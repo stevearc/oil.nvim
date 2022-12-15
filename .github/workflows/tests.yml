@@ -1,0 +1,54 @@
+name: Tests
+
+on: [push, pull_request]
+
+jobs:
+  luacheck:
+    name: Luacheck
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Prepare
+        run: |
+          sudo apt-get update
+          sudo add-apt-repository universe
+          sudo apt install luarocks -y
+          sudo luarocks install luacheck
+
+      - name: Run Luacheck
+        run: luacheck .
+
+  stylua:
+    name: StyLua
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v3
+      - name: Stylua
+        uses: JohnnyMorganz/stylua-action@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          version: v0.15.2
+          args: --check .
+
+  run_tests:
+    strategy:
+      matrix:
+        include:
+          - nvim_tag: v0.8.0
+          - nvim_tag: v0.8.1
+
+    name: Run tests
+    runs-on: ubuntu-22.04
+    env:
+      NVIM_TAG: ${{ matrix.nvim_tag }}
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install Neovim and dependencies
+        run: |
+          bash ./.github/workflows/install_nvim.sh
+
+      - name: Run tests
+        run: |
+          bash ./run_tests.sh

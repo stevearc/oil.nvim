@@ -1,0 +1,251 @@
+*oil.txt*
+*Oil* *oil* *oil.nvim*
+--------------------------------------------------------------------------------
+CONTENTS                                                            *oil-contents*
+
+  1. Options.....................................................|oil-options|
+  2. Api.............................................................|oil-api|
+  3. Columns.....................................................|oil-columns|
+  4. Highlights...............................................|oil-highlights|
+
+--------------------------------------------------------------------------------
+OPTIONS                                                              *oil-options*
+
+>
+    require("oil").setup({
+      -- Id is automatically added at the beginning, and name at the end
+      -- See :help oil-columns
+      columns = {
+        "icon",
+        -- "permissions",
+        -- "size",
+        -- "mtime",
+      },
+      -- Window-local options to use for oil buffers
+      win_options = {
+        wrap = false,
+        signcolumn = "no",
+        cursorcolumn = false,
+        foldcolumn = "0",
+        spell = false,
+        list = false,
+        conceallevel = 3,
+        concealcursor = "n",
+      },
+      -- Restore window options to previous values when leaving an oil buffer
+      restore_win_options = true,
+      -- Skip the confirmation popup for simple operations
+      skip_confirm_for_simple_edits = false,
+      -- Keymaps in oil buffer. Can be any value that `vim.keymap.set` accepts OR a table of keymap
+      -- options with a `callback` (e.g. { callback = function() ... end, desc = "", nowait = true })
+      -- Additionally, if it is a string that matches "action.<name>",
+      -- it will use the mapping at require("oil.action").<name>
+      -- Set to `false` to remove a keymap
+      keymaps = {
+        ["g?"] = "actions.show_help",
+        ["<CR>"] = "actions.select",
+        ["<C-s>"] = "actions.select_vsplit",
+        ["<C-h>"] = "actions.select_split",
+        ["<C-p>"] = "actions.preview",
+        ["<C-c>"] = "actions.close",
+        ["-"] = "actions.parent",
+        ["_"] = "actions.open_cwd",
+        ["`"] = "actions.cd",
+        ["~"] = "actions.tcd",
+        ["g."] = "actions.toggle_hidden",
+      },
+      view_options = {
+        -- Show files and directories that start with "."
+        show_hidden = false,
+      },
+      -- Configuration for the floating window in oil.open_float
+      float = {
+        -- Padding around the floating window
+        padding = 2,
+        max_width = 0,
+        max_height = 0,
+        border = "rounded",
+        win_options = {
+          winblend = 10,
+        },
+      },
+      adapters = {
+        ["oil://"] = "files",
+        ["oil-ssh://"] = "ssh",
+      },
+      -- When opening the parent of a file, substitute these url schemes
+      remap_schemes = {
+        ["scp://"] = "oil-ssh://",
+        ["sftp://"] = "oil-ssh://",
+      },
+    })
+<
+
+--------------------------------------------------------------------------------
+API                                                                      *oil-api*
+
+get_entry_on_line({bufnr}, {lnum}): nil|oil.Entry          *oil.get_entry_on_line*
+    Get the entry on a specific line (1-indexed)
+
+    Parameters:
+      {bufnr} `integer`
+      {lnum}  `integer`
+
+get_cursor_entry(): nil|oil.Entry                           *oil.get_cursor_entry*
+    Get the entry currently under the cursor
+
+
+discard_all_changes()                                    *oil.discard_all_changes*
+    Discard all changes made to oil buffers
+
+
+set_columns({cols})                                              *oil.set_columns*
+    Change the display columns for oil
+
+    Parameters:
+      {cols} `oil.ColumnSpec[]`
+
+get_current_dir(): nil|string                                *oil.get_current_dir*
+    Get the current directory
+
+
+open_float({dir})                                                 *oil.open_float*
+    Open oil browser in a floating window
+
+    Parameters:
+      {dir} `nil|string` When nil, open the parent of the current buffer, or the
+            cwd
+
+open({dir})                                                             *oil.open*
+    Open oil browser for a directory
+
+    Parameters:
+      {dir} `nil|string` When nil, open the parent of the current buffer, or the
+            cwd
+
+close()                                                                *oil.close*
+    Restore the buffer that was present when oil was opened
+
+
+select({opts})                                                        *oil.select*
+    Select the entry under the cursor
+
+    Parameters:
+      {opts} `table`
+          {vertical}   `boolean` Open the buffer in a vertical split
+          {horizontal} `boolean` Open the buffer in a horizontal split
+          {split}      `"aboveleft"|"belowright"|"topleft"|"botright"` Split
+                       modifier
+          {preview}    `boolean` Open the buffer in a preview window
+
+save({opts})                                                            *oil.save*
+    Save all changes
+
+    Parameters:
+      {opts} `nil|table`
+          {confirm} `nil|boolean` Show confirmation when true, never when false,
+                    respect skip_confirm_for_simple_edits if nil
+
+setup({opts})                                                          *oil.setup*
+    Initialize oil
+
+    Parameters:
+      {opts} `nil|table`
+
+--------------------------------------------------------------------------------
+COLUMNS                                                              *oil-columns*
+
+type                                                                 *column-type*
+    Adapters: *
+    The type of the entry (file, directory, link, etc)
+
+    Parameters:
+      {highlight} `string|fun` Highlight group
+      {icons}     `table<string, string>` Mapping of entry type to icon
+
+icon                                                                 *column-icon*
+    Adapters: *
+    An icon for the entry's type (requires nvim-web-devicons)
+
+    Parameters:
+      {highlight} `string|fun` Highlight group
+
+size                                                                 *column-size*
+    Adapters: files, ssh
+    The size of the file
+
+    Parameters:
+      {highlight} `string|fun` Highlight group
+
+permissions                                                   *column-permissions*
+    Adapters: files, ssh
+    Editable: this column is read/write
+    Access permissions of the file
+
+    Parameters:
+      {highlight} `string|fun` Highlight group
+
+ctime                                                               *column-ctime*
+    Adapters: files
+    Change timestamp of the file
+
+    Parameters:
+      {highlight} `string|fun` Highlight group
+      {format}    `string` Format string (see :help strftime)
+
+mtime                                                               *column-mtime*
+    Adapters: files
+    Last modified time of the file
+
+    Parameters:
+      {highlight} `string|fun` Highlight group
+      {format}    `string` Format string (see :help strftime)
+
+atime                                                               *column-atime*
+    Adapters: files
+    Last access time of the file
+
+    Parameters:
+      {highlight} `string|fun` Highlight group
+      {format}    `string` Format string (see :help strftime)
+
+birthtime                                                       *column-birthtime*
+    Adapters: files
+    The time the file was created
+
+    Parameters:
+      {highlight} `string|fun` Highlight group
+      {format}    `string` Format string (see :help strftime)
+
+--------------------------------------------------------------------------------
+HIGHLIGHTS                                                        *oil-highlights*
+
+OilDir                                                                 *hl-OilDir*
+    Directories in an oil buffer
+
+OilSocket                                                           *hl-OilSocket*
+    Socket files in an oil buffer
+
+OilLink                                                               *hl-OilLink*
+    Soft links in an oil buffer
+
+OilFile                                                               *hl-OilFile*
+    Normal files in an oil buffer
+
+OilCreate                                                           *hl-OilCreate*
+    Create action in the oil preview window
+
+OilDelete                                                           *hl-OilDelete*
+    Delete action in the oil preview window
+
+OilMove                                                               *hl-OilMove*
+    Move action in the oil preview window
+
+OilCopy                                                               *hl-OilCopy*
+    Copy action in the oil preview window
+
+OilChange                                                           *hl-OilChange*
+    Change action in the oil preview window
+
+================================================================================
+vim:tw=80:ts=2:ft=help:norl:syntax=help:
