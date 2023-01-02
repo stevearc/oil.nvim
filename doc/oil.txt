@@ -114,14 +114,14 @@ open_float({dir})                                                 *oil.open_floa
 
     Parameters:
       {dir} `nil|string` When nil, open the parent of the current buffer, or the
-            cwd
+            cwd if current buffer is not a file
 
 open({dir})                                                             *oil.open*
     Open oil browser for a directory
 
     Parameters:
       {dir} `nil|string` When nil, open the parent of the current buffer, or the
-            cwd
+            cwd if current buffer is not a file
 
 close()                                                                *oil.close*
     Restore the buffer that was present when oil was opened

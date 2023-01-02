@@ -240,18 +240,18 @@ Get the current directory
 `open_float(dir)` \
 Open oil browser in a floating window
 
-| Param | Type          | Desc                                                        |
-| ----- | ------------- | ----------------------------------------------------------- |
-| dir   | `nil\|string` | When nil, open the parent of the current buffer, or the cwd |
+| Param | Type          | Desc                                                                                        |
+| ----- | ------------- | ------------------------------------------------------------------------------------------- |
+| dir   | `nil\|string` | When nil, open the parent of the current buffer, or the cwd if current buffer is not a file |
 
 ### open(dir)
 
 `open(dir)` \
 Open oil browser for a directory
 
-| Param | Type          | Desc                                                        |
-| ----- | ------------- | ----------------------------------------------------------- |
-| dir   | `nil\|string` | When nil, open the parent of the current buffer, or the cwd |
+| Param | Type          | Desc                                                                                        |
+| ----- | ------------- | ------------------------------------------------------------------------------------------- |
+| dir   | `nil\|string` | When nil, open the parent of the current buffer, or the cwd if current buffer is not a file |
 
 ### close()
 
