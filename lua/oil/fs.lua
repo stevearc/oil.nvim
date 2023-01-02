@@ -178,6 +178,15 @@ end
 ---@param dest_path string
 ---@param cb fun(err: nil|string)
 M.recursive_copy = function(entry_type, src_path, dest_path, cb)
+  if entry_type == "link" then
+    vim.loop.fs_readlink(src_path, function(link_err, link)
+      if link_err then
+        return cb(link_err)
+      end
+      vim.loop.fs_symlink(link, dest_path, nil, cb)
+    end)
+    return
+  end
   if entry_type ~= "directory" then
     vim.loop.fs_copyfile(src_path, dest_path, { excl = true }, cb)
     return
