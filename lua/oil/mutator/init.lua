@@ -436,7 +436,10 @@ M.try_write_changes = function(confirm)
   local buffers = view.get_all_buffers()
   local all_diffs = {}
   local all_errors = {}
+
+  local was_modifiable = {}
   for _, bufnr in ipairs(buffers) do
+    was_modifiable[bufnr] = vim.bo[bufnr].modifiable
     -- Lock the buffer to prevent race conditions
     vim.bo[bufnr].modifiable = false
     if vim.bo[bufnr].modified then
@@ -445,6 +448,11 @@ M.try_write_changes = function(confirm)
       if not vim.tbl_isempty(errors) then
         all_errors[bufnr] = errors
       end
+    end
+  end
+  local function unlock()
+    for _, bufnr in ipairs(buffers) do
+      vim.bo[bufnr].modifiable = was_modifiable[bufnr]
     end
   end
 
@@ -469,17 +477,17 @@ M.try_write_changes = function(confirm)
       vim.api.nvim_win_set_buf(0, bufnr)
       pcall(vim.api.nvim_win_set_cursor, 0, { errs[1].lnum + 1, errs[1].col })
     end
-    return
+    return unlock()
   end
 
   local actions = M.create_actions_from_diffs(all_diffs)
   disclaimer.show(function(disclaimed)
     if not disclaimed then
-      return
+      return unlock()
     end
     preview.show(actions, confirm, function(proceed)
       if not proceed then
-        return
+        return unlock()
       end
 
       M.process_actions(
