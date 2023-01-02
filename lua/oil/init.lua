@@ -204,7 +204,7 @@ M.get_buffer_parent_url = function(bufname)
 end
 
 ---Open oil browser in a floating window
----@param dir nil|string When nil, open the parent of the current buffer, or the cwd
+---@param dir nil|string When nil, open the parent of the current buffer, or the cwd if current buffer is not a file
 M.open_float = function(dir)
   local config = require("oil.config")
   local util = require("oil.util")
@@ -246,7 +246,7 @@ M.open_float = function(dir)
 end
 
 ---Open oil browser for a directory
----@param dir nil|string When nil, open the parent of the current buffer, or the cwd
+---@param dir nil|string When nil, open the parent of the current buffer, or the cwd if current buffer is not a file
 M.open = function(dir)
   local view = require("oil.view")
   local parent_url, basename = M.get_url_for_path(dir)
