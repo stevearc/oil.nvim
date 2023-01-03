@@ -452,7 +452,7 @@ M.try_write_changes = function(confirm)
   end
   local function unlock()
     for _, bufnr in ipairs(buffers) do
-      vim.bo[bufnr].modifiable = was_modifiable[bufnr]
+      pcall(vim.api.nvim_buf_set_option, bufnr, "modifiable", was_modifiable[bufnr])
     end
   end
 
