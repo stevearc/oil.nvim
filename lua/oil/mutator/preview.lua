@@ -67,6 +67,7 @@ M.show = vim.schedule_wrap(function(actions, should_confirm, cb)
     style = "minimal",
     border = "rounded",
   })
+  vim.bo[bufnr].filetype = "oil_preview"
   vim.bo[bufnr].syntax = "oil_preview"
 
   local lines = {}
