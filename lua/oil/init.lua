@@ -497,6 +497,17 @@ M.setup = function(opts)
   local config = require("oil.config")
   config.setup(opts)
   set_colors()
+  vim.api.nvim_create_user_command("Oil", function(args)
+    if #args.fargs == 0 then
+      require("oil").open()
+    elseif args.fargs[1] == "--float" then
+      require("oil").open_float()
+    elseif args.fargs[2] == "--float" then
+      require("oil").open_float(args.fargs[1])
+    else
+      require("oil").open(args.fargs[1])
+    end
+  end, { nargs = "*", complete = "dir" })
   local aug = vim.api.nvim_create_augroup("Oil", {})
   if vim.fn.exists("#FileExplorer") then
     vim.api.nvim_create_augroup("FileExplorer", { clear = true })
