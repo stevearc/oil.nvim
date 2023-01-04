@@ -84,4 +84,17 @@ M.toggle_hidden = {
   end,
 }
 
+M.refresh = {
+  desc = "Refresh directory",
+  callback = function()
+    if vim.bo.modified then
+      local ok, choice = pcall(vim.fn.confirm, "Discard changes?", "No\nYes")
+      if not ok or choice ~= 2 then
+        return
+      end
+    end
+    vim.cmd.edit({ bang = true })
+  end,
+}
+
 return M
