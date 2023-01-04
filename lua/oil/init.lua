@@ -541,9 +541,9 @@ M.setup = function(opts)
         if new_url ~= params.file then
           util.rename_buffer(bufnr, new_url)
         end
-        vim.cmd.doautocmd({ args = { "BufReadPre", params.file }, mods = { silent = true } })
+        vim.cmd.doautocmd({ args = { "BufReadPre", params.file }, mods = { emsg_silent = true } })
         view.initialize(bufnr)
-        vim.cmd.doautocmd({ args = { "BufReadPost", params.file }, mods = { silent = true } })
+        vim.cmd.doautocmd({ args = { "BufReadPost", params.file }, mods = { emsg_silent = true } })
       end
 
       if adapter.normalize_url then
