@@ -433,6 +433,8 @@ end
 
 ---@param confirm nil|boolean
 M.try_write_changes = function(confirm)
+  local current_buf = vim.api.nvim_get_current_buf()
+  local was_modified = vim.bo.modified
   local buffers = view.get_all_buffers()
   local all_diffs = {}
   local all_errors = {}
@@ -453,6 +455,10 @@ M.try_write_changes = function(confirm)
   local function unlock()
     for _, bufnr in ipairs(buffers) do
       pcall(vim.api.nvim_buf_set_option, bufnr, "modifiable", was_modifiable[bufnr])
+    end
+    -- The ":write" will set nomodified even if we cancel here, so we need to restore it
+    if was_modified then
+      vim.bo[current_buf].modified = true
     end
   end
 
