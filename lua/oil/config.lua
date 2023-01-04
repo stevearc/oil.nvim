@@ -75,7 +75,10 @@ M.setup = function(opts)
     M[k] = v
   end
 
-  vim.tbl_add_reverse_lookup(M.adapters)
+  M.adapter_to_scheme = {}
+  for k, v in pairs(M.adapters) do
+    M.adapter_to_scheme[v] = k
+  end
   M._adapter_by_scheme = {}
   if type(M.trash) == "string" then
     M.trash = vim.fn.fnamemodify(vim.fn.expand(M.trash), ":p")
@@ -116,7 +119,7 @@ M.get_trash_url = function()
     fs.mkdirp(oil_trash_dir)
     M.trash = oil_trash_dir
   end
-  return M.adapters.files .. fs.os_to_posix_path(M.trash)
+  return M.adapter_to_scheme.files .. fs.os_to_posix_path(M.trash)
 end
 
 ---@param scheme string

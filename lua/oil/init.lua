@@ -156,7 +156,7 @@ M.get_url_for_path = function(dir)
   if dir then
     local abspath = vim.fn.fnamemodify(dir, ":p")
     local path = fs.os_to_posix_path(abspath)
-    return config.adapters.files .. path
+    return config.adapter_to_scheme.files .. path
   else
     local bufname = vim.api.nvim_buf_get_name(0)
     return M.get_buffer_parent_url(bufname)
@@ -175,7 +175,7 @@ M.get_buffer_parent_url = function(bufname)
   local scheme, path = util.parse_url(bufname)
   if not scheme then
     local parent, basename
-    scheme = config.adapters.files
+    scheme = config.adapter_to_scheme.files
     if bufname == "" then
       parent = fs.os_to_posix_path(vim.fn.getcwd())
     else
@@ -189,7 +189,7 @@ M.get_buffer_parent_url = function(bufname)
     local adapter = config.get_adapter_by_scheme(scheme)
     local parent_url
     if adapter.get_parent then
-      local adapter_scheme = config.adapters[adapter.name]
+      local adapter_scheme = config.adapter_to_scheme[adapter.name]
       parent_url = adapter.get_parent(adapter_scheme .. path)
     else
       local parent = pathutil.parent(path)
@@ -410,7 +410,7 @@ local function maybe_hijack_directory_buffer(bufnr)
   end
   util.rename_buffer(
     bufnr,
-    util.addslash(config.adapters.files .. vim.fn.fnamemodify(bufname, ":p"))
+    util.addslash(config.adapter_to_scheme.files .. vim.fn.fnamemodify(bufname, ":p"))
   )
 end
 
@@ -504,10 +504,7 @@ M.setup = function(opts)
 
   local patterns = {}
   for scheme in pairs(config.adapters) do
-    -- We added a reverse lookup to config.adapters, so filter the keys
-    if vim.endswith(scheme, "://") then
-      table.insert(patterns, scheme .. "*")
-    end
+    table.insert(patterns, scheme .. "*")
   end
   local scheme_pattern = table.concat(patterns, ",")
 

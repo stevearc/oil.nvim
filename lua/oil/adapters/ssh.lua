@@ -81,7 +81,7 @@ local _connections = {}
 ---@param allow_retry nil|boolean
 local function get_connection(url, allow_retry)
   local res = parse_url(url)
-  res.scheme = config.adapters.ssh
+  res.scheme = config.adapter_to_scheme.ssh
   res.path = ""
   local key = url_to_str(res)
   local conn = _connections[key]
