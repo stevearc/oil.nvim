@@ -103,8 +103,7 @@ If you want to mimic the `vim-vinegar` method of navigating to the parent direct
 vim.keymap.set("n", "-", require("oil").open, { desc = "Open parent directory" })
 ```
 
-You can also use the `Oil` command to open oil.nvim.
-You can provide a folder argument to open this folder and add `--float` at the end of the command to open oil in a float.
+You can open a directory with `:edit <path>` or `:Oil <path>`. To open oil in a floating window, do `:Oil --float <path>`.
 
 ## Options
 
