@@ -241,8 +241,8 @@ M.open_float = function(dir)
   for k, v in pairs(config.float.win_options) do
     vim.api.nvim_win_set_option(winid, k, v)
   end
-  util.add_title_to_win(winid, parent_url)
   vim.cmd.edit({ args = { parent_url }, mods = { keepalt = true } })
+  util.add_title_to_win(winid)
 end
 
 ---Open oil browser for a directory
