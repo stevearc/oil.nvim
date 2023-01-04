@@ -205,7 +205,7 @@ if has_devicons then
         local icon
         local hl
         icon, hl = devicons.get_icon(name)
-        icon = icon or "?"
+        icon = icon or ""
         return { icon .. " ", hl }
       end
     end,
