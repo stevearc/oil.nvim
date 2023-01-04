@@ -6,20 +6,29 @@ body:
   - type: markdown
     attributes:
       value: |
-        **Before** submitting a feature request, make sure to search [existing issues](https://github.com/stevearc/oil.nvim/issues)
+        Before submitting a feature request, make sure to search for [existing requests](https://github.com/stevearc/oil.nvim/issues)
   - type: checkboxes
     attributes:
-      label: Did you check docs and existing issues?
-      description: Make sure you checked all of the below before submitting an issue
+      label: Did you check existing requests?
       options:
-        - label: I have read all the docs
-          required: true
         - label: I have searched the existing issues
           required: true
   - type: textarea
     attributes:
-      label: Describe the feature you want
-      description: A clear and concise description of what feature you want. Is there anything similar currently implemented?
+      label: Describe the feature
+      description: A short summary of the feature you want
     validations:
       required: true
-
+  - type: textarea
+    attributes:
+      label: Provide background
+      description: Describe the reasoning behind why you want the feature.
+      placeholder: I am trying to do X. My current workflow is Y.
+    validations:
+      required: false
+  - type: textarea
+    attributes:
+      label: Additional details
+      description: Any additional information you would like to provide. Things you've tried, alternatives considered, examples from other plugins, etc.
+    validations:
+      required: false
