@@ -151,6 +151,8 @@ require("oil").setup({
     ["~"] = "actions.tcd",
     ["g."] = "actions.toggle_hidden",
   },
+  -- Set to false to disable all of the above keymaps
+  use_default_keymaps = true,
   view_options = {
     -- Show files and directories that start with "."
     show_hidden = false,
