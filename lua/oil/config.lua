@@ -41,6 +41,8 @@ local default_config = {
     ["~"] = "actions.tcd",
     ["g."] = "actions.toggle_hidden",
   },
+  -- Set to false to disable all of the above keymaps
+  use_default_keymaps = true,
   view_options = {
     -- Show files and directories that start with "."
     show_hidden = false,
@@ -71,6 +73,9 @@ local M = {}
 
 M.setup = function(opts)
   local new_conf = vim.tbl_deep_extend("keep", opts or {}, default_config)
+  if not new_conf.use_default_keymaps then
+    new_conf.keymaps = opts.keymaps
+  end
 
   for k, v in pairs(new_conf) do
     M[k] = v
