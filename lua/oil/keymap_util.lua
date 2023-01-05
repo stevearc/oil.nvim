@@ -85,7 +85,7 @@ M.show_help = function(keymaps)
 
   local editor_width = vim.o.columns
   local editor_height = util.get_editor_height()
-  vim.api.nvim_open_win(bufnr, true, {
+  local winid = vim.api.nvim_open_win(bufnr, true, {
     relative = "editor",
     row = math.max(0, (editor_height - #lines) / 2),
     col = math.max(0, (editor_width - max_line - 1) / 2),
@@ -94,6 +94,22 @@ M.show_help = function(keymaps)
     zindex = 150,
     style = "minimal",
     border = "rounded",
+  })
+  local function close()
+    if vim.api.nvim_win_is_valid(winid) then
+      vim.api.nvim_win_close(winid, true)
+    end
+  end
+  vim.api.nvim_create_autocmd("BufLeave", {
+    callback = close,
+    once = true,
+    nested = true,
+    buffer = bufnr,
+  })
+  vim.api.nvim_create_autocmd("WinLeave", {
+    callback = close,
+    once = true,
+    nested = true,
   })
 end
 
