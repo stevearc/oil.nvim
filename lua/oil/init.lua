@@ -238,6 +238,19 @@ M.open_float = function(dir)
     border = config.float.border,
     zindex = 45,
   })
+  local winleave_autocmd
+  winleave_autocmd = vim.api.nvim_create_autocmd("WinLeave", {
+    callback = vim.schedule_wrap(function()
+      if util.is_floating_win() then
+        return
+      end
+      if vim.api.nvim_win_is_valid(winid) then
+        vim.api.nvim_win_close(winid, true)
+      end
+      vim.api.nvim_del_autocmd(winleave_autocmd)
+    end),
+    nested = true,
+  })
   for k, v in pairs(config.float.win_options) do
     vim.api.nvim_win_set_option(winid, k, v)
   end
