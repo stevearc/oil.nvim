@@ -566,6 +566,7 @@ M.setup = function(opts)
   })
   vim.api.nvim_create_autocmd("BufWinEnter", {
     desc = "Set/unset oil window options",
+    group = aug,
     pattern = "*",
     callback = function()
       local view = require("oil.view")
@@ -577,6 +578,7 @@ M.setup = function(opts)
     end,
   })
   vim.api.nvim_create_autocmd("BufAdd", {
+    desc = "Detect directory buffer and open oil file browser",
     group = aug,
     pattern = "*",
     nested = true,
