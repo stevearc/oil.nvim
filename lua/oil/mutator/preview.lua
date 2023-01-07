@@ -44,7 +44,7 @@ end
 ---@param should_confirm nil|boolean
 ---@param cb fun(proceed: boolean)
 M.show = vim.schedule_wrap(function(actions, should_confirm, cb)
-  if should_confirm == false then
+  if should_confirm == false or #actions == 0 then
     cb(true)
     return
   end
