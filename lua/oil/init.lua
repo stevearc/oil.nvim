@@ -240,6 +240,8 @@ M.open_float = function(dir)
   })
   local winleave_autocmd
   winleave_autocmd = vim.api.nvim_create_autocmd("WinLeave", {
+    desc = "Close floating oil window",
+    group = "Oil",
     callback = vim.schedule_wrap(function()
       if util.is_floating_win() then
         return
