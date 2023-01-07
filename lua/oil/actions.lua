@@ -84,6 +84,16 @@ M.toggle_hidden = {
   end,
 }
 
+M.open_terminal = {
+  desc = "Open a terminal in the current directory",
+  callback = function()
+    local dir = oil.get_current_dir()
+    if dir then
+      vim.fn.termopen(vim.o.shell, { cwd = dir })
+    end
+  end,
+}
+
 M.refresh = {
   desc = "Refresh directory",
   callback = function()
