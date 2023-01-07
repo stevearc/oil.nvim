@@ -157,10 +157,6 @@ M.initialize = function(bufnr)
     bufnr = vim.api.nvim_get_current_buf()
   end
   session[bufnr] = true
-  vim.bo[bufnr].buftype = "acwrite"
-  vim.bo[bufnr].filetype = "oil"
-  vim.bo[bufnr].bufhidden = "hide"
-  vim.bo[bufnr].syntax = "oil"
   M.set_win_options()
   vim.api.nvim_create_autocmd("BufHidden", {
     callback = function()

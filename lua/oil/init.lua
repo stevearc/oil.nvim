@@ -271,9 +271,6 @@ M.open = function(dir)
   if basename then
     view.set_last_cursor(parent_url, basename)
   end
-  if not pcall(vim.api.nvim_win_get_var, 0, "oil_original_buffer") then
-    vim.api.nvim_win_set_var(0, "oil_original_buffer", vim.api.nvim_get_current_buf())
-  end
   vim.cmd.edit({ args = { parent_url }, mods = { keepalt = true } })
 end
 
@@ -286,7 +283,6 @@ M.close = function()
   end
   local ok, bufnr = pcall(vim.api.nvim_win_get_var, 0, "oil_original_buffer")
   if ok then
-    vim.api.nvim_win_del_var(0, "oil_original_buffer")
     if vim.api.nvim_buf_is_valid(bufnr) then
       vim.api.nvim_win_set_buf(0, bufnr)
       return
@@ -550,6 +546,10 @@ M.setup = function(opts)
       local view = require("oil.view")
       local adapter = config.get_adapter_by_scheme(params.file)
       local bufnr = params.buf
+      vim.bo[bufnr].buftype = "acwrite"
+      vim.bo[bufnr].filetype = "oil"
+      vim.bo[bufnr].bufhidden = "hide"
+      vim.bo[bufnr].syntax = "oil"
 
       loading.set_loading(bufnr, true)
       local function finish(new_url)
@@ -579,16 +579,49 @@ M.setup = function(opts)
       vim.cmd.doautocmd({ args = { "BufWritePost", params.file }, mods = { silent = true } })
     end,
   })
+  vim.api.nvim_create_autocmd("BufWinLeave", {
+    desc = "Save alternate buffer for later",
+    group = aug,
+    pattern = "*",
+    callback = function()
+      if vim.bo.filetype ~= "oil" then
+        vim.api.nvim_win_set_var(0, "oil_original_buffer", vim.api.nvim_get_current_buf())
+        vim.api.nvim_win_set_var(0, "oil_original_alternate", vim.fn.bufnr("#"))
+      end
+    end,
+  })
   vim.api.nvim_create_autocmd("BufWinEnter", {
-    desc = "Set/unset oil window options",
+    desc = "Set/unset oil window options and restore alternate buffer",
     group = aug,
     pattern = "*",
     callback = function()
       local view = require("oil.view")
       if vim.bo.filetype == "oil" then
         view.set_win_options()
-      elseif config.restore_win_options then
-        view.restore_win_options()
+        vim.api.nvim_win_set_var(0, "oil_did_enter", true)
+      elseif vim.w.oil_did_enter then
+        vim.api.nvim_win_del_var(0, "oil_did_enter")
+        -- We are entering a non-oil buffer *after* having been in an oil buffer
+        local has_orig, orig_buffer = pcall(vim.api.nvim_win_get_var, 0, "oil_original_buffer")
+        if has_orig and vim.api.nvim_buf_is_valid(orig_buffer) then
+          if vim.api.nvim_get_current_buf() ~= orig_buffer then
+            -- If we are editing a new file after navigating around oil, set the alternate buffer
+            -- to be the last buffer we were in before opening oil
+            vim.fn.setreg("#", orig_buffer)
+          else
+            -- If we are editing the same buffer that we started oil from, set the alternate to be
+            -- what it was before we opened oil
+            local has_orig_alt, alt_buffer =
+              pcall(vim.api.nvim_win_get_var, 0, "oil_original_alternate")
+            if has_orig_alt and vim.api.nvim_buf_is_valid(alt_buffer) then
+              vim.fn.setreg("#", alt_buffer)
+            end
+          end
+        end
+
+        if config.restore_win_options then
+          view.restore_win_options()
+        end
       end
     end,
   })
