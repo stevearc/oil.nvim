@@ -88,7 +88,7 @@ M.refresh = {
   desc = "Refresh directory",
   callback = function()
     if vim.bo.modified then
-      local ok, choice = pcall(vim.fn.confirm, "Discard changes?", "No\nYes")
+      local ok, choice = pcall(vim.fn.confirm, "Discard changes?", "Yes\nNo")
       if not ok or choice ~= 2 then
         return
       end
