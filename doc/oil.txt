@@ -158,12 +158,16 @@ setup({opts})                                                          *oil.setu
 --------------------------------------------------------------------------------
 COLUMNS                                                              *oil-columns*
 
+Columns can be specified as a string to use default arguments (e.g. `"icon"`),
+or as a table to pass parameters (e.g. `{"size", highlight = "Special"}`)
+
 type                                                                 *column-type*
     Adapters: *
     The type of the entry (file, directory, link, etc)
 
     Parameters:
-      {highlight} `string|fun` Highlight group
+      {highlight} `string|fun(value: string): string` Highlight group, or
+                  function that returns a highlight group
       {icons}     `table<string, string>` Mapping of entry type to icon
 
 icon                                                                 *column-icon*
@@ -171,14 +175,16 @@ icon                                                                 *column-ico
     An icon for the entry's type (requires nvim-web-devicons)
 
     Parameters:
-      {highlight} `string|fun` Highlight group
+      {highlight} `string|fun(value: string): string` Highlight group, or
+                  function that returns a highlight group
 
 size                                                                 *column-size*
     Adapters: files, ssh
     The size of the file
 
     Parameters:
-      {highlight} `string|fun` Highlight group
+      {highlight} `string|fun(value: string): string` Highlight group, or
+                  function that returns a highlight group
 
 permissions                                                   *column-permissions*
     Adapters: files, ssh
@@ -186,14 +192,16 @@ permissions                                                   *column-permission
     Access permissions of the file
 
     Parameters:
-      {highlight} `string|fun` Highlight group
+      {highlight} `string|fun(value: string): string` Highlight group, or
+                  function that returns a highlight group
 
 ctime                                                               *column-ctime*
     Adapters: files
     Change timestamp of the file
 
     Parameters:
-      {highlight} `string|fun` Highlight group
+      {highlight} `string|fun(value: string): string` Highlight group, or
+                  function that returns a highlight group
       {format}    `string` Format string (see :help strftime)
 
 mtime                                                               *column-mtime*
@@ -201,7 +209,8 @@ mtime                                                               *column-mtim
     Last modified time of the file
 
     Parameters:
-      {highlight} `string|fun` Highlight group
+      {highlight} `string|fun(value: string): string` Highlight group, or
+                  function that returns a highlight group
       {format}    `string` Format string (see :help strftime)
 
 atime                                                               *column-atime*
@@ -209,7 +218,8 @@ atime                                                               *column-atim
     Last access time of the file
 
     Parameters:
-      {highlight} `string|fun` Highlight group
+      {highlight} `string|fun(value: string): string` Highlight group, or
+                  function that returns a highlight group
       {format}    `string` Format string (see :help strftime)
 
 birthtime                                                       *column-birthtime*
@@ -217,7 +227,8 @@ birthtime                                                       *column-birthtim
     The time the file was created
 
     Parameters:
-      {highlight} `string|fun` Highlight group
+      {highlight} `string|fun(value: string): string` Highlight group, or
+                  function that returns a highlight group
       {format}    `string` Format string (see :help strftime)
 
 --------------------------------------------------------------------------------

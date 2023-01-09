@@ -81,7 +81,7 @@ class ColumnDef:
     params: List["LuaParam"] = field(default_factory=list)
 
 
-HL = [LuaParam("highlight", "string|fun", "Highlight group")]
+HL = [LuaParam("highlight", "string|fun(value: string): string", "Highlight group, or function that returns a highlight group")]
 TIME = [
     LuaParam("format", "string", "Format string (see :help strftime)"),
 ]
@@ -91,7 +91,8 @@ COL_DEFS = [
         "*",
         False,
         "The type of the entry (file, directory, link, etc)",
-        HL + [LuaParam("icons", "table<string, string>", "Mapping of entry type to icon")],
+        HL
+        + [LuaParam("icons", "table<string, string>", "Mapping of entry type to icon")],
     ),
     ColumnDef(
         "icon",
@@ -101,7 +102,9 @@ COL_DEFS = [
         HL + [],
     ),
     ColumnDef("size", "files, ssh", False, "The size of the file", HL + []),
-    ColumnDef("permissions", "files, ssh", True, "Access permissions of the file", HL + []),
+    ColumnDef(
+        "permissions", "files, ssh", True, "Access permissions of the file", HL + []
+    ),
     ColumnDef("ctime", "files", False, "Change timestamp of the file", HL + TIME + []),
     ColumnDef(
         "mtime", "files", False, "Last modified time of the file", HL + TIME + []
@@ -140,6 +143,12 @@ def get_highlights_vimdoc() -> "VimdocSection":
 
 def get_columns_vimdoc() -> "VimdocSection":
     section = VimdocSection("Columns", "oil-columns", ["\n"])
+    section.body.extend(
+        wrap(
+            'Columns can be specified as a string to use default arguments (e.g. `"icon"`), or as a table to pass parameters (e.g. `{"size", highlight = "Special"}`)'
+        )
+    )
+    section.body.append('\n')
     for col in COL_DEFS:
         section.body.append(leftright(col.name, f"*column-{col.name}*"))
         section.body.extend(wrap(f"Adapters: {col.adapters}", 4))
