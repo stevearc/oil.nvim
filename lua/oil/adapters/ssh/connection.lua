@@ -57,6 +57,8 @@ function SSHConnection.new(url)
     "/bin/bash",
     "--norc",
     "-c",
+    -- HACK: For some reason in my testing if I just have "echo READY" it doesn't appear, but if I echo
+    -- anything prior to that, it *will* appear. The first line gets swallowed.
     "echo '_make_newline_'; echo '===READY==='; exec /bin/bash --norc",
   }
   local self = setmetatable({

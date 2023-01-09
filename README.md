@@ -189,6 +189,7 @@ This should look familiar. In fact, if you replace `oil-ssh://` with `sftp://`, 
 
 While this adapter effectively replaces netrw for directory browsing, it still relies on netrw for file editing. When you open a file from oil, it will use the `scp://host/path/to/file.txt` format that triggers remote editing via netrw.
 
+Note that at the moment the ssh adapter does not support Windows machines, and it requires the server to have a `/bin/bash` binary as well as standard unix commands (`rm`, `mv`, `mkdir`, `chmod`, `cp`, `touch`, `ln`, `echo`).
 
 ## API
 
@@ -209,12 +210,10 @@ Get the entry on a specific line (1-indexed)
 `get_cursor_entry(): nil|oil.Entry` \
 Get the entry currently under the cursor
 
-
 ### discard_all_changes()
 
 `discard_all_changes()` \
 Discard all changes made to oil buffers
-
 
 ### set_columns(cols)
 
@@ -229,7 +228,6 @@ Change the display columns for oil
 
 `get_current_dir(): nil|string` \
 Get the current directory
-
 
 ### open_float(dir)
 
@@ -253,7 +251,6 @@ Open oil browser for a directory
 
 `close()` \
 Restore the buffer that was present when oil was opened
-
 
 ### select(opts)
 
@@ -286,7 +283,6 @@ Initialize oil
 | Param | Type         | Desc |
 | ----- | ------------ | ---- |
 | opts  | `nil\|table` |      |
-
 
 <!-- /API -->
 
