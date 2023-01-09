@@ -388,8 +388,10 @@ M.select = function(opts)
       vertical = opts.vertical,
       horizontal = opts.horizontal,
       split = opts.split,
-      keepalt = true,
     }
+    if vim.tbl_isempty(mods) then
+      mods = nil
+    end
     local cmd = opts.split and "split" or "edit"
     vim.cmd({
       cmd = cmd,

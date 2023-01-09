@@ -46,4 +46,35 @@ describe("Alternate buffer", function()
     vim.cmd.edit({ args = { "bar" } })
     assert.equals("foo", vim.fn.expand("#"))
   end)
+
+  describe("floating window", function()
+    it("sets previous buffer as alternate", function()
+      vim.cmd.edit({ args = { "foo" } })
+      oil.open_float()
+      -- This is lazy, but testing the actual select logic is more difficult. We can simply
+      -- replicated it by closing the current window and then doing the edit
+      vim.api.nvim_win_close(0, true)
+      vim.cmd.edit({ args = { "bar" } })
+      assert.equals("foo", vim.fn.expand("#"))
+    end)
+
+    it("preserves alternate buffer if editing the same file", function()
+      vim.cmd.edit({ args = { "foo" } })
+      vim.cmd.edit({ args = { "bar" } })
+      oil.open_float()
+      -- This is lazy, but testing the actual select logic is more difficult. We can simply
+      -- replicated it by closing the current window and then doing the edit
+      vim.api.nvim_win_close(0, true)
+      vim.cmd.edit({ args = { "bar" } })
+      assert.equals("foo", vim.fn.expand("#"))
+    end)
+
+    it("preserves alternate buffer if discarding changes", function()
+      vim.cmd.edit({ args = { "foo" } })
+      vim.cmd.edit({ args = { "bar" } })
+      oil.open_float()
+      oil.close()
+      assert.equals("foo", vim.fn.expand("#"))
+    end)
+  end)
 end)
