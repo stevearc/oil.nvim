@@ -210,10 +210,12 @@ Get the entry on a specific line (1-indexed)
 `get_cursor_entry(): nil|oil.Entry` \
 Get the entry currently under the cursor
 
+
 ### discard_all_changes()
 
 `discard_all_changes()` \
 Discard all changes made to oil buffers
+
 
 ### set_columns(cols)
 
@@ -228,6 +230,7 @@ Change the display columns for oil
 
 `get_current_dir(): nil|string` \
 Get the current directory
+
 
 ### open_float(dir)
 
@@ -251,6 +254,7 @@ Open oil browser for a directory
 
 `close()` \
 Restore the buffer that was present when oil was opened
+
 
 ### select(opts)
 
@@ -283,6 +287,7 @@ Initialize oil
 | Param | Type         | Desc |
 | ----- | ------------ | ---- |
 | opts  | `nil\|table` |      |
+
 
 <!-- /API -->
 
