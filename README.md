@@ -168,15 +168,6 @@ require("oil").setup({
       winblend = 10,
     },
   },
-  adapters = {
-    ["oil://"] = "files",
-    ["oil-ssh://"] = "ssh",
-  },
-  -- When opening the parent of a file, substitute these url schemes
-  remap_schemes = {
-    ["scp://"] = "oil-ssh://",
-    ["sftp://"] = "oil-ssh://",
-  },
 })
 ```
 
