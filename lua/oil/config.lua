@@ -58,15 +58,19 @@ local default_config = {
       winblend = 10,
     },
   },
-  adapters = {
-    ["oil://"] = "files",
-    ["oil-ssh://"] = "ssh",
-  },
-  -- When opening the parent of a file, substitute these url schemes
-  remap_schemes = {
-    ["scp://"] = "oil-ssh://",
-    ["sftp://"] = "oil-ssh://",
-  },
+}
+
+-- The adapter API hasn't really stabilized yet. We're not ready to advertise or encourage people to
+-- write their own adapters, and so there's no real reason to edit these config options. For that
+-- reason, I'm taking them out of the section above so they won't show up in the autogen docs.
+default_config.adapters = {
+  ["oil://"] = "files",
+  ["oil-ssh://"] = "ssh",
+}
+-- When opening the parent of a file, substitute these url schemes
+default_config.remap_schemes = {
+  ["scp://"] = "oil-ssh://",
+  ["sftp://"] = "oil-ssh://",
 }
 
 local M = {}
