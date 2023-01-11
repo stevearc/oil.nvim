@@ -504,6 +504,40 @@ M.save = function(opts)
   mutator.try_write_changes(opts.confirm)
 end
 
+---@param bufnr integer
+local function load_oil_buffer(bufnr)
+  local config = require("oil.config")
+  local loading = require("oil.loading")
+  local util = require("oil.util")
+  local view = require("oil.view")
+  local bufname = vim.api.nvim_buf_get_name(bufnr)
+  local adapter = config.get_adapter_by_scheme(bufname)
+  vim.bo[bufnr].buftype = "acwrite"
+  vim.bo[bufnr].filetype = "oil"
+  vim.bo[bufnr].bufhidden = "hide"
+  vim.bo[bufnr].syntax = "oil"
+
+  loading.set_loading(bufnr, true)
+  local function finish(new_url)
+    if new_url ~= bufname then
+      if util.rename_buffer(bufnr, new_url) then
+        -- If the buffer was replaced then don't initialize it. It's dead. The replacement will
+        -- have BufReadCmd called for it
+        return
+      end
+    end
+    vim.cmd.doautocmd({ args = { "BufReadPre", bufname }, mods = { emsg_silent = true } })
+    view.initialize(bufnr)
+    vim.cmd.doautocmd({ args = { "BufReadPost", bufname }, mods = { emsg_silent = true } })
+  end
+
+  if adapter.normalize_url then
+    adapter.normalize_url(bufname, finish)
+  else
+    finish(util.addslash(bufname))
+  end
+end
+
 ---Initialize oil
 ---@param opts nil|table
 M.setup = function(opts)
@@ -543,35 +577,7 @@ M.setup = function(opts)
     pattern = scheme_pattern,
     nested = true,
     callback = function(params)
-      local loading = require("oil.loading")
-      local util = require("oil.util")
-      local view = require("oil.view")
-      local adapter = config.get_adapter_by_scheme(params.file)
-      local bufnr = params.buf
-      vim.bo[bufnr].buftype = "acwrite"
-      vim.bo[bufnr].filetype = "oil"
-      vim.bo[bufnr].bufhidden = "hide"
-      vim.bo[bufnr].syntax = "oil"
-
-      loading.set_loading(bufnr, true)
-      local function finish(new_url)
-        if new_url ~= params.file then
-          if util.rename_buffer(bufnr, new_url) then
-            -- If the buffer was replaced then don't initialize it. It's dead. The replacement will
-            -- have BufReadCmd called for it
-            return
-          end
-        end
-        vim.cmd.doautocmd({ args = { "BufReadPre", params.file }, mods = { emsg_silent = true } })
-        view.initialize(bufnr)
-        vim.cmd.doautocmd({ args = { "BufReadPost", params.file }, mods = { emsg_silent = true } })
-      end
-
-      if adapter.normalize_url then
-        adapter.normalize_url(params.file, finish)
-      else
-        finish(util.addslash(params.file))
-      end
+      load_oil_buffer(params.buf)
     end,
   })
   vim.api.nvim_create_autocmd("BufWriteCmd", {
@@ -638,6 +644,23 @@ M.setup = function(opts)
     nested = true,
     callback = function(params)
       maybe_hijack_directory_buffer(params.buf)
+    end,
+  })
+  -- mksession doesn't save oil buffers in a useful way. We have to manually load them after a
+  -- session finishes loading. See https://github.com/stevearc/oil.nvim/issues/29
+  vim.api.nvim_create_autocmd("SessionLoadPost", {
+    desc = "Load oil buffers after a session is loaded",
+    group = aug,
+    pattern = "*",
+    callback = function(params)
+      local util = require("oil.util")
+      for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
+        local bufname = vim.api.nvim_buf_get_name(bufnr)
+        local scheme = util.parse_url(bufname)
+        if config.adapters[scheme] and vim.api.nvim_buf_line_count(bufnr) == 1 then
+          load_oil_buffer(bufnr)
+        end
+      end
     end,
   })
   maybe_hijack_directory_buffer(0)
