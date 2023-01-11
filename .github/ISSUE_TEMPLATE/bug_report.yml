@@ -53,20 +53,27 @@ body:
     attributes:
       label: Directory structure
       description: The structure of the directory used to reproduce the bug
+      placeholder: |
+        a/b/foo.txt
+        a/bar.md
+        a/c/baz.txt
     validations:
       required: false
   - type: textarea
     attributes:
       label: Repro
-      description: Minimal `init.lua` to reproduce this issue. Save as `repro.lua` and run with `nvim -u repro.lua`
+      description:
+        Minimal `init.lua` to reproduce this issue. Save as `repro.lua` and run with `nvim -u repro.lua`
         This uses lazy.nvim (a plugin manager).
         You can add your config with the `config` key the same way you can do with packer.nvim.
       value: |
-        -- DO NOT change the paths and don't remove the colorscheme
+        -- save as repro.lua
+        -- run with nvim -u repro.lua
+        -- DO NOT change the paths
         local root = vim.fn.fnamemodify("./.repro", ":p")
 
         -- set stdpaths to use .repro
-        for _, name in ipairs({ "config", "data", "state", "cache" }) do
+        for _, name in ipairs({ "config", "data", "state", "runtime", "cache" }) do
           vim.env[("XDG_%s_HOME"):format(name:upper())] = root .. "/" .. name
         end
 
@@ -90,7 +97,9 @@ body:
           {
                 "stevearc/oil.nvim",
                 config = function()
-                    require"oil".setup() -- add any needed settings here
+                    require("oil").setup({
+                      -- add any needed settings here
+                    })
                 end,
           },
           -- add any other plugins here
@@ -103,4 +112,10 @@ body:
         -- add anything else here
       render: Lua
     validations:
-      required: false
+      required: true
+  - type: checkboxes
+    attributes:
+      label: Did you check the bug with a clean config?
+      options:
+        - label: I have confirmed that the bug reproduces with `nvim -u repro.lua` using the repro.lua file above.
+          required: true
