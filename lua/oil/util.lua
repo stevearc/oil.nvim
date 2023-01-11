@@ -87,12 +87,13 @@ end
 
 ---@param src_bufnr integer|string Buffer number or name
 ---@param dest_buf_name string
+---@return boolean True if the buffer was replaced instead of renamed
 M.rename_buffer = function(src_bufnr, dest_buf_name)
   if type(src_bufnr) == "string" then
     src_bufnr = vim.fn.bufadd(src_bufnr)
     if not vim.api.nvim_buf_is_loaded(src_bufnr) then
       vim.api.nvim_buf_delete(src_bufnr, {})
-      return
+      return false
     end
   end
 
@@ -107,7 +108,7 @@ M.rename_buffer = function(src_bufnr, dest_buf_name)
     if ok then
       -- Renaming the buffer creates a new buffer with the old name. Find it and delete it.
       vim.api.nvim_buf_delete(vim.fn.bufadd(bufname), {})
-      return
+      return false
     end
   end
 
@@ -116,20 +117,25 @@ M.rename_buffer = function(src_bufnr, dest_buf_name)
   if vim.bo[src_bufnr].buflisted then
     vim.bo[dest_bufnr].buflisted = true
   end
-  -- Find any windows with the old buffer and replace them
-  for _, winid in ipairs(vim.api.nvim_list_wins()) do
-    if vim.api.nvim_win_is_valid(winid) then
-      if vim.api.nvim_win_get_buf(winid) == src_bufnr then
-        vim.api.nvim_win_set_buf(winid, dest_bufnr)
+  -- If we're renaming a buffer that we're about to enter, this may be called before the buffer is
+  -- actually in the window. We need to wait to enter the buffer and _then_ replace it.
+  vim.schedule(function()
+    -- Find any windows with the old buffer and replace them
+    for _, winid in ipairs(vim.api.nvim_list_wins()) do
+      if vim.api.nvim_win_is_valid(winid) then
+        if vim.api.nvim_win_get_buf(winid) == src_bufnr then
+          vim.api.nvim_win_set_buf(winid, dest_bufnr)
+        end
       end
     end
-  end
-  if vim.bo[src_bufnr].modified then
-    local src_lines = vim.api.nvim_buf_get_lines(src_bufnr, 0, -1, true)
-    vim.api.nvim_buf_set_lines(dest_bufnr, 0, -1, true, src_lines)
-  end
-  -- Try to delete, but don't if the buffer has changes
-  pcall(vim.api.nvim_buf_delete, src_bufnr, {})
+    if vim.bo[src_bufnr].modified then
+      local src_lines = vim.api.nvim_buf_get_lines(src_bufnr, 0, -1, true)
+      vim.api.nvim_buf_set_lines(dest_bufnr, 0, -1, true, src_lines)
+    end
+    -- Try to delete, but don't if the buffer has changes
+    pcall(vim.api.nvim_buf_delete, src_bufnr, {})
+  end)
+  return true
 end
 
 ---@param count integer

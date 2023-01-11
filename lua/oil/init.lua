@@ -556,7 +556,11 @@ M.setup = function(opts)
       loading.set_loading(bufnr, true)
       local function finish(new_url)
         if new_url ~= params.file then
-          util.rename_buffer(bufnr, new_url)
+          if util.rename_buffer(bufnr, new_url) then
+            -- If the buffer was replaced then don't initialize it. It's dead. The replacement will
+            -- have BufReadCmd called for it
+            return
+          end
         end
         vim.cmd.doautocmd({ args = { "BufReadPre", params.file }, mods = { emsg_silent = true } })
         view.initialize(bufnr)
