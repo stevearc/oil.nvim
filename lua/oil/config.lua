@@ -7,6 +7,8 @@ local default_config = {
     -- "size",
     -- "mtime",
   },
+  -- Buffer-local options to use for oil buffers
+  buf_options = {},
   -- Window-local options to use for oil buffers
   win_options = {
     wrap = false,
