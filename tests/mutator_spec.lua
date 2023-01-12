@@ -108,6 +108,41 @@ a.describe("mutator", function()
       }, errors)
     end)
 
+    it("errors on duplicate names", function()
+      vim.cmd.edit({ args = { "oil-test:///foo/" } })
+      local bufnr = vim.api.nvim_get_current_buf()
+      set_lines(bufnr, {
+        "foo",
+        "foo/",
+      })
+      local _, errors = parser.parse(bufnr)
+      assert.are.same({
+        {
+          message = "Duplicate filename",
+          lnum = 2,
+          col = 0,
+        },
+      }, errors)
+    end)
+
+    it("errors on duplicate names for existing files", function()
+      local file = cache.create_and_store_entry("oil-test:///foo/", "a.txt", "file")
+      vim.cmd.edit({ args = { "oil-test:///foo/" } })
+      local bufnr = vim.api.nvim_get_current_buf()
+      set_lines(bufnr, {
+        "a.txt",
+        string.format("/%d a.txt", file[FIELD.id]),
+      })
+      local _, errors = parser.parse(bufnr)
+      assert.are.same({
+        {
+          message = "Duplicate filename",
+          lnum = 2,
+          col = 0,
+        },
+      }, errors)
+    end)
+
     it("ignores new dirs with empty name", function()
       vim.cmd.edit({ args = { "oil-test:///foo/" } })
       local bufnr = vim.api.nvim_get_current_buf()

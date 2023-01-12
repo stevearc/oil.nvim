@@ -1,5 +1,6 @@
 local cache = require("oil.cache")
 local columns = require("oil.columns")
+local fs = require("oil.fs")
 local util = require("oil.util")
 local view = require("oil.view")
 local FIELD = require("oil.constants").FIELD
@@ -104,7 +105,7 @@ M.parse = function(bufnr)
   local adapter = util.get_adapter(bufnr)
   if not adapter then
     table.insert(errors, {
-      lnum = 1,
+      lnum = 0,
       col = 0,
       message = string.format("Cannot parse buffer '%s': No adapter", bufname),
     })
@@ -119,6 +120,18 @@ M.parse = function(bufnr)
   for _, child in pairs(children) do
     if view.should_display(child) then
       original_entries[child[FIELD.name]] = child[FIELD.id]
+    end
+  end
+  local seen_names = {}
+  local function check_dupe(name, i)
+    if fs.is_mac or fs.is_windows then
+      -- mac and windows use case-insensitive filesystems
+      name = name:lower()
+    end
+    if seen_names[name] then
+      table.insert(errors, { message = "Duplicate filename", lnum = i - 1, col = 0 })
+    else
+      seen_names[name] = true
     end
   end
   for i, line in ipairs(lines) do
@@ -143,11 +156,12 @@ M.parse = function(bufnr)
         end
         table.insert(errors, {
           message = message,
-          lnum = i,
+          lnum = i - 1,
           col = 0,
         })
         goto continue
       end
+      check_dupe(parsed_entry.name, i)
       local meta = entry[FIELD.meta]
       if original_entries[parsed_entry.name] == parsed_entry.id then
         if entry[FIELD.type] == "link" and (not meta or meta.link ~= parsed_entry.link_target) then
@@ -187,7 +201,7 @@ M.parse = function(bufnr)
       if vim.startswith(name, "/") then
         table.insert(errors, {
           message = "Paths cannot start with '/'",
-          lnum = i,
+          lnum = i - 1,
           col = 0,
         })
         goto continue
@@ -200,6 +214,7 @@ M.parse = function(bufnr)
           entry_type = "link"
           name, link = unpack(link_pieces)
         end
+        check_dupe(name, i)
         table.insert(diffs, {
           type = "new",
           name = name,

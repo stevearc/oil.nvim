@@ -3,6 +3,8 @@ local M = {}
 ---@type boolean
 M.is_windows = vim.loop.os_uname().version:match("Windows")
 
+M.is_mac = vim.loop.os_uname().sysname == "Darwin"
+
 ---@type string
 M.sep = M.is_windows and "\\" or "/"
 
