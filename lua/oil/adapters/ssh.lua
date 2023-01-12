@@ -98,14 +98,16 @@ local typechar_map = {
   p = "fifo",
   s = "socket",
   ["-"] = "file",
+  c = "file", -- character special file
+  b = "file", -- block special file
 }
 ---@param line string
 ---@return string Name of entry
 ---@return oil.EntryType
 ---@return nil|table Metadata for entry
 local function parse_ls_line(line)
-  local typechar, perms, refcount, user, group, size, date, name =
-    line:match("^(.)(%S+)%s+(%d+)%s+(%S+)%s+(%S+)%s+(%d+)%s+(%S+%s+%d+%s+%d%d:?%d%d)%s+(.*)$")
+  local typechar, perms, refcount, user, group, rem =
+    line:match("^(.)(%S+)%s+(%d+)%s+(%S+)%s+(%S+)%s+(.*)$")
   if not typechar then
     error(string.format("Could not parse '%s'", line))
   end
@@ -116,9 +118,17 @@ local function parse_ls_line(line)
     group = group,
     mode = permissions.parse(perms),
     refcount = tonumber(refcount),
-    size = tonumber(size),
-    iso_modified_date = date,
   }
+  local name, size, date, major, minor
+  if typechar == "c" or typechar == "b" then
+    major, minor, date, name = rem:match("^(%d+)%s*,%s*(%d+)%s+(%S+%s+%d+%s+%d%d:?%d%d)%s+(.*)")
+    meta.major = tonumber(major)
+    meta.minor = tonumber(minor)
+  else
+    size, date, name = rem:match("^(%d+)%s+(%S+%s+%d+%s+%d%d:?%d%d)%s+(.*)")
+    meta.size = tonumber(size)
+  end
+  meta.iso_modified_date = date
   if type == "link" then
     local link
     name, link = unpack(vim.split(name, " -> ", { plain = true }))
@@ -169,7 +179,9 @@ ssh_columns.permissions = {
 ssh_columns.size = {
   render = function(entry, conf)
     local meta = entry[FIELD.meta]
-    if meta.size >= 1e9 then
+    if not meta.size then
+      return ""
+    elseif meta.size >= 1e9 then
       return string.format("%.1fG", meta.size / 1e9)
     elseif meta.size >= 1e6 then
       return string.format("%.1fM", meta.size / 1e6)
