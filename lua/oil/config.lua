@@ -66,11 +66,13 @@ local default_config = {
 default_config.adapters = {
   ["oil://"] = "files",
   ["oil-ssh://"] = "ssh",
+  -- XXX need to rethink the url schemes
+  ["oil-nm://"] = "netman_ssh",
 }
 -- When opening the parent of a file, substitute these url schemes
 default_config.remap_schemes = {
-  ["scp://"] = "oil-ssh://",
-  ["sftp://"] = "oil-ssh://",
+  ["scp://"] = "oil-nm://",
+  ["sftp://"] = "oil-nm://",
 }
 
 local M = {}
