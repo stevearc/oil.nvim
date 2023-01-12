@@ -62,16 +62,16 @@ end
 ---@param url oil.sshUrl
 ---@return string
 local function url_to_scp(url)
-  local pieces = {}
+  local pieces = { "scp://" }
   if url.user then
     table.insert(pieces, url.user)
     table.insert(pieces, "@")
   end
   table.insert(pieces, url.host)
-  table.insert(pieces, ":")
   if url.port then
     table.insert(pieces, string.format(":%d", url.port))
   end
+  table.insert(pieces, "/")
   table.insert(pieces, url.path)
   return table.concat(pieces, "")
 end

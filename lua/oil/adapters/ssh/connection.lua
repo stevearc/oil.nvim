@@ -48,9 +48,6 @@ function SSHConnection.new(url)
   if url.user then
     host = url.user .. "@" .. host
   end
-  if url.port then
-    host = string.format("%s:%d", host, url.port)
-  end
   local command = {
     "ssh",
     host,
@@ -61,6 +58,10 @@ function SSHConnection.new(url)
     -- anything prior to that, it *will* appear. The first line gets swallowed.
     "echo '_make_newline_'; echo '===READY==='; exec /bin/bash --norc",
   }
+  if url.port then
+    table.insert(command, 2, "-p")
+    table.insert(command, 3, url.port)
+  end
   local self = setmetatable({
     host = host,
     meta = {},
