@@ -102,7 +102,7 @@ a.describe("mutator", function()
       assert.are.same({
         {
           message = "No filename found",
-          lnum = 1,
+          lnum = 0,
           col = 0,
         },
       }, errors)
@@ -119,7 +119,7 @@ a.describe("mutator", function()
       assert.are.same({
         {
           message = "Duplicate filename",
-          lnum = 2,
+          lnum = 1,
           col = 0,
         },
       }, errors)
@@ -137,7 +137,7 @@ a.describe("mutator", function()
       assert.are.same({
         {
           message = "Duplicate filename",
-          lnum = 2,
+          lnum = 1,
           col = 0,
         },
       }, errors)
