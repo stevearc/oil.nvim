@@ -219,6 +219,9 @@ M.open_float = function(dir)
   local total_width = vim.o.columns
   local total_height = util.get_editor_height()
   local width = total_width - 2 * config.float.padding
+  if config.float.border ~= "none" then
+    width = width - 2 -- The border consumes 1 col on each side
+  end
   if config.float.max_width > 0 then
     width = math.min(width, config.float.max_width)
   end
@@ -226,8 +229,8 @@ M.open_float = function(dir)
   if config.float.max_height > 0 then
     height = math.min(height, config.float.max_height)
   end
-  local row = math.floor((total_width - width) / 2)
-  local col = math.floor((total_height - height) / 2)
+  local row = math.floor((total_height - height) / 2)
+  local col = math.floor((total_width - width) / 2) - 1 -- adjust for border width
   local winid = vim.api.nvim_open_win(bufnr, true, {
     relative = "editor",
     width = width,
