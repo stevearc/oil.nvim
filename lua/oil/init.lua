@@ -42,7 +42,7 @@ M.get_entry_on_line = function(bufnr, lnum)
 
   local line = vim.api.nvim_buf_get_lines(bufnr, lnum - 1, lnum, true)[1]
   if not line then
-      return nil
+    return nil
   end
   local column_defs = columns.get_supported_columns(scheme)
   local parsed_entry, entry = parser.parse_line(adapter, line, column_defs)
