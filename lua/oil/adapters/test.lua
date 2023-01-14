@@ -1,6 +1,12 @@
 local cache = require("oil.cache")
 local M = {}
 
+---@param url string
+---@param callback fun(url: string)
+M.normalize_url = function(url, callback)
+  callback(url)
+end
+
 ---@param path string
 ---@param column_defs string[]
 ---@param cb fun(err: nil|string, entries: nil|oil.InternalEntry[])
@@ -36,11 +42,6 @@ M.is_modifiable = function(bufnr)
   return true
 end
 
----@param url string
-M.url_to_buffer_name = function(url)
-  error("Test adapter cannot open files")
-end
-
 ---@param action oil.Action
 ---@return string
 M.render_action = function(action)
@@ -57,6 +58,16 @@ end
 ---@param cb fun(err: nil|string)
 M.perform_action = function(action, cb)
   cb()
+end
+
+---@param bufnr integer
+M.read_file = function(bufnr)
+  -- pass
+end
+
+---@param bufnr integer
+M.write_file = function(bufnr)
+  -- pass
 end
 
 return M

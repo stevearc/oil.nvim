@@ -98,11 +98,10 @@ M.rename_buffer = function(src_bufnr, dest_buf_name)
   end
 
   local bufname = vim.api.nvim_buf_get_name(src_bufnr)
-  local scheme = M.parse_url(bufname)
-  -- If this buffer has a scheme (is not literally a file on disk), then we can use the simple
+  -- If this buffer is not literally a file on disk, then we can use the simple
   -- rename logic. The only reason we can't use nvim_buf_set_name on files is because vim will
   -- think that the new buffer conflicts with the file next time it tries to save.
-  if scheme or vim.fn.isdirectory(bufname) == 1 then
+  if not vim.loop.fs_stat(dest_buf_name) then
     -- This will fail if the dest buf name already exists
     local ok = pcall(vim.api.nvim_buf_set_name, src_bufnr, dest_buf_name)
     if ok then
@@ -159,19 +158,10 @@ end
 local function get_possible_buffer_names_from_url(url)
   local fs = require("oil.fs")
   local scheme, path = M.parse_url(url)
-  local ret = {}
-  for k, v in pairs(config.remap_schemes) do
-    if v == scheme then
-      if k ~= "default" then
-        table.insert(ret, k .. path)
-      end
-    end
-  end
-  if vim.tbl_isempty(ret) then
+  if config.adapters[scheme] == "files" then
     return { fs.posix_to_os_path(path) }
-  else
-    return ret
   end
+  return { url }
 end
 
 ---@param entry_type oil.EntryType

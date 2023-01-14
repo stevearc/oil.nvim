@@ -178,6 +178,12 @@ M.initialize = function(bufnr)
   if bufnr == 0 then
     bufnr = vim.api.nvim_get_current_buf()
   end
+  if not vim.api.nvim_buf_is_valid(bufnr) then
+    return
+  end
+  vim.bo[bufnr].buftype = "acwrite"
+  vim.bo[bufnr].syntax = "oil"
+  vim.bo[bufnr].filetype = "oil"
   session[bufnr] = true
   for k, v in pairs(config.buf_options) do
     vim.api.nvim_buf_set_option(bufnr, k, v)

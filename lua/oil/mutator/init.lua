@@ -487,6 +487,7 @@ M.try_write_changes = function(confirm)
   end
 
   local actions = M.create_actions_from_diffs(all_diffs)
+  -- TODO(2023-06-01) If no one has reported data loss by this time, we can remove the disclaimer
   disclaimer.show(function(disclaimed)
     if not disclaimed then
       return unlock()

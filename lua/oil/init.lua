@@ -14,13 +14,14 @@ local M = {}
 ---@field name string
 ---@field list fun(path: string, cb: fun(err: nil|string, entries: nil|oil.InternalEntry[]))
 ---@field is_modifiable fun(bufnr: integer): boolean
----@field url_to_buffer_name fun(url: string): string
 ---@field get_column fun(name: string): nil|oil.ColumnDefinition
----@field normalize_url nil|fun(url: string, callback: fun(url: string))
+---@field normalize_url fun(url: string, callback: fun(url: string))
 ---@field get_parent nil|fun(bufname: string): string
 ---@field supports_xfer nil|table<string, boolean>
 ---@field render_action nil|fun(action: oil.Action): string
 ---@field perform_action nil|fun(action: oil.Action, cb: fun(err: nil|string))
+---@field read_file fun(bufnr: integer)
+---@field write_file fun(bufnr: integer)
 
 ---Get the entry on a specific line (1-indexed)
 ---@param bufnr integer
@@ -189,7 +190,6 @@ M.get_buffer_parent_url = function(bufname)
     local parent_url = util.addslash(scheme .. parent)
     return parent_url, basename
   else
-    scheme = config.remap_schemes[scheme] or scheme
     local adapter = config.get_adapter_by_scheme(scheme)
     local parent_url
     if adapter and adapter.get_parent then
@@ -370,7 +370,6 @@ M.select = function(opts)
     local scheme, dir = util.parse_url(bufname)
     local child = dir .. entry.name
     local url = scheme .. child
-    local buffer_name
     if
       entry.type == "directory"
       or (
@@ -380,7 +379,6 @@ M.select = function(opts)
         and entry.meta.link_stat.type == "directory"
       )
     then
-      buffer_name = util.addslash(url)
       -- If this is a new directory BUT we think we already have an entry with this name, disallow
       -- entry. This prevents the case of MOVE /foo -> /bar + CREATE /foo.
       -- If you enter the new /foo, it will show the contents of the old /foo.
@@ -392,7 +390,6 @@ M.select = function(opts)
       if util.is_floating_win() then
         vim.api.nvim_win_close(0, false)
       end
-      buffer_name = adapter.url_to_buffer_name(url)
     end
     local mods = {
       vertical = opts.vertical,
@@ -405,7 +402,7 @@ M.select = function(opts)
     local cmd = opts.split and "split" or "edit"
     vim.cmd({
       cmd = cmd,
-      args = { buffer_name },
+      args = { url },
       mods = mods,
     })
     if opts.preview then
@@ -514,19 +511,69 @@ M.save = function(opts)
   mutator.try_write_changes(opts.confirm)
 end
 
+local function restore_alt_buf()
+  local config = require("oil.config")
+  local view = require("oil.view")
+  if vim.bo.filetype == "oil" then
+    view.set_win_options()
+    vim.api.nvim_win_set_var(0, "oil_did_enter", true)
+  elseif vim.w.oil_did_enter then
+    vim.api.nvim_win_del_var(0, "oil_did_enter")
+    -- We are entering a non-oil buffer *after* having been in an oil buffer
+    local has_orig, orig_buffer = pcall(vim.api.nvim_win_get_var, 0, "oil_original_buffer")
+    if has_orig and vim.api.nvim_buf_is_valid(orig_buffer) then
+      if vim.api.nvim_get_current_buf() ~= orig_buffer then
+        -- If we are editing a new file after navigating around oil, set the alternate buffer
+        -- to be the last buffer we were in before opening oil
+        vim.fn.setreg("#", orig_buffer)
+      else
+        -- If we are editing the same buffer that we started oil from, set the alternate to be
+        -- what it was before we opened oil
+        local has_orig_alt, alt_buffer =
+          pcall(vim.api.nvim_win_get_var, 0, "oil_original_alternate")
+        if has_orig_alt and vim.api.nvim_buf_is_valid(alt_buffer) then
+          vim.fn.setreg("#", alt_buffer)
+        end
+      end
+    end
+
+    if config.restore_win_options then
+      view.restore_win_options()
+    end
+  end
+end
+
 ---@param bufnr integer
 local function load_oil_buffer(bufnr)
   local config = require("oil.config")
+  local keymap_util = require("oil.keymap_util")
   local loading = require("oil.loading")
   local util = require("oil.util")
   local view = require("oil.view")
   local bufname = vim.api.nvim_buf_get_name(bufnr)
-  local adapter = config.get_adapter_by_scheme(bufname)
-  vim.bo[bufnr].buftype = "acwrite"
-  vim.bo[bufnr].filetype = "oil"
-  vim.bo[bufnr].bufhidden = "hide"
-  vim.bo[bufnr].syntax = "oil"
+  local scheme, path = util.parse_url(bufname)
+  if config.adapter_aliases[scheme] then
+    if scheme == "oil-ssh://" then
+      vim.notify_once(
+        'The "oil-ssh://" url scheme is deprecated, use "scp://" instead.\nSupport will be removed on 2023-06-01.',
+        vim.log.levels.WARN
+      )
+    end
+    scheme = config.adapter_aliases[scheme]
+    bufname = scheme .. path
+    util.rename_buffer(bufnr, bufname)
+  end
 
+  local adapter = config.get_adapter_by_scheme(scheme)
+
+  if vim.endswith(bufname, "/") then
+    -- This is a small quality-of-life thing. If the buffer name ends with a `/`, we know it's a
+    -- directory, and can set the filetype early. This is helpful for adapters with a lot of latency
+    -- (e.g. ssh) because it will set up the filetype keybinds at the *beginning* of the loading
+    -- process.
+    vim.bo[bufnr].filetype = "oil"
+    keymap_util.set_keymaps("", config.keymaps, bufnr)
+  end
   loading.set_loading(bufnr, true)
   local function finish(new_url)
     if new_url ~= bufname then
@@ -535,23 +582,31 @@ local function load_oil_buffer(bufnr)
         -- have BufReadCmd called for it
         return
       end
+      bufname = new_url
     end
-    vim.cmd.doautocmd({ args = { "BufReadPre", bufname }, mods = { emsg_silent = true } })
-    view.initialize(bufnr)
-    vim.cmd.doautocmd({ args = { "BufReadPost", bufname }, mods = { emsg_silent = true } })
+    if vim.endswith(bufname, "/") then
+      vim.cmd.doautocmd({ args = { "BufReadPre", bufname }, mods = { emsg_silent = true } })
+      view.initialize(bufnr)
+      vim.cmd.doautocmd({ args = { "BufReadPost", bufname }, mods = { emsg_silent = true } })
+    else
+      vim.bo[bufnr].buftype = "acwrite"
+      adapter.read_file(bufnr)
+    end
+    restore_alt_buf()
   end
 
-  if adapter.normalize_url then
-    adapter.normalize_url(bufname, finish)
-  else
-    finish(util.addslash(bufname))
-  end
+  adapter.normalize_url(bufname, finish)
 end
 
 ---Initialize oil
 ---@param opts nil|table
 M.setup = function(opts)
   local config = require("oil.config")
+
+  -- Disable netrw
+  vim.g.loaded_netrw = 1
+  vim.g.loaded_netrwPlugin = 1
+
   config.setup(opts)
   set_colors()
   vim.api.nvim_create_user_command("Oil", function(args)
@@ -572,6 +627,9 @@ M.setup = function(opts)
 
   local patterns = {}
   for scheme in pairs(config.adapters) do
+    table.insert(patterns, scheme .. "*")
+  end
+  for scheme in pairs(config.adapter_aliases) do
     table.insert(patterns, scheme .. "*")
   end
   local scheme_pattern = table.concat(patterns, ",")
@@ -595,10 +653,16 @@ M.setup = function(opts)
     pattern = scheme_pattern,
     nested = true,
     callback = function(params)
-      vim.cmd.doautocmd({ args = { "BufWritePre", params.file }, mods = { silent = true } })
-      M.save()
-      vim.bo[params.buf].modified = false
-      vim.cmd.doautocmd({ args = { "BufWritePost", params.file }, mods = { silent = true } })
+      local bufname = vim.api.nvim_buf_get_name(params.buf)
+      if vim.endswith(bufname, "/") then
+        vim.cmd.doautocmd({ args = { "BufWritePre", params.file }, mods = { silent = true } })
+        M.save()
+        vim.bo[params.buf].modified = false
+        vim.cmd.doautocmd({ args = { "BufWritePost", params.file }, mods = { silent = true } })
+      else
+        local adapter = config.get_adapter_by_scheme(bufname)
+        adapter.write_file(params.buf)
+      end
     end,
   })
   vim.api.nvim_create_autocmd("BufWinLeave", {
@@ -617,34 +681,15 @@ M.setup = function(opts)
     group = aug,
     pattern = "*",
     callback = function()
+      local util = require("oil.util")
       local view = require("oil.view")
-      if vim.bo.filetype == "oil" then
-        view.set_win_options()
-        vim.api.nvim_win_set_var(0, "oil_did_enter", true)
+      local scheme = util.parse_url(vim.api.nvim_buf_get_name(0))
+      if scheme and config.adapters[scheme] then
         view.maybe_set_cursor()
-      elseif vim.w.oil_did_enter then
-        vim.api.nvim_win_del_var(0, "oil_did_enter")
-        -- We are entering a non-oil buffer *after* having been in an oil buffer
-        local has_orig, orig_buffer = pcall(vim.api.nvim_win_get_var, 0, "oil_original_buffer")
-        if has_orig and vim.api.nvim_buf_is_valid(orig_buffer) then
-          if vim.api.nvim_get_current_buf() ~= orig_buffer then
-            -- If we are editing a new file after navigating around oil, set the alternate buffer
-            -- to be the last buffer we were in before opening oil
-            vim.fn.setreg("#", orig_buffer)
-          else
-            -- If we are editing the same buffer that we started oil from, set the alternate to be
-            -- what it was before we opened oil
-            local has_orig_alt, alt_buffer =
-              pcall(vim.api.nvim_win_get_var, 0, "oil_original_alternate")
-            if has_orig_alt and vim.api.nvim_buf_is_valid(alt_buffer) then
-              vim.fn.setreg("#", alt_buffer)
-            end
-          end
-        end
-
-        if config.restore_win_options then
-          view.restore_win_options()
-        end
+      else
+        -- Only run this logic if we are *not* in an oil buffer.
+        -- Oil buffers have to run it in BufReadCmd after confirming they are a directory or a file
+        restore_alt_buf()
       end
     end,
   })
@@ -722,6 +767,7 @@ M.setup = function(opts)
       end
     end,
   })
+
   maybe_hijack_directory_buffer(0)
 end
 

@@ -67,12 +67,11 @@ local default_config = {
 -- reason, I'm taking them out of the section above so they won't show up in the autogen docs.
 default_config.adapters = {
   ["oil://"] = "files",
-  ["oil-ssh://"] = "ssh",
+  ["scp://"] = "ssh",
 }
--- When opening the parent of a file, substitute these url schemes
-default_config.remap_schemes = {
-  ["scp://"] = "oil-ssh://",
-  ["sftp://"] = "oil-ssh://",
+-- For backwards compatibility
+default_config.adapter_aliases = {
+  ["oil-ssh://"] = "scp://",
 }
 
 local M = {}

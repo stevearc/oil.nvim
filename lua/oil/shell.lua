@@ -1,29 +1,36 @@
 local M = {}
 
-M.run = function(cmd, callback)
+M.run = function(cmd, opts, callback)
+  if not callback then
+    callback = opts
+    opts = {}
+  end
   local stdout
   local stderr = {}
-  local jid = vim.fn.jobstart(cmd, {
-    stdout_buffered = true,
-    stderr_buffered = true,
-    on_stdout = function(j, output)
-      stdout = output
-    end,
-    on_stderr = function(j, output)
-      stderr = output
-    end,
-    on_exit = vim.schedule_wrap(function(j, code)
-      if code == 0 then
-        callback(nil, stdout)
-      else
-        local err = table.concat(stderr, "\n")
-        if err == "" then
-          err = "Unknown error"
+  local jid = vim.fn.jobstart(
+    cmd,
+    vim.tbl_deep_extend("keep", opts, {
+      stdout_buffered = true,
+      stderr_buffered = true,
+      on_stdout = function(j, output)
+        stdout = output
+      end,
+      on_stderr = function(j, output)
+        stderr = output
+      end,
+      on_exit = vim.schedule_wrap(function(j, code)
+        if code == 0 then
+          callback(nil, stdout)
+        else
+          local err = table.concat(stderr, "\n")
+          if err == "" then
+            err = "Unknown error"
+          end
+          callback(err)
         end
-        callback(err)
-      end
-    end),
-  })
+      end),
+    })
+  )
   local exe
   if type(cmd) == "string" then
     exe = vim.split(cmd, "%s+")[1]

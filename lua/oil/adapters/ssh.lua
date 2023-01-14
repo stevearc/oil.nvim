@@ -2,8 +2,9 @@ local cache = require("oil.cache")
 local config = require("oil.config")
 local fs = require("oil.fs")
 local files = require("oil.adapters.files")
+local loading = require("oil.loading")
 local permissions = require("oil.adapters.files.permissions")
-local ssh_connection = require("oil.adapters.ssh.connection")
+local sshfs = require("oil.adapters.ssh.sshfs")
 local pathutil = require("oil.pathutil")
 local shell = require("oil.shell")
 local util = require("oil.util")
@@ -85,60 +86,11 @@ local function get_connection(url, allow_retry)
   res.path = ""
   local key = url_to_str(res)
   local conn = _connections[key]
-  if not conn or (allow_retry and conn.connection_error) then
-    conn = ssh_connection.new(res)
+  if not conn or (allow_retry and conn:get_connection_error()) then
+    conn = sshfs.new(res)
     _connections[key] = conn
   end
   return conn
-end
-
-local typechar_map = {
-  l = "link",
-  d = "directory",
-  p = "fifo",
-  s = "socket",
-  ["-"] = "file",
-  c = "file", -- character special file
-  b = "file", -- block special file
-}
----@param line string
----@return string Name of entry
----@return oil.EntryType
----@return nil|table Metadata for entry
-local function parse_ls_line(line)
-  local typechar, perms, refcount, user, group, rem =
-    line:match("^(.)(%S+)%s+(%d+)%s+(%S+)%s+(%S+)%s+(.*)$")
-  if not typechar then
-    error(string.format("Could not parse '%s'", line))
-  end
-  local type = typechar_map[typechar] or "file"
-
-  local meta = {
-    user = user,
-    group = group,
-    mode = permissions.parse(perms),
-    refcount = tonumber(refcount),
-  }
-  local name, size, date, major, minor
-  if typechar == "c" or typechar == "b" then
-    major, minor, date, name = rem:match("^(%d+)%s*,%s*(%d+)%s+(%S+%s+%d+%s+%d%d:?%d%d)%s+(.*)")
-    meta.major = tonumber(major)
-    meta.minor = tonumber(minor)
-  else
-    size, date, name = rem:match("^(%d+)%s+(%S+%s+%d+%s+%d%d:?%d%d)%s+(.*)")
-    meta.size = tonumber(size)
-  end
-  meta.iso_modified_date = date
-  if type == "link" then
-    local link
-    name, link = unpack(vim.split(name, " -> ", { plain = true }))
-    if vim.endswith(link, "/") then
-      link = link:sub(1, #link - 1)
-    end
-    meta.link = link
-  end
-
-  return name, type, meta
 end
 
 local ssh_columns = {}
@@ -171,8 +123,7 @@ ssh_columns.permissions = {
   perform_action = function(action, callback)
     local res = parse_url(action.url)
     local conn = get_connection(action.url)
-    local octal = permissions.mode_to_octal_str(action.value)
-    conn:run(string.format("chmod %s '%s'", octal, res.path), callback)
+    conn:chmod(action.value, res.path, callback)
   end,
 }
 
@@ -230,24 +181,9 @@ M.normalize_url = function(url, callback)
     path = "."
   end
 
-  local cmd = string.format(
-    'if ! readlink -f "%s" 2>/dev/null; then [[ "%s" == /* ]] && echo "%s" || echo "$PWD/%s"; fi',
-    path,
-    path,
-    path,
-    path
-  )
-  conn:run(cmd, function(err, lines)
+  conn:realpath(path, function(err, abspath)
     if err then
       vim.notify(string.format("Error normalizing url %s: %s", url, err), vim.log.levels.WARN)
-      return callback(url)
-    end
-    local abspath = table.concat(lines, "")
-    if vim.endswith(abspath, ".") then
-      abspath = abspath:sub(1, #abspath - 1)
-    end
-    abspath = util.addslash(abspath)
-    if abspath == res.path then
       callback(url)
     else
       res.path = abspath
@@ -256,81 +192,19 @@ M.normalize_url = function(url, callback)
   end)
 end
 
-local dir_meta = {}
-
 ---@param url string
 ---@param column_defs string[]
 ---@param callback fun(err: nil|string, entries: nil|oil.InternalEntry[])
 M.list = function(url, column_defs, callback)
   local res = parse_url(url)
 
-  local path_postfix = ""
-  if res.path ~= "" then
-    path_postfix = string.format(" '%s'", res.path)
-  end
-  local conn = get_connection(url)
   cache.begin_update_url(url)
-  local function cb(err, data)
+  local conn = get_connection(url)
+  conn:list_dir(url, res.path, function(err, data)
     if err or not data then
       cache.end_update_url(url)
     end
     callback(err, data)
-  end
-  conn:run("ls -fl" .. path_postfix, function(err, lines)
-    if err then
-      if err:match("No such file or directory%s*$") then
-        -- If the directory doesn't exist, treat the list as a success. We will be able to traverse
-        -- and edit a not-yet-existing directory.
-        return cb()
-      else
-        return cb(err)
-      end
-    end
-    local any_links = false
-    local entries = {}
-    for _, line in ipairs(lines) do
-      if line ~= "" and not line:match("^total") then
-        local name, type, meta = parse_ls_line(line)
-        if name == "." then
-          dir_meta[url] = meta
-        elseif name ~= ".." then
-          if type == "link" then
-            any_links = true
-          end
-          local cache_entry = cache.create_entry(url, name, type)
-          entries[name] = cache_entry
-          cache_entry[FIELD.meta] = meta
-          cache.store_entry(url, cache_entry)
-        end
-      end
-    end
-    if any_links then
-      -- If there were any soft links, then we need to run another ls command with -L so that we can
-      -- resolve the type of the link target
-      conn:run("ls -fLl" .. path_postfix, function(link_err, link_lines)
-        -- Ignore exit code 1. That just means one of the links could not be resolved.
-        if link_err and not link_err:match("^1:") then
-          return cb(link_err)
-        end
-        for _, line in ipairs(link_lines) do
-          if line ~= "" and not line:match("^total") then
-            local ok, name, type, meta = pcall(parse_ls_line, line)
-            if ok and name ~= "." and name ~= ".." then
-              local cache_entry = entries[name]
-              if cache_entry[FIELD.type] == "link" then
-                cache_entry[FIELD.meta].link_stat = {
-                  type = type,
-                  size = meta.size,
-                }
-              end
-            end
-          end
-        end
-        cb()
-      end)
-    else
-      cb()
-    end
   end)
 end
 
@@ -338,31 +212,25 @@ end
 ---@return boolean
 M.is_modifiable = function(bufnr)
   local bufname = vim.api.nvim_buf_get_name(bufnr)
-  local meta = dir_meta[bufname]
-  if not meta then
+  local conn = get_connection(bufname)
+  local dir_meta = conn:get_dir_meta(bufname)
+  if not dir_meta then
     -- Directories that don't exist yet are modifiable
     return true
   end
-  local conn = get_connection(bufname)
-  if not conn.meta.user or not conn.meta.groups then
+  local meta = conn:get_meta()
+  if not meta.user or not meta.groups then
     return false
   end
   local rwx
-  if meta.user == conn.meta.user then
-    rwx = bit.rshift(meta.mode, 6)
-  elseif vim.tbl_contains(conn.meta.groups, meta.group) then
-    rwx = bit.rshift(meta.mode, 3)
+  if dir_meta.user == meta.user then
+    rwx = bit.rshift(dir_meta.mode, 6)
+  elseif vim.tbl_contains(meta.groups, dir_meta.group) then
+    rwx = bit.rshift(dir_meta.mode, 3)
   else
-    rwx = meta.mode
+    rwx = dir_meta.mode
   end
   return bit.band(rwx, 2) ~= 0
-end
-
----@param url string
-M.url_to_buffer_name = function(url)
-  local _, rem = util.parse_url(url)
-  -- Let netrw handle editing files
-  return "scp://" .. rem
 end
 
 ---@param action oil.Action
@@ -399,16 +267,16 @@ M.perform_action = function(action, cb)
     local res = parse_url(action.url)
     local conn = get_connection(action.url)
     if action.entry_type == "directory" then
-      conn:run(string.format("mkdir -p '%s'", res.path), cb)
+      conn:mkdir(res.path, cb)
     elseif action.entry_type == "link" and action.link then
-      conn:run(string.format("ln -s '%s' '%s'", action.link, res.path), cb)
+      conn:mklink(res.path, action.link, cb)
     else
-      conn:run(string.format("touch '%s'", res.path), cb)
+      conn:touch(res.path, cb)
     end
   elseif action.type == "delete" then
     local res = parse_url(action.url)
     local conn = get_connection(action.url)
-    conn:run(string.format("rm -rf '%s'", res.path), cb)
+    conn:rm(res.path, cb)
   elseif action.type == "move" then
     local src_adapter = config.get_adapter_by_scheme(action.src_url)
     local dest_adapter = config.get_adapter_by_scheme(action.dest_url)
@@ -418,14 +286,14 @@ M.perform_action = function(action, cb)
       local src_conn = get_connection(action.src_url)
       local dest_conn = get_connection(action.dest_url)
       if src_conn ~= dest_conn then
-        shell.run({ "scp", "-r", url_to_scp(src_res), url_to_scp(dest_res) }, function(err)
+        shell.run({ "scp", "-C", "-r", url_to_scp(src_res), url_to_scp(dest_res) }, function(err)
           if err then
             return cb(err)
           end
-          src_conn:run(string.format("rm -rf '%s'", src_res.path), cb)
+          src_conn:rm(src_res.path, cb)
         end)
       else
-        src_conn:run(string.format("mv '%s' '%s'", src_res.path, dest_res.path), cb)
+        src_conn:mv(src_res.path, dest_res.path, cb)
       end
     else
       cb("We should never attempt to move across adapters")
@@ -439,9 +307,9 @@ M.perform_action = function(action, cb)
       local src_conn = get_connection(action.src_url)
       local dest_conn = get_connection(action.dest_url)
       if src_conn.host ~= dest_conn.host then
-        shell.run({ "scp", "-r", url_to_scp(src_res), url_to_scp(dest_res) }, cb)
+        shell.run({ "scp", "-C", "-r", url_to_scp(src_res), url_to_scp(dest_res) }, cb)
       end
-      src_conn:run(string.format("cp -r '%s' '%s'", src_res.path, dest_res.path), cb)
+      src_conn:cp(src_res.path, dest_res.path, cb)
     else
       local src_arg
       local dest_arg
@@ -454,7 +322,7 @@ M.perform_action = function(action, cb)
         src_arg = fs.posix_to_os_path(path)
         dest_arg = url_to_scp(parse_url(action.dest_url))
       end
-      shell.run({ "scp", "-r", src_arg, dest_arg }, cb)
+      shell.run({ "scp", "-C", "-r", src_arg, dest_arg }, cb)
     end
   else
     cb(string.format("Bad action type: %s", action.type))
@@ -462,5 +330,64 @@ M.perform_action = function(action, cb)
 end
 
 M.supports_xfer = { files = true }
+
+---@param bufnr integer
+M.read_file = function(bufnr)
+  loading.set_loading(bufnr, true)
+  local bufname = vim.api.nvim_buf_get_name(bufnr)
+  local url = parse_url(bufname)
+  local scp_url = url_to_scp(url)
+  local basename = pathutil.basename(bufname)
+  local tmpdir = fs.join(vim.fn.stdpath("cache"), "oil")
+  fs.mkdirp(tmpdir)
+  local fd, tmpfile = vim.loop.fs_mkstemp(fs.join(tmpdir, "ssh_XXXXXX"))
+  vim.loop.fs_close(fd)
+  local tmp_bufnr = vim.fn.bufadd(tmpfile)
+
+  shell.run({ "scp", "-C", scp_url, tmpfile }, function(err)
+    loading.set_loading(bufnr, false)
+    vim.bo[bufnr].modifiable = true
+    vim.cmd.doautocmd({ args = { "BufReadPre", bufname }, mods = { silent = true } })
+    if err then
+      vim.api.nvim_buf_set_lines(bufnr, 0, -1, true, vim.split(err, "\n"))
+    else
+      vim.api.nvim_buf_set_lines(bufnr, 0, -1, true, {})
+      vim.api.nvim_buf_call(bufnr, function()
+        vim.cmd.read({ args = { tmpfile }, mods = { silent = true } })
+      end)
+      vim.loop.fs_unlink(tmpfile)
+      vim.api.nvim_buf_set_lines(bufnr, 0, 1, true, {})
+    end
+    vim.bo[bufnr].modified = false
+    vim.bo[bufnr].filetype = vim.filetype.match({ buf = bufnr, filename = basename })
+    vim.cmd.doautocmd({ args = { "BufReadPost", bufname }, mods = { silent = true } })
+    vim.api.nvim_buf_delete(tmp_bufnr, { force = true })
+  end)
+end
+
+---@param bufnr integer
+M.write_file = function(bufnr)
+  local bufname = vim.api.nvim_buf_get_name(bufnr)
+  vim.bo[bufnr].modifiable = false
+  local url = parse_url(bufname)
+  local scp_url = url_to_scp(url)
+  local tmpdir = fs.join(vim.fn.stdpath("cache"), "oil")
+  local fd, tmpfile = vim.loop.fs_mkstemp(fs.join(tmpdir, "ssh_XXXXXXXX"))
+  vim.loop.fs_close(fd)
+  vim.cmd.doautocmd({ args = { "BufWritePre", bufname }, mods = { silent = true } })
+  vim.cmd.write({ args = { tmpfile }, bang = true, mods = { silent = true } })
+  local tmp_bufnr = vim.fn.bufadd(tmpfile)
+
+  shell.run({ "scp", "-C", tmpfile, scp_url }, function(err)
+    if err then
+      vim.notify(string.format("Error writing file: %s", err), vim.log.levels.ERROR)
+    end
+    vim.bo[bufnr].modifiable = true
+    vim.bo[bufnr].modified = false
+    vim.cmd.doautocmd({ args = { "BufWritePost", bufname }, mods = { silent = true } })
+    vim.loop.fs_unlink(tmpfile)
+    vim.api.nvim_buf_delete(tmp_bufnr, { force = true })
+  end)
+end
 
 return M

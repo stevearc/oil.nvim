@@ -1,3 +1,4 @@
+require("plenary.async").tests.add_to_env()
 local M = {}
 
 M.reset_editor = function()
@@ -15,5 +16,14 @@ M.reset_editor = function()
     end
   end
 end
+
+M.wait_for_autocmd = a.wrap(function(autocmd, cb)
+  vim.api.nvim_create_autocmd(autocmd, {
+    pattern = "*",
+    nested = true,
+    once = true,
+    callback = vim.schedule_wrap(cb),
+  })
+end, 2)
 
 return M

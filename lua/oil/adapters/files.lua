@@ -175,13 +175,20 @@ end
 M.normalize_url = function(url, callback)
   local scheme, path = util.parse_url(url)
   local os_path = vim.fn.fnamemodify(fs.posix_to_os_path(path), ":p")
-  local realpath = vim.loop.fs_realpath(os_path) or os_path
-  local norm_path = util.addslash(fs.os_to_posix_path(realpath))
-  if norm_path ~= os_path then
-    callback(scheme .. fs.os_to_posix_path(norm_path))
-  else
-    callback(util.addslash(url))
-  end
+  vim.loop.fs_realpath(os_path, function(err, new_os_path)
+    local realpath = new_os_path or os_path
+    vim.loop.fs_stat(
+      realpath,
+      vim.schedule_wrap(function(stat_err, stat)
+        if not stat or stat.type == "directory" then
+          local norm_path = util.addslash(fs.os_to_posix_path(realpath))
+          callback(scheme .. norm_path)
+        else
+          callback(realpath)
+        end
+      end)
+    )
+  end)
 end
 
 ---@param url string
@@ -301,12 +308,6 @@ M.is_modifiable = function(bufnr)
     rwx = stat.mode
   end
   return bit.band(rwx, 2) ~= 0
-end
-
----@param url string
-M.url_to_buffer_name = function(url)
-  local _, path = util.parse_url(url)
-  return fs.posix_to_os_path(path)
 end
 
 ---@param action oil.Action

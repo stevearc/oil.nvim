@@ -184,12 +184,10 @@ Note that file operations work _across adapters_. This means that you can use oi
 This adapter allows you to browse files over ssh, much like netrw. To use it, simply open a buffer using the following name template:
 
 ```
-nvim oil-ssh://[username@]hostname[:port]/[path]
+nvim scp://[username@]hostname[:port]/[path]
 ```
 
-This should look familiar. In fact, if you replace `oil-ssh://` with `sftp://`, this is the exact same url format that netrw uses.
-
-While this adapter effectively replaces netrw for directory browsing, it still relies on netrw for file editing. When you open a file from oil, it will use the `scp://host/path/to/file.txt` format that triggers remote editing via netrw.
+This may look familiar. In fact, this is the exact same url format that netrw uses.
 
 Note that at the moment the ssh adapter does not support Windows machines, and it requires the server to have a `/bin/bash` binary as well as standard unix commands (`rm`, `mv`, `mkdir`, `chmod`, `cp`, `touch`, `ln`, `echo`).
 
