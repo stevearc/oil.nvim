@@ -107,4 +107,31 @@ M.refresh = {
   end,
 }
 
+M.open_cmdline = {
+  desc = "Open vim cmdline with current entry as an argument",
+  callback = function()
+    local config = require("oil.config")
+    local fs = require("oil.fs")
+    local util = require("oil.util")
+    local entry = oil.get_cursor_entry()
+    if not entry then
+      return
+    end
+    local bufname = vim.api.nvim_buf_get_name(0)
+    local scheme, path = util.parse_url(bufname)
+    local adapter = config.get_adapter_by_scheme(scheme)
+    if not adapter or not path or adapter.name ~= "files" then
+      return
+    end
+    local fullpath = fs.shorten_path(fs.posix_to_os_path(path) .. entry.name)
+    local escaped = vim.api.nvim_replace_termcodes(
+      ": " .. fullpath .. string.rep("<Left>", fullpath:len() + 1),
+      true,
+      false,
+      true
+    )
+    vim.api.nvim_feedkeys(escaped, "n", true)
+  end,
+}
+
 return M
