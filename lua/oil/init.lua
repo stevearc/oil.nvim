@@ -643,6 +643,54 @@ M.setup = function(opts)
       end
     end,
   })
+  vim.api.nvim_create_autocmd("WinNew", {
+    desc = "Restore window options when splitting an oil window",
+    group = aug,
+    pattern = "*",
+    nested = true,
+    callback = function(params)
+      if vim.bo[params.buf].filetype ~= "oil" or vim.w.oil_did_enter then
+        return
+      end
+      -- This new window is a split off of an oil window. We need to transfer the window
+      -- variables. First, locate the parent window
+      local parent_win
+      for _, winid in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
+        if vim.api.nvim_win_is_valid(winid) then
+          if vim.w[winid].oil_did_enter then
+            parent_win = winid
+            break
+          end
+        end
+      end
+      if not parent_win then
+        vim.notify(
+          "Oil split could not find parent window. Please try to replicate whatever you just did and report a bug on github",
+          vim.log.levels.WARN
+        )
+        return
+      end
+      -- Then transfer over the relevant window vars
+      vim.w.oil_did_enter = true
+      local has_orig, orig_buffer =
+        pcall(vim.api.nvim_win_get_var, parent_win, "oil_original_buffer")
+      if has_orig and vim.api.nvim_buf_is_valid(orig_buffer) then
+        vim.w.oil_original_buffer = orig_buffer
+      end
+      local has_orig_alt, alt_buffer =
+        pcall(vim.api.nvim_win_get_var, parent_win, "oil_original_alternate")
+      if has_orig_alt and vim.api.nvim_buf_is_valid(alt_buffer) then
+        vim.w.oil_original_alternate = alt_buffer
+      end
+      for k in pairs(config.win_options) do
+        local varname = "_oil_" .. k
+        local has_opt, opt = pcall(vim.api.nvim_win_get_var, parent_win, varname)
+        if has_opt then
+          vim.api.nvim_win_set_option(0, k, opt)
+        end
+      end
+    end,
+  })
   vim.api.nvim_create_autocmd("BufAdd", {
     desc = "Detect directory buffer and open oil file browser",
     group = aug,
