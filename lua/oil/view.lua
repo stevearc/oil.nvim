@@ -21,9 +21,31 @@ M.should_display = function(entry)
 end
 
 ---@param bufname string
----@param name string
+---@param name nil|string
 M.set_last_cursor = function(bufname, name)
   last_cursor_entry[bufname] = name
+end
+
+---Set the cursor to the last_cursor_entry if one exists
+M.maybe_set_cursor = function()
+  local oil = require("oil")
+  local bufname = vim.api.nvim_buf_get_name(0)
+  local entry_name = last_cursor_entry[bufname]
+  if not entry_name then
+    return
+  end
+  local line_count = vim.api.nvim_buf_line_count(0)
+  for lnum = 1, line_count do
+    local entry = oil.get_entry_on_line(0, lnum)
+    if entry and entry.name == entry_name then
+      local line = vim.api.nvim_buf_get_lines(0, lnum - 1, lnum, true)[1]
+      local id_str = line:match("^/(%d+)")
+      local col = line:find(entry_name, 1, true) or (id_str:len() + 1)
+      vim.api.nvim_win_set_cursor(0, { lnum, col - 1 })
+      M.set_last_cursor(bufname, nil)
+      break
+    end
+  end
 end
 
 ---@param bufname string
@@ -245,6 +267,7 @@ local function render_buffer(bufnr, opts)
     if seek_after_render == name then
       seek_after_render_found = true
       jump_idx = #line_table
+      M.set_last_cursor(bufname, nil)
     end
     ::continue::
   end
@@ -387,6 +410,9 @@ M.render_buffer_async = function(bufnr, opts, callback)
   loading.set_loading(bufnr, true)
 
   local finish = vim.schedule_wrap(function()
+    if not vim.api.nvim_buf_is_valid(bufnr) then
+      return
+    end
     loading.set_loading(bufnr, false)
     render_buffer(bufnr, { jump = true })
     if not preserve_undo then

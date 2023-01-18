@@ -11,6 +11,7 @@ local M = {}
 ---@alias oil.TextChunk string|string[]
 
 ---@class oil.Adapter
+---@field name string
 ---@field list fun(path: string, cb: fun(err: nil|string, entries: nil|oil.InternalEntry[]))
 ---@field is_modifiable fun(bufnr: integer): boolean
 ---@field url_to_buffer_name fun(url: string): string
@@ -191,7 +192,7 @@ M.get_buffer_parent_url = function(bufname)
     scheme = config.remap_schemes[scheme] or scheme
     local adapter = config.get_adapter_by_scheme(scheme)
     local parent_url
-    if adapter.get_parent then
+    if adapter and adapter.get_parent then
       local adapter_scheme = config.adapter_to_scheme[adapter.name]
       parent_url = adapter.get_parent(adapter_scheme .. path)
     else
@@ -213,6 +214,9 @@ M.open_float = function(dir)
   local util = require("oil.util")
   local view = require("oil.view")
   local parent_url, basename = M.get_url_for_path(dir)
+  if not parent_url then
+    return
+  end
   if basename then
     view.set_last_cursor(parent_url, basename)
   end
@@ -617,6 +621,7 @@ M.setup = function(opts)
       if vim.bo.filetype == "oil" then
         view.set_win_options()
         vim.api.nvim_win_set_var(0, "oil_did_enter", true)
+        view.maybe_set_cursor()
       elseif vim.w.oil_did_enter then
         vim.api.nvim_win_del_var(0, "oil_did_enter")
         -- We are entering a non-oil buffer *after* having been in an oil buffer
