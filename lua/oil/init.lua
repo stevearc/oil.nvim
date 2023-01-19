@@ -553,12 +553,6 @@ local function load_oil_buffer(bufnr)
   local bufname = vim.api.nvim_buf_get_name(bufnr)
   local scheme, path = util.parse_url(bufname)
   if config.adapter_aliases[scheme] then
-    if scheme == "oil-ssh://" then
-      vim.notify_once(
-        'The "oil-ssh://" url scheme is deprecated, use "scp://" instead.\nSupport will be removed on 2023-06-01.',
-        vim.log.levels.WARN
-      )
-    end
     scheme = config.adapter_aliases[scheme]
     bufname = scheme .. path
     util.rename_buffer(bufnr, bufname)
@@ -602,10 +596,6 @@ end
 ---@param opts nil|table
 M.setup = function(opts)
   local config = require("oil.config")
-
-  -- Disable netrw
-  vim.g.loaded_netrw = 1
-  vim.g.loaded_netrwPlugin = 1
 
   config.setup(opts)
   set_colors()
@@ -693,6 +683,20 @@ M.setup = function(opts)
       end
     end,
   })
+  if not config.silence_scp_warning then
+    vim.api.nvim_create_autocmd("BufNew", {
+      desc = "Warn about scp:// usage",
+      group = aug,
+      pattern = "scp://*",
+      once = true,
+      callback = function()
+        vim.notify(
+          "If you are trying to browse using Oil, use oil-ssh:// instead of scp://\nSet `silence_scp_warning = true` in oil.setup() to disable this message.\nSee https://github.com/stevearc/oil.nvim/issues/27 for more information.",
+          vim.log.levels.WARN
+        )
+      end,
+    })
+  end
   vim.api.nvim_create_autocmd("WinNew", {
     desc = "Restore window options when splitting an oil window",
     group = aug,

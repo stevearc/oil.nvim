@@ -184,10 +184,10 @@ Note that file operations work _across adapters_. This means that you can use oi
 This adapter allows you to browse files over ssh, much like netrw. To use it, simply open a buffer using the following name template:
 
 ```
-nvim scp://[username@]hostname[:port]/[path]
+nvim oil-ssh://[username@]hostname[:port]/[path]
 ```
 
-This may look familiar. In fact, this is the exact same url format that netrw uses.
+This may look familiar. In fact, this is the same url format that netrw uses.
 
 Note that at the moment the ssh adapter does not support Windows machines, and it requires the server to have a `/bin/bash` binary as well as standard unix commands (`rm`, `mv`, `mkdir`, `chmod`, `cp`, `touch`, `ln`, `echo`).
 
@@ -328,3 +328,12 @@ If you don't need those features specifically, check out the alternatives listed
 - [vidir](https://github.com/trapd00r/vidir): Never personally used, but might be the first plugin to come up with the idea of editing a directory like a buffer.
 
 There's also file trees like [neo-tree](https://github.com/nvim-neo-tree/neo-tree.nvim) and [nvim-tree](https://github.com/nvim-tree/nvim-tree.lua), but they're really a different category entirely.
+
+**Q: I don't need netrw anymore. How can I disable it?**
+
+**A:** Oil can fully replace netrw for local and ssh file browsing/editing, but keep in mind that netrw also supports rsync, http, ftp, and dav. If you don't need these other features, you can disable netrw with the following:
+
+```lua
+vim.g.loaded_netrw = 1
+vim.g.loaded_netrwPlugin = 1
+```

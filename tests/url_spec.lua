@@ -7,8 +7,8 @@ describe("url", function()
       { "/foo/bar.txt", "oil:///foo/", "bar.txt" },
       { "oil:///foo/bar.txt", "oil:///foo/", "bar.txt" },
       { "oil:///", "oil:///" },
-      { "scp://user@hostname:8888//bar.txt", "scp://user@hostname:8888//", "bar.txt" },
-      { "scp://user@hostname:8888//", "scp://user@hostname:8888//" },
+      { "oil-ssh://user@hostname:8888//bar.txt", "oil-ssh://user@hostname:8888//", "bar.txt" },
+      { "oil-ssh://user@hostname:8888//", "oil-ssh://user@hostname:8888//" },
     }
     for _, case in ipairs(cases) do
       local input, expected, expected_basename = unpack(case)

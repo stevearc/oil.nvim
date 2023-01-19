@@ -67,12 +67,9 @@ local default_config = {
 -- reason, I'm taking them out of the section above so they won't show up in the autogen docs.
 default_config.adapters = {
   ["oil://"] = "files",
-  ["scp://"] = "ssh",
+  ["oil-ssh://"] = "ssh",
 }
--- For backwards compatibility
-default_config.adapter_aliases = {
-  ["oil-ssh://"] = "scp://",
-}
+default_config.adapter_aliases = {}
 
 local M = {}
 
@@ -147,6 +144,13 @@ M.get_adapter_by_scheme = function(scheme)
   local adapter = M._adapter_by_scheme[scheme]
   if adapter == nil then
     local name = M.adapters[scheme]
+    if not name then
+      vim.notify(
+        string.format("Could not find oil adapter for scheme '%s'", scheme),
+        vim.log.levels.ERROR
+      )
+      return nil
+    end
     local ok
     ok, adapter = pcall(require, string.format("oil.adapters.%s", name))
     if ok then
