@@ -101,12 +101,19 @@ function SSHConnection.new(url)
       self:_handle_output(new_i_start)
     end,
     on_exit = function(j, code)
+      pcall(
+        vim.api.nvim_chan_send,
+        self.term_id,
+        string.format("\r\n[Process exited %d]\r\n", code)
+      )
       -- Defer to allow the deferred terminal output handling to kick in first
       vim.defer_fn(function()
         if code == 0 then
           self:_set_connection_error("SSH connection terminated gracefully")
         else
-          self:_set_connection_error("Unknown SSH error")
+          self:_set_connection_error(
+            'Unknown SSH error\nTo see more, run :lua require("oil.adapters.ssh").open_terminal()'
+          )
         end
       end, 20)
     end,
