@@ -705,7 +705,9 @@ M.setup = function(opts)
       -- This new window is a split off of an oil window. We need to transfer the window
       -- variables. First, locate the parent window
       local parent_win
-      for _, winid in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
+      -- First search windows in this tab, then search all windows
+      local winids = vim.list_extend(vim.api.nvim_tabpage_list_wins(0), vim.api.nvim_list_wins())
+      for _, winid in ipairs(winids) do
         if vim.api.nvim_win_is_valid(winid) then
           if vim.w[winid].oil_did_enter then
             parent_win = winid
