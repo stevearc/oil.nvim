@@ -1,8 +1,12 @@
+local config = require("oil.config")
 local fs = require("oil.fs")
 local ReplLayout = require("oil.repl_layout")
 local M = {}
 
 M.show = function(callback)
+  if config.silence_disclaimer then
+    return callback(true)
+  end
   local marker_file = fs.join(vim.fn.stdpath("cache"), ".oil_accepted_disclaimer")
   vim.loop.fs_stat(
     marker_file,
