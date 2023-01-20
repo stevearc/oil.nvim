@@ -112,7 +112,7 @@ M.rename_buffer = function(src_bufnr, dest_buf_name)
   end
 
   local dest_bufnr = vim.fn.bufadd(dest_buf_name)
-  vim.fn.bufload(dest_bufnr)
+  pcall(vim.fn.bufload, dest_bufnr)
   if vim.bo[src_bufnr].buflisted then
     vim.bo[dest_bufnr].buflisted = true
   end
