@@ -489,6 +489,16 @@ M.run_in_fullscreen_win = function(bufnr, callback)
   vim.cmd.close({ count = winnr, mods = { noautocmd = true, emsg_silent = true } })
 end
 
+---@param bufnr integer
+---@return boolean
+M.is_oil_bufnr = function(bufnr)
+  if vim.bo[bufnr].filetype == "oil" then
+    return true
+  end
+  local scheme = M.parse_url(vim.api.nvim_buf_get_name(bufnr))
+  return config.adapters[scheme] or config.adapter_aliases[scheme]
+end
+
 ---This is a hack so we don't end up in insert mode after starting a task
 ---@param prev_mode string The vim mode we were in before opening a terminal
 M.hack_around_termopen_autocmd = function(prev_mode)

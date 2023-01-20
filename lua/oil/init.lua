@@ -660,7 +660,8 @@ M.setup = function(opts)
     group = aug,
     pattern = "*",
     callback = function()
-      if vim.bo.filetype ~= "oil" then
+      local util = require("oil.util")
+      if not util.is_oil_bufnr(0) then
         vim.api.nvim_win_set_var(0, "oil_original_buffer", vim.api.nvim_get_current_buf())
         vim.api.nvim_win_set_var(0, "oil_original_alternate", vim.fn.bufnr("#"))
       end
@@ -719,7 +720,8 @@ M.setup = function(opts)
     pattern = "*",
     nested = true,
     callback = function(params)
-      if vim.bo[params.buf].filetype ~= "oil" or vim.w.oil_did_enter then
+      local util = require("oil.util")
+      if not util.is_oil_bufnr(params.buf) or vim.w.oil_did_enter then
         return
       end
       -- This new window is a split off of an oil window. We need to transfer the window
