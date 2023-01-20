@@ -699,6 +699,20 @@ M.setup = function(opts)
       end,
     })
   end
+  if vim.g.loaded_netrwPlugin ~= 1 and not config.silence_netrw_warning then
+    vim.api.nvim_create_autocmd("FileType", {
+      desc = "Inform user how to disable netrw",
+      group = aug,
+      pattern = "netrw",
+      once = true,
+      callback = function()
+        vim.notify(
+          "If you expected an Oil buffer here, you may want to disable netrw (:help netrw-noload)\nSet `silence_netrw_warning = true` in oil.setup() to disable this message.",
+          vim.log.levels.WARN
+        )
+      end,
+    })
+  end
   vim.api.nvim_create_autocmd("WinNew", {
     desc = "Restore window options when splitting an oil window",
     group = aug,
