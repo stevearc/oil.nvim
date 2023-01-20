@@ -127,12 +127,14 @@ M.rename_buffer = function(src_bufnr, dest_buf_name)
         end
       end
     end
-    if vim.bo[src_bufnr].modified then
-      local src_lines = vim.api.nvim_buf_get_lines(src_bufnr, 0, -1, true)
-      vim.api.nvim_buf_set_lines(dest_bufnr, 0, -1, true, src_lines)
+    if vim.api.nvim_buf_is_valid(src_bufnr) then
+      if vim.bo[src_bufnr].modified then
+        local src_lines = vim.api.nvim_buf_get_lines(src_bufnr, 0, -1, true)
+        vim.api.nvim_buf_set_lines(dest_bufnr, 0, -1, true, src_lines)
+      end
+      -- Try to delete, but don't if the buffer has changes
+      pcall(vim.api.nvim_buf_delete, src_bufnr, {})
     end
-    -- Try to delete, but don't if the buffer has changes
-    pcall(vim.api.nvim_buf_delete, src_bufnr, {})
   end)
   return true
 end

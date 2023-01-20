@@ -673,11 +673,13 @@ M.setup = function(opts)
     callback = function()
       local util = require("oil.util")
       local view = require("oil.view")
-      local scheme = util.parse_url(vim.api.nvim_buf_get_name(0))
+      local bufname = vim.api.nvim_buf_get_name(0)
+      local scheme = util.parse_url(bufname)
       if scheme and config.adapters[scheme] then
         view.maybe_set_cursor()
-      else
-        -- Only run this logic if we are *not* in an oil buffer.
+      elseif vim.fn.isdirectory(bufname) == 0 then
+        -- Only run this logic if we are *not* in an oil buffer (and it's not a directory, which
+        -- will be replaced by an oil:// url)
         -- Oil buffers have to run it in BufReadCmd after confirming they are a directory or a file
         restore_alt_buf()
       end
