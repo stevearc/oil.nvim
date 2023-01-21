@@ -1,19 +1,13 @@
 import os
-from dataclasses import dataclass, field
 import os.path
 import re
-from functools import lru_cache
+from dataclasses import dataclass, field
 from typing import List
 
-from nvim_doc_tools.vimdoc import format_vimdoc_params
 from nvim_doc_tools import (
-    Command,
     LuaParam,
     Vimdoc,
     VimdocSection,
-    commands_from_json,
-    format_md_commands,
-    format_vimdoc_commands,
     generate_md_toc,
     indent,
     leftright,
@@ -25,6 +19,7 @@ from nvim_doc_tools import (
     replace_section,
     wrap,
 )
+from nvim_doc_tools.vimdoc import format_vimdoc_params
 
 HERE = os.path.dirname(__file__)
 ROOT = os.path.abspath(os.path.join(HERE, os.path.pardir))
@@ -81,7 +76,13 @@ class ColumnDef:
     params: List["LuaParam"] = field(default_factory=list)
 
 
-HL = [LuaParam("highlight", "string|fun(value: string): string", "Highlight group, or function that returns a highlight group")]
+HL = [
+    LuaParam(
+        "highlight",
+        "string|fun(value: string): string",
+        "Highlight group, or function that returns a highlight group",
+    )
+]
 TIME = [
     LuaParam("format", "string", "Format string (see :help strftime)"),
 ]
@@ -141,6 +142,25 @@ def get_highlights_vimdoc() -> "VimdocSection":
     return section
 
 
+def get_actions_vimdoc() -> "VimdocSection":
+    section = VimdocSection("Actions", "oil-actions", ["\n"])
+    section.body.extend(
+        wrap(
+            "These are actions that can be used in the `keymaps` section of config options."
+        )
+    )
+    section.body.append("\n")
+    actions = read_nvim_json('require("oil.actions")._get_actions()')
+    actions.sort(key=lambda a: a["name"])
+    for action in actions:
+        name = action["name"]
+        desc = action["desc"]
+        section.body.append(leftright(name, f"*actions.{name}*"))
+        section.body.extend(wrap(desc, 4))
+        section.body.append("\n")
+    return section
+
+
 def get_columns_vimdoc() -> "VimdocSection":
     section = VimdocSection("Columns", "oil-columns", ["\n"])
     section.body.extend(
@@ -148,7 +168,7 @@ def get_columns_vimdoc() -> "VimdocSection":
             'Columns can be specified as a string to use default arguments (e.g. `"icon"`), or as a table to pass parameters (e.g. `{"size", highlight = "Special"}`)'
         )
     )
-    section.body.append('\n')
+    section.body.append("\n")
     for col in COL_DEFS:
         section.body.append(leftright(col.name, f"*column-{col.name}*"))
         section.body.extend(wrap(f"Adapters: {col.adapters}", 4))
@@ -170,6 +190,7 @@ def generate_vimdoc():
             get_options_vimdoc(),
             VimdocSection("API", "oil-api", render_vimdoc_api("oil", funcs)),
             get_columns_vimdoc(),
+            get_actions_vimdoc(),
             get_highlights_vimdoc(),
         ]
     )

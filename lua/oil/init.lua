@@ -407,6 +407,7 @@ M.select = function(opts)
     })
     if opts.preview then
       vim.api.nvim_win_set_option(0, "previewwindow", true)
+      vim.api.nvim_win_set_var(0, "oil_entry_id", entry.id)
       vim.api.nvim_set_current_win(prev_win)
     end
     -- Set opts.split so that for every entry after the first, we do a split

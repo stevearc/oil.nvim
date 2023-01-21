@@ -136,9 +136,10 @@ require("oil").setup({
   skip_confirm_for_simple_edits = false,
   -- Keymaps in oil buffer. Can be any value that `vim.keymap.set` accepts OR a table of keymap
   -- options with a `callback` (e.g. { callback = function() ... end, desc = "", nowait = true })
-  -- Additionally, if it is a string that matches "action.<name>",
-  -- it will use the mapping at require("oil.action").<name>
+  -- Additionally, if it is a string that matches "actions.<name>",
+  -- it will use the mapping at require("oil.actions").<name>
   -- Set to `false` to remove a keymap
+  -- See :help oil-actions for a list of all available actions
   keymaps = {
     ["g?"] = "actions.show_help",
     ["<CR>"] = "actions.select",

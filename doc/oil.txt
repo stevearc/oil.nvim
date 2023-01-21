@@ -6,7 +6,8 @@ CONTENTS                                                            *oil-content
   1. Options.....................................................|oil-options|
   2. Api.............................................................|oil-api|
   3. Columns.....................................................|oil-columns|
-  4. Highlights...............................................|oil-highlights|
+  4. Actions.....................................................|oil-actions|
+  5. Highlights...............................................|oil-highlights|
 
 --------------------------------------------------------------------------------
 OPTIONS                                                              *oil-options*
@@ -40,9 +41,10 @@ OPTIONS                                                              *oil-option
       skip_confirm_for_simple_edits = false,
       -- Keymaps in oil buffer. Can be any value that `vim.keymap.set` accepts OR a table of keymap
       -- options with a `callback` (e.g. { callback = function() ... end, desc = "", nowait = true })
-      -- Additionally, if it is a string that matches "action.<name>",
-      -- it will use the mapping at require("oil.action").<name>
+      -- Additionally, if it is a string that matches "actions.<name>",
+      -- it will use the mapping at require("oil.actions").<name>
       -- Set to `false` to remove a keymap
+      -- See :help oil-actions for a list of all available actions
       keymaps = {
         ["g?"] = "actions.show_help",
         ["<CR>"] = "actions.select",
@@ -223,6 +225,60 @@ birthtime                                                       *column-birthtim
       {highlight} `string|fun(value: string): string` Highlight group, or
                   function that returns a highlight group
       {format}    `string` Format string (see :help strftime)
+
+--------------------------------------------------------------------------------
+ACTIONS                                                              *oil-actions*
+
+These are actions that can be used in the `keymaps` section of config options.
+
+cd                                                                    *actions.cd*
+    :cd to the current oil directory
+
+close                                                              *actions.close*
+    Close oil and restore original buffer
+
+open_cmdline                                                *actions.open_cmdline*
+    Open vim cmdline with current entry as an argument
+
+open_cwd                                                        *actions.open_cwd*
+    Open oil in Neovim's current working directory
+
+open_terminal                                              *actions.open_terminal*
+    Open a terminal in the current directory
+
+parent                                                            *actions.parent*
+    Navigate to the parent path
+
+preview                                                          *actions.preview*
+    Open the entry under the cursor in a preview window, or close the preview
+    window if already open
+
+preview_scroll_down                                  *actions.preview_scroll_down*
+    Scroll down in the preview window
+
+preview_scroll_up                                      *actions.preview_scroll_up*
+    Scroll up in the preview window
+
+refresh                                                          *actions.refresh*
+    Refresh current directory list
+
+select                                                            *actions.select*
+    Open the entry under the cursor
+
+select_split                                                *actions.select_split*
+    Open the entry under the cursor in a horizontal split
+
+select_vsplit                                              *actions.select_vsplit*
+    Open the entry under the cursor in a vertical split
+
+show_help                                                      *actions.show_help*
+    Show default keymaps
+
+tcd                                                                  *actions.tcd*
+    :tcd to the current oil directory
+
+toggle_hidden                                              *actions.toggle_hidden*
+    Toggle hidden files and directories
 
 --------------------------------------------------------------------------------
 HIGHLIGHTS                                                        *oil-highlights*
