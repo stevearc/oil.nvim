@@ -73,7 +73,11 @@ local home_dir = vim.loop.os_homedir()
 M.shorten_path = function(path)
   local cwd = vim.fn.getcwd()
   if vim.startswith(path, cwd) then
-    return path:sub(cwd:len() + 2)
+    local relative = path:sub(cwd:len() + 2)
+    if relative == "" then
+      relative = "."
+    end
+    return relative
   end
   if vim.startswith(path, home_dir) then
     return "~" .. path:sub(home_dir:len() + 1)
