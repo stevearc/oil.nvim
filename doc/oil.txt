@@ -240,6 +240,9 @@ close                                                              *actions.clos
 open_cmdline                                                *actions.open_cmdline*
     Open vim cmdline with current entry as an argument
 
+open_cmdline_dir                                        *actions.open_cmdline_dir*
+    Open vim cmdline with current directory as an argument
+
 open_cwd                                                        *actions.open_cwd*
     Open oil in Neovim's current working directory
 

@@ -2,6 +2,7 @@ Oil	oil.txt	/*Oil*
 actions.cd	oil.txt	/*actions.cd*
 actions.close	oil.txt	/*actions.close*
 actions.open_cmdline	oil.txt	/*actions.open_cmdline*
+actions.open_cmdline_dir	oil.txt	/*actions.open_cmdline_dir*
 actions.open_cwd	oil.txt	/*actions.open_cwd*
 actions.open_terminal	oil.txt	/*actions.open_terminal*
 actions.parent	oil.txt	/*actions.parent*
