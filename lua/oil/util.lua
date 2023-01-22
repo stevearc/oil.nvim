@@ -516,4 +516,13 @@ M.hack_around_termopen_autocmd = function(prev_mode)
   end, 10)
 end
 
+---@return nil|integer
+M.get_preview_win = function()
+  for _, winid in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
+    if vim.api.nvim_win_is_valid(winid) and vim.api.nvim_win_get_option(winid, "previewwindow") then
+      return winid
+    end
+  end
+end
+
 return M

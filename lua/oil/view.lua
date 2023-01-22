@@ -189,20 +189,60 @@ M.initialize = function(bufnr)
     vim.api.nvim_buf_set_option(bufnr, k, v)
   end
   M.set_win_options()
+  vim.api.nvim_clear_autocmds({
+    buffer = bufnr,
+    group = "Oil",
+  })
   vim.api.nvim_create_autocmd("BufHidden", {
+    desc = "Delete oil buffers when no longer in use",
+    group = "Oil",
+    nested = true,
+    buffer = bufnr,
     callback = function()
       vim.defer_fn(M.cleanup, 2000)
     end,
-    nested = true,
-    buffer = bufnr,
   })
   vim.api.nvim_create_autocmd("BufDelete", {
-    callback = function()
-      session[bufnr] = nil
-    end,
+    group = "Oil",
     nested = true,
     once = true,
     buffer = bufnr,
+    callback = function()
+      session[bufnr] = nil
+    end,
+  })
+  local timer
+  vim.api.nvim_create_autocmd("CursorMoved", {
+    desc = "Update oil preview window",
+    group = "Oil",
+    buffer = bufnr,
+    callback = function()
+      if timer then
+        timer:again()
+        return
+      end
+      timer = vim.loop.new_timer()
+      timer:start(10, 100, function()
+        timer:stop()
+        timer:close()
+        timer = nil
+        vim.schedule(function()
+          if vim.api.nvim_get_current_buf() ~= bufnr then
+            return
+          end
+          local oil = require("oil")
+          local entry = oil.get_cursor_entry()
+          if entry then
+            local winid = util.get_preview_win()
+            if winid then
+              if entry.id ~= vim.w[winid].oil_entry_id then
+                oil.select({ preview = true })
+              end
+            end
+          end
+        end)
+      end)
+    end,
   })
   M.render_buffer_async(bufnr, {}, function(err)
     if err then

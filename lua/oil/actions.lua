@@ -1,4 +1,5 @@
 local oil = require("oil")
+local util = require("oil.util")
 
 local M = {}
 
@@ -29,15 +30,6 @@ M.select_split = {
   end,
 }
 
----@return nil|integer
-local function get_preview_win()
-  for _, winid in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
-    if vim.api.nvim_win_is_valid(winid) and vim.api.nvim_win_get_option(winid, "previewwindow") then
-      return winid
-    end
-  end
-end
-
 M.preview = {
   desc = "Open the entry under the cursor in a preview window, or close the preview window if already open",
   callback = function()
@@ -46,7 +38,7 @@ M.preview = {
       vim.notify("Could not find entry under cursor", vim.log.levels.ERROR)
       return
     end
-    local winid = get_preview_win()
+    local winid = util.get_preview_win()
     if winid then
       local cur_id = vim.w[winid].oil_entry_id
       if entry.id == cur_id then
@@ -61,7 +53,7 @@ M.preview = {
 M.preview_scroll_down = {
   desc = "Scroll down in the preview window",
   callback = function()
-    local winid = get_preview_win()
+    local winid = util.get_preview_win()
     if winid then
       vim.api.nvim_win_call(winid, function()
         vim.cmd.normal({
@@ -76,7 +68,7 @@ M.preview_scroll_down = {
 M.preview_scroll_up = {
   desc = "Scroll up in the preview window",
   callback = function()
-    local winid = get_preview_win()
+    local winid = util.get_preview_win()
     if winid then
       vim.api.nvim_win_call(winid, function()
         vim.cmd.normal({
@@ -174,7 +166,6 @@ M.open_cmdline = {
   callback = function()
     local config = require("oil.config")
     local fs = require("oil.fs")
-    local util = require("oil.util")
     local entry = oil.get_cursor_entry()
     if not entry then
       return
