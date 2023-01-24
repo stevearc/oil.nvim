@@ -118,7 +118,9 @@ require("oil").setup({
     -- "mtime",
   },
   -- Buffer-local options to use for oil buffers
-  buf_options = {},
+  buf_options = {
+    buflisted = false,
+  },
   -- Window-local options to use for oil buffers
   win_options = {
     wrap = false,
