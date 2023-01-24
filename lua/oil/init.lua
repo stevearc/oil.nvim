@@ -617,13 +617,21 @@ M.setup = function(opts)
   end
 
   local patterns = {}
+  local filetype_patterns = {}
   for scheme in pairs(config.adapters) do
     table.insert(patterns, scheme .. "*")
+    filetype_patterns[scheme .. ".*"] = { "oil", { priority = 10 } }
   end
   for scheme in pairs(config.adapter_aliases) do
     table.insert(patterns, scheme .. "*")
+    filetype_patterns[scheme .. ".*"] = { "oil", { priority = 10 } }
   end
   local scheme_pattern = table.concat(patterns, ",")
+  -- We need to add these patterns to the filetype matcher so the filetype doesn't get overridden
+  -- by other patterns. See https://github.com/stevearc/oil.nvim/issues/47
+  vim.filetype.add({
+    pattern = filetype_patterns,
+  })
 
   vim.api.nvim_create_autocmd("ColorScheme", {
     desc = "Set default oil highlights",
