@@ -190,6 +190,12 @@ M.get_buffer_parent_url = function(bufname)
     local parent_url = util.addslash(scheme .. parent)
     return parent_url, basename
   else
+    -- TODO maybe we should remove this special case and turn it into a config
+    if scheme == "term://" then
+      path = path:match("^(.*)//")
+      return config.adapter_to_scheme.files .. util.addslash(path)
+    end
+
     local adapter = config.get_adapter_by_scheme(scheme)
     local parent_url
     if adapter and adapter.get_parent then
