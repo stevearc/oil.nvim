@@ -184,6 +184,18 @@ M.open_cmdline = {
   end,
 }
 
+M.copy_entry_path = {
+  desc = "Copy the filepath of the entry under the cursor to the + register",
+  callback = function()
+    local entry = oil.get_cursor_entry()
+    local dir = oil.get_current_dir()
+    if not entry or not dir then
+      return
+    end
+    vim.fn.setreg("+", dir .. entry.name)
+  end,
+}
+
 M.open_cmdline_dir = {
   desc = "Open vim cmdline with current directory as an argument",
   callback = function()
