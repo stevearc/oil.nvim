@@ -239,6 +239,9 @@ cd                                                                    *actions.c
 close                                                              *actions.close*
     Close oil and restore original buffer
 
+copy_entry_path                                          *actions.copy_entry_path*
+    Copy the filepath of the entry under the cursor to the + register
+
 open_cmdline                                                *actions.open_cmdline*
     Open vim cmdline with current entry as an argument
 
