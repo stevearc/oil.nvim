@@ -147,6 +147,7 @@ require("oil").setup({
     ["<CR>"] = "actions.select",
     ["<C-s>"] = "actions.select_vsplit",
     ["<C-h>"] = "actions.select_split",
+    ["<C-t>"] = "actions.select_tab",
     ["<C-p>"] = "actions.preview",
     ["<C-c>"] = "actions.close",
     ["<C-l>"] = "actions.refresh",
@@ -271,6 +272,7 @@ Select the entry under the cursor
 |       | horizontal | `boolean`                                          | Open the buffer in a horizontal split |
 |       | split      | `"aboveleft"\|"belowright"\|"topleft"\|"botright"` | Split modifier                        |
 |       | preview    | `boolean`                                          | Open the buffer in a preview window   |
+|       | tab        | `boolean`                                          | Open the buffer in a new tab          |
 
 ### save(opts)
 

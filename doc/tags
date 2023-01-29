@@ -13,6 +13,7 @@ actions.preview_scroll_up	oil.txt	/*actions.preview_scroll_up*
 actions.refresh	oil.txt	/*actions.refresh*
 actions.select	oil.txt	/*actions.select*
 actions.select_split	oil.txt	/*actions.select_split*
+actions.select_tab	oil.txt	/*actions.select_tab*
 actions.select_vsplit	oil.txt	/*actions.select_vsplit*
 actions.show_help	oil.txt	/*actions.show_help*
 actions.tcd	oil.txt	/*actions.tcd*

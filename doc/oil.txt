@@ -52,6 +52,7 @@ OPTIONS                                                              *oil-option
         ["<CR>"] = "actions.select",
         ["<C-s>"] = "actions.select_vsplit",
         ["<C-h>"] = "actions.select_split",
+        ["<C-t>"] = "actions.select_tab",
         ["<C-p>"] = "actions.preview",
         ["<C-c>"] = "actions.close",
         ["<C-l>"] = "actions.refresh",
@@ -137,6 +138,7 @@ select({opts})                                                        *oil.selec
           {split}      `"aboveleft"|"belowright"|"topleft"|"botright"` Split
                        modifier
           {preview}    `boolean` Open the buffer in a preview window
+          {tab}        `boolean` Open the buffer in a new tab
 
 save({opts})                                                            *oil.save*
     Save all changes
@@ -275,6 +277,9 @@ select                                                            *actions.selec
 
 select_split                                                *actions.select_split*
     Open the entry under the cursor in a horizontal split
+
+select_tab                                                    *actions.select_tab*
+    Open the entry under the cursor in a new tab
 
 select_vsplit                                              *actions.select_vsplit*
     Open the entry under the cursor in a vertical split
