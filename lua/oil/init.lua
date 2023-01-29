@@ -313,6 +313,7 @@ end
 ---    horizontal boolean Open the buffer in a horizontal split
 ---    split "aboveleft"|"belowright"|"topleft"|"botright" Split modifier
 ---    preview boolean Open the buffer in a preview window
+---    tab boolean Open the buffer in a new tab
 M.select = function(opts)
   local cache = require("oil.cache")
   opts = vim.tbl_extend("keep", opts or {}, {})
@@ -321,6 +322,9 @@ M.select = function(opts)
   end
   if opts.preview and not opts.horizontal and opts.vertical == nil then
     opts.vertical = true
+  end
+  if opts.tab and (opts.preview or opts.split) then
+    error("Cannot set preview or split when tab = true")
   end
   local util = require("oil.util")
   if util.is_floating_win() and opts.preview then
@@ -405,7 +409,14 @@ M.select = function(opts)
     if vim.tbl_isempty(mods) then
       mods = nil
     end
-    local cmd = opts.split and "split" or "edit"
+    local cmd
+    if opts.tab then
+      cmd = "tabedit"
+    elseif opts.split then
+      cmd = "split"
+    else
+      cmd = "edit"
+    end
     vim.cmd({
       cmd = cmd,
       args = { url },

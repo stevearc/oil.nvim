@@ -76,7 +76,7 @@ a.describe("Alternate buffer", function()
       oil.open_float()
       test_util.wait_for_autocmd("BufReadPost")
       -- This is lazy, but testing the actual select logic is more difficult. We can simply
-      -- replicated it by closing the current window and then doing the edit
+      -- replicate it by closing the current window and then doing the edit
       vim.api.nvim_win_close(0, true)
       vim.cmd.edit({ args = { "bar" } })
       assert.equals("foo", vim.fn.expand("#"))
@@ -88,7 +88,7 @@ a.describe("Alternate buffer", function()
       oil.open_float()
       test_util.wait_for_autocmd("BufReadPost")
       -- This is lazy, but testing the actual select logic is more difficult. We can simply
-      -- replicated it by closing the current window and then doing the edit
+      -- replicate it by closing the current window and then doing the edit
       vim.api.nvim_win_close(0, true)
       vim.cmd.edit({ args = { "bar" } })
       assert.equals("foo", vim.fn.expand("#"))

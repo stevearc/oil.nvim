@@ -30,6 +30,13 @@ M.select_split = {
   end,
 }
 
+M.select_tab = {
+  desc = "Open the entry under the cursor in a new tab",
+  callback = function()
+    oil.select({ tab = true })
+  end,
+}
+
 M.preview = {
   desc = "Open the entry under the cursor in a preview window, or close the preview window if already open",
   callback = function()
