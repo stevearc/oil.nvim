@@ -192,7 +192,7 @@ M.get_buffer_parent_url = function(bufname)
   else
     -- TODO maybe we should remove this special case and turn it into a config
     if scheme == "term://" then
-      path = path:match("^(.*)//")
+      path = vim.fn.expand(path:match("^(.*)//"))
       return config.adapter_to_scheme.files .. util.addslash(path)
     end
 
