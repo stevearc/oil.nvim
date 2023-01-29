@@ -587,24 +587,31 @@ local function load_oil_buffer(bufnr)
     keymap_util.set_keymaps("", config.keymaps, bufnr)
   end
   loading.set_loading(bufnr, true)
+  local winid = vim.api.nvim_get_current_win()
   local function finish(new_url)
-    if new_url ~= bufname then
-      if util.rename_buffer(bufnr, new_url) then
-        -- If the buffer was replaced then don't initialize it. It's dead. The replacement will
-        -- have BufReadCmd called for it
-        return
+    -- Since this was async, we may have left the window with this buffer. People often write
+    -- BufReadPre/Post autocmds with the expectation that the current window is the one that
+    -- contains the buffer. Let's then do our best to make sure that that assumption isn't violated.
+    winid = util.buf_get_win(bufnr, winid) or vim.api.nvim_get_current_win()
+    vim.api.nvim_win_call(winid, function()
+      if new_url ~= bufname then
+        if util.rename_buffer(bufnr, new_url) then
+          -- If the buffer was replaced then don't initialize it. It's dead. The replacement will
+          -- have BufReadCmd called for it
+          return
+        end
+        bufname = new_url
       end
-      bufname = new_url
-    end
-    if vim.endswith(bufname, "/") then
-      vim.cmd.doautocmd({ args = { "BufReadPre", bufname }, mods = { emsg_silent = true } })
-      view.initialize(bufnr)
-      vim.cmd.doautocmd({ args = { "BufReadPost", bufname }, mods = { emsg_silent = true } })
-    else
-      vim.bo[bufnr].buftype = "acwrite"
-      adapter.read_file(bufnr)
-    end
-    restore_alt_buf()
+      if vim.endswith(bufname, "/") then
+        vim.cmd.doautocmd({ args = { "BufReadPre", bufname }, mods = { emsg_silent = true } })
+        view.initialize(bufnr)
+        vim.cmd.doautocmd({ args = { "BufReadPost", bufname }, mods = { emsg_silent = true } })
+      else
+        vim.bo[bufnr].buftype = "acwrite"
+        adapter.read_file(bufnr)
+      end
+      restore_alt_buf()
+    end)
   end
 
   adapter.normalize_url(bufname, finish)

@@ -525,4 +525,28 @@ M.get_preview_win = function()
   end
 end
 
+---@param bufnr integer
+---@param preferred_win nil|integer
+---@return nil|integer
+M.buf_get_win = function(bufnr, preferred_win)
+  if
+    preferred_win
+    and vim.api.nvim_win_is_valid(preferred_win)
+    and vim.api.nvim_win_get_buf(preferred_win) == bufnr
+  then
+    return preferred_win
+  end
+  for _, winid in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
+    if vim.api.nvim_win_is_valid(winid) and vim.api.nvim_win_get_buf(winid) == bufnr then
+      return winid
+    end
+  end
+  for _, winid in ipairs(vim.api.nvim_list_wins()) do
+    if vim.api.nvim_win_is_valid(winid) and vim.api.nvim_win_get_buf(winid) == bufnr then
+      return winid
+    end
+  end
+  return nil
+end
+
 return M
