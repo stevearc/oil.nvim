@@ -184,6 +184,7 @@ M.initialize = function(bufnr)
   vim.bo[bufnr].buftype = "acwrite"
   vim.bo[bufnr].syntax = "oil"
   vim.bo[bufnr].filetype = "oil"
+  vim.b[bufnr].EditorConfig_disable = 1
   session[bufnr] = true
   for k, v in pairs(config.buf_options) do
     vim.api.nvim_buf_set_option(bufnr, k, v)
