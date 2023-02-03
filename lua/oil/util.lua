@@ -111,11 +111,15 @@ M.rename_buffer = function(src_bufnr, dest_buf_name)
     end
   end
 
+  local is_modified = vim.bo[src_bufnr].modified
   local dest_bufnr = vim.fn.bufadd(dest_buf_name)
   pcall(vim.fn.bufload, dest_bufnr)
   if vim.bo[src_bufnr].buflisted then
     vim.bo[dest_bufnr].buflisted = true
   end
+  -- If the src_bufnr was marked as modified by the previous operation, we should undo that
+  vim.bo[src_bufnr].modified = is_modified
+
   -- If we're renaming a buffer that we're about to enter, this may be called before the buffer is
   -- actually in the window. We need to wait to enter the buffer and _then_ replace it.
   vim.schedule(function()
