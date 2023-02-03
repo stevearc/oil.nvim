@@ -255,6 +255,20 @@ M.initialize = function(bufnr)
   keymap_util.set_keymaps("", config.keymaps, bufnr)
 end
 
+---@param entry oil.InternalEntry
+---@return boolean
+local function is_entry_directory(entry)
+  local type = entry[FIELD.type]
+  if type == "directory" then
+    return true
+  elseif type == "link" then
+    local meta = entry[FIELD.meta]
+    return meta and meta.link_stat and meta.link_stat.type == "directory"
+  else
+    return false
+  end
+end
+
 ---@param bufnr integer
 ---@param opts nil|table
 ---    jump boolean
@@ -281,8 +295,8 @@ local function render_buffer(bufnr, opts)
   local entry_list = vim.tbl_values(entries)
 
   table.sort(entry_list, function(a, b)
-    local a_isdir = a[FIELD.type] == "directory"
-    local b_isdir = b[FIELD.type] == "directory"
+    local a_isdir = is_entry_directory(a)
+    local b_isdir = is_entry_directory(b)
     if a_isdir ~= b_isdir then
       return a_isdir
     end
