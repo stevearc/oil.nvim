@@ -531,9 +531,8 @@ end
 
 local function restore_alt_buf()
   local config = require("oil.config")
-  local view = require("oil.view")
   if vim.bo.filetype == "oil" then
-    view.set_win_options()
+    require("oil.view").set_win_options()
     vim.api.nvim_win_set_var(0, "oil_did_enter", true)
   elseif vim.w.oil_did_enter then
     vim.api.nvim_win_del_var(0, "oil_did_enter")
@@ -556,7 +555,7 @@ local function restore_alt_buf()
     end
 
     if config.restore_win_options then
-      view.restore_win_options()
+      require("oil.view").restore_win_options()
     end
   end
 end
@@ -706,11 +705,10 @@ M.setup = function(opts)
     pattern = "*",
     callback = function()
       local util = require("oil.util")
-      local view = require("oil.view")
       local bufname = vim.api.nvim_buf_get_name(0)
       local scheme = util.parse_url(bufname)
       if scheme and config.adapters[scheme] then
-        view.maybe_set_cursor()
+        require("oil.view").maybe_set_cursor()
       elseif vim.fn.isdirectory(bufname) == 0 then
         -- Only run this logic if we are *not* in an oil buffer (and it's not a directory, which
         -- will be replaced by an oil:// url)
