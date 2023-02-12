@@ -80,7 +80,7 @@ local M = {}
 M.setup = function(opts)
   local new_conf = vim.tbl_deep_extend("keep", opts or {}, default_config)
   if not new_conf.use_default_keymaps then
-    new_conf.keymaps = opts.keymaps
+    new_conf.keymaps = opts.keymaps or {}
   end
 
   for k, v in pairs(new_conf) do
