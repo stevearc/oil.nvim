@@ -162,6 +162,10 @@ require("oil").setup({
   view_options = {
     -- Show files and directories that start with "."
     show_hidden = false,
+    -- This function defines what is considered a "hidden" file
+    is_hidden_file = function(name, bufnr)
+      return vim.startswith(name, ".")
+    end,
   },
   -- Configuration for the floating window in oil.open_float
   float = {
