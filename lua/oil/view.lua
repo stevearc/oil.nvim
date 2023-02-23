@@ -11,13 +11,11 @@ local M = {}
 local last_cursor_entry = {}
 
 ---@param entry oil.InternalEntry
+---@param bufnr integer
 ---@return boolean
-M.should_display = function(entry)
+M.should_display = function(entry, bufnr)
   local name = entry[FIELD.name]
-  if not config.view_options.show_hidden and vim.startswith(name, ".") then
-    return false
-  end
-  return true
+  return config.view_options.show_hidden or not config.view_options.is_hidden_file(name, bufnr)
 end
 
 ---@param bufname string
@@ -318,7 +316,7 @@ local function render_buffer(bufnr, opts)
   end
   local virt_text = {}
   for _, entry in ipairs(entry_list) do
-    if not M.should_display(entry) then
+    if not M.should_display(entry, bufnr) then
       goto continue
     end
     local cols = M.format_entry_cols(entry, column_defs, col_width, adapter)

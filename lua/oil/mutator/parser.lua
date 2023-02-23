@@ -42,8 +42,9 @@ end
 ---@param adapter oil.Adapter
 ---@param line string
 ---@param column_defs oil.ColumnSpec[]
----@return table
----@return nil|oil.InternalEntry
+---@return nil|table Parsed entry data
+---@return nil|oil.InternalEntry If the entry already exists
+---@return nil|string Error message
 M.parse_line = function(adapter, line, column_defs)
   local ret = {}
   local value, rem = line:match("^/(%d+) (.+)$")
@@ -118,7 +119,7 @@ M.parse = function(bufnr)
   local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, true)
   local original_entries = {}
   for _, child in pairs(children) do
-    if view.should_display(child) then
+    if view.should_display(child, bufnr) then
       original_entries[child[FIELD.name]] = child[FIELD.id]
     end
   end
@@ -137,7 +138,7 @@ M.parse = function(bufnr)
   for i, line in ipairs(lines) do
     if line:match("^/%d+") then
       local parsed_entry, entry, err = M.parse_line(adapter, line, column_defs)
-      if err then
+      if not parsed_entry then
         table.insert(errors, {
           message = err,
           lnum = i - 1,
