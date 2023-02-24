@@ -709,6 +709,12 @@ M.setup = function(opts)
       local scheme = util.parse_url(bufname)
       if scheme and config.adapters[scheme] then
         require("oil.view").maybe_set_cursor()
+        -- While we are in an oil buffer, set the alternate file to the buffer we were in prior to
+        -- opening oil
+        local has_orig, orig_buffer = pcall(vim.api.nvim_win_get_var, 0, "oil_original_buffer")
+        if has_orig and vim.api.nvim_buf_is_valid(orig_buffer) then
+          vim.fn.setreg("#", orig_buffer)
+        end
       elseif vim.fn.isdirectory(bufname) == 0 then
         -- Only run this logic if we are *not* in an oil buffer (and it's not a directory, which
         -- will be replaced by an oil:// url)
