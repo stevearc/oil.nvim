@@ -70,7 +70,7 @@ M.toggle_hidden = function()
     vim.notify("Cannot toggle hidden files when you have unsaved changes", vim.log.levels.WARN)
   else
     config.view_options.show_hidden = not config.view_options.show_hidden
-    view.rerender_visible_and_cleanup({ refetch = false })
+    view.rerender_all_oil_buffers({ refetch = false })
   end
 end
 
@@ -82,7 +82,7 @@ M.set_columns = function(cols)
   else
     config.columns = cols
     -- TODO only refetch if we don't have all the necessary data for the columns
-    view.rerender_visible_and_cleanup({ refetch = true })
+    view.rerender_all_oil_buffers({ refetch = true })
   end
 end
 
@@ -97,7 +97,7 @@ end
 ---@param opts table
 ---@note
 --- This DISCARDS ALL MODIFICATIONS a user has made to oil buffers
-M.rerender_visible_and_cleanup = function(opts)
+M.rerender_all_oil_buffers = function(opts)
   local buffers = M.get_all_buffers()
   local hidden_buffers = {}
   for _, bufnr in ipairs(buffers) do
@@ -110,7 +110,7 @@ M.rerender_visible_and_cleanup = function(opts)
   end
   for _, bufnr in ipairs(buffers) do
     if hidden_buffers[bufnr] then
-      vim.api.nvim_buf_delete(bufnr, { force = true })
+      vim.b[bufnr].oil_dirty = opts
     else
       M.render_buffer_async(bufnr, opts)
     end
@@ -142,8 +142,12 @@ M.restore_win_options = function()
   end
 end
 
----Delete hidden oil buffers and if none remain, clear the cache
-M.cleanup = function()
+---Get a list of visible oil buffers and a list of hidden oil buffers
+---@note
+--- If any buffers are modified, return values are nil
+---@return nil|integer[]
+---@return nil|integer[]
+local function get_visible_hidden_buffers()
   local buffers = M.get_all_buffers()
   local hidden_buffers = {}
   for _, bufnr in ipairs(buffers) do
@@ -157,18 +161,22 @@ M.cleanup = function()
       hidden_buffers[vim.api.nvim_win_get_buf(winid)] = nil
     end
   end
+  local visible_buffers = vim.tbl_filter(function(bufnr)
+    return not hidden_buffers[bufnr]
+  end, buffers)
+  return visible_buffers, vim.tbl_keys(hidden_buffers)
+end
 
-  local any_remaining = false
-  for _, bufnr in ipairs(buffers) do
-    if hidden_buffers[bufnr] then
-      vim.api.nvim_buf_delete(bufnr, { force = true })
-    else
-      any_remaining = true
-    end
+---Delete unmodified, hidden oil buffers and if none remain, clear the cache
+M.delete_hidden_buffers = function()
+  local visible_buffers, hidden_buffers = get_visible_hidden_buffers()
+  if not visible_buffers or not hidden_buffers or not vim.tbl_isempty(visible_buffers) then
+    return
   end
-  if not any_remaining then
-    cache.clear_everything()
+  for _, bufnr in ipairs(hidden_buffers) do
+    vim.api.nvim_buf_delete(bufnr, { force = true })
   end
+  cache.clear_everything()
 end
 
 ---@param bufnr integer
@@ -198,7 +206,16 @@ M.initialize = function(bufnr)
     nested = true,
     buffer = bufnr,
     callback = function()
-      vim.defer_fn(M.cleanup, 2000)
+      -- First wait a short time (10ms) for the buffer change to settle
+      vim.defer_fn(function()
+        local visible_buffers = get_visible_hidden_buffers()
+        -- Only kick off the 2-second timer if we don't have any visible oil buffers
+        if visible_buffers and vim.tbl_isempty(visible_buffers) then
+          vim.defer_fn(function()
+            M.delete_hidden_buffers()
+          end, 2000)
+        end
+      end, 10)
     end,
   })
   vim.api.nvim_create_autocmd("BufDelete", {
@@ -208,6 +225,17 @@ M.initialize = function(bufnr)
     buffer = bufnr,
     callback = function()
       session[bufnr] = nil
+    end,
+  })
+  vim.api.nvim_create_autocmd("BufEnter", {
+    group = "Oil",
+    buffer = bufnr,
+    callback = function(args)
+      local opts = vim.b[args.buf].oil_dirty
+      if opts then
+        vim.b[args.buf].oil_dirty = nil
+        M.render_buffer_async(args.buf, opts)
+      end
     end,
   })
   local timer

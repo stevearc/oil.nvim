@@ -511,7 +511,7 @@ M.try_write_changes = function(confirm)
                 vim.split(current_entry.name, "/")[1]
               )
             end
-            view.rerender_visible_and_cleanup({ preserve_undo = M.trash })
+            view.rerender_all_oil_buffers({ preserve_undo = M.trash })
           end
         end)
       )
