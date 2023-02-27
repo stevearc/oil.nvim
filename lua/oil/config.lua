@@ -138,9 +138,12 @@ M.get_trash_url = function()
   return M.adapter_to_scheme.files .. fs.os_to_posix_path(M.trash)
 end
 
----@param scheme string
+---@param scheme nil|string
 ---@return nil|oil.Adapter
 M.get_adapter_by_scheme = function(scheme)
+  if not scheme then
+    return nil
+  end
   if not vim.endswith(scheme, "://") then
     local pieces = vim.split(scheme, "://", { plain = true })
     if #pieces <= 2 then

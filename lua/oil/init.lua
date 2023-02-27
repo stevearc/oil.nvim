@@ -5,7 +5,7 @@ local M = {}
 ---@class oil.Entry
 ---@field name string
 ---@field type oil.EntryType
----@field id nil|string Will be nil if it hasn't been persisted to disk yet
+---@field id nil|integer Will be nil if it hasn't been persisted to disk yet
 
 ---@alias oil.EntryType "file"|"directory"|"socket"|"link"
 ---@alias oil.TextChunk string|string[]
@@ -29,15 +29,12 @@ local M = {}
 ---@return nil|oil.Entry
 M.get_entry_on_line = function(bufnr, lnum)
   local columns = require("oil.columns")
-  local config = require("oil.config")
   local parser = require("oil.mutator.parser")
   local util = require("oil.util")
   if vim.bo[bufnr].filetype ~= "oil" then
     return nil
   end
-  local bufname = vim.api.nvim_buf_get_name(0)
-  local scheme = util.parse_url(bufname)
-  local adapter = config.get_adapter_by_scheme(scheme)
+  local adapter = util.get_adapter(bufnr)
   if not adapter then
     return nil
   end
@@ -46,15 +43,15 @@ M.get_entry_on_line = function(bufnr, lnum)
   if not line then
     return nil
   end
-  local column_defs = columns.get_supported_columns(scheme)
-  local parsed_entry, entry = parser.parse_line(adapter, line, column_defs)
-  if parsed_entry then
-    if entry then
-      return util.export_entry(entry)
+  local column_defs = columns.get_supported_columns(adapter)
+  local result = parser.parse_line(adapter, line, column_defs)
+  if result then
+    if result.entry then
+      return util.export_entry(result.entry)
     else
       return {
-        name = parsed_entry.name,
-        type = parsed_entry._type,
+        name = result.data.name,
+        type = result.data._type,
       }
     end
   end

@@ -244,11 +244,33 @@ M.initialize = function(bufnr)
     group = "Oil",
     buffer = bufnr,
     callback = function()
+      local oil = require("oil")
+      local parser = require("oil.mutator.parser")
+
+      -- Force the cursor to be after the (concealed) ID at the beginning of the line
+      local adapter = util.get_adapter(bufnr)
+      if adapter then
+        local cur = vim.api.nvim_win_get_cursor(0)
+        local line = vim.api.nvim_buf_get_lines(bufnr, cur[1] - 1, cur[1], true)[1]
+        local column_defs = columns.get_supported_columns(adapter)
+        local result = parser.parse_line(adapter, line, column_defs)
+        if result and result.data then
+          local min_col = result.ranges.id[2] + 1
+          if cur[2] < min_col then
+            vim.api.nvim_win_set_cursor(0, { cur[1], min_col })
+          end
+        end
+      end
+
+      -- Debounce and update the preview window
       if timer then
         timer:again()
         return
       end
       timer = vim.loop.new_timer()
+      if not timer then
+        return
+      end
       timer:start(10, 100, function()
         timer:stop()
         timer:close()
@@ -257,7 +279,6 @@ M.initialize = function(bufnr)
           if vim.api.nvim_get_current_buf() ~= bufnr then
             return
           end
-          local oil = require("oil")
           local entry = oil.get_cursor_entry()
           if entry then
             local winid = util.get_preview_win()
@@ -397,7 +418,6 @@ local function render_buffer(bufnr, opts)
 end
 
 ---@private
----@param adapter oil.Adapter
 ---@param entry oil.InternalEntry
 ---@param column_defs table[]
 ---@param col_width integer[]
