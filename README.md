@@ -125,6 +125,7 @@ require("oil").setup({
   win_options = {
     wrap = false,
     signcolumn = "no",
+    -- cursorline = true, -- will pick user's settings if not set.
     cursorcolumn = false,
     foldcolumn = "0",
     spell = false,
