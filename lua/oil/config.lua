@@ -56,6 +56,10 @@ local default_config = {
     is_hidden_file = function(name, bufnr)
       return vim.startswith(name, ".")
     end,
+    -- This function defines what will never be shown, even when `show_hidden` is set
+    is_excluded = function (name, bufnr)
+      return false
+    end
   },
   -- Configuration for the floating window in oil.open_float
   float = {
