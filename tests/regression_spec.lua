@@ -31,4 +31,20 @@ a.describe("regression tests", function()
     entry = oil.get_cursor_entry()
     assert.equals("README.md", entry and entry.name)
   end)
+
+  -- https://github.com/stevearc/oil.nvim/issues/64
+  a.it("doesn't close floating windows oil didn't open itself", function()
+    local winid = vim.api.nvim_open_win(vim.fn.bufadd("README.md"), true, {
+      relative = "editor",
+      row = 1,
+      col = 1,
+      width = 100,
+      height = 100,
+    })
+    oil.open()
+    a.util.sleep(10)
+    oil.close()
+    a.util.sleep(10)
+    assert.equals(winid, vim.api.nvim_get_current_win())
+  end)
 end)

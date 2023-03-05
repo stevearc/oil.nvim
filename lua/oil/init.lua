@@ -254,6 +254,7 @@ M.open_float = function(dir)
     border = config.float.border,
     zindex = 45,
   })
+  vim.w[winid].is_oil_win = true
   local winleave_autocmd
   winleave_autocmd = vim.api.nvim_create_autocmd("WinLeave", {
     desc = "Close floating oil window",
@@ -292,8 +293,7 @@ end
 
 ---Restore the buffer that was present when oil was opened
 M.close = function()
-  local util = require("oil.util")
-  if util.is_floating_win(0) then
+  if vim.w.is_oil_win then
     vim.api.nvim_win_close(0, true)
     return
   end
@@ -308,7 +308,7 @@ M.close = function()
 end
 
 ---Select the entry under the cursor
----@param opts table
+---@param opts nil|table
 ---    vertical boolean Open the buffer in a vertical split
 ---    horizontal boolean Open the buffer in a horizontal split
 ---    split "aboveleft"|"belowright"|"topleft"|"botright" Split modifier
@@ -397,7 +397,7 @@ M.select = function(opts)
         return
       end
     else
-      if util.is_floating_win() then
+      if vim.w.is_oil_win then
         vim.api.nvim_win_close(0, false)
       end
     end
