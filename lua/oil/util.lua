@@ -102,11 +102,16 @@ M.rename_buffer = function(src_bufnr, dest_buf_name)
   -- rename logic. The only reason we can't use nvim_buf_set_name on files is because vim will
   -- think that the new buffer conflicts with the file next time it tries to save.
   if not vim.loop.fs_stat(dest_buf_name) then
+    local altbuf = vim.fn.bufnr("#")
     -- This will fail if the dest buf name already exists
     local ok = pcall(vim.api.nvim_buf_set_name, src_bufnr, dest_buf_name)
     if ok then
       -- Renaming the buffer creates a new buffer with the old name. Find it and delete it.
       vim.api.nvim_buf_delete(vim.fn.bufadd(bufname), {})
+      if altbuf and vim.api.nvim_buf_is_valid(altbuf) then
+        vim.fn.setreg("#", altbuf)
+      end
+
       return false
     end
   end
