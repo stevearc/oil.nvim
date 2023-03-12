@@ -306,11 +306,12 @@ M.close = function()
     return
   end
   local ok, bufnr = pcall(vim.api.nvim_win_get_var, 0, "oil_original_buffer")
-  if ok then
-    if vim.api.nvim_buf_is_valid(bufnr) then
-      vim.api.nvim_win_set_buf(0, bufnr)
-      return
+  if ok and vim.api.nvim_buf_is_valid(bufnr) then
+    vim.api.nvim_win_set_buf(0, bufnr)
+    if vim.w.oil_original_view then
+      vim.fn.winrestview(vim.w.oil_original_view)
     end
+    return
   end
   vim.api.nvim_buf_delete(0, { force = true })
 end
@@ -703,8 +704,9 @@ M.setup = function(opts)
     callback = function()
       local util = require("oil.util")
       if not util.is_oil_bufnr(0) then
-        vim.api.nvim_win_set_var(0, "oil_original_buffer", vim.api.nvim_get_current_buf())
-        vim.api.nvim_win_set_var(0, "oil_original_alternate", vim.fn.bufnr("#"))
+        vim.w.oil_original_buffer = vim.api.nvim_get_current_buf()
+        vim.w.oil_original_view = vim.fn.winsaveview()
+        vim.w.oil_original_alternate = vim.fn.bufnr("#")
       end
     end,
   })
@@ -792,16 +794,9 @@ M.setup = function(opts)
       end
       -- Then transfer over the relevant window vars
       vim.w.oil_did_enter = true
-      local has_orig, orig_buffer =
-        pcall(vim.api.nvim_win_get_var, parent_win, "oil_original_buffer")
-      if has_orig and vim.api.nvim_buf_is_valid(orig_buffer) then
-        vim.w.oil_original_buffer = orig_buffer
-      end
-      local has_orig_alt, alt_buffer =
-        pcall(vim.api.nvim_win_get_var, parent_win, "oil_original_alternate")
-      if has_orig_alt and vim.api.nvim_buf_is_valid(alt_buffer) then
-        vim.w.oil_original_alternate = alt_buffer
-      end
+      vim.w.oil_original_buffer = vim.w[parent_win].oil_original_buffer
+      vim.w.oil_original_view = vim.w[parent_win].oil_original_view
+      vim.w.oil_original_alternate = vim.w[parent_win].oil_original_alternate
       for k in pairs(config.win_options) do
         local varname = "_oil_" .. k
         local has_opt, opt = pcall(vim.api.nvim_win_get_var, parent_win, varname)
