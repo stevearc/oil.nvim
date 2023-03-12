@@ -110,6 +110,17 @@ set_columns({cols})                                              *oil.set_column
     Parameters:
       {cols} `oil.ColumnSpec[]`
 
+set_is_hidden_file({is_hidden_file})                      *oil.set_is_hidden_file*
+    Change how oil determines if the file is hidden
+
+    Parameters:
+      {is_hidden_file} `fun(filename: string, bufnr: nil|integer): boolean` Retu
+                       rn true if the file/dir should be hidden
+
+toggle_hidden()                                                *oil.toggle_hidden*
+    Toggle hidden files and directories
+
+
 get_current_dir(): nil|string                                *oil.get_current_dir*
     Get the current directory
 

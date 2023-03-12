@@ -234,6 +234,21 @@ Change the display columns for oil
 | ----- | ------------------ | ---- |
 | cols  | `oil.ColumnSpec[]` |      |
 
+### set_is_hidden_file(is_hidden_file)
+
+`set_is_hidden_file(is_hidden_file)` \
+Change how oil determines if the file is hidden
+
+| Param          | Type                                                  | Desc                                         |
+| -------------- | ----------------------------------------------------- | -------------------------------------------- |
+| is_hidden_file | `fun(filename: string, bufnr: nil\|integer): boolean` | Return true if the file/dir should be hidden |
+
+### toggle_hidden()
+
+`toggle_hidden()` \
+Toggle hidden files and directories
+
+
 ### get_current_dir()
 
 `get_current_dir(): nil|string` \

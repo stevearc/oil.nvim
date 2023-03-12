@@ -53,5 +53,7 @@ oil.open_float	oil.txt	/*oil.open_float*
 oil.save	oil.txt	/*oil.save*
 oil.select	oil.txt	/*oil.select*
 oil.set_columns	oil.txt	/*oil.set_columns*
+oil.set_is_hidden_file	oil.txt	/*oil.set_is_hidden_file*
 oil.setup	oil.txt	/*oil.setup*
+oil.toggle_hidden	oil.txt	/*oil.toggle_hidden*
 oil.txt	oil.txt	/*oil.txt*

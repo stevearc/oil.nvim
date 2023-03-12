@@ -53,8 +53,7 @@ M.get_last_cursor = function(bufname)
 end
 
 local function are_any_modified()
-  local view = require("oil.view")
-  local buffers = view.get_all_buffers()
+  local buffers = M.get_all_buffers()
   for _, bufnr in ipairs(buffers) do
     if vim.bo[bufnr].modified then
       return true
@@ -64,25 +63,34 @@ local function are_any_modified()
 end
 
 M.toggle_hidden = function()
-  local view = require("oil.view")
   local any_modified = are_any_modified()
   if any_modified then
     vim.notify("Cannot toggle hidden files when you have unsaved changes", vim.log.levels.WARN)
   else
     config.view_options.show_hidden = not config.view_options.show_hidden
-    view.rerender_all_oil_buffers({ refetch = false })
+    M.rerender_all_oil_buffers({ refetch = false })
+  end
+end
+
+---@param is_hidden_file fun(filename: string, bufnr: nil|integer): boolean
+M.set_is_hidden_file = function(is_hidden_file)
+  local any_modified = are_any_modified()
+  if any_modified then
+    vim.notify("Cannot change is_hidden_file when you have unsaved changes", vim.log.levels.WARN)
+  else
+    config.view_options.is_hidden_file = is_hidden_file
+    M.rerender_all_oil_buffers({ refetch = false })
   end
 end
 
 M.set_columns = function(cols)
-  local view = require("oil.view")
   local any_modified = are_any_modified()
   if any_modified then
     vim.notify("Cannot change columns when you have unsaved changes", vim.log.levels.WARN)
   else
     config.columns = cols
     -- TODO only refetch if we don't have all the necessary data for the columns
-    view.rerender_all_oil_buffers({ refetch = true })
+    M.rerender_all_oil_buffers({ refetch = true })
   end
 end
 
