@@ -64,6 +64,7 @@ M.show = vim.schedule_wrap(function(actions, should_confirm, cb)
     height = height,
     row = math.floor((vim.o.lines - vim.o.cmdheight - height) / 2),
     col = math.floor((vim.o.columns - width) / 2),
+    zindex = 152, -- render on top of the floating window title
     style = "minimal",
     border = "rounded",
   })
