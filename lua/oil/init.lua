@@ -313,7 +313,12 @@ M.close = function()
     end
     return
   end
-  vim.api.nvim_buf_delete(0, { force = true })
+
+  -- Deleting the buffer closes all windows with that buffer open, so navigate to a different
+  -- buffer first
+  local oilbuf = vim.api.nvim_get_current_buf()
+  vim.cmd.bprev()
+  vim.api.nvim_buf_delete(oilbuf, { force = true })
 end
 
 ---Select the entry under the cursor
@@ -697,7 +702,7 @@ M.setup = function(opts)
       end
     end,
   })
-  vim.api.nvim_create_autocmd("BufWinLeave", {
+  vim.api.nvim_create_autocmd("BufLeave", {
     desc = "Save alternate buffer for later",
     group = aug,
     pattern = "*",
@@ -710,7 +715,7 @@ M.setup = function(opts)
       end
     end,
   })
-  vim.api.nvim_create_autocmd("BufWinEnter", {
+  vim.api.nvim_create_autocmd("BufEnter", {
     desc = "Set/unset oil window options and restore alternate buffer",
     group = aug,
     pattern = "*",
