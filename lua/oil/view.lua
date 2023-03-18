@@ -15,7 +15,8 @@ local last_cursor_entry = {}
 ---@return boolean
 M.should_display = function(entry, bufnr)
   local name = entry[FIELD.name]
-  return config.view_options.show_hidden or not config.view_options.is_hidden_file(name, bufnr)
+  return not config.view_options.is_always_hidden(name, bufnr)
+    and (not config.view_options.is_hidden_file(name, bufnr) or config.view_options.show_hidden)
 end
 
 ---@param bufname string
