@@ -394,15 +394,15 @@ M.select = function(opts)
     local scheme, dir = util.parse_url(bufname)
     local child = dir .. entry.name
     local url = scheme .. child
-    if
-      entry.type == "directory"
+    local is_directory = entry.type == "directory"
       or (
         entry.type == "link"
         and entry.meta
         and entry.meta.link_stat
         and entry.meta.link_stat.type == "directory"
       )
-    then
+    if is_directory then
+      url = url .. "/"
       -- If this is a new directory BUT we think we already have an entry with this name, disallow
       -- entry. This prevents the case of MOVE /foo -> /bar + CREATE /foo.
       -- If you enter the new /foo, it will show the contents of the old /foo.
@@ -614,6 +614,17 @@ local function load_oil_buffer(bufnr)
           -- have BufReadCmd called for it
           return
         end
+
+        -- If the renamed buffer doesn't have a scheme anymore, this is a normal file.
+        -- Finish setting it up as a normal buffer.
+        local new_scheme = util.parse_url(new_url)
+        if not new_scheme then
+          loading.set_loading(bufnr, false)
+          vim.cmd.doautocmd({ args = { "BufReadPre", new_url }, mods = { emsg_silent = true } })
+          vim.cmd.doautocmd({ args = { "BufReadPost", new_url }, mods = { emsg_silent = true } })
+          return
+        end
+
         bufname = new_url
       end
       if vim.endswith(bufname, "/") then

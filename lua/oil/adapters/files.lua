@@ -180,7 +180,17 @@ M.normalize_url = function(url, callback)
     vim.loop.fs_stat(
       realpath,
       vim.schedule_wrap(function(stat_err, stat)
-        if not stat or stat.type == "directory" then
+        local is_directory
+        if stat then
+          is_directory = stat.type == "directory"
+        elseif vim.endswith(realpath, "/") then
+          is_directory = true
+        else
+          local filetype = vim.filetype.match({ filename = vim.fs.basename(realpath) })
+          is_directory = filetype == nil
+        end
+
+        if is_directory then
           local norm_path = util.addslash(fs.os_to_posix_path(realpath))
           callback(scheme .. norm_path)
         else
