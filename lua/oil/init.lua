@@ -614,6 +614,17 @@ local function load_oil_buffer(bufnr)
           -- have BufReadCmd called for it
           return
         end
+
+        -- If the renamed buffer doesn't have a scheme anymore, this is a normal file.
+        -- Finish setting it up as a normal buffer.
+        local new_scheme = util.parse_url(new_url)
+        if not new_scheme then
+          loading.set_loading(bufnr, false)
+          vim.cmd.doautocmd({ args = { "BufReadPre", new_url }, mods = { emsg_silent = true } })
+          vim.cmd.doautocmd({ args = { "BufReadPost", new_url }, mods = { emsg_silent = true } })
+          return
+        end
+
         bufname = new_url
       end
       if vim.endswith(bufname, "/") then

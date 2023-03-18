@@ -2,6 +2,7 @@ require("plenary.async").tests.add_to_env()
 local fs = require("oil.fs")
 local files = require("oil.adapters.files")
 local cache = require("oil.cache")
+local test_util = require("tests.test_util")
 
 local function throwiferr(err, ...)
   if err then
@@ -307,5 +308,28 @@ a.describe("files adapter", function()
       ["a/a.txt"] = "a/a.txt",
       ["a/"] = true,
     })
+  end)
+
+  a.it("Editing a new oil://path/ creates an oil buffer", function()
+    local tmpdir_url = "oil://" .. vim.fn.fnamemodify(tmpdir.path, ":p") .. "/"
+    vim.cmd.edit({ args = { tmpdir_url } })
+    test_util.wait_for_autocmd("BufReadPost")
+    local new_url = "oil://" .. vim.fn.fnamemodify(tmpdir.path, ":p") .. "newdir"
+    vim.cmd.edit({ args = { new_url } })
+    test_util.wait_for_autocmd("BufReadPost")
+    assert.equals("oil", vim.bo.filetype)
+    -- The normalization will add a '/'
+    assert.equals(new_url .. "/", vim.api.nvim_buf_get_name(0))
+  end)
+
+  a.it("Editing a new oil://file.rb creates a normal buffer", function()
+    local tmpdir_url = "oil://" .. vim.fn.fnamemodify(tmpdir.path, ":p") .. "/"
+    vim.cmd.edit({ args = { tmpdir_url } })
+    test_util.wait_for_autocmd("BufReadPost")
+    local new_url = "oil://" .. vim.fn.fnamemodify(tmpdir.path, ":p") .. "file.rb"
+    vim.cmd.edit({ args = { new_url } })
+    test_util.wait_for_autocmd("BufReadPost")
+    assert.equals("ruby", vim.bo.filetype)
+    assert.equals(vim.fn.fnamemodify(tmpdir.path, ":p") .. "file.rb", vim.api.nvim_buf_get_name(0))
   end)
 end)
