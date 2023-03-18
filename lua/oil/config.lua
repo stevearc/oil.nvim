@@ -57,7 +57,7 @@ local default_config = {
       return vim.startswith(name, ".")
     end,
     -- This function defines what will never be shown, even when `show_hidden` is set
-    is_excluded = function (name, bufnr)
+    is_always_hidden = function (name, bufnr)
       return false
     end
   },
