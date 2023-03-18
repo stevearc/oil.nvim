@@ -5,7 +5,7 @@ local M = {}
 ---@class oil.Entry
 ---@field name string
 ---@field type oil.EntryType
----@field id nil|string Will be nil if it hasn't been persisted to disk yet
+---@field id nil|integer Will be nil if it hasn't been persisted to disk yet
 
 ---@alias oil.EntryType "file"|"directory"|"socket"|"link"
 ---@alias oil.TextChunk string|string[]
@@ -29,15 +29,12 @@ local M = {}
 ---@return nil|oil.Entry
 M.get_entry_on_line = function(bufnr, lnum)
   local columns = require("oil.columns")
-  local config = require("oil.config")
   local parser = require("oil.mutator.parser")
   local util = require("oil.util")
   if vim.bo[bufnr].filetype ~= "oil" then
     return nil
   end
-  local bufname = vim.api.nvim_buf_get_name(0)
-  local scheme = util.parse_url(bufname)
-  local adapter = config.get_adapter_by_scheme(scheme)
+  local adapter = util.get_adapter(bufnr)
   if not adapter then
     return nil
   end
@@ -46,15 +43,15 @@ M.get_entry_on_line = function(bufnr, lnum)
   if not line then
     return nil
   end
-  local column_defs = columns.get_supported_columns(scheme)
-  local parsed_entry, entry = parser.parse_line(adapter, line, column_defs)
-  if parsed_entry then
-    if entry then
-      return util.export_entry(entry)
+  local column_defs = columns.get_supported_columns(adapter)
+  local result = parser.parse_line(adapter, line, column_defs)
+  if result then
+    if result.entry then
+      return util.export_entry(result.entry)
     else
       return {
-        name = parsed_entry.name,
-        type = parsed_entry._type,
+        name = result.data.name,
+        type = result.data._type,
       }
     end
   end
@@ -136,6 +133,17 @@ end
 ---@param cols oil.ColumnSpec[]
 M.set_columns = function(cols)
   require("oil.view").set_columns(cols)
+end
+
+---Change how oil determines if the file is hidden
+---@param is_hidden_file fun(filename: string, bufnr: nil|integer): boolean Return true if the file/dir should be hidden
+M.set_is_hidden_file = function(is_hidden_file)
+  require("oil.view").set_is_hidden_file(is_hidden_file)
+end
+
+---Toggle hidden files and directories
+M.toggle_hidden = function()
+  require("oil.view").toggle_hidden()
 end
 
 ---Get the current directory
@@ -298,13 +306,19 @@ M.close = function()
     return
   end
   local ok, bufnr = pcall(vim.api.nvim_win_get_var, 0, "oil_original_buffer")
-  if ok then
-    if vim.api.nvim_buf_is_valid(bufnr) then
-      vim.api.nvim_win_set_buf(0, bufnr)
-      return
+  if ok and vim.api.nvim_buf_is_valid(bufnr) then
+    vim.api.nvim_win_set_buf(0, bufnr)
+    if vim.w.oil_original_view then
+      vim.fn.winrestview(vim.w.oil_original_view)
     end
+    return
   end
-  vim.api.nvim_buf_delete(0, { force = true })
+
+  -- Deleting the buffer closes all windows with that buffer open, so navigate to a different
+  -- buffer first
+  local oilbuf = vim.api.nvim_get_current_buf()
+  vim.cmd.bprev()
+  vim.api.nvim_buf_delete(oilbuf, { force = true })
 end
 
 ---Select the entry under the cursor
@@ -368,11 +382,10 @@ M.select = function(opts)
     vim.notify("Cannot preview multiple entries", vim.log.levels.WARN)
     entries = { entries[1] }
   end
-  -- Close the preview window
-  for _, winid in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
-    if vim.api.nvim_win_is_valid(winid) and vim.api.nvim_win_get_option(winid, "previewwindow") then
-      vim.api.nvim_win_close(winid, true)
-    end
+  -- Close the preview window if we're not previewing the selection
+  local preview_win = util.get_preview_win()
+  if not opts.preview and preview_win then
+    vim.api.nvim_win_close(preview_win, true)
   end
   local bufname = vim.api.nvim_buf_get_name(0)
   local prev_win = vim.api.nvim_get_current_win()
@@ -380,15 +393,15 @@ M.select = function(opts)
     local scheme, dir = util.parse_url(bufname)
     local child = dir .. entry.name
     local url = scheme .. child
-    if
-      entry.type == "directory"
+    local is_directory = entry.type == "directory"
       or (
         entry.type == "link"
         and entry.meta
         and entry.meta.link_stat
         and entry.meta.link_stat.type == "directory"
       )
-    then
+    if is_directory then
+      url = url .. "/"
       -- If this is a new directory BUT we think we already have an entry with this name, disallow
       -- entry. This prevents the case of MOVE /foo -> /bar + CREATE /foo.
       -- If you enter the new /foo, it will show the contents of the old /foo.
@@ -401,27 +414,34 @@ M.select = function(opts)
         vim.api.nvim_win_close(0, false)
       end
     end
+
     local mods = {
       vertical = opts.vertical,
       horizontal = opts.horizontal,
       split = opts.split,
+      keepalt = true,
     }
-    if vim.tbl_isempty(mods) then
-      mods = nil
-    end
-    local cmd
-    if opts.tab then
-      cmd = "tabedit"
-    elseif opts.split then
-      cmd = "split"
+    if opts.preview and preview_win then
+      vim.api.nvim_set_current_win(preview_win)
+      vim.cmd.edit({ args = { url }, mods = mods })
     else
-      cmd = "edit"
+      if vim.tbl_isempty(mods) then
+        mods = nil
+      end
+      local cmd
+      if opts.tab then
+        cmd = "tabedit"
+      elseif opts.split then
+        cmd = "split"
+      else
+        cmd = "edit"
+      end
+      vim.cmd({
+        cmd = cmd,
+        args = { url },
+        mods = mods,
+      })
     end
-    vim.cmd({
-      cmd = cmd,
-      args = { url },
-      mods = mods,
-    })
     if opts.preview then
       vim.api.nvim_win_set_option(0, "previewwindow", true)
       vim.api.nvim_win_set_var(0, "oil_entry_id", entry.id)
@@ -439,6 +459,9 @@ end
 local function maybe_hijack_directory_buffer(bufnr)
   local config = require("oil.config")
   local util = require("oil.util")
+  if not config.default_file_explorer then
+    return
+  end
   local bufname = vim.api.nvim_buf_get_name(bufnr)
   if bufname == "" then
     return
@@ -599,6 +622,17 @@ local function load_oil_buffer(bufnr)
           -- have BufReadCmd called for it
           return
         end
+
+        -- If the renamed buffer doesn't have a scheme anymore, this is a normal file.
+        -- Finish setting it up as a normal buffer.
+        local new_scheme = util.parse_url(new_url)
+        if not new_scheme then
+          loading.set_loading(bufnr, false)
+          vim.cmd.doautocmd({ args = { "BufReadPre", new_url }, mods = { emsg_silent = true } })
+          vim.cmd.doautocmd({ args = { "BufReadPost", new_url }, mods = { emsg_silent = true } })
+          return
+        end
+
         bufname = new_url
       end
       if vim.endswith(bufname, "/") then
@@ -687,19 +721,20 @@ M.setup = function(opts)
       end
     end,
   })
-  vim.api.nvim_create_autocmd("BufWinLeave", {
+  vim.api.nvim_create_autocmd("BufLeave", {
     desc = "Save alternate buffer for later",
     group = aug,
     pattern = "*",
     callback = function()
       local util = require("oil.util")
       if not util.is_oil_bufnr(0) then
-        vim.api.nvim_win_set_var(0, "oil_original_buffer", vim.api.nvim_get_current_buf())
-        vim.api.nvim_win_set_var(0, "oil_original_alternate", vim.fn.bufnr("#"))
+        vim.w.oil_original_buffer = vim.api.nvim_get_current_buf()
+        vim.w.oil_original_view = vim.fn.winsaveview()
+        vim.w.oil_original_alternate = vim.fn.bufnr("#")
       end
     end,
   })
-  vim.api.nvim_create_autocmd("BufWinEnter", {
+  vim.api.nvim_create_autocmd("BufEnter", {
     desc = "Set/unset oil window options and restore alternate buffer",
     group = aug,
     pattern = "*",
@@ -714,6 +749,10 @@ M.setup = function(opts)
         local has_orig, orig_buffer = pcall(vim.api.nvim_win_get_var, 0, "oil_original_buffer")
         if has_orig and vim.api.nvim_buf_is_valid(orig_buffer) then
           vim.fn.setreg("#", orig_buffer)
+        end
+        if not vim.w.oil_did_enter then
+          require("oil.view").set_win_options()
+          vim.w.oil_did_enter = true
         end
       elseif vim.fn.isdirectory(bufname) == 0 then
         -- Only run this logic if we are *not* in an oil buffer (and it's not a directory, which
@@ -783,16 +822,9 @@ M.setup = function(opts)
       end
       -- Then transfer over the relevant window vars
       vim.w.oil_did_enter = true
-      local has_orig, orig_buffer =
-        pcall(vim.api.nvim_win_get_var, parent_win, "oil_original_buffer")
-      if has_orig and vim.api.nvim_buf_is_valid(orig_buffer) then
-        vim.w.oil_original_buffer = orig_buffer
-      end
-      local has_orig_alt, alt_buffer =
-        pcall(vim.api.nvim_win_get_var, parent_win, "oil_original_alternate")
-      if has_orig_alt and vim.api.nvim_buf_is_valid(alt_buffer) then
-        vim.w.oil_original_alternate = alt_buffer
-      end
+      vim.w.oil_original_buffer = vim.w[parent_win].oil_original_buffer
+      vim.w.oil_original_view = vim.w[parent_win].oil_original_view
+      vim.w.oil_original_alternate = vim.w[parent_win].oil_original_alternate
       for k in pairs(config.win_options) do
         local varname = "_oil_" .. k
         local has_opt, opt = pcall(vim.api.nvim_win_get_var, parent_win, varname)

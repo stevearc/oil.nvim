@@ -38,27 +38,40 @@ local function parsedir(name)
   return name, isdir
 end
 
+---@class oil.ParseResult
+---@field data table Parsed entry data
+---@field ranges table<string, integer[]> Locations of the various columns
+---@field entry nil|oil.InternalEntry If the entry already exists
+
 ---Parse a single line in a buffer
 ---@param adapter oil.Adapter
 ---@param line string
 ---@param column_defs oil.ColumnSpec[]
----@return nil|table Parsed entry data
----@return nil|oil.InternalEntry If the entry already exists
----@return nil|string Error message
+---@return nil|oil.ParseResult
+---@return nil|string Error
 M.parse_line = function(adapter, line, column_defs)
   local ret = {}
+  local ranges = {}
+  local start = 1
   local value, rem = line:match("^/(%d+) (.+)$")
   if not value then
-    return nil, nil, "Malformed ID at start of line"
+    return nil, "Malformed ID at start of line"
   end
+  ranges.id = { start, value:len() + 1 }
+  start = ranges.id[2] + 1
   ret.id = tonumber(value)
   for _, def in ipairs(column_defs) do
     local name = util.split_config(def)
+    local range = { start }
+    local start_len = string.len(rem)
     value, rem = columns.parse_col(adapter, rem, def)
-    if not value then
-      return nil, nil, string.format("Parsing %s failed", name)
+    if not value or not rem then
+      return nil, string.format("Parsing %s failed", name)
     end
     ret[name] = value
+    range[2] = range[1] + start_len - string.len(rem) - 1
+    ranges[name] = range
+    start = range[2] + 1
   end
   local name = rem
   if name then
@@ -70,8 +83,9 @@ M.parse_line = function(adapter, line, column_defs)
     ret._type = isdir and "directory" or "file"
   end
   local entry = cache.get_entry_by_id(ret.id)
+  ranges.name = { start, start + string.len(rem) - 1 }
   if not entry then
-    return ret
+    return { data = ret, ranges = ranges }
   end
 
   -- Parse the symlink syntax
@@ -81,8 +95,9 @@ M.parse_line = function(adapter, line, column_defs)
     local name_pieces = vim.split(ret.name, " -> ", { plain = true })
     if #name_pieces ~= 2 then
       ret.name = ""
-      return ret
+      return { data = ret, ranges = ranges }
     end
+    ranges.name = { start, start + string.len(name_pieces[1]) - 1 }
     ret.name = parsedir(vim.trim(name_pieces[1]))
     ret.link_target = name_pieces[2]
     ret._type = "link"
@@ -93,7 +108,7 @@ M.parse_line = function(adapter, line, column_defs)
     ret._type = entry[FIELD.type]
   end
 
-  return ret, entry
+  return { data = ret, entry = entry, ranges = ranges }
 end
 
 ---@param bufnr integer
@@ -113,8 +128,8 @@ M.parse = function(bufnr)
     return diffs, errors
   end
   local scheme, path = util.parse_url(bufname)
-  local column_defs = columns.get_supported_columns(scheme)
   local parent_url = scheme .. path
+  local column_defs = columns.get_supported_columns(adapter)
   local children = cache.list_url(parent_url)
   local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, true)
   local original_entries = {}
@@ -137,8 +152,8 @@ M.parse = function(bufnr)
   end
   for i, line in ipairs(lines) do
     if line:match("^/%d+") then
-      local parsed_entry, entry, err = M.parse_line(adapter, line, column_defs)
-      if not parsed_entry then
+      local result, err = M.parse_line(adapter, line, column_defs)
+      if not result or err then
         table.insert(errors, {
           message = err,
           lnum = i - 1,
@@ -146,6 +161,8 @@ M.parse = function(bufnr)
         })
         goto continue
       end
+      local parsed_entry = result.data
+      local entry = result.entry
       if not parsed_entry.name or parsed_entry.name:match("/") or not entry then
         local message
         if not parsed_entry.name then

@@ -27,11 +27,16 @@ local function get_column(adapter, defn)
   return all_columns[name] or adapter.get_column(name)
 end
 
----@param scheme string
+---@param adapter_or_scheme string|oil.Adapter
 ---@return oil.ColumnSpec[]
-M.get_supported_columns = function(scheme)
+M.get_supported_columns = function(adapter_or_scheme)
+  local adapter
+  if type(adapter_or_scheme) == "string" then
+    adapter = config.get_adapter_by_scheme(adapter_or_scheme)
+  else
+    adapter = adapter_or_scheme
+  end
   local ret = {}
-  local adapter = config.get_adapter_by_scheme(scheme)
   for _, def in ipairs(config.columns) do
     if get_column(adapter, def) then
       table.insert(ret, def)

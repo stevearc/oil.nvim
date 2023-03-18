@@ -132,6 +132,8 @@ require("oil").setup({
     conceallevel = 3,
     concealcursor = "n",
   },
+  -- Oil will take over directory buffers (e.g. `vim .` or `:e src/`
+  default_file_explorer = true,
   -- Restore window options to previous values when leaving an oil buffer
   restore_win_options = true,
   -- Skip the confirmation popup for simple operations
@@ -233,6 +235,21 @@ Change the display columns for oil
 | Param | Type               | Desc |
 | ----- | ------------------ | ---- |
 | cols  | `oil.ColumnSpec[]` |      |
+
+### set_is_hidden_file(is_hidden_file)
+
+`set_is_hidden_file(is_hidden_file)` \
+Change how oil determines if the file is hidden
+
+| Param          | Type                                                  | Desc                                         |
+| -------------- | ----------------------------------------------------- | -------------------------------------------- |
+| is_hidden_file | `fun(filename: string, bufnr: nil\|integer): boolean` | Return true if the file/dir should be hidden |
+
+### toggle_hidden()
+
+`toggle_hidden()` \
+Toggle hidden files and directories
+
 
 ### get_current_dir()
 
