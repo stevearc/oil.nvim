@@ -254,6 +254,9 @@ M.initialize = function(bufnr)
     callback = function()
       local oil = require("oil")
       local parser = require("oil.mutator.parser")
+      if vim.wo.previewwindow then
+        return
+      end
 
       -- Force the cursor to be after the (concealed) ID at the beginning of the line
       local adapter = util.get_adapter(bufnr)

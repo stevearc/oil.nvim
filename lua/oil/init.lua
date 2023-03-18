@@ -382,11 +382,10 @@ M.select = function(opts)
     vim.notify("Cannot preview multiple entries", vim.log.levels.WARN)
     entries = { entries[1] }
   end
-  -- Close the preview window
-  for _, winid in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
-    if vim.api.nvim_win_is_valid(winid) and vim.api.nvim_win_get_option(winid, "previewwindow") then
-      vim.api.nvim_win_close(winid, true)
-    end
+  -- Close the preview window if we're not previewing the selection
+  local preview_win = util.get_preview_win()
+  if not opts.preview and preview_win then
+    vim.api.nvim_win_close(preview_win, true)
   end
   local bufname = vim.api.nvim_buf_get_name(0)
   local prev_win = vim.api.nvim_get_current_win()
@@ -415,28 +414,34 @@ M.select = function(opts)
         vim.api.nvim_win_close(0, false)
       end
     end
+
     local mods = {
       vertical = opts.vertical,
       horizontal = opts.horizontal,
       split = opts.split,
       keepalt = true,
     }
-    if vim.tbl_isempty(mods) then
-      mods = nil
-    end
-    local cmd
-    if opts.tab then
-      cmd = "tabedit"
-    elseif opts.split then
-      cmd = "split"
+    if opts.preview and preview_win then
+      vim.api.nvim_set_current_win(preview_win)
+      vim.cmd.edit({ args = { url }, mods = mods })
     else
-      cmd = "edit"
+      if vim.tbl_isempty(mods) then
+        mods = nil
+      end
+      local cmd
+      if opts.tab then
+        cmd = "tabedit"
+      elseif opts.split then
+        cmd = "split"
+      else
+        cmd = "edit"
+      end
+      vim.cmd({
+        cmd = cmd,
+        args = { url },
+        mods = mods,
+      })
     end
-    vim.cmd({
-      cmd = cmd,
-      args = { url },
-      mods = mods,
-    })
     if opts.preview then
       vim.api.nvim_win_set_option(0, "previewwindow", true)
       vim.api.nvim_win_set_var(0, "oil_entry_id", entry.id)
