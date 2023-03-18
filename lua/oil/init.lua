@@ -742,6 +742,10 @@ M.setup = function(opts)
         if has_orig and vim.api.nvim_buf_is_valid(orig_buffer) then
           vim.fn.setreg("#", orig_buffer)
         end
+        if not vim.w.oil_did_enter then
+          require("oil.view").set_win_options()
+          vim.w.oil_did_enter = true
+        end
       elseif vim.fn.isdirectory(bufname) == 0 then
         -- Only run this logic if we are *not* in an oil buffer (and it's not a directory, which
         -- will be replaced by an oil:// url)
