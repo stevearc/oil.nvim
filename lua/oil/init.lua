@@ -459,6 +459,9 @@ end
 local function maybe_hijack_directory_buffer(bufnr)
   local config = require("oil.config")
   local util = require("oil.util")
+  if not config.default_file_explorer then
+    return
+  end
   local bufname = vim.api.nvim_buf_get_name(bufnr)
   if bufname == "" then
     return
