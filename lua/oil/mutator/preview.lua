@@ -1,5 +1,6 @@
 local columns = require("oil.columns")
 local config = require("oil.config")
+local layout = require("oil.layout")
 local util = require("oil.util")
 local M = {}
 
@@ -44,6 +45,8 @@ end
 ---@param should_confirm nil|boolean
 ---@param cb fun(proceed: boolean)
 M.show = vim.schedule_wrap(function(actions, should_confirm, cb)
+  -- The schedule wrap ensures that we actually enter the floating window.
+  -- Not sure why it doesn't work without that
   if should_confirm == false or #actions == 0 then
     cb(true)
     return
@@ -52,36 +55,52 @@ M.show = vim.schedule_wrap(function(actions, should_confirm, cb)
     cb(true)
     return
   end
-  -- The schedule wrap ensures that we actually enter the floating window.
-  -- Not sure why it doesn't work without that
+
+  -- Create the buffer
   local bufnr = vim.api.nvim_create_buf(false, true)
   vim.bo[bufnr].bufhidden = "wipe"
-  local width = 120
-  local height = 40
+  local lines = {}
+  local max_line_width = 0
+  for _, action in ipairs(actions) do
+    local adapter = util.get_adapter_for_action(action)
+    local line
+    if action.type == "change" then
+      line = columns.render_change_action(adapter, action)
+    else
+      line = adapter.render_action(action)
+    end
+    table.insert(lines, line)
+    local line_width = vim.api.nvim_strwidth(line)
+    if line_width > max_line_width then
+      max_line_width = line_width
+    end
+  end
+  table.insert(lines, "")
+
+  -- Create the floating window
+  local width, height = layout.calculate_dims(max_line_width, #lines + 1, config.preview)
   local winid = vim.api.nvim_open_win(bufnr, true, {
     relative = "editor",
     width = width,
     height = height,
-    row = math.floor((vim.o.lines - vim.o.cmdheight - height) / 2),
-    col = math.floor((vim.o.columns - width) / 2),
+    row = math.floor((layout.get_editor_height() - height) / 2),
+    col = math.floor((layout.get_editor_width() - width) / 2),
     zindex = 152, -- render on top of the floating window title
     style = "minimal",
-    border = "rounded",
+    border = config.preview.border,
   })
   vim.bo[bufnr].filetype = "oil_preview"
   vim.bo[bufnr].syntax = "oil_preview"
-
-  local lines = {}
-  for _, action in ipairs(actions) do
-    local adapter = util.get_adapter_for_action(action)
-    if action.type == "change" then
-      table.insert(lines, columns.render_change_action(adapter, action))
-    else
-      table.insert(lines, adapter.render_action(action))
-    end
+  for k, v in pairs(config.preview.win_options) do
+    vim.api.nvim_win_set_option(winid, k, v)
   end
-  table.insert(lines, "")
+
+  -- Finish setting the last line and highlights on the buffer
   width = vim.api.nvim_win_get_width(0)
+  height = vim.api.nvim_win_get_height(0)
+  while #lines < height - 1 do
+    table.insert(lines, "")
+  end
   local last_line = "[O]k    [C]ancel"
   local highlights = {}
   local padding = string.rep(" ", math.floor((width - last_line:len()) / 2))
@@ -97,6 +116,7 @@ M.show = vim.schedule_wrap(function(actions, should_confirm, cb)
     vim.api.nvim_buf_add_highlight(bufnr, ns, unpack(hl))
   end
 
+  -- Attach autocmds and keymaps
   local cancel
   local confirm
   local function make_callback(value)
