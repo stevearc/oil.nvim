@@ -317,7 +317,11 @@ M.close = function()
   -- Deleting the buffer closes all windows with that buffer open, so navigate to a different
   -- buffer first
   local oilbuf = vim.api.nvim_get_current_buf()
-  vim.cmd.bprev()
+  ok = pcall(vim.cmd.bprev)
+  if not ok then
+    -- If `bprev` failed, there are no buffers open so we should create a new one with enew
+    vim.cmd.enew()
+  end
   vim.api.nvim_buf_delete(oilbuf, { force = true })
 end
 

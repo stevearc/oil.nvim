@@ -62,4 +62,13 @@ a.describe("regression tests", function()
     assert.equals(winid, vim.api.nvim_get_current_win())
     assert.equals(bufnr, vim.api.nvim_get_current_buf())
   end)
+
+  -- https://github.com/stevearc/oil.nvim/issues/79
+  a.it("Returns to empty buffer on close", function()
+    oil.open()
+    test_util.wait_for_autocmd("BufReadPost")
+    oil.close()
+    assert.not_equals("oil", vim.bo.filetype)
+    assert.equals("", vim.api.nvim_buf_get_name(0))
+  end)
 end)
