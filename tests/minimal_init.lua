@@ -7,5 +7,5 @@ require("oil").setup({
   adapters = {
     ["oil-test://"] = "test",
   },
-  trash = false,
+  silence_disclaimer = true,
 })
