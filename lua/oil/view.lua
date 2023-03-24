@@ -120,6 +120,8 @@ M.rerender_all_oil_buffers = function(opts)
   for _, bufnr in ipairs(buffers) do
     if hidden_buffers[bufnr] then
       vim.b[bufnr].oil_dirty = opts
+      -- We also need to mark this as nomodified so it doesn't interfere with quitting vim
+      vim.bo[bufnr].modified = false
     else
       M.render_buffer_async(bufnr, opts)
     end

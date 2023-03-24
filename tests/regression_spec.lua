@@ -1,11 +1,22 @@
 require("plenary.async").tests.add_to_env()
 local oil = require("oil")
 local test_util = require("tests.test_util")
+local TmpDir = require("tests.tmpdir")
 
 a.describe("regression tests", function()
-  after_each(function()
+  local tmpdir
+  a.before_each(function()
+    tmpdir = TmpDir.new()
+  end)
+  a.after_each(function()
+    if tmpdir then
+      tmpdir:dispose()
+      a.util.scheduler()
+      tmpdir = nil
+    end
     test_util.reset_editor()
   end)
+
   -- see https://github.com/stevearc/oil.nvim/issues/25
   a.it("can edit dirs that will be renamed to an existing buffer", function()
     vim.cmd.edit({ args = { "README.md" } })
@@ -70,5 +81,28 @@ a.describe("regression tests", function()
     oil.close()
     assert.not_equals("oil", vim.bo.filetype)
     assert.equals("", vim.api.nvim_buf_get_name(0))
+  end)
+
+  a.it("All buffers set nomodified after save", function()
+    tmpdir:create({ "a.txt" })
+    a.util.scheduler()
+    vim.cmd.edit({ args = { "oil://" .. vim.fn.fnamemodify(tmpdir.path, ":p") } })
+    local first_dir = vim.api.nvim_get_current_buf()
+    test_util.wait_for_autocmd("BufReadPost")
+    test_util.feedkeys({ "dd", "itest/<esc>", "<CR>" }, 10)
+    vim.wait(1000, function()
+      return vim.bo.modifiable
+    end, 10)
+    test_util.feedkeys({ "p" }, 10)
+    a.util.scheduler()
+    oil.save({ confirm = false })
+    vim.wait(1000, function()
+      return vim.bo.modifiable
+    end, 10)
+    tmpdir:assert_fs({
+      ["test/a.txt"] = "a.txt",
+    })
+    -- The first oil buffer should not be modified anymore
+    assert.falsy(vim.bo[first_dir].modified)
   end)
 end)
