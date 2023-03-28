@@ -1,4 +1,6 @@
+local config = require("oil.config")
 local columns = require("oil.columns")
+local layout = require("oil.layout")
 local loading = require("oil.loading")
 local util = require("oil.util")
 local Progress = {}
@@ -11,6 +13,7 @@ function Progress.new()
   return setmetatable({
     lines = { "", "", "" },
     bufnr = bufnr,
+    autocmds = {},
   }, {
     __index = Progress,
   })
@@ -30,21 +33,52 @@ function Progress:show()
       self:_render()
     end)
   )
-  local width = 120
-  local height = 10
+  local width, height = layout.calculate_dims(120, 10, config.progress)
   self.winid = vim.api.nvim_open_win(self.bufnr, true, {
     relative = "editor",
     width = width,
     height = height,
-    row = math.floor((vim.o.lines - vim.o.cmdheight - height) / 2),
-    col = math.floor((vim.o.columns - width) / 2),
+    row = math.floor((layout.get_editor_height() - height) / 2),
+    col = math.floor((layout.get_editor_width() - width) / 2),
+    zindex = 152, -- render on top of the floating window title
     style = "minimal",
-    border = "rounded",
+    border = config.progress.border,
   })
+  vim.bo[self.bufnr].filetype = "oil_progress"
+  for k, v in pairs(config.preview.win_options) do
+    vim.api.nvim_win_set_option(self.winid, k, v)
+  end
+  table.insert(
+    self.autocmds,
+    vim.api.nvim_create_autocmd("VimResized", {
+      callback = function()
+        self:_reposition()
+      end,
+    })
+  )
 end
 
 function Progress:_render()
   util.render_centered_text(self.bufnr, self.lines)
+end
+
+function Progress:_reposition()
+  if self.winid and vim.api.nvim_win_is_valid(self.winid) then
+    local min_width = 120
+    local line_width = vim.api.nvim_strwidth(self.lines[1])
+    if line_width > min_width then
+      min_width = line_width
+    end
+    local width, height = layout.calculate_dims(min_width, 10, config.progress)
+    vim.api.nvim_win_set_config(self.winid, {
+      relative = "editor",
+      width = width,
+      height = height,
+      row = math.floor((layout.get_editor_height() - height) / 2),
+      col = math.floor((layout.get_editor_width() - width) / 2),
+      zindex = 152, -- render on top of the floating window title
+    })
+  end
 end
 
 ---@param action oil.Action
@@ -60,6 +94,7 @@ function Progress:set_action(action, idx, total)
   end
   self.lines[1] = change_line
   self.lines[3] = string.format("[%d/%d]", idx, total)
+  self:_reposition()
   self:_render()
 end
 
@@ -74,6 +109,10 @@ function Progress:close()
     end
     self.winid = nil
   end
+  for _, id in ipairs(self.autocmds) do
+    vim.api.nvim_del_autocmd(id)
+  end
+  self.autocmds = {}
 end
 
 return Progress
