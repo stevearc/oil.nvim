@@ -225,6 +225,7 @@ end
 ---@param dir nil|string When nil, open the parent of the current buffer, or the cwd if current buffer is not a file
 M.open_float = function(dir)
   local config = require("oil.config")
+  local layout = require("oil.layout")
   local util = require("oil.util")
   local view = require("oil.view")
   local parent_url, basename = M.get_url_for_path(dir)
@@ -238,7 +239,7 @@ M.open_float = function(dir)
   local bufnr = vim.api.nvim_create_buf(false, true)
   vim.bo[bufnr].bufhidden = "wipe"
   local total_width = vim.o.columns
-  local total_height = util.get_editor_height()
+  local total_height = layout.get_editor_height()
   local width = total_width - 2 * config.float.padding
   if config.float.border ~= "none" then
     width = width - 2 -- The border consumes 1 col on each side

@@ -287,20 +287,6 @@ M.is_floating_win = function(winid)
   return vim.api.nvim_win_get_config(winid or 0).relative ~= ""
 end
 
----@return integer
-M.get_editor_height = function()
-  local total_height = vim.o.lines - vim.o.cmdheight
-  if vim.o.showtabline == 2 or (vim.o.showtabline == 1 and #vim.api.nvim_list_tabpages() > 1) then
-    total_height = total_height - 1
-  end
-  if
-    vim.o.laststatus >= 2 or (vim.o.laststatus == 1 and #vim.api.nvim_tabpage_list_wins(0) > 1)
-  then
-    total_height = total_height - 1
-  end
-  return total_height
-end
-
 local winid_map = {}
 M.add_title_to_win = function(winid, opts)
   opts = opts or {}
@@ -442,6 +428,8 @@ M.get_adapter_for_action = function(action)
   return adapter
 end
 
+---@param bufnr integer
+---@param text string|string[]
 M.render_centered_text = function(bufnr, text)
   if not vim.api.nvim_buf_is_valid(bufnr) then
     return

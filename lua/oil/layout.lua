@@ -13,10 +13,12 @@ local function calc_float(value, max_value)
   end
 end
 
+---@return integer
 M.get_editor_width = function()
   return vim.o.columns
 end
 
+---@return integer
 M.get_editor_height = function()
   local editor_height = vim.o.lines - vim.o.cmdheight
   -- Subtract 1 if tabline is visible

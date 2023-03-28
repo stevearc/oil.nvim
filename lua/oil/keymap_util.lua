@@ -1,4 +1,5 @@
 local actions = require("oil.actions")
+local layout = require("oil.layout")
 local util = require("oil.util")
 local M = {}
 
@@ -84,7 +85,7 @@ M.show_help = function(keymaps)
   vim.api.nvim_buf_set_option(bufnr, "bufhidden", "wipe")
 
   local editor_width = vim.o.columns
-  local editor_height = util.get_editor_height()
+  local editor_height = layout.get_editor_height()
   local winid = vim.api.nvim_open_win(bufnr, true, {
     relative = "editor",
     row = math.max(0, (editor_height - #lines) / 2),

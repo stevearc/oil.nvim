@@ -1,3 +1,4 @@
+local layout = require("oil.layout")
 local util = require("oil.util")
 local SSHConnection = {}
 
@@ -233,10 +234,10 @@ function SSHConnection:open_terminal()
   end
   local min_width = 120
   local min_height = 20
-  local total_height = util.get_editor_height()
+  local total_height = layout.get_editor_height()
   local width = math.min(min_width, vim.o.columns - 2)
   local height = math.min(min_height, total_height - 3)
-  local row = math.floor((util.get_editor_height() - height) / 2)
+  local row = math.floor((total_height - height) / 2)
   local col = math.floor((vim.o.columns - width) / 2)
   self.term_winid = vim.api.nvim_open_win(self.term_bufnr, true, {
     relative = "editor",

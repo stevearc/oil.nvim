@@ -1,4 +1,4 @@
-local util = require("oil.util")
+local layout = require("oil.layout")
 local ReplLayout = {}
 
 ---@param opts table
@@ -19,12 +19,12 @@ ReplLayout.new = function(opts)
     on_submit = { opts.on_submit, "f" },
     on_cancel = { opts.on_cancel, "f", true },
   })
-  local total_height = util.get_editor_height()
+  local total_height = layout.get_editor_height()
   local bufnr = vim.api.nvim_create_buf(false, true)
   vim.bo[bufnr].bufhidden = "wipe"
   local width = math.min(opts.min_width, vim.o.columns - 2)
   local height = math.min(opts.min_height, total_height - 3)
-  local row = math.floor((util.get_editor_height() - height) / 2)
+  local row = math.floor((total_height - height) / 2)
   local col = math.floor((vim.o.columns - width) / 2)
   local view_winid = vim.api.nvim_open_win(bufnr, false, {
     relative = "editor",
