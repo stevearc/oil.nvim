@@ -103,6 +103,30 @@ M.get_all_buffers = function()
   return vim.tbl_filter(vim.api.nvim_buf_is_loaded, vim.tbl_keys(session))
 end
 
+local buffers_locked = false
+---Make all oil buffers nomodifiable
+M.lock_buffers = function()
+  buffers_locked = true
+  for bufnr in pairs(session) do
+    if vim.api.nvim_buf_is_loaded(bufnr) then
+      vim.bo[bufnr].modifiable = false
+    end
+  end
+end
+
+---Restore normal modifiable settings for oil buffers
+M.unlock_buffers = function()
+  buffers_locked = false
+  for bufnr in pairs(session) do
+    if vim.api.nvim_buf_is_loaded(bufnr) then
+      local adapter = util.get_adapter(bufnr)
+      if adapter then
+        vim.bo[bufnr].modifiable = adapter.is_modifiable(bufnr)
+      end
+    end
+  end
+end
+
 ---@param opts table
 ---@note
 --- This DISCARDS ALL MODIFICATIONS a user has made to oil buffers
@@ -350,7 +374,7 @@ local function render_buffer(bufnr, opts)
   })
   local scheme = util.parse_url(bufname)
   local adapter = util.get_adapter(bufnr)
-  if not adapter then
+  if not scheme or not adapter then
     return false
   end
   local entries = cache.list_url(bufname)
@@ -539,7 +563,7 @@ M.render_buffer_async = function(bufnr, opts, callback)
     if not preserve_undo then
       vim.bo[bufnr].undolevels = vim.api.nvim_get_option("undolevels")
     end
-    vim.bo[bufnr].modifiable = adapter.is_modifiable(bufnr)
+    vim.bo[bufnr].modifiable = not buffers_locked and adapter.is_modifiable(bufnr)
     if callback then
       callback()
     end

@@ -431,19 +431,24 @@ M.process_actions = function(actions, cb)
   next_action()
 end
 
+local mutation_in_progress = false
+
 ---@param confirm nil|boolean
 M.try_write_changes = function(confirm)
+  if mutation_in_progress then
+    error("Cannot perform mutation when already in progress")
+    return
+  end
   local current_buf = vim.api.nvim_get_current_buf()
   local was_modified = vim.bo.modified
   local buffers = view.get_all_buffers()
   local all_diffs = {}
   local all_errors = {}
 
-  local was_modifiable = {}
+  mutation_in_progress = true
+  -- Lock the buffer to prevent race conditions from the user modifying them during parsing
+  view.lock_buffers()
   for _, bufnr in ipairs(buffers) do
-    was_modifiable[bufnr] = vim.bo[bufnr].modifiable
-    -- Lock the buffer to prevent race conditions
-    vim.bo[bufnr].modifiable = false
     if vim.bo[bufnr].modified then
       local diffs, errors = parser.parse(bufnr)
       all_diffs[bufnr] = diffs
@@ -453,13 +458,12 @@ M.try_write_changes = function(confirm)
     end
   end
   local function unlock()
-    for _, bufnr in ipairs(buffers) do
-      pcall(vim.api.nvim_buf_set_option, bufnr, "modifiable", was_modifiable[bufnr])
-    end
+    view.unlock_buffers()
     -- The ":write" will set nomodified even if we cancel here, so we need to restore it
     if was_modified then
       vim.bo[current_buf].modified = true
     end
+    mutation_in_progress = false
   end
 
   local ns = vim.api.nvim_create_namespace("Oil")
@@ -500,8 +504,10 @@ M.try_write_changes = function(confirm)
       M.process_actions(
         actions,
         vim.schedule_wrap(function(err)
+          view.unlock_buffers()
           if err then
             vim.notify(string.format("[oil] Error applying actions: %s", err), vim.log.levels.ERROR)
+            view.rerender_all_oil_buffers({ preserve_undo = false })
           else
             local current_entry = oil.get_cursor_entry()
             if current_entry then
@@ -513,6 +519,7 @@ M.try_write_changes = function(confirm)
             end
             view.rerender_all_oil_buffers({ preserve_undo = M.trash })
           end
+          mutation_in_progress = false
         end)
       )
     end)

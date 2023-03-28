@@ -69,7 +69,9 @@ function Progress:close()
     self.timer = nil
   end
   if self.winid then
-    vim.api.nvim_win_close(self.winid, true)
+    if vim.api.nvim_win_is_valid(self.winid) then
+      vim.api.nvim_win_close(self.winid, true)
+    end
     self.winid = nil
   end
 end
