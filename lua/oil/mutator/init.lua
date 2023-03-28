@@ -387,22 +387,33 @@ M.process_actions = function(actions, cb)
 
   local finished = false
   local progress = Progress.new()
+  local function finish(...)
+    if not finished then
+      finished = true
+      progress:close()
+      cb(...)
+    end
+  end
+
   -- Defer showing the progress to avoid flicker for fast operations
   vim.defer_fn(function()
     if not finished then
-      progress:show()
+      progress:show({
+        -- TODO some actions are actually cancelable.
+        -- We should stop them instead of stopping after the current action
+        cancel = function()
+          finish("Canceled")
+        end,
+      })
     end
   end, 100)
-
-  local function finish(...)
-    finished = true
-    progress:close()
-    cb(...)
-  end
 
   local idx = 1
   local next_action
   next_action = function()
+    if finished then
+      return
+    end
     if idx > #actions then
       finish()
       return
@@ -415,7 +426,10 @@ M.process_actions = function(actions, cb)
       return finish(adapter)
     end
     local callback = vim.schedule_wrap(function(err)
-      if err then
+      if finished then
+        -- This can happen if the user canceled out of the progress window
+        return
+      elseif err then
         finish(err)
       else
         cache.perform_action(action)

@@ -428,40 +428,104 @@ M.get_adapter_for_action = function(action)
   return adapter
 end
 
+---@param str string
+---@param align "left"|"right"|"center"
+---@param width integer
+---@return string
+---@return integer
+M.h_align = function(str, align, width)
+  if align == "center" then
+    local padding = math.floor((width - vim.api.nvim_strwidth(str)) / 2)
+    return string.rep(" ", padding) .. str, padding
+  elseif align == "right" then
+    local padding = width - vim.api.nvim_strwidth(str)
+    return string.rep(" ", padding) .. str, padding
+  else
+    return str, 0
+  end
+end
+
 ---@param bufnr integer
 ---@param text string|string[]
-M.render_centered_text = function(bufnr, text)
+---@param opts nil|table
+---    h_align nil|"left"|"right"|"center"
+---    v_align nil|"top"|"bottom"|"center"
+---    actions nil|string[]
+---    winid nil|integer
+M.render_text = function(bufnr, text, opts)
+  opts = vim.tbl_deep_extend("keep", opts or {}, {
+    h_align = "center",
+    v_align = "center",
+  })
   if not vim.api.nvim_buf_is_valid(bufnr) then
     return
   end
   if type(text) == "string" then
     text = { text }
   end
-  local winid
-  for _, win in ipairs(vim.api.nvim_list_wins()) do
-    if vim.api.nvim_win_get_buf(win) == bufnr then
-      winid = win
-      break
-    end
-  end
   local height = 40
   local width = 30
-  if winid then
-    height = vim.api.nvim_win_get_height(winid)
-    width = vim.api.nvim_win_get_width(winid)
+
+  -- If no winid passed in, find the first win that displays this buffer
+  if not opts.winid then
+    for _, winid in ipairs(vim.api.nvim_list_wins()) do
+      if vim.api.nvim_win_is_valid(winid) and vim.api.nvim_win_get_buf(winid) == bufnr then
+        opts.winid = winid
+        break
+      end
+    end
+  end
+  if opts.winid then
+    height = vim.api.nvim_win_get_height(opts.winid)
+    width = vim.api.nvim_win_get_width(opts.winid)
   end
   local lines = {}
-  for _ = 1, (height / 2) - (#text / 2) do
-    table.insert(lines, "")
+
+  -- Add vertical spacing for vertical alignment
+  if opts.v_align == "center" then
+    for _ = 1, (height / 2) - (#text / 2) do
+      table.insert(lines, "")
+    end
+  elseif opts.v_align == "bottom" then
+    local num_lines = height
+    if opts.actions then
+      num_lines = num_lines - 2
+    end
+    while #lines + #text < num_lines do
+      table.insert(lines, "")
+    end
   end
+
+  -- Add the lines of text
   for _, line in ipairs(text) do
-    line = string.rep(" ", (width - vim.api.nvim_strwidth(line)) / 2) .. line
+    line = M.h_align(line, opts.h_align, width)
     table.insert(lines, line)
   end
-  vim.api.nvim_buf_set_option(bufnr, "modifiable", true)
+
+  -- Render the actions (if any) at the bottom
+  local highlights = {}
+  if opts.actions then
+    while #lines < height - 1 do
+      table.insert(lines, "")
+    end
+    local last_line, padding = M.h_align(table.concat(opts.actions, "    "), "center", width)
+    local col = padding
+    for _, action in ipairs(opts.actions) do
+      table.insert(highlights, { "Special", #lines, col, col + 3 })
+      col = padding + action:len() + 4
+    end
+    table.insert(lines, last_line)
+  end
+
+  vim.bo[bufnr].modifiable = true
   pcall(vim.api.nvim_buf_set_lines, bufnr, 0, -1, false, lines)
-  vim.api.nvim_buf_set_option(bufnr, "modifiable", false)
+  vim.bo[bufnr].modifiable = false
   vim.bo[bufnr].modified = false
+  local ns = vim.api.nvim_create_namespace("Oil")
+  vim.api.nvim_buf_clear_namespace(bufnr, ns, 0, -1)
+  for _, hl in ipairs(highlights) do
+    vim.api.nvim_buf_add_highlight(bufnr, ns, unpack(hl))
+  end
 end
 
 ---Run a function in the context of a full-editor window

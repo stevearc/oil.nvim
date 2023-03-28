@@ -48,7 +48,7 @@ M.set_loading = function(bufnr, is_loading)
             return
           end
           local lines = { util.lpad("Loading", math.floor(width / 2) - 3), bar_iter() }
-          util.render_centered_text(bufnr, lines)
+          util.render_text(bufnr, lines)
         end)
       )
     end

@@ -11,7 +11,8 @@ function Progress.new()
   local bufnr = vim.api.nvim_create_buf(false, true)
   vim.bo[bufnr].bufhidden = "wipe"
   return setmetatable({
-    lines = { "", "", "" },
+    lines = { "", "" },
+    count = "",
     bufnr = bufnr,
     autocmds = {},
   }, {
@@ -19,17 +20,21 @@ function Progress.new()
   })
 end
 
-function Progress:show()
+---@param opts nil|table
+---    cancel fun()
+function Progress:show(opts)
+  opts = opts or {}
   if self.winid and vim.api.nvim_win_is_valid(self.winid) then
     return
   end
+  self.cancel = opts.cancel
   local loading_iter = loading.get_bar_iter()
   self.timer = vim.loop.new_timer()
   self.timer:start(
     0,
     math.floor(1000 / FPS),
     vim.schedule_wrap(function()
-      self.lines[2] = loading_iter()
+      self.lines[2] = string.format("%s %s", self.count, loading_iter())
       self:_render()
     end)
   )
@@ -56,10 +61,13 @@ function Progress:show()
       end,
     })
   )
+  local cancel = self.cancel or function() end
+  vim.keymap.set("n", "c", cancel, { buffer = self.bufnr, nowait = true })
+  vim.keymap.set("n", "C", cancel, { buffer = self.bufnr, nowait = true })
 end
 
 function Progress:_render()
-  util.render_centered_text(self.bufnr, self.lines)
+  util.render_text(self.bufnr, self.lines, { winid = self.winid, actions = { "[C]ancel" } })
 end
 
 function Progress:_reposition()
@@ -93,7 +101,7 @@ function Progress:set_action(action, idx, total)
     change_line = adapter.render_action(action)
   end
   self.lines[1] = change_line
-  self.lines[3] = string.format("[%d/%d]", idx, total)
+  self.count = string.format("%d/%d", idx, total)
   self:_reposition()
   self:_render()
 end

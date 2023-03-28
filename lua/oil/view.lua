@@ -532,7 +532,7 @@ M.render_buffer_async = function(bufnr, opts, callback)
     if not preserve_undo then
       vim.bo[bufnr].undolevels = vim.api.nvim_get_option("undolevels")
     end
-    util.render_centered_text(bufnr, { "Error: " .. message })
+    util.render_text(bufnr, { "Error: " .. message })
     if callback then
       callback(message)
     else

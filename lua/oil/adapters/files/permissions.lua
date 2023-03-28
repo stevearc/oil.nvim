@@ -1,6 +1,6 @@
 local M = {}
 
----@param exe_modifier nil|string
+---@param exe_modifier nil|false|string
 ---@param num integer
 ---@return string
 local function perm_to_str(exe_modifier, num)
@@ -36,9 +36,9 @@ M.mode_to_octal_str = function(mode)
 end
 
 ---@param str string String of 3 characters
----@return integer
+---@return nil|integer
 local function str_to_mode(str)
-  local r, w, x = unpack(vim.split(str, ""))
+  local r, w, x = unpack(vim.split(str, "", {}))
   local mode = 0
   if r == "r" then
     mode = bit.bor(mode, 4)

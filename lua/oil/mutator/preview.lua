@@ -45,25 +45,11 @@ end
 ---@param bufnr integer
 ---@param lines string[]
 local function render_lines(winid, bufnr, lines)
-  -- Finish setting the last line and highlights on the buffer
-  local width = vim.api.nvim_win_get_width(winid)
-  local height = vim.api.nvim_win_get_height(winid)
-  while #lines < height do
-    table.insert(lines, "")
-  end
-  local last_line = "[O]k    [C]ancel"
-  local padding = string.rep(" ", math.floor((width - last_line:len()) / 2))
-  local p_len = padding:len()
-  local padded_last_line = padding .. last_line
-  lines[#lines] = padded_last_line
-  vim.bo[bufnr].modifiable = true
-  vim.api.nvim_buf_set_lines(bufnr, 0, -1, true, lines)
-  vim.bo[bufnr].modified = false
-  vim.bo[bufnr].modifiable = false
-  local ns = vim.api.nvim_create_namespace("Oil")
-  vim.api.nvim_buf_clear_namespace(bufnr, ns, #lines - 1, #lines)
-  vim.api.nvim_buf_add_highlight(bufnr, ns, "Special", #lines - 1, p_len, p_len + 3)
-  vim.api.nvim_buf_add_highlight(bufnr, ns, "Special", #lines - 1, p_len + 8, p_len + 11)
+  util.render_text(
+    bufnr,
+    lines,
+    { v_align = "top", h_align = "left", winid = winid, actions = { "[O]k", "[C]ancel" } }
+  )
 end
 
 ---@param actions oil.Action[]
@@ -170,11 +156,9 @@ M.show = vim.schedule_wrap(function(actions, should_confirm, cb)
       end,
     })
   )
-  vim.keymap.set("n", "q", cancel, { buffer = bufnr })
-  vim.keymap.set("n", "C", cancel, { buffer = bufnr })
-  vim.keymap.set("n", "c", cancel, { buffer = bufnr })
-  vim.keymap.set("n", "<Esc>", cancel, { buffer = bufnr })
-  vim.keymap.set("n", "<C-c>", cancel, { buffer = bufnr })
+  for _, cancel_key in ipairs({ "q", "C", "c", "<C-c>", "<Esc>" }) do
+    vim.keymap.set("n", cancel_key, cancel, { buffer = bufnr, nowait = true })
+  end
   vim.keymap.set("n", "O", confirm, { buffer = bufnr })
   vim.keymap.set("n", "o", confirm, { buffer = bufnr })
 end)
