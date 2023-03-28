@@ -222,6 +222,10 @@ M.initialize = function(bufnr)
   if not vim.api.nvim_buf_is_valid(bufnr) then
     return
   end
+  vim.api.nvim_clear_autocmds({
+    buffer = bufnr,
+    group = "Oil",
+  })
   vim.bo[bufnr].buftype = "acwrite"
   vim.bo[bufnr].syntax = "oil"
   vim.bo[bufnr].filetype = "oil"
@@ -231,10 +235,6 @@ M.initialize = function(bufnr)
     vim.api.nvim_buf_set_option(bufnr, k, v)
   end
   M.set_win_options()
-  vim.api.nvim_clear_autocmds({
-    buffer = bufnr,
-    group = "Oil",
-  })
   vim.api.nvim_create_autocmd("BufHidden", {
     desc = "Delete oil buffers when no longer in use",
     group = "Oil",

@@ -105,4 +105,13 @@ a.describe("regression tests", function()
     -- The first oil buffer should not be modified anymore
     assert.falsy(vim.bo[first_dir].modified)
   end)
+
+  a.it("refreshing buffer doesn't lose track of it", function()
+    vim.cmd.edit({ args = { "." } })
+    test_util.wait_for_autocmd("BufReadPost")
+    local bufnr = vim.api.nvim_get_current_buf()
+    vim.cmd.edit({ bang = true })
+    test_util.wait_for_autocmd("BufReadPost")
+    assert.are.same({ bufnr }, require("oil.view").get_all_buffers())
+  end)
 end)
