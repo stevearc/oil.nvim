@@ -41,6 +41,31 @@ local function is_simple_edit(actions)
   return true
 end
 
+---@param winid integer
+---@param bufnr integer
+---@param lines string[]
+local function render_lines(winid, bufnr, lines)
+  -- Finish setting the last line and highlights on the buffer
+  local width = vim.api.nvim_win_get_width(winid)
+  local height = vim.api.nvim_win_get_height(winid)
+  while #lines < height do
+    table.insert(lines, "")
+  end
+  local last_line = "[O]k    [C]ancel"
+  local padding = string.rep(" ", math.floor((width - last_line:len()) / 2))
+  local p_len = padding:len()
+  local padded_last_line = padding .. last_line
+  lines[#lines] = padded_last_line
+  vim.bo[bufnr].modifiable = true
+  vim.api.nvim_buf_set_lines(bufnr, 0, -1, true, lines)
+  vim.bo[bufnr].modified = false
+  vim.bo[bufnr].modifiable = false
+  local ns = vim.api.nvim_create_namespace("Oil")
+  vim.api.nvim_buf_clear_namespace(bufnr, ns, #lines - 1, #lines)
+  vim.api.nvim_buf_add_highlight(bufnr, ns, "Special", #lines - 1, p_len, p_len + 3)
+  vim.api.nvim_buf_add_highlight(bufnr, ns, "Special", #lines - 1, p_len + 8, p_len + 11)
+end
+
 ---@param actions oil.Action[]
 ---@param should_confirm nil|boolean
 ---@param cb fun(proceed: boolean)
@@ -95,34 +120,20 @@ M.show = vim.schedule_wrap(function(actions, should_confirm, cb)
     vim.api.nvim_win_set_option(winid, k, v)
   end
 
-  -- Finish setting the last line and highlights on the buffer
-  width = vim.api.nvim_win_get_width(0)
-  height = vim.api.nvim_win_get_height(0)
-  while #lines < height - 1 do
-    table.insert(lines, "")
-  end
-  local last_line = "[O]k    [C]ancel"
-  local highlights = {}
-  local padding = string.rep(" ", math.floor((width - last_line:len()) / 2))
-  last_line = padding .. last_line
-  table.insert(highlights, { "Special", #lines, padding:len(), padding:len() + 3 })
-  table.insert(highlights, { "Special", #lines, padding:len() + 8, padding:len() + 11 })
-  table.insert(lines, last_line)
-  vim.api.nvim_buf_set_lines(bufnr, 0, -1, true, lines)
-  vim.bo[bufnr].modified = false
-  vim.bo[bufnr].modifiable = false
-  local ns = vim.api.nvim_create_namespace("Oil")
-  for _, hl in ipairs(highlights) do
-    vim.api.nvim_buf_add_highlight(bufnr, ns, unpack(hl))
-  end
+  render_lines(winid, bufnr, lines)
 
   -- Attach autocmds and keymaps
   local cancel
   local confirm
+  local autocmds = {}
   local function make_callback(value)
     return function()
       confirm = function() end
       cancel = function() end
+      for _, id in ipairs(autocmds) do
+        vim.api.nvim_del_autocmd(id)
+      end
+      autocmds = {}
       vim.api.nvim_win_close(winid, true)
       cb(value)
     end
@@ -140,6 +151,25 @@ M.show = vim.schedule_wrap(function(actions, should_confirm, cb)
     once = true,
     nested = true,
   })
+  table.insert(
+    autocmds,
+    vim.api.nvim_create_autocmd("VimResized", {
+      callback = function()
+        if vim.api.nvim_win_is_valid(winid) then
+          width, height = layout.calculate_dims(max_line_width, #lines, config.preview)
+          vim.api.nvim_win_set_config(winid, {
+            relative = "editor",
+            width = width,
+            height = height,
+            row = math.floor((layout.get_editor_height() - height) / 2),
+            col = math.floor((layout.get_editor_width() - width) / 2),
+            zindex = 152, -- render on top of the floating window title
+          })
+          render_lines(winid, bufnr, lines)
+        end
+      end,
+    })
+  )
   vim.keymap.set("n", "q", cancel, { buffer = bufnr })
   vim.keymap.set("n", "C", cancel, { buffer = bufnr })
   vim.keymap.set("n", "c", cancel, { buffer = bufnr })
