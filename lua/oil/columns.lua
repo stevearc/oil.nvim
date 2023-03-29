@@ -205,12 +205,12 @@ if has_devicons then
         end
       end
       if type == "directory" then
-        return { " ", "OilDir" }
+        return { config.icons.directory, "OilDir" }
       else
         local icon
         local hl
         icon, hl = devicons.get_icon(name)
-        icon = icon or ""
+        icon = icon or config.icons.default_file
         return { icon .. " ", hl }
       end
     end,
