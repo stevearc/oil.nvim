@@ -132,6 +132,11 @@ require("oil").setup({
     conceallevel = 3,
     concealcursor = "n",
   },
+  -- Custom icons
+  icons = {
+    default_file = "",
+    directory = " ",
+  },
   -- Oil will take over directory buffers (e.g. `vim .` or `:e src/`
   default_file_explorer = true,
   -- Restore window options to previous values when leaving an oil buffer
