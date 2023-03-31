@@ -2,7 +2,7 @@ local default_config = {
   -- Id is automatically added at the beginning, and name at the end
   -- See :help oil-columns
   columns = {
-    "icon",
+    { "icon", default_file = "", directory = " " },
     -- "permissions",
     -- "size",
     -- "mtime",
@@ -21,11 +21,6 @@ local default_config = {
     list = false,
     conceallevel = 3,
     concealcursor = "n",
-  },
-  -- Custom icons
-  icons = {
-    default_file = "",
-    directory = " ",
   },
   -- Oil will take over directory buffers (e.g. `vim .` or `:e src/`
   default_file_explorer = true,
