@@ -216,6 +216,7 @@ require("oil").setup({
     min_height = { 5, 0.1 },
     height = nil,
     border = "rounded",
+    minimized_border = "none",
     win_options = {
       winblend = 0,
     },
