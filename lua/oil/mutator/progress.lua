@@ -13,8 +13,13 @@ function Progress.new()
   return setmetatable({
     lines = { "", "" },
     count = "",
+    spinner = "",
     bufnr = bufnr,
+    winid = nil,
+    min_bufnr = nil,
+    min_winid = nil,
     autocmds = {},
+    closing = false,
   }, {
     __index = Progress,
   })
@@ -27,14 +32,17 @@ function Progress:show(opts)
   if self.winid and vim.api.nvim_win_is_valid(self.winid) then
     return
   end
+  self.closing = false
   self.cancel = opts.cancel
   local loading_iter = loading.get_bar_iter()
+  local spinner = loading.get_iter("dots")
   self.timer = vim.loop.new_timer()
   self.timer:start(
     0,
     math.floor(1000 / FPS),
     vim.schedule_wrap(function()
       self.lines[2] = string.format("%s %s", self.count, loading_iter())
+      self.spinner = spinner()
       self:_render()
     end)
   )
@@ -61,13 +69,41 @@ function Progress:show(opts)
       end,
     })
   )
+  table.insert(
+    self.autocmds,
+    vim.api.nvim_create_autocmd("WinLeave", {
+      callback = function()
+        self:minimize()
+      end,
+    })
+  )
   local cancel = self.cancel or function() end
+  local minimize = function()
+    if self.winid and vim.api.nvim_win_is_valid(self.winid) then
+      vim.api.nvim_win_close(self.winid, true)
+    end
+  end
   vim.keymap.set("n", "c", cancel, { buffer = self.bufnr, nowait = true })
   vim.keymap.set("n", "C", cancel, { buffer = self.bufnr, nowait = true })
+  vim.keymap.set("n", "m", minimize, { buffer = self.bufnr, nowait = true })
+  vim.keymap.set("n", "M", minimize, { buffer = self.bufnr, nowait = true })
 end
 
 function Progress:_render()
-  util.render_text(self.bufnr, self.lines, { winid = self.winid, actions = { "[C]ancel" } })
+  if self.bufnr and vim.api.nvim_buf_is_valid(self.bufnr) then
+    util.render_text(
+      self.bufnr,
+      self.lines,
+      { winid = self.winid, actions = { "[M]inimize", "[C]ancel" } }
+    )
+  end
+  if self.min_bufnr and vim.api.nvim_buf_is_valid(self.min_bufnr) then
+    util.render_text(
+      self.min_bufnr,
+      { string.format("%sOil: %s", self.spinner, self.count) },
+      { winid = self.min_winid, h_align = "left" }
+    )
+  end
 end
 
 function Progress:_reposition()
@@ -89,6 +125,43 @@ function Progress:_reposition()
   end
 end
 
+function Progress:_cleanup_main_win()
+  if self.winid then
+    if vim.api.nvim_win_is_valid(self.winid) then
+      vim.api.nvim_win_close(self.winid, true)
+    end
+    self.winid = nil
+  end
+  for _, id in ipairs(self.autocmds) do
+    vim.api.nvim_del_autocmd(id)
+  end
+  self.autocmds = {}
+  self.bufnr = nil
+end
+
+function Progress:minimize()
+  if self.closing then
+    return
+  end
+  self:_cleanup_main_win()
+  local bufnr = vim.api.nvim_create_buf(false, true)
+  vim.bo[bufnr].bufhidden = "wipe"
+  local winid = vim.api.nvim_open_win(bufnr, false, {
+    relative = "editor",
+    width = 16,
+    height = 1,
+    anchor = "SE",
+    row = layout.get_editor_height(),
+    col = layout.get_editor_width(),
+    zindex = 152, -- render on top of the floating window title
+    style = "minimal",
+    border = config.progress.minimized_border,
+  })
+  self.min_bufnr = bufnr
+  self.min_winid = winid
+  self:_render()
+end
+
 ---@param action oil.Action
 ---@param idx integer
 ---@param total integer
@@ -107,20 +180,17 @@ function Progress:set_action(action, idx, total)
 end
 
 function Progress:close()
+  self.closing = true
   if self.timer then
     self.timer:close()
     self.timer = nil
   end
-  if self.winid then
-    if vim.api.nvim_win_is_valid(self.winid) then
-      vim.api.nvim_win_close(self.winid, true)
-    end
-    self.winid = nil
+  self:_cleanup_main_win()
+  if self.min_winid and vim.api.nvim_win_is_valid(self.min_winid) then
+    vim.api.nvim_win_close(self.min_winid, true)
   end
-  for _, id in ipairs(self.autocmds) do
-    vim.api.nvim_del_autocmd(id)
-  end
-  self.autocmds = {}
+  self.min_winid = nil
+  self.min_bufnr = nil
 end
 
 return Progress

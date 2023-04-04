@@ -9,6 +9,29 @@ M.is_loading = function(bufnr)
   return timers[bufnr] ~= nil
 end
 
+local spinners = {
+  dots = { "⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏" },
+}
+
+---@param name_or_frames string|string[]
+---@return fun()
+M.get_iter = function(name_or_frames)
+  local frames
+  if type(name_or_frames) == "string" then
+    frames = spinners[name_or_frames]
+    if not frames then
+      error(string.format("Unrecognized spinner: '%s'", name_or_frames))
+    end
+  else
+    frames = name_or_frames
+  end
+  local i = 0
+  return function()
+    i = (i % #frames) + 1
+    return frames[i]
+  end
+end
+
 M.get_bar_iter = function(opts)
   opts = vim.tbl_deep_extend("keep", opts or {}, {
     bar_size = 3,
