@@ -127,13 +127,17 @@ M.show = vim.schedule_wrap(function(actions, should_confirm, cb)
   cancel = make_callback(false)
   confirm = make_callback(true)
   vim.api.nvim_create_autocmd("BufLeave", {
-    callback = cancel,
+    callback = function()
+      cancel()
+    end,
     once = true,
     nested = true,
     buffer = bufnr,
   })
   vim.api.nvim_create_autocmd("WinLeave", {
-    callback = cancel,
+    callback = function()
+      cancel()
+    end,
     once = true,
     nested = true,
   })
@@ -157,10 +161,16 @@ M.show = vim.schedule_wrap(function(actions, should_confirm, cb)
     })
   )
   for _, cancel_key in ipairs({ "q", "C", "c", "<C-c>", "<Esc>" }) do
-    vim.keymap.set("n", cancel_key, cancel, { buffer = bufnr, nowait = true })
+    vim.keymap.set("n", cancel_key, function()
+      cancel()
+    end, { buffer = bufnr, nowait = true })
   end
-  vim.keymap.set("n", "O", confirm, { buffer = bufnr })
-  vim.keymap.set("n", "o", confirm, { buffer = bufnr })
+  vim.keymap.set("n", "O", function()
+    confirm()
+  end, { buffer = bufnr })
+  vim.keymap.set("n", "o", function()
+    confirm()
+  end, { buffer = bufnr })
 end)
 
 return M
