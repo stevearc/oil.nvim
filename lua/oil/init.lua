@@ -253,7 +253,7 @@ M.open_float = function(dir)
   end
   local row = math.floor((total_height - height) / 2)
   local col = math.floor((total_width - width) / 2) - 1 -- adjust for border width
-  local winid = vim.api.nvim_open_win(bufnr, true, {
+  local win_opts = {
     relative = "editor",
     width = width,
     height = height,
@@ -262,28 +262,74 @@ M.open_float = function(dir)
     style = "minimal",
     border = config.float.border,
     zindex = 45,
-  })
+  }
+
+  local winid = vim.api.nvim_open_win(bufnr, true, win_opts)
   vim.w[winid].is_oil_win = true
-  local winleave_autocmd
-  winleave_autocmd = vim.api.nvim_create_autocmd("WinLeave", {
-    desc = "Close floating oil window",
-    group = "Oil",
-    callback = vim.schedule_wrap(function()
-      if util.is_floating_win() then
-        return
-      end
-      if vim.api.nvim_win_is_valid(winid) then
-        vim.api.nvim_win_close(winid, true)
-      end
-      vim.api.nvim_del_autocmd(winleave_autocmd)
-    end),
-    nested = true,
-  })
   for k, v in pairs(config.float.win_options) do
     vim.api.nvim_win_set_option(winid, k, v)
   end
+  local autocmds = {}
+  table.insert(
+    autocmds,
+    vim.api.nvim_create_autocmd("WinLeave", {
+      desc = "Close floating oil window",
+      group = "Oil",
+      callback = vim.schedule_wrap(function()
+        if util.is_floating_win() then
+          return
+        end
+        if vim.api.nvim_win_is_valid(winid) then
+          vim.api.nvim_win_close(winid, true)
+        end
+        for _, id in ipairs(autocmds) do
+          vim.api.nvim_del_autocmd(id)
+        end
+      end),
+      nested = true,
+    })
+  )
+
+  -- Update the window title when we switch buffers
+  if vim.fn.has("nvim-0.9") == 1 then
+    local function get_title()
+      local src_buf = vim.api.nvim_win_get_buf(winid)
+      local title = vim.api.nvim_buf_get_name(src_buf)
+      local scheme, path = util.parse_url(title)
+      if config.adapters[scheme] == "files" then
+        local fs = require("oil.fs")
+        title = vim.fn.fnamemodify(fs.posix_to_os_path(path), ":~")
+      end
+      return title
+    end
+    table.insert(
+      autocmds,
+      vim.api.nvim_create_autocmd("BufWinEnter", {
+        desc = "Update oil floating window title when buffer changes",
+        pattern = "*",
+        callback = function(params)
+          local winbuf = params.buf
+          if not vim.api.nvim_win_is_valid(winid) or vim.api.nvim_win_get_buf(winid) ~= winbuf then
+            return
+          end
+          vim.api.nvim_win_set_config(winid, {
+            relative = "editor",
+            row = row,
+            col = col,
+            width = width,
+            height = height,
+            title = get_title(),
+          })
+        end,
+      })
+    )
+  end
+
   vim.cmd.edit({ args = { parent_url }, mods = { keepalt = true } })
-  util.add_title_to_win(winid)
+
+  if vim.fn.has("nvim-0.9") == 0 then
+    util.add_title_to_win(winid)
+  end
 end
 
 ---Open oil browser for a directory
