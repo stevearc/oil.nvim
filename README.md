@@ -112,7 +112,7 @@ require("oil").setup({
   -- Id is automatically added at the beginning, and name at the end
   -- See :help oil-columns
   columns = {
-    { "icon", default_file = "", directory = " " },
+    "icon",
     -- "permissions",
     -- "size",
     -- "mtime",
