@@ -100,7 +100,11 @@ COL_DEFS = [
         "*",
         False,
         "An icon for the entry's type (requires nvim-web-devicons)",
-        HL + [],
+        HL
+        + [
+            LuaParam("default_file", "string", "Fallback icon for files when nvim-web-devicons returns nil"),
+            LuaParam("directory", "string", "Icon for directories"),
+        ],
     ),
     ColumnDef("size", "files, ssh", False, "The size of the file", HL + []),
     ColumnDef(

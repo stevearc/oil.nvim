@@ -232,8 +232,11 @@ icon                                                                 *column-ico
     An icon for the entry's type (requires nvim-web-devicons)
 
     Parameters:
-      {highlight} `string|fun(value: string): string` Highlight group, or
-                  function that returns a highlight group
+      {highlight}    `string|fun(value: string): string` Highlight group, or
+                     function that returns a highlight group
+      {default_file} `string` Fallback icon for files when nvim-web-devicons
+                     returns nil
+      {directory}    `string` Icon for directories
 
 size                                                                 *column-size*
     Adapters: files, ssh
