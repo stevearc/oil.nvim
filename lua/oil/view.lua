@@ -336,6 +336,11 @@ M.initialize = function(bufnr)
         string.format("Error rendering oil buffer %s: %s", vim.api.nvim_buf_get_name(bufnr), err),
         vim.log.levels.ERROR
       )
+    else
+      vim.api.nvim_exec_autocmds(
+        "User",
+        { pattern = "OilEnter", modeline = false, data = { buf = bufnr } }
+      )
     end
   end)
   keymap_util.set_keymaps("", config.keymaps, bufnr)
