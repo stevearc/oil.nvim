@@ -30,7 +30,6 @@ jobs:
           python -m pip install pyparsing==3.0.9
           python .github/main.py generate
           python .github/main.py lint
-          nvim --headless -c 'set runtimepath+=.' -c 'helptags ALL' -c 'qall'
           git add README.md doc
           # Only commit and push if we have changes
           git diff --quiet && git diff --staged --quiet || (git commit -m "${COMMIT_MSG}"; git push origin HEAD:${GITHUB_REF})
