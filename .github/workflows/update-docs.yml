@@ -13,7 +13,7 @@ jobs:
 
       - name: Install Neovim and dependencies
         env:
-          NVIM_TAG: v0.8.1
+          NVIM_TAG: v0.9.0
         run: |
           bash ./.github/workflows/install_nvim.sh
 
