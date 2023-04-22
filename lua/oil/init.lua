@@ -166,7 +166,12 @@ end
 M.get_url_for_path = function(dir)
   local config = require("oil.config")
   local fs = require("oil.fs")
+  local util = require("oil.util")
   if dir then
+    local scheme = util.parse_url(dir)
+    if scheme then
+      return dir
+    end
     local abspath = vim.fn.fnamemodify(dir, ":p")
     local path = fs.os_to_posix_path(abspath)
     return config.adapter_to_scheme.files .. path
