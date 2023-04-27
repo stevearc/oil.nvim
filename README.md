@@ -26,6 +26,20 @@ https://user-images.githubusercontent.com/506791/209727111-6b4a11f4-634a-4efa-94
 oil.nvim supports all the usual plugin managers
 
 <details>
+  <summary>lazy.nvim</summary>
+
+```lua
+{
+  'stevearc/oil.nvim',
+  opts = {},
+  -- Optional dependencies
+  dependencies = { "nvim-tree/nvim-web-devicons" },
+}
+```
+
+</details>
+
+<details>
   <summary>Packer</summary>
 
 ```lua
