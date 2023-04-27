@@ -667,6 +667,10 @@ local function load_oil_buffer(bufnr)
   loading.set_loading(bufnr, true)
   local winid = vim.api.nvim_get_current_win()
   local function finish(new_url)
+    -- If the buffer was deleted while we were normalizing the name, early return
+    if not vim.api.nvim_buf_is_valid(bufnr) then
+      return
+    end
     -- Since this was async, we may have left the window with this buffer. People often write
     -- BufReadPre/Post autocmds with the expectation that the current window is the one that
     -- contains the buffer. Let's then do our best to make sure that that assumption isn't violated.
