@@ -880,6 +880,7 @@ M.setup = function(opts)
         )
         return
       end
+
       -- Then transfer over the relevant window vars
       vim.w.oil_did_enter = true
       vim.w.oil_original_buffer = vim.w[parent_win].oil_original_buffer
@@ -889,7 +890,7 @@ M.setup = function(opts)
         local varname = "_oil_" .. k
         local has_opt, opt = pcall(vim.api.nvim_win_get_var, parent_win, varname)
         if has_opt then
-          vim.api.nvim_win_set_option(0, k, opt)
+          vim.api.nvim_win_set_var(0, varname, opt)
         end
       end
     end,
