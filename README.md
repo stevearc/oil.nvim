@@ -397,6 +397,10 @@ If you don't need those features specifically, check out the alternatives listed
 
 **A:** Because I am a _maniac control freak_.
 
+**Q: Can oil display files as a tree view**?
+
+**A:** No. A tree view would require a completely different methodology, necessitating a complete rewrite. I don't use tree views, so I will leave this as a plugin for someone else to write.
+
 **Q: What are some alternatives?**
 
 **A:**
