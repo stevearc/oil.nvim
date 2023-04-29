@@ -175,6 +175,13 @@ open_float({dir})                                                 *oil.open_floa
       {dir} `nil|string` When nil, open the parent of the current buffer, or the
             cwd if current buffer is not a file
 
+toggle_float({dir})                                             *oil.toggle_float*
+    Open oil browser in a floating window, or close it if open
+
+    Parameters:
+      {dir} `nil|string` When nil, open the parent of the current buffer, or the
+            cwd if current buffer is not a file
+
 open({dir})                                                             *oil.open*
     Open oil browser for a directory
 

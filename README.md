@@ -321,6 +321,15 @@ Open oil browser in a floating window
 | ----- | ------------- | ------------------------------------------------------------------------------------------- |
 | dir   | `nil\|string` | When nil, open the parent of the current buffer, or the cwd if current buffer is not a file |
 
+### toggle_float(dir)
+
+`toggle_float(dir)` \
+Open oil browser in a floating window, or close it if open
+
+| Param | Type          | Desc                                                                                        |
+| ----- | ------------- | ------------------------------------------------------------------------------------------- |
+| dir   | `nil\|string` | When nil, open the parent of the current buffer, or the cwd if current buffer is not a file |
+
 ### open(dir)
 
 `open(dir)` \

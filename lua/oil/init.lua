@@ -337,6 +337,17 @@ M.open_float = function(dir)
   end
 end
 
+---Open oil browser in a floating window, or close it if open
+---@param dir nil|string When nil, open the parent of the current buffer, or the cwd if current buffer is not a file
+M.toggle_float = function(dir)
+  local util = require("oil.util")
+  if util.is_oil_bufnr(0) and util.is_floating_win(0) then
+    vim.api.nvim_win_close(0, true)
+  else
+    M.open_float(dir)
+  end
+end
+
 ---Open oil browser for a directory
 ---@param dir nil|string When nil, open the parent of the current buffer, or the cwd if current buffer is not a file
 M.open = function(dir)
