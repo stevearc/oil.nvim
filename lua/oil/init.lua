@@ -290,6 +290,7 @@ M.open_float = function(dir)
         for _, id in ipairs(autocmds) do
           vim.api.nvim_del_autocmd(id)
         end
+        autocmds = {}
       end),
       nested = true,
     })
