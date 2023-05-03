@@ -785,7 +785,6 @@ M.setup = function(opts)
       if vim.endswith(bufname, "/") then
         vim.cmd.doautocmd({ args = { "BufWritePre", params.file }, mods = { silent = true } })
         M.save()
-        vim.bo[params.buf].modified = false
         vim.cmd.doautocmd({ args = { "BufWritePost", params.file }, mods = { silent = true } })
       else
         local adapter = config.get_adapter_by_scheme(bufname)
