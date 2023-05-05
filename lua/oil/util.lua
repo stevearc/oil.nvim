@@ -8,6 +8,14 @@ M.parse_url = function(url)
   return url:match("^(.*://)(.*)$")
 end
 
+---Escapes a filename for use in :edit
+---@param filename string
+---@return string
+M.escape_filename = function(filename)
+  local ret = filename:gsub("([%%#])", "\\%1")
+  return ret
+end
+
 ---@param bufnr integer
 ---@return nil|oil.Adapter
 M.get_adapter = function(bufnr)

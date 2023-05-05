@@ -331,7 +331,7 @@ M.open_float = function(dir)
     )
   end
 
-  vim.cmd.edit({ args = { parent_url }, mods = { keepalt = true } })
+  vim.cmd.edit({ args = { util.escape_filename(parent_url) }, mods = { keepalt = true } })
 
   if vim.fn.has("nvim-0.9") == 0 then
     util.add_title_to_win(winid)
@@ -352,6 +352,7 @@ end
 ---Open oil browser for a directory
 ---@param dir nil|string When nil, open the parent of the current buffer, or the cwd if current buffer is not a file
 M.open = function(dir)
+  local util = require("oil.util")
   local view = require("oil.view")
   local parent_url, basename = M.get_url_for_path(dir)
   if not parent_url then
@@ -360,7 +361,7 @@ M.open = function(dir)
   if basename then
     view.set_last_cursor(parent_url, basename)
   end
-  vim.cmd.edit({ args = { parent_url }, mods = { keepalt = true } })
+  vim.cmd.edit({ args = { util.escape_filename(parent_url) }, mods = { keepalt = true } })
 end
 
 ---Restore the buffer that was present when oil was opened
@@ -491,7 +492,7 @@ M.select = function(opts)
     }
     if opts.preview and preview_win then
       vim.api.nvim_set_current_win(preview_win)
-      vim.cmd.edit({ args = { url }, mods = mods })
+      vim.cmd.edit({ args = { util.escape_filename(url) }, mods = mods })
     else
       if vim.tbl_isempty(mods) then
         mods = nil
@@ -506,7 +507,7 @@ M.select = function(opts)
       end
       vim.cmd({
         cmd = cmd,
-        args = { url },
+        args = { util.escape_filename(url) },
         mods = mods,
       })
     end
