@@ -8,7 +8,6 @@ M.reset_editor = function()
     adapters = {
       ["oil-test://"] = "test",
     },
-    silence_disclaimer = true,
     prompt_save_on_select_new_entry = false,
   })
   vim.cmd.tabonly({ mods = { silent = true } })

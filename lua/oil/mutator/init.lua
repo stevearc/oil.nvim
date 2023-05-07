@@ -1,7 +1,6 @@
 local cache = require("oil.cache")
 local columns = require("oil.columns")
 local config = require("oil.config")
-local disclaimer = require("oil.mutator.disclaimer")
 local oil = require("oil")
 local parser = require("oil.mutator.parser")
 local pathutil = require("oil.pathutil")
@@ -505,38 +504,32 @@ M.try_write_changes = function(confirm)
   end
 
   local actions = M.create_actions_from_diffs(all_diffs)
-  -- TODO(2023-06-01) If no one has reported data loss by this time, we can remove the disclaimer
-  disclaimer.show(function(disclaimed)
-    if not disclaimed then
+  preview.show(actions, confirm, function(proceed)
+    if not proceed then
       return unlock()
     end
-    preview.show(actions, confirm, function(proceed)
-      if not proceed then
-        return unlock()
-      end
 
-      M.process_actions(
-        actions,
-        vim.schedule_wrap(function(err)
-          view.unlock_buffers()
-          if err then
-            vim.notify(string.format("[oil] Error applying actions: %s", err), vim.log.levels.ERROR)
-            view.rerender_all_oil_buffers({ preserve_undo = false })
-          else
-            local current_entry = oil.get_cursor_entry()
-            if current_entry then
-              -- get the entry under the cursor and make sure the cursor stays on it
-              view.set_last_cursor(
-                vim.api.nvim_buf_get_name(0),
-                vim.split(current_entry.parsed_name or current_entry.name, "/")[1]
-              )
-            end
-            view.rerender_all_oil_buffers({ preserve_undo = M.trash })
+    M.process_actions(
+      actions,
+      vim.schedule_wrap(function(err)
+        view.unlock_buffers()
+        if err then
+          vim.notify(string.format("[oil] Error applying actions: %s", err), vim.log.levels.ERROR)
+          view.rerender_all_oil_buffers({ preserve_undo = false })
+        else
+          local current_entry = oil.get_cursor_entry()
+          if current_entry then
+            -- get the entry under the cursor and make sure the cursor stays on it
+            view.set_last_cursor(
+              vim.api.nvim_buf_get_name(0),
+              vim.split(current_entry.parsed_name or current_entry.name, "/")[1]
+            )
           end
-          mutation_in_progress = false
-        end)
-      )
-    end)
+          view.rerender_all_oil_buffers({ preserve_undo = M.trash })
+        end
+        mutation_in_progress = false
+      end)
+    )
   end)
 end
 
