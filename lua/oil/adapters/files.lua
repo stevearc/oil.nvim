@@ -3,6 +3,7 @@ local columns = require("oil.columns")
 local config = require("oil.config")
 local fs = require("oil.fs")
 local permissions = require("oil.adapters.files.permissions")
+local trash = require("oil.adapters.files.trash")
 local util = require("oil.util")
 local FIELD = require("oil.constants").FIELD
 local M = {}
@@ -384,7 +385,11 @@ M.perform_action = function(action, cb)
   elseif action.type == "delete" then
     local _, path = util.parse_url(action.url)
     path = fs.posix_to_os_path(path)
-    fs.recursive_delete(action.entry_type, path, cb)
+    if config.delete_to_trash then
+      trash.recursive_delete(path, cb)
+    else
+      fs.recursive_delete(action.entry_type, path, cb)
+    end
   elseif action.type == "move" then
     local dest_adapter = config.get_adapter_by_scheme(action.dest_url)
     if dest_adapter == M then

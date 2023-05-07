@@ -28,6 +28,8 @@ local default_config = {
   restore_win_options = true,
   -- Skip the confirmation popup for simple operations
   skip_confirm_for_simple_edits = false,
+  -- Deleted files will be removed with the `trash-put` command.
+  delete_to_trash = false,
   -- Keymaps in oil buffer. Can be any value that `vim.keymap.set` accepts OR a table of keymap
   -- options with a `callback` (e.g. { callback = function() ... end, desc = "", nowait = true })
   -- Additionally, if it is a string that matches "actions.<name>",
@@ -128,6 +130,14 @@ M.setup = function(opts)
   local new_conf = vim.tbl_deep_extend("keep", opts or {}, default_config)
   if not new_conf.use_default_keymaps then
     new_conf.keymaps = opts.keymaps or {}
+  end
+
+  if new_conf.delete_to_trash and vim.fn.executable("trash-put") == 0 then
+    vim.notify(
+      "oil.nvim: delete_to_trash is true, but trash-put executable not found.\nDeleted files will be permanently removed.",
+      vim.log.levels.WARN
+    )
+    new_conf.delete_to_trash = false
   end
 
   for k, v in pairs(new_conf) do
