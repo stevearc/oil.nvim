@@ -9,6 +9,7 @@ M.reset_editor = function()
       ["oil-test://"] = "test",
     },
     silence_disclaimer = true,
+    prompt_save_on_select_new_entry = false,
   })
   vim.cmd.tabonly({ mods = { silent = true } })
   for i, winid in ipairs(vim.api.nvim_tabpage_list_wins(0)) do

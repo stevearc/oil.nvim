@@ -154,6 +154,8 @@ require("oil").setup({
   skip_confirm_for_simple_edits = false,
   -- Deleted files will be removed with the `trash-put` command.
   delete_to_trash = false,
+  -- Selecting a new/moved/renamed file or directory will prompt you to save changes first
+  prompt_save_on_select_new_entry = true,
   -- Keymaps in oil buffer. Can be any value that `vim.keymap.set` accepts OR a table of keymap
   -- options with a `callback` (e.g. { callback = function() ... end, desc = "", nowait = true })
   -- Additionally, if it is a string that matches "actions.<name>",

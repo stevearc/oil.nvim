@@ -528,7 +528,7 @@ M.try_write_changes = function(confirm)
               -- get the entry under the cursor and make sure the cursor stays on it
               view.set_last_cursor(
                 vim.api.nvim_buf_get_name(0),
-                vim.split(current_entry.name, "/")[1]
+                vim.split(current_entry.parsed_name or current_entry.name, "/")[1]
               )
             end
             view.rerender_all_oil_buffers({ preserve_undo = M.trash })

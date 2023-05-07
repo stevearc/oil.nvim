@@ -6,6 +6,7 @@ local M = {}
 ---@field name string
 ---@field type oil.EntryType
 ---@field id nil|integer Will be nil if it hasn't been persisted to disk yet
+---@field parsed_name nil|string
 
 ---@alias oil.EntryType "file"|"directory"|"socket"|"link"
 ---@alias oil.TextChunk string|string[]
@@ -47,11 +48,14 @@ M.get_entry_on_line = function(bufnr, lnum)
   local result = parser.parse_line(adapter, line, column_defs)
   if result then
     if result.entry then
-      return util.export_entry(result.entry)
+      local entry = util.export_entry(result.entry)
+      entry.parsed_name = result.data.name
+      return entry
     else
       return {
         name = result.data.name,
         type = result.data._type,
+        parsed_name = result.data.name,
       }
     end
   end
@@ -70,6 +74,7 @@ M.get_entry_on_line = function(bufnr, lnum)
     return {
       name = name,
       type = entry_type,
+      parsed_name = name,
     }
   end
 end
@@ -399,6 +404,7 @@ end
 ---    tab boolean Open the buffer in a new tab
 M.select = function(opts)
   local cache = require("oil.cache")
+  local config = require("oil.config")
   opts = vim.tbl_extend("keep", opts or {}, {})
   if opts.horizontal or opts.vertical or opts.preview then
     opts.split = opts.split or "belowright"
@@ -451,12 +457,34 @@ M.select = function(opts)
     vim.notify("Cannot preview multiple entries", vim.log.levels.WARN)
     entries = { entries[1] }
   end
+
+  -- Check if any of these entries are moved from their original location
+  local bufname = vim.api.nvim_buf_get_name(0)
+  local any_moved = false
+  for _, entry in ipairs(entries) do
+    local is_new_entry = entry.id == nil
+    local is_moved_from_dir = entry.id and cache.get_parent_url(entry.id) ~= bufname
+    local is_renamed = entry.parsed_name ~= entry.name
+    if is_new_entry or is_moved_from_dir or is_renamed then
+      any_moved = true
+      break
+    end
+  end
+  if any_moved and not opts.preview and config.prompt_save_on_select_new_entry then
+    local ok, choice = pcall(vim.fn.confirm, "Save changes?", "Yes\nNo", 1)
+    if not ok then
+      return
+    elseif choice == 1 then
+      M.save()
+      return
+    end
+  end
+
   -- Close the preview window if we're not previewing the selection
   local preview_win = util.get_preview_win()
   if not opts.preview and preview_win then
     vim.api.nvim_win_close(preview_win, true)
   end
-  local bufname = vim.api.nvim_buf_get_name(0)
   local prev_win = vim.api.nvim_get_current_win()
   for _, entry in ipairs(entries) do
     local scheme, dir = util.parse_url(bufname)

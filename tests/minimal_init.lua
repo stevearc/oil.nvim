@@ -2,10 +2,4 @@ vim.cmd([[set runtimepath+=.]])
 
 vim.o.swapfile = false
 vim.bo.swapfile = false
-require("oil").setup({
-  columms = {},
-  adapters = {
-    ["oil-test://"] = "test",
-  },
-  silence_disclaimer = true,
-})
+require("tests.test_util").reset_editor()
