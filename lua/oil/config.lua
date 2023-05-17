@@ -10,6 +10,7 @@ local default_config = {
   -- Buffer-local options to use for oil buffers
   buf_options = {
     buflisted = false,
+    bufhidden = "hide",
   },
   -- Window-local options to use for oil buffers
   win_options = {
