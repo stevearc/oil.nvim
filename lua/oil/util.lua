@@ -348,12 +348,8 @@ M.add_title_to_win = function(winid, opts)
       noautocmd = true,
     })
     winid_map[winid] = title_winid
-    vim.api.nvim_win_set_option(
-      title_winid,
-      "winblend",
-      vim.api.nvim_win_get_option(winid, "winblend")
-    )
-    vim.api.nvim_buf_set_option(bufnr, "bufhidden", "wipe")
+    vim.wo[title_winid].winblend = vim.wo[winid].winblend
+    vim.bo[bufnr].bufhidden = "wipe"
 
     local update_autocmd = vim.api.nvim_create_autocmd("BufWinEnter", {
       desc = "Update oil floating window title when buffer changes",
@@ -401,11 +397,7 @@ M.add_title_to_win = function(winid, opts)
   end
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, true, { " " .. title .. " " })
   vim.bo[bufnr].modified = false
-  vim.api.nvim_win_set_option(
-    title_winid,
-    "winhighlight",
-    "Normal:FloatTitle,NormalFloat:FloatTitle"
-  )
+  vim.wo[title_winid].winhighlight = "Normal:FloatTitle,NormalFloat:FloatTitle"
 end
 
 ---@param action oil.Action
@@ -542,7 +534,7 @@ end
 M.run_in_fullscreen_win = function(bufnr, callback)
   if not bufnr then
     bufnr = vim.api.nvim_create_buf(false, true)
-    vim.api.nvim_buf_set_option(bufnr, "bufhidden", "wipe")
+    vim.bo[bufnr].bufhidden = "wipe"
   end
   local winid = vim.api.nvim_open_win(bufnr, false, {
     relative = "editor",
@@ -588,7 +580,7 @@ end
 ---@return nil|integer
 M.get_preview_win = function()
   for _, winid in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
-    if vim.api.nvim_win_is_valid(winid) and vim.api.nvim_win_get_option(winid, "previewwindow") then
+    if vim.api.nvim_win_is_valid(winid) and vim.wo[winid].previewwindow then
       return winid
     end
   end

@@ -59,7 +59,7 @@ function Progress:show(opts)
   })
   vim.bo[self.bufnr].filetype = "oil_progress"
   for k, v in pairs(config.preview.win_options) do
-    vim.api.nvim_win_set_option(self.winid, k, v)
+    vim.wo[self.winid][k] = v
   end
   table.insert(
     self.autocmds,

@@ -277,7 +277,7 @@ M.open_float = function(dir)
   local winid = vim.api.nvim_open_win(bufnr, true, win_opts)
   vim.w[winid].is_oil_win = true
   for k, v in pairs(config.float.win_options) do
-    vim.api.nvim_win_set_option(winid, k, v)
+    vim.wo[winid][k] = v
   end
   local autocmds = {}
   table.insert(
@@ -540,8 +540,8 @@ M.select = function(opts)
       })
     end
     if opts.preview then
-      vim.api.nvim_win_set_option(0, "previewwindow", true)
-      vim.api.nvim_win_set_var(0, "oil_entry_id", entry.id)
+      vim.wo.previewwindow = true
+      vim.w.oil_entry_id = entry.id
       vim.api.nvim_set_current_win(prev_win)
     end
     -- Set opts.split so that for every entry after the first, we do a split

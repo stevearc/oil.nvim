@@ -162,7 +162,7 @@ M.set_win_options = function()
         vim.api.nvim_win_set_var(winid, varname, prev_value)
       end
     end
-    vim.api.nvim_win_set_option(winid, k, v)
+    vim.wo[winid][k] = v
   end
 end
 
@@ -172,7 +172,7 @@ M.restore_win_options = function()
     local varname = "_oil_" .. k
     local has_opt, opt = pcall(vim.api.nvim_win_get_var, winid, varname)
     if has_opt then
-      vim.api.nvim_win_set_option(winid, k, opt)
+      vim.wo[winid][k] = opt
     end
   end
 end
@@ -535,7 +535,7 @@ M.render_buffer_async = function(bufnr, opts, callback)
   end
   local handle_error = vim.schedule_wrap(function(message)
     if not preserve_undo then
-      vim.bo[bufnr].undolevels = vim.api.nvim_get_option("undolevels")
+      vim.bo[bufnr].undolevels = vim.api.nvim_get_option_value("undolevels", { scope = "global" })
     end
     util.render_text(bufnr, { "Error: " .. message })
     if callback then
@@ -566,7 +566,7 @@ M.render_buffer_async = function(bufnr, opts, callback)
     loading.set_loading(bufnr, false)
     render_buffer(bufnr, { jump = true })
     if not preserve_undo then
-      vim.bo[bufnr].undolevels = vim.api.nvim_get_option("undolevels")
+      vim.bo[bufnr].undolevels = vim.api.nvim_get_option_value("undolevels", { scope = "global" })
     end
     vim.bo[bufnr].modifiable = not buffers_locked and adapter.is_modifiable(bufnr)
     if callback then

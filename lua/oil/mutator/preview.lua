@@ -103,7 +103,7 @@ M.show = vim.schedule_wrap(function(actions, should_confirm, cb)
   vim.bo[bufnr].filetype = "oil_preview"
   vim.bo[bufnr].syntax = "oil_preview"
   for k, v in pairs(config.preview.win_options) do
-    vim.api.nvim_win_set_option(winid, k, v)
+    vim.wo[winid][k] = v
   end
 
   render_lines(winid, bufnr, lines)
