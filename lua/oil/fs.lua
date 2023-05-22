@@ -57,7 +57,7 @@ M.os_to_posix_path = function(path)
   if M.is_windows then
     if M.is_absolute(path) then
       local drive, rem = path:match("^([^:]+):\\(.*)$")
-      return string.format("/%s/%s", drive, rem:gsub("\\", "/"))
+      return string.format("/%s/%s", drive:upper(), rem:gsub("\\", "/"))
     else
       return path:gsub("\\", "/")
     end
