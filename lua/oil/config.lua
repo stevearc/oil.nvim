@@ -29,8 +29,10 @@ local default_config = {
   restore_win_options = true,
   -- Skip the confirmation popup for simple operations
   skip_confirm_for_simple_edits = false,
-  -- Deleted files will be removed with the `trash-put` command.
+  -- Deleted files will be removed with the trash_command (below).
   delete_to_trash = false,
+  -- Change this to customize the command used when deleting to trash
+  trash_command = "trash-put",
   -- Selecting a new/moved/renamed file or directory will prompt you to save changes first
   prompt_save_on_select_new_entry = true,
   -- Keymaps in oil buffer. Can be any value that `vim.keymap.set` accepts OR a table of keymap
@@ -135,12 +137,18 @@ M.setup = function(opts)
     new_conf.keymaps = opts.keymaps or {}
   end
 
-  if new_conf.delete_to_trash and vim.fn.executable("trash-put") == 0 then
-    vim.notify(
-      "oil.nvim: delete_to_trash is true, but trash-put executable not found.\nDeleted files will be permanently removed.",
-      vim.log.levels.WARN
-    )
-    new_conf.delete_to_trash = false
+  if new_conf.delete_to_trash then
+    local trash_bin = vim.split(new_conf.trash_command, " ")[1]
+    if vim.fn.executable(trash_bin) == 0 then
+      vim.notify(
+        string.format(
+          "oil.nvim: delete_to_trash is true, but '%s' executable not found.\nDeleted files will be permanently removed.",
+          new_conf.trash_command
+        ),
+        vim.log.levels.WARN
+      )
+      new_conf.delete_to_trash = false
+    end
   end
 
   for k, v in pairs(new_conf) do

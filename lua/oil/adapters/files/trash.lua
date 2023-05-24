@@ -1,9 +1,11 @@
+local config = require("oil.config")
 local M = {}
 
 M.recursive_delete = function(path, cb)
   local stdout = {}
   local stderr = {}
-  local jid = vim.fn.jobstart({ "trash-put", path }, {
+  local cmd = vim.list_extend(vim.split(config.trash_command, "%s+"), { path })
+  local jid = vim.fn.jobstart(cmd, {
     stdout_buffered = true,
     stderr_buffered = true,
     on_stdout = function(j, output)
@@ -28,9 +30,9 @@ M.recursive_delete = function(path, cb)
     end,
   })
   if jid == 0 then
-    cb(string.format("Passed invalid argument '%s' to 'trash-put'", path))
+    cb(string.format("Passed invalid argument '%s' to '%s'", path, config.trash_command))
   elseif jid == -1 then
-    cb("'trash-put' is not executable")
+    cb(string.format("'%s' is not executable", config.trash_command))
   end
 end
 
