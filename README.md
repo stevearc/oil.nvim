@@ -267,124 +267,20 @@ Note that at the moment the ssh adapter does not support Windows machines, and i
 
 <!-- API -->
 
-### get_entry_on_line(bufnr, lnum)
-
-`get_entry_on_line(bufnr, lnum): nil|oil.Entry` \
-Get the entry on a specific line (1-indexed)
-
-| Param | Type      | Desc |
-| ----- | --------- | ---- |
-| bufnr | `integer` |      |
-| lnum  | `integer` |      |
-
-### get_cursor_entry()
-
-`get_cursor_entry(): nil|oil.Entry` \
-Get the entry currently under the cursor
-
-
-### discard_all_changes()
-
-`discard_all_changes()` \
-Discard all changes made to oil buffers
-
-
-### set_columns(cols)
-
-`set_columns(cols)` \
-Change the display columns for oil
-
-| Param | Type               | Desc |
-| ----- | ------------------ | ---- |
-| cols  | `oil.ColumnSpec[]` |      |
-
-### set_is_hidden_file(is_hidden_file)
-
-`set_is_hidden_file(is_hidden_file)` \
-Change how oil determines if the file is hidden
-
-| Param          | Type                                                  | Desc                                         |
-| -------------- | ----------------------------------------------------- | -------------------------------------------- |
-| is_hidden_file | `fun(filename: string, bufnr: nil\|integer): boolean` | Return true if the file/dir should be hidden |
-
-### toggle_hidden()
-
-`toggle_hidden()` \
-Toggle hidden files and directories
-
-
-### get_current_dir()
-
-`get_current_dir(): nil|string` \
-Get the current directory
-
-
-### open_float(dir)
-
-`open_float(dir)` \
-Open oil browser in a floating window
-
-| Param | Type          | Desc                                                                                        |
-| ----- | ------------- | ------------------------------------------------------------------------------------------- |
-| dir   | `nil\|string` | When nil, open the parent of the current buffer, or the cwd if current buffer is not a file |
-
-### toggle_float(dir)
-
-`toggle_float(dir)` \
-Open oil browser in a floating window, or close it if open
-
-| Param | Type          | Desc                                                                                        |
-| ----- | ------------- | ------------------------------------------------------------------------------------------- |
-| dir   | `nil\|string` | When nil, open the parent of the current buffer, or the cwd if current buffer is not a file |
-
-### open(dir)
-
-`open(dir)` \
-Open oil browser for a directory
-
-| Param | Type          | Desc                                                                                        |
-| ----- | ------------- | ------------------------------------------------------------------------------------------- |
-| dir   | `nil\|string` | When nil, open the parent of the current buffer, or the cwd if current buffer is not a file |
-
-### close()
-
-`close()` \
-Restore the buffer that was present when oil was opened
-
-
-### select(opts)
-
-`select(opts)` \
-Select the entry under the cursor
-
-| Param | Type         | Desc                                               |                                       |
-| ----- | ------------ | -------------------------------------------------- | ------------------------------------- |
-| opts  | `nil\|table` |                                                    |                                       |
-|       | vertical     | `boolean`                                          | Open the buffer in a vertical split   |
-|       | horizontal   | `boolean`                                          | Open the buffer in a horizontal split |
-|       | split        | `"aboveleft"\|"belowright"\|"topleft"\|"botright"` | Split modifier                        |
-|       | preview      | `boolean`                                          | Open the buffer in a preview window   |
-|       | tab          | `boolean`                                          | Open the buffer in a new tab          |
-
-### save(opts)
-
-`save(opts)` \
-Save all changes
-
-| Param | Type         | Desc           |                                                                                             |
-| ----- | ------------ | -------------- | ------------------------------------------------------------------------------------------- |
-| opts  | `nil\|table` |                |                                                                                             |
-|       | confirm      | `nil\|boolean` | Show confirmation when true, never when false, respect skip_confirm_for_simple_edits if nil |
-
-### setup(opts)
-
-`setup(opts)` \
-Initialize oil
-
-| Param | Type         | Desc |
-| ----- | ------------ | ---- |
-| opts  | `nil\|table` |      |
-
+- [get_entry_on_line(bufnr, lnum)](doc/api.md#get_entry_on_linebufnr-lnum)
+- [get_cursor_entry()](doc/api.md#get_cursor_entry)
+- [discard_all_changes()](doc/api.md#discard_all_changes)
+- [set_columns(cols)](doc/api.md#set_columnscols)
+- [set_is_hidden_file(is_hidden_file)](doc/api.md#set_is_hidden_fileis_hidden_file)
+- [toggle_hidden()](doc/api.md#toggle_hidden)
+- [get_current_dir()](doc/api.md#get_current_dir)
+- [open_float(dir)](doc/api.md#open_floatdir)
+- [toggle_float(dir)](doc/api.md#toggle_floatdir)
+- [open(dir)](doc/api.md#opendir)
+- [close()](doc/api.md#close)
+- [select(opts)](doc/api.md#selectopts)
+- [save(opts)](doc/api.md#saveopts)
+- [setup(opts)](doc/api.md#setupopts)
 
 <!-- /API -->
 

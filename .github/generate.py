@@ -36,13 +36,28 @@ def add_md_link_path(path: str, lines: List[str]) -> List[str]:
 
 
 def update_md_api():
+    api_doc = os.path.join(DOC, "api.md")
     funcs = parse_functions(os.path.join(ROOT, "lua", "oil", "init.lua"))
-    lines = ["\n"] + render_md_api(funcs, 3) + ["\n"]
+    lines = ["\n"] + render_md_api(funcs, 2) + ["\n"]
+    replace_section(
+        api_doc,
+        r"^<!-- API -->$",
+        r"^<!-- /API -->$",
+        lines,
+    )
+    toc = ["\n"] + generate_md_toc(api_doc, max_level=1) + ["\n"]
+    replace_section(
+        api_doc,
+        r"^<!-- TOC -->$",
+        r"^<!-- /TOC -->$",
+        toc,
+    )
+    toc = add_md_link_path("doc/api.md", toc)
     replace_section(
         README,
         r"^<!-- API -->$",
         r"^<!-- /API -->$",
-        lines,
+        toc,
     )
 
 
