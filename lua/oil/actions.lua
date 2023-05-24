@@ -199,7 +199,7 @@ M.copy_entry_path = {
     if not entry or not dir then
       return
     end
-    vim.fn.setreg("+", dir .. entry.name)
+    vim.fn.setreg(vim.v.register, dir .. entry.name)
   end,
 }
 
