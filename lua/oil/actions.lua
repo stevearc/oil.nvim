@@ -140,6 +140,8 @@ M.open_terminal = {
   callback = function()
     local dir = oil.get_current_dir()
     if dir then
+      local bufnr = vim.api.nvim_create_buf(false, true)
+      vim.api.nvim_set_current_buf(bufnr)
       vim.fn.termopen(vim.o.shell, { cwd = dir })
     end
   end,
