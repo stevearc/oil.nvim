@@ -90,7 +90,7 @@ M.show = vim.schedule_wrap(function(actions, should_confirm, cb)
 
   -- Create the floating window
   local width, height = layout.calculate_dims(max_line_width, #lines + 1, config.preview)
-  local winid = vim.api.nvim_open_win(bufnr, true, {
+  local ok, winid = pcall(vim.api.nvim_open_win, bufnr, true, {
     relative = "editor",
     width = width,
     height = height,
@@ -100,6 +100,10 @@ M.show = vim.schedule_wrap(function(actions, should_confirm, cb)
     style = "minimal",
     border = config.preview.border,
   })
+  if not ok then
+    vim.notify(string.format("Error showing oil preview window: %s", winid), vim.log.levels.ERROR)
+    cb(false)
+  end
   vim.bo[bufnr].filetype = "oil_preview"
   vim.bo[bufnr].syntax = "oil_preview"
   for k, v in pairs(config.preview.win_options) do
