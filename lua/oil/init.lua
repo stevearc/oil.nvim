@@ -759,6 +759,9 @@ M.setup = function(opts)
   config.setup(opts)
   set_colors()
   vim.api.nvim_create_user_command("Oil", function(args)
+    if args.smods.tab == 1 then
+      vim.cmd.tabnew()
+    end
     local float = false
     for i, v in ipairs(args.fargs) do
       if v == "--float" then
@@ -766,6 +769,15 @@ M.setup = function(opts)
         table.remove(args.fargs, i)
       end
     end
+
+    if not float and (args.smods.vertical or args.smods.split ~= "") then
+      if args.smods.vertical then
+        vim.cmd.vsplit({ mods = { split = args.smods.split } })
+      else
+        vim.cmd.split({ mods = { split = args.smods.split } })
+      end
+    end
+
     local method = float and "open_float" or "open"
     M[method](unpack(args.fargs))
   end, { desc = "Open oil file browser on a directory", nargs = "*", complete = "dir" })
