@@ -302,7 +302,7 @@ M.open_float = function(dir)
   )
 
   -- Update the window title when we switch buffers
-  if vim.fn.has("nvim-0.9") == 1 then
+  if vim.fn.has("nvim-0.9") == 1 and config.float.border ~= "none" then
     local function get_title()
       local src_buf = vim.api.nvim_win_get_buf(winid)
       local title = vim.api.nvim_buf_get_name(src_buf)
