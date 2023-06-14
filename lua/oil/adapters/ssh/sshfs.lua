@@ -120,7 +120,7 @@ function SSHFS:list_dir(url, path, callback)
   if path ~= "" then
     path_postfix = string.format(" '%s'", path)
   end
-  self.conn:run("ls -fl" .. path_postfix, function(err, lines)
+  self.conn:run("LANG=C ls -fl" .. path_postfix, function(err, lines)
     if err then
       if err:match("No such file or directory%s*$") then
         -- If the directory doesn't exist, treat the list as a success. We will be able to traverse
