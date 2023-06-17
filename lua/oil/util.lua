@@ -348,7 +348,11 @@ M.add_title_to_win = function(winid, opts)
       noautocmd = true,
     })
     winid_map[winid] = title_winid
-    vim.wo[title_winid].winblend = vim.wo[winid].winblend
+    vim.api.nvim_set_option_value(
+      "winblend",
+      vim.wo[winid].winblend,
+      { scope = "local", win = title_winid }
+    )
     vim.bo[bufnr].bufhidden = "wipe"
 
     local update_autocmd = vim.api.nvim_create_autocmd("BufWinEnter", {
@@ -397,7 +401,11 @@ M.add_title_to_win = function(winid, opts)
   end
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, true, { " " .. title .. " " })
   vim.bo[bufnr].modified = false
-  vim.wo[title_winid].winhighlight = "Normal:FloatTitle,NormalFloat:FloatTitle"
+  vim.api.nvim_set_option_value(
+    "winhighlight",
+    "Normal:FloatTitle,NormalFloat:FloatTitle",
+    { scope = "local", win = title_winid }
+  )
 end
 
 ---@param action oil.Action

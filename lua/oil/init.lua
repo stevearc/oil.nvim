@@ -277,7 +277,7 @@ M.open_float = function(dir)
   local winid = vim.api.nvim_open_win(bufnr, true, win_opts)
   vim.w[winid].is_oil_win = true
   for k, v in pairs(config.float.win_options) do
-    vim.wo[winid][k] = v
+    vim.api.nvim_set_option_value(k, v, { scope = "local", win = winid })
   end
   local autocmds = {}
   table.insert(
@@ -540,7 +540,7 @@ M.select = function(opts)
       })
     end
     if opts.preview then
-      vim.wo.previewwindow = true
+      vim.api.nvim_set_option_value("previewwindow", true, { scope = "local", win = 0 })
       vim.w.oil_entry_id = entry.id
       vim.api.nvim_set_current_win(prev_win)
     end

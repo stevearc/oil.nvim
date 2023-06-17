@@ -162,7 +162,7 @@ M.set_win_options = function()
         vim.api.nvim_win_set_var(winid, varname, prev_value)
       end
     end
-    vim.wo[winid][k] = v
+    vim.api.nvim_set_option_value(k, v, { scope = "local", win = winid })
   end
 end
 
@@ -172,7 +172,7 @@ M.restore_win_options = function()
     local varname = "_oil_" .. k
     local has_opt, opt = pcall(vim.api.nvim_win_get_var, winid, varname)
     if has_opt then
-      vim.wo[winid][k] = opt
+      vim.api.nvim_set_option_value(k, opt, { scope = "local", win = winid })
     end
   end
 end
