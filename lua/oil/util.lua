@@ -12,7 +12,7 @@ end
 ---@param filename string
 ---@return string
 M.escape_filename = function(filename)
-  local ret = filename:gsub("([%%#])", "\\%1")
+  local ret = filename:gsub("([%%#$])", "\\%1")
   return ret
 end
 
