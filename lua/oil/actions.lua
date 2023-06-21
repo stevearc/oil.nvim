@@ -194,7 +194,7 @@ M.open_cmdline = {
 }
 
 M.copy_entry_path = {
-  desc = "Copy the filepath of the entry under the cursor to the + register",
+  desc = "Yank the filepath of the entry under the cursor to a register",
   callback = function()
     local entry = oil.get_cursor_entry()
     local dir = oil.get_current_dir()

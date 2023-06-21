@@ -548,11 +548,6 @@ M.select = function(opts)
       vim.w.oil_entry_id = entry.id
       vim.api.nvim_set_current_win(prev_win)
     end
-    -- Set opts.split so that for every entry after the first, we do a split
-    opts.split = opts.split or "belowright"
-    if not opts.horizontal and opts.vertical == nil then
-      opts.vertical = true
-    end
   end
 
   if
