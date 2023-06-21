@@ -24,12 +24,19 @@ M.reset_editor = function()
 end
 
 M.wait_for_autocmd = a.wrap(function(autocmd, cb)
-  vim.api.nvim_create_autocmd(autocmd, {
+  local opts = {
     pattern = "*",
     nested = true,
     once = true,
-    callback = vim.schedule_wrap(cb),
-  })
+  }
+  if type(autocmd) == "table" then
+    opts = vim.tbl_extend("force", opts, autocmd)
+    autocmd = autocmd[1]
+    opts[1] = nil
+  end
+  opts.callback = vim.schedule_wrap(cb)
+
+  vim.api.nvim_create_autocmd(autocmd, opts)
 end, 2)
 
 ---@param actions string[]
