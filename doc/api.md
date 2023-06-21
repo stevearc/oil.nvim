@@ -111,14 +111,15 @@ Restore the buffer that was present when oil was opened
 `select(opts)` \
 Select the entry under the cursor
 
-| Param | Type         | Desc                                               |                                       |
-| ----- | ------------ | -------------------------------------------------- | ------------------------------------- |
-| opts  | `nil\|table` |                                                    |                                       |
-|       | vertical     | `boolean`                                          | Open the buffer in a vertical split   |
-|       | horizontal   | `boolean`                                          | Open the buffer in a horizontal split |
-|       | split        | `"aboveleft"\|"belowright"\|"topleft"\|"botright"` | Split modifier                        |
-|       | preview      | `boolean`                                          | Open the buffer in a preview window   |
-|       | tab          | `boolean`                                          | Open the buffer in a new tab          |
+| Param | Type         | Desc                                               |                                                      |
+| ----- | ------------ | -------------------------------------------------- | ---------------------------------------------------- |
+| opts  | `nil\|table` |                                                    |                                                      |
+|       | vertical     | `boolean`                                          | Open the buffer in a vertical split                  |
+|       | horizontal   | `boolean`                                          | Open the buffer in a horizontal split                |
+|       | split        | `"aboveleft"\|"belowright"\|"topleft"\|"botright"` | Split modifier                                       |
+|       | preview      | `boolean`                                          | Open the buffer in a preview window                  |
+|       | tab          | `boolean`                                          | Open the buffer in a new tab                         |
+|       | close        | `boolean`                                          | Close the original oil buffer once selection is made |
 
 ## save(opts)
 

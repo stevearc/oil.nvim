@@ -211,6 +211,8 @@ select({opts})                                                        *oil.selec
                        modifier
           {preview}    `boolean` Open the buffer in a preview window
           {tab}        `boolean` Open the buffer in a new tab
+          {close}      `boolean` Close the original oil buffer once selection is
+                       made
 
 save({opts})                                                            *oil.save*
     Save all changes
@@ -317,7 +319,7 @@ close                                                              *actions.clos
     Close oil and restore original buffer
 
 copy_entry_path                                          *actions.copy_entry_path*
-    Copy the filepath of the entry under the cursor to the + register
+    Yank the filepath of the entry under the cursor to a register
 
 open_cmdline                                                *actions.open_cmdline*
     Open vim cmdline with current entry as an argument
