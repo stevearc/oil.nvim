@@ -402,6 +402,7 @@ end
 ---    split "aboveleft"|"belowright"|"topleft"|"botright" Split modifier
 ---    preview boolean Open the buffer in a preview window
 ---    tab boolean Open the buffer in a new tab
+---    close boolean Close the original oil buffer once selection is made
 M.select = function(opts)
   local cache = require("oil.cache")
   local config = require("oil.config")
@@ -414,6 +415,9 @@ M.select = function(opts)
   end
   if opts.tab and (opts.preview or opts.split) then
     error("Cannot set preview or split when tab = true")
+  end
+  if opts.close and opts.preview then
+    error("Cannot use close=true with preview=true")
   end
   local util = require("oil.util")
   if util.is_floating_win() and opts.preview then
@@ -549,6 +553,16 @@ M.select = function(opts)
     if not opts.horizontal and opts.vertical == nil then
       opts.vertical = true
     end
+  end
+
+  if
+    opts.close
+    and vim.api.nvim_win_is_valid(prev_win)
+    and prev_win ~= vim.api.nvim_get_current_win()
+  then
+    vim.api.nvim_win_call(prev_win, function()
+      M.close()
+    end)
   end
 end
 
