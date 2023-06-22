@@ -301,7 +301,7 @@ Plus, I think it's pretty slick ;)
 
 - You like to use a netrw-like view to browse directories (as opposed to a file tree)
 - AND you want to be able to edit your filesystem like a buffer
-- AND you want to perform cross-directory actions. AFAIK there is no other plugin that does this.
+- AND you want to perform cross-directory actions. AFAIK there is no other plugin that does this. (update: [mini.files](https://github.com/echasnovski/mini.nvim/blob/main/readmes/mini-files.md) also offers this functionality)
 
 If you don't need those features specifically, check out the alternatives listed below
 
@@ -317,6 +317,7 @@ If you don't need those features specifically, check out the alternatives listed
 
 **A:**
 
+- [mini.files](https://github.com/echasnovski/mini.nvim/blob/main/readmes/mini-files.md): A newer plugin that also supports cross-directory filesystem-as-buffer edits. It utilizes a unique column view.
 - [vim-vinegar](https://github.com/tpope/vim-vinegar): The granddaddy. This made me fall in love with single-directory file browsing. I stopped using it when I encountered netrw bugs and performance issues.
 - [defx.nvim](https://github.com/Shougo/defx.nvim): What I switched to after vim-vinegar. Much more flexible and performant, but requires python and the API is a little hard to work with.
 - [dirbuf.nvim](https://github.com/elihunter173/dirbuf.nvim): The first plugin I encountered that let you edit the filesystem like a buffer. Never used it because it [can't do cross-directory edits](https://github.com/elihunter173/dirbuf.nvim/issues/7).
