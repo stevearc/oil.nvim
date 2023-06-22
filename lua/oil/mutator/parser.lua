@@ -38,6 +38,19 @@ local function parsedir(name)
   return name, isdir
 end
 
+---@param meta nil|table
+---@param parsed_entry table
+---@return boolean True if metadata and parsed entry have the same link target
+local function compare_link_target(meta, parsed_entry)
+  if not meta or not meta.link then
+    return false
+  end
+  -- Make sure we trim off any trailing path slashes from both sources
+  local meta_name = meta.link:gsub("[/\\]$", "")
+  local parsed_name = parsed_entry.link_target:gsub("[/\\]$", "")
+  return meta_name == parsed_name
+end
+
 ---@class oil.ParseResult
 ---@field data table Parsed entry data
 ---@field ranges table<string, integer[]> Locations of the various columns
@@ -182,7 +195,7 @@ M.parse = function(bufnr)
       check_dupe(parsed_entry.name, i)
       local meta = entry[FIELD.meta]
       if original_entries[parsed_entry.name] == parsed_entry.id then
-        if entry[FIELD.type] == "link" and (not meta or meta.link ~= parsed_entry.link_target) then
+        if entry[FIELD.type] == "link" and not compare_link_target(meta, parsed_entry) then
           table.insert(diffs, {
             type = "new",
             name = parsed_entry.name,

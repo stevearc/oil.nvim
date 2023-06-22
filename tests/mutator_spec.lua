@@ -41,6 +41,19 @@ a.describe("mutator", function()
       assert.are.same({ { entry_type = "directory", name = "foo", type = "new" } }, diffs)
     end)
 
+    it("detects new links", function()
+      vim.cmd.edit({ args = { "oil-test:///foo/" } })
+      local bufnr = vim.api.nvim_get_current_buf()
+      set_lines(bufnr, {
+        "a.txt -> b.txt",
+      })
+      local diffs = parser.parse(bufnr)
+      assert.are.same(
+        { { entry_type = "link", name = "a.txt", type = "new", link = "b.txt" } },
+        diffs
+      )
+    end)
+
     it("detects deleted files", function()
       local file = cache.create_and_store_entry("oil-test:///foo/", "a.txt", "file")
       vim.cmd.edit({ args = { "oil-test:///foo/" } })
@@ -60,6 +73,18 @@ a.describe("mutator", function()
       local diffs = parser.parse(bufnr)
       assert.are.same({
         { name = "bar", type = "delete", id = dir[FIELD.id] },
+      }, diffs)
+    end)
+
+    it("detects deleted links", function()
+      local file = cache.create_and_store_entry("oil-test:///foo/", "a.txt", "link")
+      file[FIELD.meta] = { link = "b.txt" }
+      vim.cmd.edit({ args = { "oil-test:///foo/" } })
+      local bufnr = vim.api.nvim_get_current_buf()
+      set_lines(bufnr, {})
+      local diffs = parser.parse(bufnr)
+      assert.are.same({
+        { name = "a.txt", type = "delete", id = file[FIELD.id] },
       }, diffs)
     end)
 
@@ -193,6 +218,18 @@ a.describe("mutator", function()
         { name = "a.txt", type = "delete", id = afile[FIELD.id] },
         { name = "b.txt", type = "delete", id = bfile[FIELD.id] },
       }, last_two)
+    end)
+
+    it("views link targets with trailing slashes as the same", function()
+      local file = cache.create_and_store_entry("oil-test:///foo/", "mydir", "link")
+      file[FIELD.meta] = { link = "dir/" }
+      vim.cmd.edit({ args = { "oil-test:///foo/" } })
+      local bufnr = vim.api.nvim_get_current_buf()
+      set_lines(bufnr, {
+        string.format("/%d mydir/ -> dir/", file[FIELD.id]),
+      })
+      local diffs = parser.parse(bufnr)
+      assert.are.same({}, diffs)
     end)
   end)
 
