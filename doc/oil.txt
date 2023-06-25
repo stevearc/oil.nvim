@@ -200,11 +200,11 @@ close()                                                                *oil.clos
     Restore the buffer that was present when oil was opened
 
 
-select({opts})                                                        *oil.select*
+select({opts}, {callback})                                            *oil.select*
     Select the entry under the cursor
 
     Parameters:
-      {opts} `nil|table`
+      {opts}     `nil|table`
           {vertical}   `boolean` Open the buffer in a vertical split
           {horizontal} `boolean` Open the buffer in a horizontal split
           {split}      `"aboveleft"|"belowright"|"topleft"|"botright"` Split
@@ -213,6 +213,8 @@ select({opts})                                                        *oil.selec
           {tab}        `boolean` Open the buffer in a new tab
           {close}      `boolean` Close the original oil buffer once selection is
                        made
+      {callback} `nil|fun(err: nil|string)` Called once all entries have been
+                 opened
 
 save({opts})                                                            *oil.save*
     Save all changes

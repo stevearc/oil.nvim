@@ -13,7 +13,7 @@
 - [toggle_float(dir)](#toggle_floatdir)
 - [open(dir)](#opendir)
 - [close()](#close)
-- [select(opts)](#selectopts)
+- [select(opts, callback)](#selectopts-callback)
 - [save(opts)](#saveopts)
 - [setup(opts)](#setupopts)
 
@@ -106,20 +106,21 @@ Open oil browser for a directory
 Restore the buffer that was present when oil was opened
 
 
-## select(opts)
+## select(opts, callback)
 
-`select(opts)` \
+`select(opts, callback)` \
 Select the entry under the cursor
 
-| Param | Type         | Desc                                               |                                                      |
-| ----- | ------------ | -------------------------------------------------- | ---------------------------------------------------- |
-| opts  | `nil\|table` |                                                    |                                                      |
-|       | vertical     | `boolean`                                          | Open the buffer in a vertical split                  |
-|       | horizontal   | `boolean`                                          | Open the buffer in a horizontal split                |
-|       | split        | `"aboveleft"\|"belowright"\|"topleft"\|"botright"` | Split modifier                                       |
-|       | preview      | `boolean`                                          | Open the buffer in a preview window                  |
-|       | tab          | `boolean`                                          | Open the buffer in a new tab                         |
-|       | close        | `boolean`                                          | Close the original oil buffer once selection is made |
+| Param    | Type                         | Desc                                               |                                                      |
+| -------- | ---------------------------- | -------------------------------------------------- | ---------------------------------------------------- |
+| opts     | `nil\|table`                 |                                                    |                                                      |
+|          | vertical                     | `boolean`                                          | Open the buffer in a vertical split                  |
+|          | horizontal                   | `boolean`                                          | Open the buffer in a horizontal split                |
+|          | split                        | `"aboveleft"\|"belowright"\|"topleft"\|"botright"` | Split modifier                                       |
+|          | preview                      | `boolean`                                          | Open the buffer in a preview window                  |
+|          | tab                          | `boolean`                                          | Open the buffer in a new tab                         |
+|          | close                        | `boolean`                                          | Close the original oil buffer once selection is made |
+| callback | `nil\|fun(err: nil\|string)` | Called once all entries have been opened           |                                                      |
 
 ## save(opts)
 
