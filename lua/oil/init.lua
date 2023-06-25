@@ -403,10 +403,19 @@ end
 ---    preview boolean Open the buffer in a preview window
 ---    tab boolean Open the buffer in a new tab
 ---    close boolean Close the original oil buffer once selection is made
-M.select = function(opts)
+---@param callback nil|fun(err: nil|string) Called once all entries have been opened
+M.select = function(opts, callback)
   local cache = require("oil.cache")
   local config = require("oil.config")
   opts = vim.tbl_extend("keep", opts or {}, {})
+  local function finish(err)
+    if err then
+      vim.notify(err, vim.log.levels.ERROR)
+    end
+    if callback then
+      callback(err)
+    end
+  end
   if opts.horizontal or opts.vertical or opts.preview then
     opts.split = opts.split or "belowright"
   end
@@ -414,19 +423,18 @@ M.select = function(opts)
     opts.vertical = true
   end
   if opts.tab and (opts.preview or opts.split) then
-    error("Cannot set preview or split when tab = true")
+    return finish("Cannot set preview or split when tab = true")
   end
   if opts.close and opts.preview then
-    error("Cannot use close=true with preview=true")
+    return finish("Cannot use close=true with preview=true")
   end
   local util = require("oil.util")
   if util.is_floating_win() and opts.preview then
-    vim.notify("oil preview doesn't work in a floating window", vim.log.levels.ERROR)
-    return
+    return finish("oil preview doesn't work in a floating window")
   end
   local adapter = util.get_adapter(0)
   if not adapter then
-    return
+    return finish("Could not find adapter for current buffer")
   end
 
   local mode = vim.api.nvim_get_mode().mode
@@ -454,8 +462,7 @@ M.select = function(opts)
     end
   end
   if vim.tbl_isempty(entries) then
-    vim.notify("Could not find entry under cursor", vim.log.levels.ERROR)
-    return
+    return finish("Could not find entry under cursor")
   end
   if #entries > 1 and opts.preview then
     vim.notify("Cannot preview multiple entries", vim.log.levels.WARN)
@@ -477,10 +484,10 @@ M.select = function(opts)
   if any_moved and not opts.preview and config.prompt_save_on_select_new_entry then
     local ok, choice = pcall(vim.fn.confirm, "Save changes?", "Yes\nNo", 1)
     if not ok then
-      return
+      return finish()
     elseif choice == 1 then
       M.save()
-      return
+      return finish()
     end
   end
 
@@ -490,7 +497,15 @@ M.select = function(opts)
     vim.api.nvim_win_close(preview_win, true)
   end
   local prev_win = vim.api.nvim_get_current_win()
-  for _, entry in ipairs(entries) do
+
+  -- Async iter over entries so we can normalize the url before opening
+  local i = 1
+  local function open_next_entry(cb)
+    local entry = entries[i]
+    i = i + 1
+    if not entry then
+      return cb()
+    end
     local scheme, dir = util.parse_url(bufname)
     local child = dir .. entry.name
     local url = scheme .. child
@@ -507,8 +522,7 @@ M.select = function(opts)
       -- entry. This prevents the case of MOVE /foo -> /bar + CREATE /foo.
       -- If you enter the new /foo, it will show the contents of the old /foo.
       if not entry.id and cache.list_url(bufname)[entry.name] then
-        vim.notify("Please save changes before entering new directory", vim.log.levels.ERROR)
-        return
+        return cb("Please save changes before entering new directory")
       end
     else
       if vim.w.is_oil_win then
@@ -516,49 +530,60 @@ M.select = function(opts)
       end
     end
 
-    local mods = {
-      vertical = opts.vertical,
-      horizontal = opts.horizontal,
-      split = opts.split,
-      keepalt = true,
-    }
-    if opts.preview and preview_win then
-      vim.api.nvim_set_current_win(preview_win)
-      vim.cmd.edit({ args = { util.escape_filename(url) }, mods = mods })
-    else
-      if vim.tbl_isempty(mods) then
-        mods = nil
-      end
-      local cmd
-      if opts.tab then
-        cmd = "tabedit"
-      elseif opts.split then
-        cmd = "split"
+    -- Normalize the url before opening to prevent needing to rename them inside the BufReadCmd
+    -- Renaming buffers during opening can lead to missed autocmds
+    adapter.normalize_url(url, function(normalized_url)
+      local mods = {
+        vertical = opts.vertical,
+        horizontal = opts.horizontal,
+        split = opts.split,
+        keepalt = true,
+      }
+      if opts.preview and preview_win then
+        vim.api.nvim_set_current_win(preview_win)
+        vim.cmd.edit({ args = { util.escape_filename(normalized_url) }, mods = mods })
       else
-        cmd = "edit"
+        if vim.tbl_isempty(mods) then
+          mods = nil
+        end
+        local cmd
+        if opts.tab then
+          cmd = "tabedit"
+        elseif opts.split then
+          cmd = "split"
+        else
+          cmd = "edit"
+        end
+        vim.cmd({
+          cmd = cmd,
+          args = { util.escape_filename(normalized_url) },
+          mods = mods,
+        })
       end
-      vim.cmd({
-        cmd = cmd,
-        args = { util.escape_filename(url) },
-        mods = mods,
-      })
-    end
-    if opts.preview then
-      vim.api.nvim_set_option_value("previewwindow", true, { scope = "local", win = 0 })
-      vim.w.oil_entry_id = entry.id
-      vim.api.nvim_set_current_win(prev_win)
-    end
-  end
-
-  if
-    opts.close
-    and vim.api.nvim_win_is_valid(prev_win)
-    and prev_win ~= vim.api.nvim_get_current_win()
-  then
-    vim.api.nvim_win_call(prev_win, function()
-      M.close()
+      if opts.preview then
+        vim.api.nvim_set_option_value("previewwindow", true, { scope = "local", win = 0 })
+        vim.w.oil_entry_id = entry.id
+        vim.api.nvim_set_current_win(prev_win)
+      end
+      open_next_entry(cb)
     end)
   end
+
+  open_next_entry(function(err)
+    if err then
+      return finish(err)
+    end
+    if
+      opts.close
+      and vim.api.nvim_win_is_valid(prev_win)
+      and prev_win ~= vim.api.nvim_get_current_win()
+    then
+      vim.api.nvim_win_call(prev_win, function()
+        M.close()
+      end)
+    end
+    finish()
+  end)
 end
 
 ---@param bufnr integer
