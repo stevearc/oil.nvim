@@ -1,11 +1,16 @@
 local cache = require("oil.cache")
 local columns = require("oil.columns")
 local config = require("oil.config")
+local constants = require("oil.constants")
 local keymap_util = require("oil.keymap_util")
 local loading = require("oil.loading")
 local util = require("oil.util")
-local FIELD = require("oil.constants").FIELD
 local M = {}
+
+local FIELD_ID = constants.FIELD_ID
+local FIELD_NAME = constants.FIELD_NAME
+local FIELD_TYPE = constants.FIELD_TYPE
+local FIELD_META = constants.FIELD_META
 
 -- map of path->last entry under cursor
 local last_cursor_entry = {}
@@ -14,7 +19,7 @@ local last_cursor_entry = {}
 ---@param bufnr integer
 ---@return boolean
 M.should_display = function(entry, bufnr)
-  local name = entry[FIELD.name]
+  local name = entry[FIELD_NAME]
   return not config.view_options.is_always_hidden(name, bufnr)
     and (not config.view_options.is_hidden_file(name, bufnr) or config.view_options.show_hidden)
 end
@@ -349,11 +354,11 @@ end
 ---@param entry oil.InternalEntry
 ---@return boolean
 local function is_entry_directory(entry)
-  local type = entry[FIELD.type]
+  local type = entry[FIELD_TYPE]
   if type == "directory" then
     return true
   elseif type == "link" then
-    local meta = entry[FIELD.meta]
+    local meta = entry[FIELD_META]
     return meta and meta.link_stat and meta.link_stat.type == "directory"
   else
     return false
@@ -391,7 +396,7 @@ local function render_buffer(bufnr, opts)
     if a_isdir ~= b_isdir then
       return a_isdir
     end
-    return a[FIELD.name] < b[FIELD.name]
+    return a[FIELD_NAME] < b[FIELD_NAME]
   end)
 
   local jump_idx
@@ -414,7 +419,7 @@ local function render_buffer(bufnr, opts)
     local cols = M.format_entry_cols(entry, column_defs, col_width, adapter)
     table.insert(line_table, cols)
 
-    local name = entry[FIELD.name]
+    local name = entry[FIELD_NAME]
     if seek_after_render == name then
       seek_after_render_found = true
       jump_idx = #line_table
@@ -448,7 +453,7 @@ local function render_buffer(bufnr, opts)
           if id then
             local entry = cache.get_entry_by_id(id)
             if entry then
-              local name = entry[FIELD.name]
+              local name = entry[FIELD_NAME]
               local col = line:find(name, 1, true) or (id_str:len() + 1)
               vim.api.nvim_win_set_cursor(winid, { lnum, col - 1 })
             end
@@ -467,10 +472,10 @@ end
 ---@param adapter oil.Adapter
 ---@return oil.TextChunk[]
 M.format_entry_cols = function(entry, column_defs, col_width, adapter)
-  local name = entry[FIELD.name]
+  local name = entry[FIELD_NAME]
   -- First put the unique ID
   local cols = {}
-  local id_key = cache.format_id(entry[FIELD.id])
+  local id_key = cache.format_id(entry[FIELD_ID])
   col_width[1] = id_key:len()
   table.insert(cols, id_key)
   -- Then add all the configured columns
@@ -481,13 +486,13 @@ M.format_entry_cols = function(entry, column_defs, col_width, adapter)
     table.insert(cols, chunk)
   end
   -- Always add the entry name at the end
-  local entry_type = entry[FIELD.type]
+  local entry_type = entry[FIELD_TYPE]
   if entry_type == "directory" then
     table.insert(cols, { name .. "/", "OilDir" })
   elseif entry_type == "socket" then
     table.insert(cols, { name, "OilSocket" })
   elseif entry_type == "link" then
-    local meta = entry[FIELD.meta]
+    local meta = entry[FIELD_META]
     local link_text
     if meta then
       if meta.link_stat and meta.link_stat.type == "directory" then

@@ -1,11 +1,16 @@
 require("plenary.async").tests.add_to_env()
-local FIELD = require("oil.constants").FIELD
-local view = require("oil.view")
 local cache = require("oil.cache")
+local constants = require("oil.constants")
 local mutator = require("oil.mutator")
 local parser = require("oil.mutator.parser")
 local test_adapter = require("oil.adapters.test")
 local util = require("oil.util")
+local view = require("oil.view")
+
+local FIELD_ID = constants.FIELD_ID
+local FIELD_NAME = constants.FIELD_NAME
+local FIELD_TYPE = constants.FIELD_TYPE
+local FIELD_META = constants.FIELD_META
 
 local function set_lines(bufnr, lines)
   vim.bo[bufnr].modifiable = true
@@ -61,7 +66,7 @@ a.describe("mutator", function()
       set_lines(bufnr, {})
       local diffs = parser.parse(bufnr)
       assert.are.same({
-        { name = "a.txt", type = "delete", id = file[FIELD.id] },
+        { name = "a.txt", type = "delete", id = file[FIELD_ID] },
       }, diffs)
     end)
 
@@ -72,19 +77,19 @@ a.describe("mutator", function()
       set_lines(bufnr, {})
       local diffs = parser.parse(bufnr)
       assert.are.same({
-        { name = "bar", type = "delete", id = dir[FIELD.id] },
+        { name = "bar", type = "delete", id = dir[FIELD_ID] },
       }, diffs)
     end)
 
     it("detects deleted links", function()
       local file = cache.create_and_store_entry("oil-test:///foo/", "a.txt", "link")
-      file[FIELD.meta] = { link = "b.txt" }
+      file[FIELD_META] = { link = "b.txt" }
       vim.cmd.edit({ args = { "oil-test:///foo/" } })
       local bufnr = vim.api.nvim_get_current_buf()
       set_lines(bufnr, {})
       local diffs = parser.parse(bufnr)
       assert.are.same({
-        { name = "a.txt", type = "delete", id = file[FIELD.id] },
+        { name = "a.txt", type = "delete", id = file[FIELD_ID] },
       }, diffs)
     end)
 
@@ -156,7 +161,7 @@ a.describe("mutator", function()
       local bufnr = vim.api.nvim_get_current_buf()
       set_lines(bufnr, {
         "a.txt",
-        string.format("/%d a.txt", file[FIELD.id]),
+        string.format("/%d a.txt", file[FIELD_ID]),
       })
       local _, errors = parser.parse(bufnr)
       assert.are.same({
@@ -183,12 +188,12 @@ a.describe("mutator", function()
       vim.cmd.edit({ args = { "oil-test:///foo/" } })
       local bufnr = vim.api.nvim_get_current_buf()
       set_lines(bufnr, {
-        string.format("/%d b.txt", file[FIELD.id]),
+        string.format("/%d b.txt", file[FIELD_ID]),
       })
       local diffs = parser.parse(bufnr)
       assert.are.same({
-        { type = "new", id = file[FIELD.id], name = "b.txt", entry_type = "file" },
-        { type = "delete", id = file[FIELD.id], name = "a.txt" },
+        { type = "new", id = file[FIELD_ID], name = "b.txt", entry_type = "file" },
+        { type = "delete", id = file[FIELD_ID], name = "a.txt" },
       }, diffs)
     end)
 
@@ -198,8 +203,8 @@ a.describe("mutator", function()
       vim.cmd.edit({ args = { "oil-test:///foo/" } })
       local bufnr = vim.api.nvim_get_current_buf()
       set_lines(bufnr, {
-        string.format("/%d a.txt", bfile[FIELD.id]),
-        string.format("/%d b.txt", afile[FIELD.id]),
+        string.format("/%d a.txt", bfile[FIELD_ID]),
+        string.format("/%d b.txt", afile[FIELD_ID]),
       })
       local diffs = parser.parse(bufnr)
       local first_two = { diffs[1], diffs[2] }
@@ -211,22 +216,22 @@ a.describe("mutator", function()
         return a.id < b.id
       end)
       assert.are.same({
-        { name = "b.txt", type = "new", id = afile[FIELD.id], entry_type = "file" },
-        { name = "a.txt", type = "new", id = bfile[FIELD.id], entry_type = "file" },
+        { name = "b.txt", type = "new", id = afile[FIELD_ID], entry_type = "file" },
+        { name = "a.txt", type = "new", id = bfile[FIELD_ID], entry_type = "file" },
       }, first_two)
       assert.are.same({
-        { name = "a.txt", type = "delete", id = afile[FIELD.id] },
-        { name = "b.txt", type = "delete", id = bfile[FIELD.id] },
+        { name = "a.txt", type = "delete", id = afile[FIELD_ID] },
+        { name = "b.txt", type = "delete", id = bfile[FIELD_ID] },
       }, last_two)
     end)
 
     it("views link targets with trailing slashes as the same", function()
       local file = cache.create_and_store_entry("oil-test:///foo/", "mydir", "link")
-      file[FIELD.meta] = { link = "dir/" }
+      file[FIELD_META] = { link = "dir/" }
       vim.cmd.edit({ args = { "oil-test:///foo/" } })
       local bufnr = vim.api.nvim_get_current_buf()
       set_lines(bufnr, {
-        string.format("/%d mydir/ -> dir/", file[FIELD.id]),
+        string.format("/%d mydir/ -> dir/", file[FIELD_ID]),
       })
       local diffs = parser.parse(bufnr)
       assert.are.same({}, diffs)
@@ -266,7 +271,7 @@ a.describe("mutator", function()
       vim.cmd.edit({ args = { "oil-test:///foo/" } })
       local bufnr = vim.api.nvim_get_current_buf()
       local diffs = {
-        { type = "delete", name = "a.txt", id = file[FIELD.id] },
+        { type = "delete", name = "a.txt", id = file[FIELD_ID] },
       }
       local actions = mutator.create_actions_from_diffs({
         [bufnr] = diffs,
@@ -285,7 +290,7 @@ a.describe("mutator", function()
       vim.cmd.edit({ args = { "oil-test:///foo/" } })
       local bufnr = vim.api.nvim_get_current_buf()
       local diffs = {
-        { type = "new", name = "b.txt", entry_type = "file", id = file[FIELD.id] },
+        { type = "new", name = "b.txt", entry_type = "file", id = file[FIELD_ID] },
       }
       local actions = mutator.create_actions_from_diffs({
         [bufnr] = diffs,
@@ -305,8 +310,8 @@ a.describe("mutator", function()
       vim.cmd.edit({ args = { "oil-test:///foo/" } })
       local bufnr = vim.api.nvim_get_current_buf()
       local diffs = {
-        { type = "delete", name = "a.txt", id = file[FIELD.id] },
-        { type = "new", name = "b.txt", entry_type = "file", id = file[FIELD.id] },
+        { type = "delete", name = "a.txt", id = file[FIELD_ID] },
+        { type = "new", name = "b.txt", entry_type = "file", id = file[FIELD_ID] },
       }
       local actions = mutator.create_actions_from_diffs({
         [bufnr] = diffs,
@@ -326,8 +331,8 @@ a.describe("mutator", function()
       vim.cmd.edit({ args = { "oil-test:///" } })
       local bufnr = vim.api.nvim_get_current_buf()
       local diffs = {
-        { type = "delete", name = "a.txt", id = file[FIELD.id] },
-        { type = "new", name = "b.txt", entry_type = "file", id = file[FIELD.id] },
+        { type = "delete", name = "a.txt", id = file[FIELD_ID] },
+        { type = "new", name = "b.txt", entry_type = "file", id = file[FIELD_ID] },
         { type = "new", name = "a.txt", entry_type = "file" },
       }
       local actions = mutator.create_actions_from_diffs({
@@ -354,10 +359,10 @@ a.describe("mutator", function()
       vim.cmd.edit({ args = { "oil-test:///" } })
       local bufnr = vim.api.nvim_get_current_buf()
       local diffs = {
-        { type = "delete", name = "a.txt", id = afile[FIELD.id] },
-        { type = "new", name = "b.txt", entry_type = "file", id = afile[FIELD.id] },
-        { type = "delete", name = "b.txt", id = bfile[FIELD.id] },
-        { type = "new", name = "a.txt", entry_type = "file", id = bfile[FIELD.id] },
+        { type = "delete", name = "a.txt", id = afile[FIELD_ID] },
+        { type = "new", name = "b.txt", entry_type = "file", id = afile[FIELD_ID] },
+        { type = "delete", name = "b.txt", id = bfile[FIELD_ID] },
+        { type = "new", name = "a.txt", entry_type = "file", id = bfile[FIELD_ID] },
       }
       math.randomseed(2983982)
       local actions = mutator.create_actions_from_diffs({
@@ -541,9 +546,9 @@ a.describe("mutator", function()
       local files = cache.list_url("oil-test:///")
       assert.are.same({
         ["a.txt"] = {
-          [FIELD.id] = 1,
-          [FIELD.type] = "file",
-          [FIELD.name] = "a.txt",
+          [FIELD_ID] = 1,
+          [FIELD_TYPE] = "file",
+          [FIELD_NAME] = "a.txt",
         },
       }, files)
     end)
@@ -556,9 +561,9 @@ a.describe("mutator", function()
       a.wrap(mutator.process_actions, 2)(actions)
       local files = cache.list_url("oil-test:///")
       assert.are.same({}, files)
-      assert.is_nil(cache.get_entry_by_id(file[FIELD.id]))
+      assert.is_nil(cache.get_entry_by_id(file[FIELD_ID]))
       assert.has_error(function()
-        cache.get_parent_url(file[FIELD.id])
+        cache.get_parent_url(file[FIELD_ID])
       end)
     end)
 
@@ -575,15 +580,15 @@ a.describe("mutator", function()
       a.wrap(mutator.process_actions, 2)(actions)
       local files = cache.list_url("oil-test:///")
       local new_entry = {
-        [FIELD.id] = file[FIELD.id],
-        [FIELD.type] = "file",
-        [FIELD.name] = "b.txt",
+        [FIELD_ID] = file[FIELD_ID],
+        [FIELD_TYPE] = "file",
+        [FIELD_NAME] = "b.txt",
       }
       assert.are.same({
         ["b.txt"] = new_entry,
       }, files)
-      assert.are.same(new_entry, cache.get_entry_by_id(file[FIELD.id]))
-      assert.equals("oil-test:///", cache.get_parent_url(file[FIELD.id]))
+      assert.are.same(new_entry, cache.get_entry_by_id(file[FIELD_ID]))
+      assert.equals("oil-test:///", cache.get_parent_url(file[FIELD_ID]))
     end)
 
     a.it("copies entries", function()
@@ -599,9 +604,9 @@ a.describe("mutator", function()
       a.wrap(mutator.process_actions, 2)(actions)
       local files = cache.list_url("oil-test:///")
       local new_entry = {
-        [FIELD.id] = file[FIELD.id] + 1,
-        [FIELD.type] = "file",
-        [FIELD.name] = "b.txt",
+        [FIELD_ID] = file[FIELD_ID] + 1,
+        [FIELD_TYPE] = "file",
+        [FIELD_NAME] = "b.txt",
       }
       assert.are.same({
         ["a.txt"] = file,

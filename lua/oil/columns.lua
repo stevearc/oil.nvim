@@ -1,8 +1,12 @@
 local config = require("oil.config")
+local constants = require("oil.constants")
 local util = require("oil.util")
 local has_devicons, devicons = pcall(require, "nvim-web-devicons")
-local FIELD = require("oil.constants").FIELD
 local M = {}
+
+local FIELD_NAME = constants.FIELD_NAME
+local FIELD_TYPE = constants.FIELD_TYPE
+local FIELD_META = constants.FIELD_META
 
 local all_columns = {}
 
@@ -71,7 +75,7 @@ M.get_metadata_fetcher = function(adapter, column_defs)
   return function(parent_url, entry, cb)
     cb = util.cb_collect(num_keys, cb)
     local meta = {}
-    entry[FIELD.meta] = meta
+    entry[FIELD_META] = meta
     for k, v in pairs(keyfetches) do
       v(parent_url, entry, function(err, value)
         if err then
@@ -101,7 +105,7 @@ M.render_col = function(adapter, col_def, entry)
 
   -- Make sure all the required metadata exists before attempting to render
   if column.meta_fields then
-    local meta = entry[FIELD.meta]
+    local meta = entry[FIELD_META]
     if not meta then
       return EMPTY
     end
@@ -193,9 +197,9 @@ end
 if has_devicons then
   M.register("icon", {
     render = function(entry, conf)
-      local type = entry[FIELD.type]
-      local name = entry[FIELD.name]
-      local meta = entry[FIELD.meta]
+      local type = entry[FIELD_TYPE]
+      local name = entry[FIELD_NAME]
+      local meta = entry[FIELD_META]
       if type == "link" and meta then
         if meta.link then
           name = meta.link
@@ -228,7 +232,7 @@ local default_type_icons = {
 }
 M.register("type", {
   render = function(entry, conf)
-    local entry_type = entry[FIELD.type]
+    local entry_type = entry[FIELD_TYPE]
     if conf and conf.icons then
       return conf.icons[entry_type] or entry_type
     else

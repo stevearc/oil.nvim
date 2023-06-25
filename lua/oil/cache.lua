@@ -1,6 +1,9 @@
+local constants = require("oil.constants")
 local util = require("oil.util")
-local FIELD = require("oil.constants").FIELD
 local M = {}
+
+local FIELD_ID = constants.FIELD_ID
+local FIELD_NAME = constants.FIELD_NAME
 
 local next_id = 1
 
@@ -64,8 +67,8 @@ M.store_entry = function(parent_url, entry)
     parent = {}
     url_directory[parent_url] = parent
   end
-  local id = entry[FIELD.id]
-  local name = entry[FIELD.name]
+  local id = entry[FIELD_ID]
+  local name = entry[FIELD_NAME]
   parent[name] = entry
   local tmp_dir = tmp_url_directory[parent_url]
   if tmp_dir and tmp_dir[name] then
@@ -97,7 +100,7 @@ M.end_update_url = function(parent_url)
     return
   end
   for _, old_entry in pairs(tmp_url_directory[parent_url]) do
-    local id = old_entry[FIELD.id]
+    local id = old_entry[FIELD_ID]
     parent_url_by_id[id] = nil
     entries_by_id[id] = nil
   end
@@ -146,8 +149,8 @@ M.perform_action = function(action)
     local name = vim.fn.fnamemodify(path, ":t")
     local entry = url_directory[parent_url][name]
     url_directory[parent_url][name] = nil
-    entries_by_id[entry[FIELD.id]] = nil
-    parent_url_by_id[entry[FIELD.id]] = nil
+    entries_by_id[entry[FIELD_ID]] = nil
+    parent_url_by_id[entry[FIELD_ID]] = nil
   elseif action.type == "move" then
     local src_scheme, src_path = util.parse_url(action.src_url)
     local src_parent_url = util.addslash(src_scheme .. vim.fn.fnamemodify(src_path, ":h"))
@@ -165,8 +168,8 @@ M.perform_action = function(action)
       url_directory[dest_parent_url] = dest_parent
     end
     dest_parent[dest_name] = entry
-    parent_url_by_id[entry[FIELD.id]] = dest_parent_url
-    entry[FIELD.name] = dest_name
+    parent_url_by_id[entry[FIELD_ID]] = dest_parent_url
+    entry[FIELD_NAME] = dest_name
     util.update_moved_buffers(action.entry_type, action.src_url, action.dest_url)
   elseif action.type == "copy" then
     local scheme, path = util.parse_url(action.dest_url)

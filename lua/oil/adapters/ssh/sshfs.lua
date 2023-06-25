@@ -1,9 +1,12 @@
 local cache = require("oil.cache")
+local constants = require("oil.constants")
 local permissions = require("oil.adapters.files.permissions")
 local SSHConnection = require("oil.adapters.ssh.connection")
 local util = require("oil.util")
-local FIELD = require("oil.constants").FIELD
 local SSHFS = {}
+
+local FIELD_TYPE = constants.FIELD_TYPE
+local FIELD_META = constants.FIELD_META
 
 local typechar_map = {
   l = "link",
@@ -143,7 +146,7 @@ function SSHFS:list_dir(url, path, callback)
           end
           local cache_entry = cache.create_entry(url, name, type)
           entries[name] = cache_entry
-          cache_entry[FIELD.meta] = meta
+          cache_entry[FIELD_META] = meta
           cache.store_entry(url, cache_entry)
         end
       end
@@ -161,8 +164,8 @@ function SSHFS:list_dir(url, path, callback)
             local ok, name, type, meta = pcall(parse_ls_line, line)
             if ok and name ~= "." and name ~= ".." then
               local cache_entry = entries[name]
-              if cache_entry[FIELD.type] == "link" then
-                cache_entry[FIELD.meta].link_stat = {
+              if cache_entry[FIELD_TYPE] == "link" then
+                cache_entry[FIELD_META].link_stat = {
                   type = type,
                   size = meta.size,
                 }

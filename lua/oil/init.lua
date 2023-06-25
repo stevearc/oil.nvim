@@ -1,7 +1,5 @@
 local M = {}
 
----@alias oil.InternalEntry string[]
-
 ---@class oil.Entry
 ---@field name string
 ---@field type oil.EntryType

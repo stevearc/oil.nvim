@@ -1,5 +1,12 @@
 local config = require("oil.config")
+local constants = require("oil.constants")
+
 local M = {}
+
+local FIELD_ID = constants.FIELD_ID
+local FIELD_NAME = constants.FIELD_NAME
+local FIELD_TYPE = constants.FIELD_TYPE
+local FIELD_META = constants.FIELD_META
 
 ---@param url string
 ---@return nil|string
@@ -84,12 +91,11 @@ end
 ---@param entry oil.InternalEntry
 ---@return oil.Entry
 M.export_entry = function(entry)
-  local FIELD = require("oil.constants").FIELD
   return {
-    name = entry[FIELD.name],
-    type = entry[FIELD.type],
-    id = entry[FIELD.id],
-    meta = entry[FIELD.meta],
+    name = entry[FIELD_NAME],
+    type = entry[FIELD_TYPE],
+    id = entry[FIELD_ID],
+    meta = entry[FIELD_META],
   }
 end
 

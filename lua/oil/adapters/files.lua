@@ -1,12 +1,15 @@
 local cache = require("oil.cache")
 local columns = require("oil.columns")
 local config = require("oil.config")
+local constants = require("oil.constants")
 local fs = require("oil.fs")
 local permissions = require("oil.adapters.files.permissions")
 local trash = require("oil.adapters.files.trash")
 local util = require("oil.util")
-local FIELD = require("oil.constants").FIELD
 local M = {}
+
+local FIELD_NAME = constants.FIELD_NAME
+local FIELD_META = constants.FIELD_META
 
 local function read_link_data(path, cb)
   vim.loop.fs_readlink(
@@ -44,7 +47,7 @@ local fs_stat_meta_fields = {
   stat = function(parent_url, entry, cb)
     local _, path = util.parse_url(parent_url)
     local dir = fs.posix_to_os_path(path)
-    vim.loop.fs_stat(fs.join(dir, entry[FIELD.name]), cb)
+    vim.loop.fs_stat(fs.join(dir, entry[FIELD_NAME]), cb)
   end,
 }
 
@@ -52,7 +55,7 @@ file_columns.size = {
   meta_fields = fs_stat_meta_fields,
 
   render = function(entry, conf)
-    local meta = entry[FIELD.meta]
+    local meta = entry[FIELD_META]
     local stat = meta.stat
     if not stat then
       return ""
@@ -79,7 +82,7 @@ if not fs.is_windows then
     meta_fields = fs_stat_meta_fields,
 
     render = function(entry, conf)
-      local meta = entry[FIELD.meta]
+      local meta = entry[FIELD_META]
       local stat = meta.stat
       if not stat then
         return ""
@@ -92,7 +95,7 @@ if not fs.is_windows then
     end,
 
     compare = function(entry, parsed_value)
-      local meta = entry[FIELD.meta]
+      local meta = entry[FIELD_META]
       if parsed_value and meta.stat and meta.stat.mode then
         local mask = bit.lshift(1, 12) - 1
         local old_mode = bit.band(meta.stat.mode, mask)
@@ -135,7 +138,7 @@ for _, time_key in ipairs({ "ctime", "mtime", "atime", "birthtime" }) do
     meta_fields = fs_stat_meta_fields,
 
     render = function(entry, conf)
-      local meta = entry[FIELD.meta]
+      local meta = entry[FIELD_META]
       local stat = meta.stat
       local fmt = conf and conf.format
       local ret
@@ -253,7 +256,7 @@ M.list = function(url, column_defs, callback)
               if err then
                 poll(meta_err)
               else
-                local meta = cache_entry[FIELD.meta]
+                local meta = cache_entry[FIELD_META]
                 -- Make sure we always get fs_stat info for links
                 if entry.type == "link" then
                   read_link_data(fs.join(dir, entry.name), function(link_err, link, link_stat)
@@ -262,7 +265,7 @@ M.list = function(url, column_defs, callback)
                     else
                       if not meta then
                         meta = {}
-                        cache_entry[FIELD.meta] = meta
+                        cache_entry[FIELD_META] = meta
                       end
                       meta.link = link
                       meta.link_stat = link_stat

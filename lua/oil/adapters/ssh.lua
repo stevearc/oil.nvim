@@ -1,5 +1,6 @@
 local cache = require("oil.cache")
 local config = require("oil.config")
+local constants = require("oil.constants")
 local fs = require("oil.fs")
 local files = require("oil.adapters.files")
 local loading = require("oil.loading")
@@ -8,8 +9,9 @@ local sshfs = require("oil.adapters.ssh.sshfs")
 local pathutil = require("oil.pathutil")
 local shell = require("oil.shell")
 local util = require("oil.util")
-local FIELD = require("oil.constants").FIELD
 local M = {}
+
+local FIELD_META = constants.FIELD_META
 
 ---@class oil.sshUrl
 ---@field scheme string
@@ -96,7 +98,7 @@ end
 local ssh_columns = {}
 ssh_columns.permissions = {
   render = function(entry, conf)
-    local meta = entry[FIELD.meta]
+    local meta = entry[FIELD_META]
     return permissions.mode_to_str(meta.mode)
   end,
 
@@ -105,7 +107,7 @@ ssh_columns.permissions = {
   end,
 
   compare = function(entry, parsed_value)
-    local meta = entry[FIELD.meta]
+    local meta = entry[FIELD_META]
     if parsed_value and meta.mode then
       local mask = bit.lshift(1, 12) - 1
       local old_mode = bit.band(meta.mode, mask)
@@ -129,7 +131,7 @@ ssh_columns.permissions = {
 
 ssh_columns.size = {
   render = function(entry, conf)
-    local meta = entry[FIELD.meta]
+    local meta = entry[FIELD_META]
     if not meta.size then
       return ""
     elseif meta.size >= 1e9 then

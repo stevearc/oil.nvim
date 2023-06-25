@@ -1,6 +1,7 @@
 local cache = require("oil.cache")
 local columns = require("oil.columns")
 local config = require("oil.config")
+local constants = require("oil.constants")
 local oil = require("oil")
 local parser = require("oil.mutator.parser")
 local pathutil = require("oil.pathutil")
@@ -9,8 +10,10 @@ local Progress = require("oil.mutator.progress")
 local Trie = require("oil.mutator.trie")
 local util = require("oil.util")
 local view = require("oil.view")
-local FIELD = require("oil.constants").FIELD
 local M = {}
+
+local FIELD_NAME = constants.FIELD_NAME
+local FIELD_TYPE = constants.FIELD_TYPE
 
 ---@alias oil.Action oil.CreateAction|oil.DeleteAction|oil.MoveAction|oil.CopyAction|oil.ChangeAction
 
@@ -129,17 +132,17 @@ M.create_actions_from_diffs = function(all_diffs)
         for i, diff in ipairs(diffs) do
           table.insert(actions, {
             type = i == #diffs and "move" or "copy",
-            entry_type = entry[FIELD.type],
+            entry_type = entry[FIELD_TYPE],
             dest_url = diff.dest,
-            src_url = cache.get_parent_url(id) .. entry[FIELD.name],
+            src_url = cache.get_parent_url(id) .. entry[FIELD_NAME],
           })
         end
       else
         -- DELETE when no create
         table.insert(actions, {
           type = "delete",
-          entry_type = entry[FIELD.type],
-          url = cache.get_parent_url(id) .. entry[FIELD.name],
+          entry_type = entry[FIELD_TYPE],
+          url = cache.get_parent_url(id) .. entry[FIELD_NAME],
         })
       end
     else
@@ -147,8 +150,8 @@ M.create_actions_from_diffs = function(all_diffs)
       for _, diff in ipairs(diffs) do
         table.insert(actions, {
           type = "copy",
-          entry_type = entry[FIELD.type],
-          src_url = cache.get_parent_url(id) .. entry[FIELD.name],
+          entry_type = entry[FIELD_TYPE],
+          src_url = cache.get_parent_url(id) .. entry[FIELD_NAME],
           dest_url = diff.dest,
         })
       end
