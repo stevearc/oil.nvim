@@ -173,6 +173,45 @@ a.describe("mutator", function()
       }, errors)
     end)
 
+    it("errors on duplicate names for existing files in subdirectory", function()
+      cache.create_and_store_entry("oil-test:///foo/bar/", "a.txt", "file")
+      local bar = cache.create_and_store_entry("oil-test:///foo/", "bar", "directory")
+      vim.cmd.edit({ args = { "oil-test:///foo/" } })
+      local bufnr = vim.api.nvim_get_current_buf()
+      set_lines(bufnr, {
+        "bar/a.txt",
+        string.format("/%d bar", bar[FIELD_ID]),
+      })
+      local _, errors = parser.parse(bufnr)
+      assert.are.same({
+        {
+          message = "Duplicate filename",
+          lnum = 1,
+          col = 0,
+        },
+      }, errors)
+    end)
+
+    it("errors on duplicate names for moving to existing file in subdirectory", function()
+      cache.create_and_store_entry("oil-test:///foo/bar/", "b.txt", "file")
+      local bar = cache.create_and_store_entry("oil-test:///foo/", "bar", "directory")
+      local a = cache.create_and_store_entry("oil-test:///foo/", "a.txt", "file")
+      vim.cmd.edit({ args = { "oil-test:///foo/" } })
+      local bufnr = vim.api.nvim_get_current_buf()
+      set_lines(bufnr, {
+        string.format("/%d bar/b.txt", a[FIELD_ID]),
+        string.format("/%d bar", bar[FIELD_ID]),
+      })
+      local _, errors = parser.parse(bufnr)
+      assert.are.same({
+        {
+          message = "Duplicate filename",
+          lnum = 1,
+          col = 0,
+        },
+      }, errors)
+    end)
+
     it("ignores new dirs with empty name", function()
       vim.cmd.edit({ args = { "oil-test:///foo/" } })
       local bufnr = vim.api.nvim_get_current_buf()
