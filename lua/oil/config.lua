@@ -80,6 +80,19 @@ local default_config = {
     win_options = {
       winblend = 10,
     },
+    -- This is the config that will be passed to nvim_open_win.
+    -- Change values here to customize the layout
+    -- For example, you can use this to position the window on the right
+    -- override = function(conf)
+    --   local opts = {
+    --     col = vim.o.columns - conf.width,
+    --     zindex = 80,
+    --   }
+    --   return vim.tbl_deep_extend("force", conf, opts)
+    -- end,
+    override = function(conf)
+      return conf
+    end,
   },
   -- Configuration for the actions floating preview window
   preview = {
