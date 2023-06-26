@@ -82,14 +82,6 @@ local default_config = {
     },
     -- This is the config that will be passed to nvim_open_win.
     -- Change values here to customize the layout
-    -- For example, you can use this to position the window on the right
-    -- override = function(conf)
-    --   local opts = {
-    --     col = vim.o.columns - conf.width,
-    --     zindex = 80,
-    --   }
-    --   return vim.tbl_deep_extend("force", conf, opts)
-    -- end,
     override = function(conf)
       return conf
     end,

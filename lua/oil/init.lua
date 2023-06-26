@@ -273,7 +273,7 @@ M.open_float = function(dir)
     border = config.float.border,
     zindex = 45,
   }
-  win_opts = config.float.override(win_opts)
+  win_opts = config.float.override(win_opts) or win_opts
 
   local winid = vim.api.nvim_open_win(bufnr, true, win_opts)
   vim.w[winid].is_oil_win = true
