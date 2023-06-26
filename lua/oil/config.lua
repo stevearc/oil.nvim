@@ -80,6 +80,11 @@ local default_config = {
     win_options = {
       winblend = 10,
     },
+    -- This is the config that will be passed to nvim_open_win.
+    -- Change values here to customize the layout
+    override = function(conf)
+      return conf
+    end,
   },
   -- Configuration for the actions floating preview window
   preview = {
