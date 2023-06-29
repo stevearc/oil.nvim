@@ -815,7 +815,8 @@ M.setup = function(opts)
     M[method](unpack(args.fargs))
   end, { desc = "Open oil file browser on a directory", nargs = "*", complete = "dir" })
   local aug = vim.api.nvim_create_augroup("Oil", {})
-  if vim.fn.exists("#FileExplorer") then
+
+  if config.default_file_explorer and vim.fn.exists("#FileExplorer") then
     vim.api.nvim_create_augroup("FileExplorer", { clear = true })
   end
 
