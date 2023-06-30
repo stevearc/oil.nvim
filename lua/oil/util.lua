@@ -23,6 +23,40 @@ M.escape_filename = function(filename)
   return ret
 end
 
+local _url_escape_chars = {
+  [" "] = "%20",
+  ["$"] = "%24",
+  ["&"] = "%26",
+  ["`"] = "%60",
+  [":"] = "%3A",
+  ["<"] = "%3C",
+  ["="] = "%3D",
+  [">"] = "%3E",
+  ["?"] = "%3F",
+  ["["] = "%5B",
+  ["\\"] = "%5C",
+  ["]"] = "%5D",
+  ["^"] = "%5E",
+  ["{"] = "%7B",
+  ["|"] = "%7C",
+  ["}"] = "%7D",
+  ["~"] = "%7E",
+  ["“"] = "%22",
+  ["‘"] = "%27",
+  ["+"] = "%2B",
+  [","] = "%2C",
+  ["#"] = "%23",
+  ["%"] = "%25",
+  ["@"] = "%40",
+  ["/"] = "%2F",
+  [";"] = "%3B",
+}
+---@param string string
+---@return string
+M.url_escape = function(string)
+  return (string:gsub(".", _url_escape_chars))
+end
+
 ---@param bufnr integer
 ---@return nil|oil.Adapter
 M.get_adapter = function(bufnr)

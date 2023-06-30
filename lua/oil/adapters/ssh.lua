@@ -75,7 +75,8 @@ local function url_to_scp(url)
     table.insert(pieces, string.format(":%d", url.port))
   end
   table.insert(pieces, "/")
-  table.insert(pieces, url.path)
+  local escaped_path = util.url_escape(url.path)
+  table.insert(pieces, escaped_path)
   return table.concat(pieces, "")
 end
 
