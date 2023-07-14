@@ -411,7 +411,6 @@ local function render_buffer(bufnr, opts)
   for i in ipairs(column_defs) do
     col_width[i + 1] = 1
   end
-  local virt_text = {}
   for _, entry in ipairs(entry_list) do
     if not M.should_display(entry, bufnr) then
       goto continue
@@ -435,11 +434,6 @@ local function render_buffer(bufnr, opts)
   vim.bo[bufnr].modifiable = false
   vim.bo[bufnr].modified = false
   util.set_highlights(bufnr, highlights)
-  local ns = vim.api.nvim_create_namespace("Oil")
-  for _, v in ipairs(virt_text) do
-    local lnum, col, ext_opts = unpack(v)
-    vim.api.nvim_buf_set_extmark(bufnr, ns, lnum, col, ext_opts)
-  end
   if opts.jump then
     -- TODO why is the schedule necessary?
     vim.schedule(function()
