@@ -610,7 +610,7 @@ M._get_highlights = function()
   return {
     {
       name = "OilDir",
-      link = "Special",
+      link = "Directory",
       desc = "Directories in an oil buffer",
     },
     {
