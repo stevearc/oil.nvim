@@ -538,14 +538,26 @@ M.select = function(opts, callback)
         split = opts.split,
         keepalt = true,
       }
+      local filename = util.escape_filename(normalized_url)
+
+      -- If we're previewing a file that hasn't been opened yet, make sure it gets deleted after we
+      -- close the window
+      if opts.preview and not util.parse_url(filename) then
+        local bufnr = vim.fn.bufadd(filename)
+        if vim.fn.bufloaded(bufnr) == 0 then
+          vim.bo[bufnr].bufhidden = "wipe"
+          vim.b[bufnr].oil_preview_buffer = true
+        end
+      end
+
+      local cmd
       if opts.preview and preview_win then
         vim.api.nvim_set_current_win(preview_win)
-        vim.cmd.edit({ args = { util.escape_filename(normalized_url) }, mods = mods })
+        cmd = "edit"
       else
         if vim.tbl_isempty(mods) then
           mods = nil
         end
-        local cmd
         if opts.tab then
           cmd = "tabedit"
         elseif opts.split then
@@ -553,12 +565,12 @@ M.select = function(opts, callback)
         else
           cmd = "edit"
         end
-        vim.cmd({
-          cmd = cmd,
-          args = { util.escape_filename(normalized_url) },
-          mods = mods,
-        })
       end
+      vim.cmd({
+        cmd = cmd,
+        args = { filename },
+        mods = mods,
+      })
       if opts.preview then
         vim.api.nvim_set_option_value("previewwindow", true, { scope = "local", win = 0 })
         vim.w.oil_entry_id = entry.id
@@ -905,6 +917,19 @@ M.setup = function(opts)
         -- will be replaced by an oil:// url)
         -- Oil buffers have to run it in BufReadCmd after confirming they are a directory or a file
         restore_alt_buf()
+      end
+    end,
+  })
+
+  vim.api.nvim_create_autocmd({ "BufWinEnter", "WinNew", "WinEnter" }, {
+    desc = "Reset bufhidden when entering a preview buffer",
+    group = aug,
+    pattern = "*",
+    callback = function()
+      -- If we have entered a "preview" buffer in a non-preview window, reset bufhidden
+      if vim.b.oil_preview_buffer and not vim.wo.previewwindow then
+        vim.bo.bufhidden = vim.o.bufhidden
+        vim.b.oil_preview_buffer = nil
       end
     end,
   })
