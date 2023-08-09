@@ -601,23 +601,25 @@ M.select = function(opts, callback)
 end
 
 ---@param bufnr integer
+---@return boolean
 local function maybe_hijack_directory_buffer(bufnr)
   local config = require("oil.config")
   local util = require("oil.util")
   if not config.default_file_explorer then
-    return
+    return false
   end
   local bufname = vim.api.nvim_buf_get_name(bufnr)
   if bufname == "" then
-    return
+    return false
   end
   if util.parse_url(bufname) or vim.fn.isdirectory(bufname) == 0 then
-    return
+    return false
   end
-  util.rename_buffer(
+  local replaced = util.rename_buffer(
     bufnr,
     util.addslash(config.adapter_to_scheme.files .. vim.fn.fnamemodify(bufname, ":p"))
   )
+  return not replaced
 end
 
 ---@private
@@ -1045,7 +1047,12 @@ M.setup = function(opts)
     end,
   })
 
-  maybe_hijack_directory_buffer(0)
+  local bufnr = vim.api.nvim_get_current_buf()
+  if maybe_hijack_directory_buffer(bufnr) and vim.v.vim_did_enter == 1 then
+    -- manually call load on a hijacked directory buffer if vim has already entered
+    -- (the BufReadCmd will not trigger)
+    load_oil_buffer(bufnr)
+  end
 end
 
 return M

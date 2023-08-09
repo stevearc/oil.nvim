@@ -5,6 +5,8 @@ local timers = {}
 
 local FPS = 20
 
+---@param bufnr integer
+---@return boolean
 M.is_loading = function(bufnr)
   return timers[bufnr] ~= nil
 end
@@ -56,6 +58,8 @@ M.get_bar_iter = function(opts)
   end
 end
 
+---@param bufnr integer
+---@param is_loading boolean
 M.set_loading = function(bufnr, is_loading)
   if is_loading then
     if timers[bufnr] == nil then
