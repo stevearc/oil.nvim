@@ -119,6 +119,7 @@ COL_DEFS = [
         + [
             LuaParam("default_file", "string", "Fallback icon for files when nvim-web-devicons returns nil"),
             LuaParam("directory", "string", "Icon for directories"),
+            LuaParam("add_padding", "boolean", "Set to false to remove the extra whitespace after the icon"),
         ],
     ),
     ColumnDef("size", "files, ssh", False, "The size of the file", HL + []),

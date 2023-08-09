@@ -626,6 +626,11 @@ M._get_highlights = function()
       desc = "Directories in an oil buffer",
     },
     {
+      name = "OilDirIcon",
+      link = "OilDir",
+      desc = "Icon for directories",
+    },
+    {
       name = "OilSocket",
       link = "Keyword",
       desc = "Socket files in an oil buffer",

@@ -260,6 +260,8 @@ icon                                                                 *column-ico
       {default_file} `string` Fallback icon for files when nvim-web-devicons
                      returns nil
       {directory}    `string` Icon for directories
+      {add_padding}  `boolean` Set to false to remove the extra whitespace after
+                     the icon
 
 size                                                                 *column-size*
     Adapters: files, ssh
@@ -382,6 +384,9 @@ HIGHLIGHTS                                                        *oil-highlight
 
 OilDir                                                                 *hl-OilDir*
     Directories in an oil buffer
+
+OilDirIcon                                                         *hl-OilDirIcon*
+    Icon for directories
 
 OilSocket                                                           *hl-OilSocket*
     Socket files in an oil buffer

@@ -208,16 +208,18 @@ if has_devicons then
           type = meta.link_stat.type
         end
       end
+      local icon, hl
       if type == "directory" then
-        local icon = conf and conf.directory or " "
-        return { icon, "OilDir" }
+        icon = conf and conf.directory or ""
+        hl = "OilDirIcon"
       else
-        local icon
-        local hl
         icon, hl = devicons.get_icon(name)
         icon = icon or (conf and conf.default_file or "")
-        return { icon .. " ", hl }
       end
+      if not conf or conf.add_padding ~= false then
+        icon = icon .. " "
+      end
+      return { icon, hl }
     end,
 
     parse = function(line, conf)
