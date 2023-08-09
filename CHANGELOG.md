@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.1.0](https://github.com/stevearc/oil.nvim/compare/v1.0.0...v1.1.0) (2023-08-09)
+
+
+### Features
+
+* config to remove icon padding ([#145](https://github.com/stevearc/oil.nvim/issues/145)) ([b24380c](https://github.com/stevearc/oil.nvim/commit/b24380c0e17d21271cc04d94827a07397b9fc4dc))
+
+
+### Bug Fixes
+
+* directory hijacking when oil is lazy loaded ([#149](https://github.com/stevearc/oil.nvim/issues/149)) ([966eaaa](https://github.com/stevearc/oil.nvim/commit/966eaaadbc4d344660f867e41f6b1252459065b2))
+* leave netrw autocmds intact when default_file_explorer = false ([#135](https://github.com/stevearc/oil.nvim/issues/135)) ([789b486](https://github.com/stevearc/oil.nvim/commit/789b486fb5cdc9e31abe9b0569b0e316f9d07bfd))
+* opening oil from netrw defaults to netrw directory ([#148](https://github.com/stevearc/oil.nvim/issues/148)) ([887bb4a](https://github.com/stevearc/oil.nvim/commit/887bb4a8b6c9d73db9c34352d5363ee6289f733e))
+* previewed buffers are deleted once hidden ([#141](https://github.com/stevearc/oil.nvim/issues/141)) ([eaa20a6](https://github.com/stevearc/oil.nvim/commit/eaa20a6aee7c4df89d80ec8208de63ec2fa4d38a))
+* url-escape paths for scp ([#134](https://github.com/stevearc/oil.nvim/issues/134)) ([a5ff72a](https://github.com/stevearc/oil.nvim/commit/a5ff72a8da0df1042ee4c7705c301901062fa6d5))
+* use standard Directory highlight group ([#139](https://github.com/stevearc/oil.nvim/issues/139)) ([f180a9f](https://github.com/stevearc/oil.nvim/commit/f180a9ffab24946a933621108144e2901533d583))
+
 ## 1.0.0 (2023-06-27)
 
 
