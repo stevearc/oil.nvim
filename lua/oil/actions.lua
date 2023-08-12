@@ -138,11 +138,32 @@ M.toggle_hidden = {
 M.open_terminal = {
   desc = "Open a terminal in the current directory",
   callback = function()
-    local dir = oil.get_current_dir()
-    if dir then
+    local config = require("oil.config")
+    local bufname = vim.api.nvim_buf_get_name(0)
+    local adapter = config.get_adapter_by_scheme(bufname)
+    if not adapter then
+      return
+    end
+    if adapter.name == "files" then
+      local dir = oil.get_current_dir()
+      assert(dir, "Oil buffer with files adapter must have current directory")
       local bufnr = vim.api.nvim_create_buf(false, true)
       vim.api.nvim_set_current_buf(bufnr)
       vim.fn.termopen(vim.o.shell, { cwd = dir })
+    elseif adapter.name == "ssh" then
+      local bufnr = vim.api.nvim_create_buf(false, true)
+      vim.api.nvim_set_current_buf(bufnr)
+      local url = require("oil.adapters.ssh").parse_url(bufname)
+      local cmd = require("oil.adapters.ssh.connection").create_ssh_command(url)
+      local term_id = vim.fn.termopen(cmd)
+      if term_id then
+        vim.api.nvim_chan_send(term_id, string.format("cd %s\n", url.path))
+      end
+    else
+      vim.notify(
+        string.format("Cannot open terminal for unsupported adapter: '%s'", adapter.name),
+        vim.log.levels.WARN
+      )
     end
   end,
 }

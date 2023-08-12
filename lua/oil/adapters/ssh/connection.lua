@@ -1,5 +1,8 @@
 local layout = require("oil.layout")
 local util = require("oil.util")
+
+---@class oil.sshConnection
+---@field meta {user?: string, groups?: string[]}
 local SSHConnection = {}
 
 local function output_extend(agg, output)
@@ -44,7 +47,8 @@ local function get_last_lines(bufnr, num_lines)
 end
 
 ---@param url oil.sshUrl
-function SSHConnection.new(url)
+---@return string[]
+function SSHConnection.create_ssh_command(url)
   local host = url.host
   if url.user then
     host = url.user .. "@" .. host
@@ -52,19 +56,27 @@ function SSHConnection.new(url)
   local command = {
     "ssh",
     host,
+  }
+  if url.port then
+    table.insert(command, "-p")
+    table.insert(command, url.port)
+  end
+  return command
+end
+
+---@param url oil.sshUrl
+---@return oil.sshConnection
+function SSHConnection.new(url)
+  local command = SSHConnection.create_ssh_command(url)
+  vim.list_extend(command, {
     "/bin/bash",
     "--norc",
     "-c",
     -- HACK: For some reason in my testing if I just have "echo READY" it doesn't appear, but if I echo
     -- anything prior to that, it *will* appear. The first line gets swallowed.
     "echo '_make_newline_'; echo '===READY==='; exec /bin/bash --norc",
-  }
-  if url.port then
-    table.insert(command, 2, "-p")
-    table.insert(command, 3, url.port)
-  end
+  })
   local self = setmetatable({
-    host = host,
     meta = {},
     commands = {},
     connected = false,
@@ -84,7 +96,7 @@ function SSHConnection.new(url)
     })
   end)
   self.term_id = term_id
-  vim.api.nvim_chan_send(term_id, string.format("ssh %s\r\n", host))
+  vim.api.nvim_chan_send(term_id, string.format("ssh %s\r\n", url.host))
   util.hack_around_termopen_autocmd(mode)
 
   -- If it takes more than 2 seconds to connect, pop open the terminal
@@ -131,6 +143,7 @@ function SSHConnection.new(url)
     if err then
       vim.notify(string.format("Error fetching ssh connection user: %s", err), vim.log.levels.WARN)
     else
+      assert(lines)
       self.meta.user = vim.trim(table.concat(lines, ""))
     end
   end)
@@ -141,6 +154,7 @@ function SSHConnection.new(url)
         vim.log.levels.WARN
       )
     else
+      assert(lines)
       self.meta.groups = vim.split(table.concat(lines, ""), "%s+", { trimempty = true })
     end
   end)

@@ -3,6 +3,9 @@ local constants = require("oil.constants")
 local permissions = require("oil.adapters.files.permissions")
 local SSHConnection = require("oil.adapters.ssh.connection")
 local util = require("oil.util")
+
+---@class oil.sshFs
+---@field conn oil.sshConnection
 local SSHFS = {}
 
 local FIELD_TYPE = constants.FIELD_TYPE
@@ -20,7 +23,7 @@ local typechar_map = {
 ---@param line string
 ---@return string Name of entry
 ---@return oil.EntryType
----@return nil|table Metadata for entry
+---@return table Metadata for entry
 local function parse_ls_line(line)
   local typechar, perms, refcount, user, group, rem =
     line:match("^(.)(%S+)%s+(%d+)%s+(%S+)%s+(%S+)%s+(.*)$")
@@ -58,6 +61,7 @@ local function parse_ls_line(line)
 end
 
 ---@param url oil.sshUrl
+---@return oil.sshFs
 function SSHFS.new(url)
   return setmetatable({
     conn = SSHConnection.new(url),
@@ -94,6 +98,7 @@ function SSHFS:realpath(path, callback)
     if err then
       return callback(err)
     end
+    assert(lines)
     local abspath = table.concat(lines, "")
     -- If the path was "." then the abspath might be /path/to/., so we need to trim that final '.'
     if vim.endswith(abspath, ".") then
@@ -105,6 +110,7 @@ function SSHFS:realpath(path, callback)
         -- If the file doesn't exist, treat it like a not-yet-existing directory
         type = "directory"
       else
+        assert(ls_lines)
         local _
         _, type = parse_ls_line(ls_lines[1])
       end
@@ -133,6 +139,7 @@ function SSHFS:list_dir(url, path, callback)
         return callback(err)
       end
     end
+    assert(lines)
     local any_links = false
     local entries = {}
     for _, line in ipairs(lines) do
@@ -159,6 +166,7 @@ function SSHFS:list_dir(url, path, callback)
         if link_err and not link_err:match("^1:") then
           return callback(link_err)
         end
+        assert(link_lines)
         for _, line in ipairs(link_lines) do
           if line ~= "" and not line:match("^total") then
             local ok, name, type, meta = pcall(parse_ls_line, line)
