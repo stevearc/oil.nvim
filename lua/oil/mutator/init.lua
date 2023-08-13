@@ -504,6 +504,7 @@ M.try_write_changes = function(confirm)
         { all_errors[curbuf][1].lnum + 1, all_errors[curbuf][1].col }
       )
     else
+      ---@diagnostic disable-next-line: param-type-mismatch
       local bufnr, errs = next(pairs(all_errors))
       vim.api.nvim_win_set_buf(0, bufnr)
       pcall(vim.api.nvim_win_set_cursor, 0, { errs[1].lnum + 1, errs[1].col })

@@ -94,6 +94,7 @@ function SSHConnection.new(url)
   util.run_in_fullscreen_win(term_bufnr, function()
     term_id = vim.api.nvim_open_term(term_bufnr, {
       on_input = function(_, _, _, data)
+        ---@diagnostic disable-next-line: invisible
         pcall(vim.api.nvim_chan_send, self.jid, data)
       end,
     })

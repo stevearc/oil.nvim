@@ -6,7 +6,7 @@ local M = {}
 ---@field id nil|integer Will be nil if it hasn't been persisted to disk yet
 ---@field parsed_name nil|string
 
----@alias oil.EntryType "file"|"directory"|"socket"|"link"
+---@alias oil.EntryType "file"|"directory"|"socket"|"link"|"fifo"
 ---@alias oil.TextChunk string|string[]
 
 ---@class oil.Adapter
@@ -21,6 +21,9 @@ local M = {}
 ---@field perform_action nil|fun(action: oil.Action, cb: fun(err: nil|string))
 ---@field read_file fun(bufnr: integer)
 ---@field write_file fun(bufnr: integer)
+
+-- TODO remove after https://github.com/folke/neodev.nvim/pull/163 lands
+---@diagnostic disable: undefined-field
 
 ---Get the entry on a specific line (1-indexed)
 ---@param bufnr integer
@@ -214,7 +217,8 @@ M.get_buffer_parent_url = function(bufname)
     assert(path)
     -- TODO maybe we should remove this special case and turn it into a config
     if scheme == "term://" then
-      path = vim.fn.expand(path:match("^(.*)//"))
+      ---@type string
+      path = vim.fn.expand(path:match("^(.*)//")) ---@diagnostic disable-line: assign-type-mismatch
       return config.adapter_to_scheme.files .. util.addslash(path)
     end
 
@@ -903,6 +907,7 @@ M.setup = function(opts)
       if not util.is_oil_bufnr(0) then
         vim.w.oil_original_buffer = vim.api.nvim_get_current_buf()
         vim.w.oil_original_view = vim.fn.winsaveview()
+        ---@diagnostic disable-next-line: param-type-mismatch
         vim.w.oil_original_alternate = vim.fn.bufnr("#")
       end
     end,

@@ -1,9 +1,11 @@
 local M = {}
 
----@type boolean
-M.is_windows = vim.loop.os_uname().version:match("Windows")
+local uv = vim.uv or vim.loop
 
-M.is_mac = vim.loop.os_uname().sysname == "Darwin"
+---@type boolean
+M.is_windows = uv.os_uname().version:match("Windows")
+
+M.is_mac = uv.os_uname().sysname == "Darwin"
 
 ---@type string
 M.sep = M.is_windows and "\\" or "/"
@@ -27,12 +29,12 @@ end
 ---@param path string
 ---@param cb fun(err: nil|string)
 M.touch = function(path, cb)
-  vim.loop.fs_open(path, "a", 420, function(err, fd) -- 0644
+  uv.fs_open(path, "a", 420, function(err, fd) -- 0644
     if err then
       cb(err)
     else
       assert(fd)
-      vim.loop.fs_close(fd, cb)
+      uv.fs_close(fd, cb)
     end
   end)
 end
@@ -69,7 +71,7 @@ M.os_to_posix_path = function(path)
   end
 end
 
-local home_dir = assert(vim.loop.os_homedir())
+local home_dir = assert(uv.os_homedir())
 
 ---@param path string
 ---@return string
@@ -98,30 +100,32 @@ M.mkdirp = function(dir)
   while mod ~= "" do
     mod = mod:sub(3)
     path = vim.fn.fnamemodify(dir, mod)
-    vim.loop.fs_mkdir(path, 493)
+    uv.fs_mkdir(path, 493)
   end
 end
 
 ---@param dir string
 ---@param cb fun(err: nil|string, entries: nil|{type: oil.EntryType, name: string})
 M.listdir = function(dir, cb)
-  vim.loop.fs_opendir(dir, function(open_err, fd)
+  ---@diagnostic disable-next-line: param-type-mismatch
+  uv.fs_opendir(dir, function(open_err, fd)
     if open_err then
       return cb(open_err)
     end
     local read_next
     read_next = function()
-      vim.loop.fs_readdir(fd, function(err, entries)
+      uv.fs_readdir(fd, function(err, entries)
         if err then
-          vim.loop.fs_closedir(fd, function()
+          uv.fs_closedir(fd, function()
             cb(err)
           end)
           return
         elseif entries then
+          ---@diagnostic disable-next-line: param-type-mismatch
           cb(nil, entries)
           read_next()
         else
-          vim.loop.fs_closedir(fd, function(close_err)
+          uv.fs_closedir(fd, function(close_err)
             if close_err then
               cb(close_err)
             else
@@ -132,6 +136,7 @@ M.listdir = function(dir, cb)
       end)
     end
     read_next()
+    ---@diagnostic disable-next-line: param-type-mismatch
   end, 100) -- TODO do some testing for this
 end
 
@@ -140,15 +145,16 @@ end
 ---@param cb fun(err: nil|string)
 M.recursive_delete = function(entry_type, path, cb)
   if entry_type ~= "directory" then
-    return vim.loop.fs_unlink(path, cb)
+    return uv.fs_unlink(path, cb)
   end
-  vim.loop.fs_opendir(path, function(open_err, fd)
+  ---@diagnostic disable-next-line: param-type-mismatch
+  uv.fs_opendir(path, function(open_err, fd)
     if open_err then
       return cb(open_err)
     end
     local poll
     poll = function(inner_cb)
-      vim.loop.fs_readdir(fd, function(err, entries)
+      uv.fs_readdir(fd, function(err, entries)
         if err then
           return inner_cb(err)
         elseif entries then
@@ -173,12 +179,13 @@ M.recursive_delete = function(entry_type, path, cb)
       end)
     end
     poll(function(err)
-      vim.loop.fs_closedir(fd)
+      uv.fs_closedir(fd)
       if err then
         return cb(err)
       end
-      vim.loop.fs_rmdir(path, cb)
+      uv.fs_rmdir(path, cb)
     end)
+    ---@diagnostic disable-next-line: param-type-mismatch
   end, 100) -- TODO do some testing for this
 end
 
@@ -188,35 +195,36 @@ end
 ---@param cb fun(err: nil|string)
 M.recursive_copy = function(entry_type, src_path, dest_path, cb)
   if entry_type == "link" then
-    vim.loop.fs_readlink(src_path, function(link_err, link)
+    uv.fs_readlink(src_path, function(link_err, link)
       if link_err then
         return cb(link_err)
       end
       assert(link)
-      vim.loop.fs_symlink(link, dest_path, 0, cb)
+      uv.fs_symlink(link, dest_path, 0, cb)
     end)
     return
   end
   if entry_type ~= "directory" then
-    vim.loop.fs_copyfile(src_path, dest_path, { excl = true }, cb)
+    uv.fs_copyfile(src_path, dest_path, { excl = true }, cb)
     return
   end
-  vim.loop.fs_stat(src_path, function(stat_err, src_stat)
+  uv.fs_stat(src_path, function(stat_err, src_stat)
     if stat_err then
       return cb(stat_err)
     end
     assert(src_stat)
-    vim.loop.fs_mkdir(dest_path, src_stat.mode, function(mkdir_err)
+    uv.fs_mkdir(dest_path, src_stat.mode, function(mkdir_err)
       if mkdir_err then
         return cb(mkdir_err)
       end
-      vim.loop.fs_opendir(src_path, function(open_err, fd)
+      ---@diagnostic disable-next-line: param-type-mismatch
+      uv.fs_opendir(src_path, function(open_err, fd)
         if open_err then
           return cb(open_err)
         end
         local poll
         poll = function(inner_cb)
-          vim.loop.fs_readdir(fd, function(err, entries)
+          uv.fs_readdir(fd, function(err, entries)
             if err then
               return inner_cb(err)
             elseif entries then
@@ -246,6 +254,7 @@ M.recursive_copy = function(entry_type, src_path, dest_path, cb)
           end)
         end
         poll(cb)
+        ---@diagnostic disable-next-line: param-type-mismatch
       end, 100) -- TODO do some testing for this
     end)
   end)
@@ -256,7 +265,7 @@ end
 ---@param dest_path string
 ---@param cb fun(err: nil|string)
 M.recursive_move = function(entry_type, src_path, dest_path, cb)
-  vim.loop.fs_rename(src_path, dest_path, function(err)
+  uv.fs_rename(src_path, dest_path, function(err)
     if err then
       -- fs_rename fails for cross-partition or cross-device operations.
       -- We then fall back to a copy + delete

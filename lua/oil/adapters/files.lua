@@ -6,13 +6,14 @@ local fs = require("oil.fs")
 local permissions = require("oil.adapters.files.permissions")
 local trash = require("oil.adapters.files.trash")
 local util = require("oil.util")
+local uv = vim.uv or vim.loop
 local M = {}
 
 local FIELD_NAME = constants.FIELD_NAME
 local FIELD_META = constants.FIELD_META
 
 local function read_link_data(path, cb)
-  vim.loop.fs_readlink(
+  uv.fs_readlink(
     path,
     vim.schedule_wrap(function(link_err, link)
       if link_err then
@@ -22,7 +23,7 @@ local function read_link_data(path, cb)
         if not fs.is_absolute(link) then
           stat_path = fs.join(vim.fn.fnamemodify(path, ":h"), link)
         end
-        vim.loop.fs_stat(stat_path, function(stat_err, stat)
+        uv.fs_stat(stat_path, function(stat_err, stat)
           cb(nil, link, stat)
         end)
       end
@@ -48,7 +49,7 @@ local fs_stat_meta_fields = {
     local _, path = util.parse_url(parent_url)
     assert(path)
     local dir = fs.posix_to_os_path(path)
-    vim.loop.fs_stat(fs.join(dir, entry[FIELD_NAME]), cb)
+    uv.fs_stat(fs.join(dir, entry[FIELD_NAME]), cb)
   end,
 }
 
@@ -121,7 +122,7 @@ if not fs.is_windows then
       local _, path = util.parse_url(action.url)
       assert(path)
       path = fs.posix_to_os_path(path)
-      vim.loop.fs_stat(path, function(err, stat)
+      uv.fs_stat(path, function(err, stat)
         if err then
           return callback(err)
         end
@@ -129,7 +130,7 @@ if not fs.is_windows then
         -- We are only changing the lower 12 bits of the mode
         local mask = bit.bnot(bit.lshift(1, 12) - 1)
         local old_mode = bit.band(stat.mode, mask)
-        vim.loop.fs_chmod(path, bit.bor(old_mode, action.value), callback)
+        uv.fs_chmod(path, bit.bor(old_mode, action.value), callback)
       end)
     end,
   }
@@ -184,9 +185,9 @@ M.normalize_url = function(url, callback)
   local scheme, path = util.parse_url(url)
   assert(path)
   local os_path = vim.fn.fnamemodify(fs.posix_to_os_path(path), ":p")
-  vim.loop.fs_realpath(os_path, function(err, new_os_path)
+  uv.fs_realpath(os_path, function(err, new_os_path)
     local realpath = new_os_path or os_path
-    vim.loop.fs_stat(
+    uv.fs_stat(
       realpath,
       vim.schedule_wrap(function(stat_err, stat)
         local is_directory
@@ -225,7 +226,8 @@ M.list = function(url, column_defs, callback)
     end
     callback(err, data)
   end
-  vim.loop.fs_opendir(dir, function(open_err, fd)
+  ---@diagnostic disable-next-line: param-type-mismatch
+  uv.fs_opendir(dir, function(open_err, fd)
     if open_err then
       if open_err:match("^ENOENT: no such file or directory") then
         -- If the directory doesn't exist, treat the list as a success. We will be able to traverse
@@ -241,9 +243,9 @@ M.list = function(url, column_defs, callback)
         cb(read_err)
         return
       end
-      vim.loop.fs_readdir(fd, function(err, entries)
+      uv.fs_readdir(fd, function(err, entries)
         if err then
-          vim.loop.fs_closedir(fd, function()
+          uv.fs_closedir(fd, function()
             cb(err)
           end)
           return
@@ -287,7 +289,7 @@ M.list = function(url, column_defs, callback)
             end)
           end
         else
-          vim.loop.fs_closedir(fd, function(close_err)
+          uv.fs_closedir(fd, function(close_err)
             if close_err then
               cb(close_err)
             else
@@ -298,6 +300,7 @@ M.list = function(url, column_defs, callback)
       end)
     end
     read_next()
+    ---@diagnostic disable-next-line: param-type-mismatch
   end, 100) -- TODO do some testing for this
 end
 
@@ -308,7 +311,7 @@ M.is_modifiable = function(bufnr)
   local _, path = util.parse_url(bufname)
   assert(path)
   local dir = fs.posix_to_os_path(path)
-  local stat = vim.loop.fs_stat(dir)
+  local stat = uv.fs_stat(dir)
   if not stat then
     return true
   end
@@ -318,8 +321,8 @@ M.is_modifiable = function(bufnr)
     return true
   end
 
-  local uid = vim.loop.getuid()
-  local gid = vim.loop.getgid()
+  local uid = uv.getuid()
+  local gid = uv.getgid()
   local rwx
   if uid == stat.uid then
     rwx = bit.rshift(stat.mode, 6)
@@ -376,7 +379,7 @@ M.perform_action = function(action, cb)
     assert(path)
     path = fs.posix_to_os_path(path)
     if action.entry_type == "directory" then
-      vim.loop.fs_mkdir(path, 493, function(err)
+      uv.fs_mkdir(path, 493, function(err)
         -- Ignore if the directory already exists
         if not err or err:match("^EEXIST:") then
           cb()
@@ -393,7 +396,7 @@ M.perform_action = function(action, cb)
           junction = false,
         }
       end
-      vim.loop.fs_symlink(target, path, flags, cb)
+      uv.fs_symlink(target, path, flags, cb)
     else
       fs.touch(path, cb)
     end
