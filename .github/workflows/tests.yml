@@ -25,11 +25,20 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Stylua
-        uses: JohnnyMorganz/stylua-action@v1
+        uses: JohnnyMorganz/stylua-action@v3
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           version: v0.15.2
           args: --check .
+
+  typecheck:
+    name: typecheck
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v3
+      - uses: stevearc/nvim-typecheck-action@v1
+        with:
+          path: lua
 
   run_tests:
     strategy:
@@ -60,6 +69,7 @@ jobs:
     needs:
       - luacheck
       - stylua
+      - typecheck
       - run_tests
     runs-on: ubuntu-22.04
     steps:
