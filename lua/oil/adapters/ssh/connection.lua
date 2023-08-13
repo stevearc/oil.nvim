@@ -3,6 +3,8 @@ local util = require("oil.util")
 
 ---@class oil.sshConnection
 ---@field meta {user?: string, groups?: string[]}
+---@field private term_bufnr integer
+---@field private jid integer
 local SSHConnection = {}
 
 local function output_extend(agg, output)
@@ -76,20 +78,21 @@ function SSHConnection.new(url)
     -- anything prior to that, it *will* appear. The first line gets swallowed.
     "echo '_make_newline_'; echo '===READY==='; exec /bin/bash --norc",
   })
+  local term_bufnr = vim.api.nvim_create_buf(false, true)
   local self = setmetatable({
     meta = {},
     commands = {},
     connected = false,
     connection_error = nil,
+    term_bufnr = term_bufnr,
   }, {
     __index = SSHConnection,
   })
 
-  self.term_bufnr = vim.api.nvim_create_buf(false, true)
   local term_id
   local mode = vim.api.nvim_get_mode().mode
-  util.run_in_fullscreen_win(self.term_bufnr, function()
-    term_id = vim.api.nvim_open_term(self.term_bufnr, {
+  util.run_in_fullscreen_win(term_bufnr, function()
+    term_id = vim.api.nvim_open_term(term_bufnr, {
       on_input = function(_, _, _, data)
         pcall(vim.api.nvim_chan_send, self.jid, data)
       end,
@@ -195,6 +198,7 @@ function SSHConnection:_handle_output(start_i)
     end
   else
     for i = start_i, #self._stdout - 1 do
+      ---@type string
       local line = self._stdout[i]
       if line:match("^===BEGIN===%s*$") then
         self._stdout = util.tbl_slice(self._stdout, i + 1)

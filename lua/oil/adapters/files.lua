@@ -46,6 +46,7 @@ local file_columns = {}
 local fs_stat_meta_fields = {
   stat = function(parent_url, entry, cb)
     local _, path = util.parse_url(parent_url)
+    assert(path)
     local dir = fs.posix_to_os_path(path)
     vim.loop.fs_stat(fs.join(dir, entry[FIELD_NAME]), cb)
   end,
@@ -108,6 +109,7 @@ if not fs.is_windows then
 
     render_action = function(action)
       local _, path = util.parse_url(action.url)
+      assert(path)
       return string.format(
         "CHMOD %s %s",
         permissions.mode_to_octal_str(action.value),
@@ -117,11 +119,13 @@ if not fs.is_windows then
 
     perform_action = function(action, callback)
       local _, path = util.parse_url(action.url)
+      assert(path)
       path = fs.posix_to_os_path(path)
       vim.loop.fs_stat(path, function(err, stat)
         if err then
           return callback(err)
         end
+        assert(stat)
         -- We are only changing the lower 12 bits of the mode
         local mask = bit.bnot(bit.lshift(1, 12) - 1)
         local old_mode = bit.band(stat.mode, mask)
@@ -178,6 +182,7 @@ end
 ---@param callback fun(url: string)
 M.normalize_url = function(url, callback)
   local scheme, path = util.parse_url(url)
+  assert(path)
   local os_path = vim.fn.fnamemodify(fs.posix_to_os_path(path), ":p")
   vim.loop.fs_realpath(os_path, function(err, new_os_path)
     local realpath = new_os_path or os_path
@@ -210,6 +215,7 @@ end
 ---@param callback fun(err: nil|string, entries: nil|oil.InternalEntry[])
 M.list = function(url, column_defs, callback)
   local _, path = util.parse_url(url)
+  assert(path)
   local dir = fs.posix_to_os_path(path)
   local fetch_meta = columns.get_metadata_fetcher(M, column_defs)
   cache.begin_update_url(url)
@@ -300,6 +306,7 @@ end
 M.is_modifiable = function(bufnr)
   local bufname = vim.api.nvim_buf_get_name(bufnr)
   local _, path = util.parse_url(bufname)
+  assert(path)
   local dir = fs.posix_to_os_path(path)
   local stat = vim.loop.fs_stat(dir)
   if not stat then
@@ -329,6 +336,7 @@ end
 M.render_action = function(action)
   if action.type == "create" then
     local _, path = util.parse_url(action.url)
+    assert(path)
     local ret = string.format("CREATE %s", M.to_short_os_path(path, action.entry_type))
     if action.link then
       ret = ret .. " -> " .. fs.posix_to_os_path(action.link)
@@ -336,12 +344,15 @@ M.render_action = function(action)
     return ret
   elseif action.type == "delete" then
     local _, path = util.parse_url(action.url)
+    assert(path)
     return string.format("DELETE %s", M.to_short_os_path(path, action.entry_type))
   elseif action.type == "move" or action.type == "copy" then
     local dest_adapter = config.get_adapter_by_scheme(action.dest_url)
     if dest_adapter == M then
       local _, src_path = util.parse_url(action.src_url)
+      assert(src_path)
       local _, dest_path = util.parse_url(action.dest_url)
+      assert(dest_path)
       return string.format(
         "  %s %s -> %s",
         action.type:upper(),
@@ -362,6 +373,7 @@ end
 M.perform_action = function(action, cb)
   if action.type == "create" then
     local _, path = util.parse_url(action.url)
+    assert(path)
     path = fs.posix_to_os_path(path)
     if action.entry_type == "directory" then
       vim.loop.fs_mkdir(path, 493, function(err)
@@ -387,6 +399,7 @@ M.perform_action = function(action, cb)
     end
   elseif action.type == "delete" then
     local _, path = util.parse_url(action.url)
+    assert(path)
     path = fs.posix_to_os_path(path)
     if config.delete_to_trash then
       trash.recursive_delete(path, cb)
@@ -397,7 +410,9 @@ M.perform_action = function(action, cb)
     local dest_adapter = config.get_adapter_by_scheme(action.dest_url)
     if dest_adapter == M then
       local _, src_path = util.parse_url(action.src_url)
+      assert(src_path)
       local _, dest_path = util.parse_url(action.dest_url)
+      assert(dest_path)
       src_path = fs.posix_to_os_path(src_path)
       dest_path = fs.posix_to_os_path(dest_path)
       fs.recursive_move(action.entry_type, src_path, dest_path, vim.schedule_wrap(cb))
@@ -409,7 +424,9 @@ M.perform_action = function(action, cb)
     local dest_adapter = config.get_adapter_by_scheme(action.dest_url)
     if dest_adapter == M then
       local _, src_path = util.parse_url(action.src_url)
+      assert(src_path)
       local _, dest_path = util.parse_url(action.dest_url)
+      assert(dest_path)
       src_path = fs.posix_to_os_path(src_path)
       dest_path = fs.posix_to_os_path(dest_path)
       fs.recursive_copy(action.entry_type, src_path, dest_path, cb)

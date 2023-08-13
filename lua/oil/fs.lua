@@ -31,6 +31,7 @@ M.touch = function(path, cb)
     if err then
       cb(err)
     else
+      assert(fd)
       vim.loop.fs_close(fd, cb)
     end
   end)
@@ -44,7 +45,8 @@ M.posix_to_os_path = function(path)
       local drive, rem = path:match("^/([^/]+)/(.*)$")
       return string.format("%s:\\%s", drive, rem:gsub("/", "\\"))
     else
-      return path:gsub("/", "\\")
+      local newpath = path:gsub("/", "\\")
+      return newpath
     end
   else
     return path
@@ -59,14 +61,15 @@ M.os_to_posix_path = function(path)
       local drive, rem = path:match("^([^:]+):\\(.*)$")
       return string.format("/%s/%s", drive:upper(), rem:gsub("\\", "/"))
     else
-      return path:gsub("\\", "/")
+      local newpath = path:gsub("\\", "/")
+      return newpath
     end
   else
     return path
   end
 end
 
-local home_dir = vim.loop.os_homedir()
+local home_dir = assert(vim.loop.os_homedir())
 
 ---@param path string
 ---@return string
@@ -189,7 +192,8 @@ M.recursive_copy = function(entry_type, src_path, dest_path, cb)
       if link_err then
         return cb(link_err)
       end
-      vim.loop.fs_symlink(link, dest_path, nil, cb)
+      assert(link)
+      vim.loop.fs_symlink(link, dest_path, 0, cb)
     end)
     return
   end
@@ -201,6 +205,7 @@ M.recursive_copy = function(entry_type, src_path, dest_path, cb)
     if stat_err then
       return cb(stat_err)
     end
+    assert(src_stat)
     vim.loop.fs_mkdir(dest_path, src_stat.mode, function(mkdir_err)
       if mkdir_err then
         return cb(mkdir_err)

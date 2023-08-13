@@ -169,6 +169,7 @@ function Progress:set_action(action, idx, total)
   local adapter = util.get_adapter_for_action(action)
   local change_line
   if action.type == "change" then
+    ---@cast action oil.ChangeAction
     change_line = columns.render_change_action(adapter, action)
   else
     change_line = adapter.render_action(action)

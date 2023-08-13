@@ -136,7 +136,7 @@ M.get_entry_by_url = function(url)
   return cache and cache[name]
 end
 
----@param oil.Action
+---@param action oil.Action
 M.perform_action = function(action)
   if action.type == "create" then
     local scheme, path = util.parse_url(action.url)

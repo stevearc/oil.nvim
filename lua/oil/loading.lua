@@ -16,7 +16,7 @@ local spinners = {
 }
 
 ---@param name_or_frames string|string[]
----@return fun()
+---@return fun(): string
 M.get_iter = function(name_or_frames)
   local frames
   if type(name_or_frames) == "string" then

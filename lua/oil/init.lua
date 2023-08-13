@@ -11,7 +11,7 @@ local M = {}
 
 ---@class oil.Adapter
 ---@field name string
----@field list fun(path: string, cb: fun(err: nil|string, entries: nil|oil.InternalEntry[]))
+---@field list fun(path: string, column_defs: string[], cb: fun(err: nil|string, entries: nil|oil.InternalEntry[]))
 ---@field is_modifiable fun(bufnr: integer): boolean
 ---@field get_column fun(name: string): nil|oil.ColumnDefinition
 ---@field normalize_url fun(url: string, callback: fun(url: string))
@@ -119,6 +119,7 @@ M.empty_trash = function()
     return
   end
   local _, path = util.parse_url(trash_url)
+  assert(path)
   local dir = fs.posix_to_os_path(path)
   if vim.fn.isdirectory(dir) == 1 then
     fs.recursive_delete("directory", dir, function(err)
@@ -157,6 +158,7 @@ M.get_current_dir = function()
   local util = require("oil.util")
   local scheme, path = util.parse_url(vim.api.nvim_buf_get_name(0))
   if config.adapters[scheme] == "files" then
+    assert(path)
     return fs.posix_to_os_path(path)
   end
 end
@@ -209,6 +211,7 @@ M.get_buffer_parent_url = function(bufname)
     local parent_url = util.addslash(scheme .. parent)
     return parent_url, basename
   else
+    assert(path)
     -- TODO maybe we should remove this special case and turn it into a config
     if scheme == "term://" then
       path = vim.fn.expand(path:match("^(.*)//"))
@@ -310,6 +313,7 @@ M.open_float = function(dir)
       local title = vim.api.nvim_buf_get_name(src_buf)
       local scheme, path = util.parse_url(title)
       if config.adapters[scheme] == "files" then
+        assert(path)
         local fs = require("oil.fs")
         title = vim.fn.fnamemodify(fs.posix_to_os_path(path), ":~")
       end
@@ -750,7 +754,7 @@ local function load_oil_buffer(bufnr)
     util.rename_buffer(bufnr, bufname)
   end
 
-  local adapter = config.get_adapter_by_scheme(scheme)
+  local adapter = assert(config.get_adapter_by_scheme(scheme))
 
   if vim.endswith(bufname, "/") then
     -- This is a small quality-of-life thing. If the buffer name ends with a `/`, we know it's a
@@ -885,6 +889,7 @@ M.setup = function(opts)
         vim.cmd.doautocmd({ args = { "BufWritePost", params.file }, mods = { silent = true } })
       else
         local adapter = config.get_adapter_by_scheme(bufname)
+        assert(adapter)
         adapter.write_file(params.buf)
       end
     end,

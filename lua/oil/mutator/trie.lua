@@ -1,6 +1,10 @@
 local util = require("oil.util")
+
+---@class oil.Trie
+---@field private root table
 local Trie = {}
 
+---@return oil.Trie
 Trie.new = function()
   return setmetatable({
     root = { values = {}, children = {} },
@@ -13,6 +17,7 @@ end
 ---@return string[]
 function Trie:_url_to_path_pieces(url)
   local scheme, path = util.parse_url(url)
+  assert(path)
   local pieces = vim.split(path, "/")
   table.insert(pieces, 1, scheme)
   return pieces
@@ -131,7 +136,7 @@ end
 ---Add all actions at a specific path
 ---@param url string
 ---@param ret oil.InternalEntry[]
----@param filter nil|fun(entry: oil.InternalEntry): boolean
+---@param filter? fun(entry: oil.InternalEntry): boolean
 function Trie:accum_actions_at(url, ret, filter)
   local pieces = self:_url_to_path_pieces(url)
   local current = self.root

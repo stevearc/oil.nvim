@@ -7,7 +7,7 @@ M.normalize_url = function(url, callback)
   callback(url)
 end
 
----@param path string
+---@param url string
 ---@param column_defs string[]
 ---@param cb fun(err: nil|string, entries: nil|oil.InternalEntry[])
 M.list = function(url, column_defs, cb)

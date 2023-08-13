@@ -5,7 +5,7 @@ local M = {}
 
 local function resolve(rhs)
   if type(rhs) == "string" and vim.startswith(rhs, "actions.") then
-    return resolve(actions[vim.split(rhs, ".", true)[2]])
+    return resolve(actions[vim.split(rhs, ".", { plain = true })[2]])
   elseif type(rhs) == "table" then
     local opts = vim.deepcopy(rhs)
     opts.callback = nil

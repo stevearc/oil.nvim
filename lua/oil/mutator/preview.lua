@@ -76,6 +76,7 @@ M.show = vim.schedule_wrap(function(actions, should_confirm, cb)
     local adapter = util.get_adapter_for_action(action)
     local line
     if action.type == "change" then
+      ---@cast action oil.ChangeAction
       line = columns.render_change_action(adapter, action)
     else
       line = adapter.render_action(action)

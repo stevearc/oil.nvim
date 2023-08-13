@@ -15,7 +15,10 @@ local all_columns = {}
 ---@class oil.ColumnDefinition
 ---@field render fun(entry: oil.InternalEntry, conf: nil|table): nil|oil.TextChunk
 ---@field parse fun(line: string, conf: nil|table): nil|string, nil|string
----@field meta_fields nil|table<string, fun(parent_url:L string, entry: oil.InternalEntry, cb: fn(err: nil|string))>
+---@field meta_fields nil|table<string, fun(parent_url: string, entry: oil.InternalEntry, cb: fun(err: nil|string))>
+---@field compare? fun(entry: oil.InternalEntry, parsed_value: any): boolean
+---@field render_action? fun(action: oil.ChangeAction): string
+---@field perform_action? fun(action: oil.ChangeAction, callback: fun(err: nil|string))
 
 ---@param name string
 ---@param column oil.ColumnDefinition
@@ -40,6 +43,7 @@ M.get_supported_columns = function(adapter_or_scheme)
   else
     adapter = adapter_or_scheme
   end
+  assert(adapter)
   local ret = {}
   for _, def in ipairs(config.columns) do
     if get_column(adapter, def) then

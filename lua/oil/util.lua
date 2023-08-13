@@ -218,6 +218,7 @@ local function get_possible_buffer_names_from_url(url)
   local fs = require("oil.fs")
   local scheme, path = M.parse_url(url)
   if config.adapters[scheme] == "files" then
+    assert(path)
     return { fs.posix_to_os_path(path) }
   end
   return { url }
@@ -347,6 +348,7 @@ M.add_title_to_win = function(winid, opts)
     local title = vim.api.nvim_buf_get_name(src_buf)
     local scheme, path = M.parse_url(title)
     if config.adapters[scheme] == "files" then
+      assert(path)
       local fs = require("oil.fs")
       title = vim.fn.fnamemodify(fs.posix_to_os_path(path), ":~")
     end
@@ -456,7 +458,7 @@ M.get_adapter_for_action = function(action)
     error("no adapter found")
   end
   if action.dest_url then
-    local dest_adapter = config.get_adapter_by_scheme(action.dest_url)
+    local dest_adapter = assert(config.get_adapter_by_scheme(action.dest_url))
     if adapter ~= dest_adapter then
       if adapter.supports_xfer and adapter.supports_xfer[dest_adapter.name] then
         return adapter

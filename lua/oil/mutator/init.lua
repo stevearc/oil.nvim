@@ -184,8 +184,9 @@ M.enforce_action_order = function(actions)
   --   a. TODO optimization: check immediate parents to see if they have no dependencies now
   -- 5. repeat
 
-  -- Gets the dependencies of a particular action. Effectively dynamically calculates the dependency
-  -- "edges" of the graph.
+  ---Gets the dependencies of a particular action. Effectively dynamically calculates the dependency
+  ---"edges" of the graph.
+  ---@param action oil.Action
   local function get_deps(action)
     local ret = {}
     if action.type == "delete" then
@@ -357,7 +358,9 @@ M.process_actions = function(actions, cb)
       if v.type == "delete" then
         local scheme, path = util.parse_url(v.url)
         if config.adapters[scheme] == "files" then
-          actions[i] = {
+          assert(path)
+          ---@type oil.MoveAction
+          local move_action = {
             type = "move",
             src_url = v.url,
             entry_type = v.entry_type,
@@ -366,6 +369,7 @@ M.process_actions = function(actions, cb)
               math.random(999999)
             ),
           }
+          actions[i] = move_action
         end
       end
     end
@@ -439,6 +443,7 @@ M.process_actions = function(actions, cb)
       end
     end)
     if action.type == "change" then
+      ---@cast action oil.ChangeAction
       columns.perform_change_action(adapter, action, callback)
     else
       adapter.perform_action(action, callback)

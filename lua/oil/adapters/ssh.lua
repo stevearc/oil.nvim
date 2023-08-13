@@ -261,9 +261,11 @@ M.render_action = function(action)
     local dest = action.dest_url
     if config.get_adapter_by_scheme(src) == M then
       local _, path = util.parse_url(dest)
+      assert(path)
       dest = files.to_short_os_path(path, action.entry_type)
     else
       local _, path = util.parse_url(src)
+      assert(path)
       src = files.to_short_os_path(path, action.entry_type)
     end
     return string.format("  %s %s -> %s", action.type:upper(), src, dest)
@@ -328,9 +330,11 @@ M.perform_action = function(action, cb)
       if src_adapter == M then
         src_arg = url_to_scp(M.parse_url(action.src_url))
         local _, path = util.parse_url(action.dest_url)
+        assert(path)
         dest_arg = fs.posix_to_os_path(path)
       else
         local _, path = util.parse_url(action.src_url)
+        assert(path)
         src_arg = fs.posix_to_os_path(path)
         dest_arg = url_to_scp(M.parse_url(action.dest_url))
       end
@@ -353,7 +357,9 @@ M.read_file = function(bufnr)
   local tmpdir = fs.join(vim.fn.stdpath("cache"), "oil")
   fs.mkdirp(tmpdir)
   local fd, tmpfile = vim.loop.fs_mkstemp(fs.join(tmpdir, "ssh_XXXXXX"))
-  vim.loop.fs_close(fd)
+  if fd then
+    vim.loop.fs_close(fd)
+  end
   local tmp_bufnr = vim.fn.bufadd(tmpfile)
 
   shell.run({ "scp", "-C", scp_url, tmpfile }, function(err)
@@ -371,7 +377,10 @@ M.read_file = function(bufnr)
       vim.api.nvim_buf_set_lines(bufnr, 0, 1, true, {})
     end
     vim.bo[bufnr].modified = false
-    vim.bo[bufnr].filetype = vim.filetype.match({ buf = bufnr, filename = basename })
+    local filetype = vim.filetype.match({ buf = bufnr, filename = basename })
+    if filetype then
+      vim.bo[bufnr].filetype = filetype
+    end
     vim.cmd.doautocmd({ args = { "BufReadPost", bufname }, mods = { silent = true } })
     vim.api.nvim_buf_delete(tmp_bufnr, { force = true })
   end)
@@ -385,7 +394,9 @@ M.write_file = function(bufnr)
   local scp_url = url_to_scp(url)
   local tmpdir = fs.join(vim.fn.stdpath("cache"), "oil")
   local fd, tmpfile = vim.loop.fs_mkstemp(fs.join(tmpdir, "ssh_XXXXXXXX"))
-  vim.loop.fs_close(fd)
+  if fd then
+    vim.loop.fs_close(fd)
+  end
   vim.cmd.doautocmd({ args = { "BufWritePre", bufname }, mods = { silent = true } })
   vim.cmd.write({ args = { tmpfile }, bang = true, mods = { silent = true } })
   local tmp_bufnr = vim.fn.bufadd(tmpfile)
