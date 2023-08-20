@@ -846,8 +846,13 @@ M.setup = function(opts)
   end, { desc = "Open oil file browser on a directory", nargs = "*", complete = "dir" })
   local aug = vim.api.nvim_create_augroup("Oil", {})
 
-  if config.default_file_explorer and vim.fn.exists("#FileExplorer") then
-    vim.api.nvim_create_augroup("FileExplorer", { clear = true })
+  if config.default_file_explorer then
+    vim.g.loaded_netrw = 1
+    vim.g.loaded_netrwPlugin = 1
+    -- If netrw was already loaded, clear this augroup
+    if vim.fn.exists("#FileExplorer") then
+      vim.api.nvim_create_augroup("FileExplorer", { clear = true })
+    end
   end
 
   local patterns = {}
@@ -962,24 +967,6 @@ M.setup = function(opts)
       callback = function()
         vim.notify(
           "If you are trying to browse using Oil, use oil-ssh:// instead of scp://\nSet `silence_scp_warning = true` in oil.setup() to disable this message.\nSee https://github.com/stevearc/oil.nvim/issues/27 for more information.",
-          vim.log.levels.WARN
-        )
-      end,
-    })
-  end
-  if
-    vim.g.loaded_netrwPlugin ~= 1
-    and not config.silence_netrw_warning
-    and config.default_file_explorer
-  then
-    vim.api.nvim_create_autocmd("FileType", {
-      desc = "Inform user how to disable netrw",
-      group = aug,
-      pattern = "netrw",
-      once = true,
-      callback = function()
-        vim.notify(
-          "If you expected an Oil buffer here, you may want to disable netrw (:help netrw-noload)\nSet `default_file_explorer = false` in oil.setup() to not take over netrw buffers, or `silence_netrw_warning = true` to disable this message.",
           vim.log.levels.WARN
         )
       end,

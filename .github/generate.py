@@ -73,10 +73,11 @@ def update_readme_toc():
 
 def update_config_options():
     config_file = os.path.join(ROOT, "lua", "oil", "config.lua")
-    opt_lines = read_section(config_file, r"^\s*local default_config =", r"^}$")
+    opt_lines = ['\n```lua\nrequire("oil").setup({\n']
+    opt_lines.extend(read_section(config_file, r"^\s*local default_config =", r"^}$"))
     replace_section(
         README,
-        r"^require\(\"oil\"\)\.setup\(\{$",
+        r"^## Options$",
         r"^}\)$",
         opt_lines,
     )

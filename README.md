@@ -114,7 +114,7 @@ Then open a directory with `nvim .`. Use `<CR>` to open a file/directory, and `-
 If you want to mimic the `vim-vinegar` method of navigating to the parent directory of a file, add this keymap:
 
 ```lua
-vim.keymap.set("n", "-", require("oil").open, { desc = "Open parent directory" })
+vim.keymap.set("n", "-", "<CMD>Oil<CR>", { desc = "Open parent directory" })
 ```
 
 You can open a directory with `:edit <path>` or `:Oil <path>`. To open oil in a floating window, do `:Oil --float <path>`.
@@ -123,6 +123,9 @@ You can open a directory with `:edit <path>` or `:Oil <path>`. To open oil in a 
 
 ```lua
 require("oil").setup({
+  -- Oil will take over directory buffers (e.g. `vim .` or `:e src/`)
+  -- Set to false if you still want to use netrw.
+  default_file_explorer = true,
   -- Id is automatically added at the beginning, and name at the end
   -- See :help oil-columns
   columns = {
@@ -147,8 +150,6 @@ require("oil").setup({
     conceallevel = 3,
     concealcursor = "n",
   },
-  -- Oil will take over directory buffers (e.g. `vim .` or `:e src/`
-  default_file_explorer = true,
   -- Restore window options to previous values when leaving an oil buffer
   restore_win_options = true,
   -- Skip the confirmation popup for simple operations
@@ -331,12 +332,3 @@ If you don't need those features specifically, check out the alternatives listed
 - [vidir](https://github.com/trapd00r/vidir): Never personally used, but might be the first plugin to come up with the idea of editing a directory like a buffer.
 
 There's also file trees like [neo-tree](https://github.com/nvim-neo-tree/neo-tree.nvim) and [nvim-tree](https://github.com/nvim-tree/nvim-tree.lua), but they're really a different category entirely.
-
-**Q: I don't need netrw anymore. How can I disable it?**
-
-**A:** Oil can fully replace netrw for local and ssh file browsing/editing, but keep in mind that netrw also supports rsync, http, ftp, and dav. If you don't need these other features, you can disable netrw with the following:
-
-```lua
-vim.g.loaded_netrw = 1
-vim.g.loaded_netrwPlugin = 1
-```

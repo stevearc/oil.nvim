@@ -1,4 +1,7 @@
 local default_config = {
+  -- Oil will take over directory buffers (e.g. `vim .` or `:e src/`)
+  -- Set to false if you still want to use netrw.
+  default_file_explorer = true,
   -- Id is automatically added at the beginning, and name at the end
   -- See :help oil-columns
   columns = {
@@ -23,8 +26,6 @@ local default_config = {
     conceallevel = 3,
     concealcursor = "n",
   },
-  -- Oil will take over directory buffers (e.g. `vim .` or `:e src/`
-  default_file_explorer = true,
   -- Restore window options to previous values when leaving an oil buffer
   restore_win_options = true,
   -- Skip the confirmation popup for simple operations
