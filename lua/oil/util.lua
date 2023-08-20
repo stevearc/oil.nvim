@@ -461,9 +461,15 @@ M.get_adapter_for_action = function(action)
   if action.dest_url then
     local dest_adapter = assert(config.get_adapter_by_scheme(action.dest_url))
     if adapter ~= dest_adapter then
-      if adapter.supports_xfer and adapter.supports_xfer[dest_adapter.name] then
+      if
+        adapter.supported_adapters_for_copy
+        and adapter.supported_adapters_for_copy[dest_adapter.name]
+      then
         return adapter
-      elseif dest_adapter.supports_xfer and dest_adapter.supports_xfer[adapter.name] then
+      elseif
+        dest_adapter.supported_adapters_for_copy
+        and dest_adapter.supported_adapters_for_copy[adapter.name]
+      then
         return dest_adapter
       else
         error(

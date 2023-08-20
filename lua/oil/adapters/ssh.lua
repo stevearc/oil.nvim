@@ -338,7 +338,7 @@ M.perform_action = function(action, cb)
   end
 end
 
-M.supports_xfer = { files = true }
+M.supported_adapters_for_copy = { files = true }
 
 ---@param bufnr integer
 M.read_file = function(bufnr)

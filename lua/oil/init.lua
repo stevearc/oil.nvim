@@ -19,7 +19,7 @@ local M = {}
 ---@field perform_action? fun(action: oil.Action, cb: fun(err: nil|string)) Perform a mutation action. Only needed if adapter is modifiable.
 ---@field read_file? fun(bufnr: integer) Used for adapters that deal with remote/virtual files. Read the contents of the file into a buffer.
 ---@field write_file? fun(bufnr: integer) Used for adapters that deal with remote/virtual files. Write the contents of a buffer to the destination.
----@field supports_xfer? table<string, boolean> This and all other parts of cross-adapter actions are WIP and not a stable API.
+---@field supported_adapters_for_copy? table<string, boolean> Mapping of adapter name to true for all other adapters that can be used as a src or dest for move/copy actions.
 
 -- TODO remove after https://github.com/folke/neodev.nvim/pull/163 lands
 ---@diagnostic disable: undefined-field
