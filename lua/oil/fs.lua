@@ -186,7 +186,7 @@ M.recursive_delete = function(entry_type, path, cb)
       uv.fs_rmdir(path, cb)
     end)
     ---@diagnostic disable-next-line: param-type-mismatch
-  end, 100) -- TODO do some testing for this
+  end, 10000)
 end
 
 ---@param entry_type oil.EntryType
@@ -255,7 +255,7 @@ M.recursive_copy = function(entry_type, src_path, dest_path, cb)
         end
         poll(cb)
         ---@diagnostic disable-next-line: param-type-mismatch
-      end, 100) -- TODO do some testing for this
+      end, 10000)
     end)
   end)
 end
