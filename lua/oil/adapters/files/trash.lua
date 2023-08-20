@@ -4,7 +4,12 @@ local M = {}
 M.recursive_delete = function(path, cb)
   local stdout = {}
   local stderr = {}
-  local cmd = vim.list_extend(vim.split(config.trash_command, "%s+"), { path })
+  local cmd
+  if config.trash_command:find("%s") then
+    cmd = string.format("%s %s", config.trash_command, vim.fn.shellescape(path))
+  else
+    cmd = { config.trash_command, path }
+  end
   local jid = vim.fn.jobstart(cmd, {
     stdout_buffered = true,
     stderr_buffered = true,
