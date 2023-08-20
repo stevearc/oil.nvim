@@ -126,7 +126,7 @@ local dir_meta = {}
 
 ---@param url string
 ---@param path string
----@param callback fun(err: nil|string, fetch_more?: fun())
+---@param callback fun(err?: string, entries?: oil.InternalEntry[], fetch_more?: fun())
 function SSHFS:list_dir(url, path, callback)
   local path_postfix = ""
   if path ~= "" then
@@ -145,6 +145,7 @@ function SSHFS:list_dir(url, path, callback)
     assert(lines)
     local any_links = false
     local entries = {}
+    local cache_entries = {}
     for _, line in ipairs(lines) do
       if line ~= "" and not line:match("^total") then
         local name, type, meta = parse_ls_line(line)
@@ -155,9 +156,9 @@ function SSHFS:list_dir(url, path, callback)
             any_links = true
           end
           local cache_entry = cache.create_entry(url, name, type)
+          table.insert(cache_entries, cache_entry)
           entries[name] = cache_entry
           cache_entry[FIELD_META] = meta
-          cache.store_entry(url, cache_entry)
         end
       end
     end
@@ -184,10 +185,10 @@ function SSHFS:list_dir(url, path, callback)
             end
           end
         end
-        callback()
+        callback(nil, cache_entries)
       end)
     else
-      callback()
+      callback(nil, cache_entries)
     end
   end)
 end

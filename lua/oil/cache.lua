@@ -52,10 +52,7 @@ M.create_entry = function(parent_url, name, type)
   if entry then
     return entry
   end
-  local id = next_id
-  next_id = next_id + 1
-  _cached_id_fmt = nil
-  return { id, name, type }
+  return { nil, name, type }
 end
 
 ---@param parent_url string
@@ -68,6 +65,12 @@ M.store_entry = function(parent_url, entry)
     url_directory[parent_url] = parent
   end
   local id = entry[FIELD_ID]
+  if id == nil then
+    id = next_id
+    next_id = next_id + 1
+    entry[FIELD_ID] = id
+    _cached_id_fmt = nil
+  end
   local name = entry[FIELD_NAME]
   parent[name] = entry
   local tmp_dir = tmp_url_directory[parent_url]

@@ -579,13 +579,19 @@ M.render_buffer_async = function(bufnr, opts, callback)
   end
 
   cache.begin_update_url(bufname)
-  adapter.list(bufname, config.columns, function(err, fetch_more)
+  adapter.list(bufname, config.columns, function(err, entries, fetch_more)
     loading.set_loading(bufnr, false)
     if err then
       cache.end_update_url(bufname)
       handle_error(err)
       return
-    elseif fetch_more then
+    end
+    if entries then
+      for _, entry in ipairs(entries) do
+        cache.store_entry(bufname, entry)
+      end
+    end
+    if fetch_more then
       local now = vim.loop.hrtime() / 1e6
       local delta = now - start_ms
       -- If we've been chugging for more than 40ms, go ahead and render what we have

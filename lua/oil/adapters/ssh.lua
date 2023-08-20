@@ -1,4 +1,3 @@
-local cache = require("oil.cache")
 local config = require("oil.config")
 local constants = require("oil.constants")
 local fs = require("oil.fs")
@@ -206,7 +205,7 @@ end
 
 ---@param url string
 ---@param column_defs string[]
----@param callback fun(err: nil|string, fetch_more?: fun())
+---@param callback fun(err?: string, entries?: oil.InternalEntry[], fetch_more?: fun())
 M.list = function(url, column_defs, callback)
   local res = M.parse_url(url)
 

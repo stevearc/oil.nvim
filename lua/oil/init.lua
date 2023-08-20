@@ -11,7 +11,7 @@ local M = {}
 
 ---@class oil.Adapter
 ---@field name string The unique name of the adapter (this will be set automatically)
----@field list fun(path: string, column_defs: string[], cb: fun(err: nil|string, fetch_more: nil|fun())) Async function to list a directory. Entries should be stored in the cache.
+---@field list fun(path: string, column_defs: string[], cb: fun(err?: string, entries?: oil.InternalEntry[], fetch_more?: fun())) Async function to list a directory.
 ---@field is_modifiable fun(bufnr: integer): boolean Return true if this directory is modifiable (allows for directories with read-only permissions).
 ---@field get_column fun(name: string): nil|oil.ColumnDefinition If the adapter has any adapter-specific columns, return them when fetched by name.
 ---@field normalize_url fun(url: string, callback: fun(url: string)) Before oil opens a url it will be normalized. This allows for link following, path normalizing, and converting an oil file url to the actual path of a file.

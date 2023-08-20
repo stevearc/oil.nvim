@@ -213,7 +213,7 @@ end
 
 ---@param url string
 ---@param column_defs string[]
----@param cb fun(err?: string, fetch_more?: fun())
+---@param cb fun(err?: string, entries?: oil.InternalEntry[], fetch_more?: fun())
 M.list = function(url, column_defs, cb)
   local _, path = util.parse_url(url)
   assert(path)
@@ -234,6 +234,7 @@ M.list = function(url, column_defs, cb)
     local read_next
     read_next = function()
       uv.fs_readdir(fd, function(err, entries)
+        local internal_entries = {}
         if err then
           uv.fs_closedir(fd, function()
             cb(err)
@@ -244,7 +245,7 @@ M.list = function(url, column_defs, cb)
             if inner_err then
               cb(inner_err)
             else
-              cb(nil, read_next)
+              cb(nil, internal_entries, read_next)
             end
           end)
           for _, entry in ipairs(entries) do
@@ -253,6 +254,7 @@ M.list = function(url, column_defs, cb)
               if err then
                 poll(meta_err)
               else
+                table.insert(internal_entries, cache_entry)
                 local meta = cache_entry[FIELD_META]
                 -- Make sure we always get fs_stat info for links
                 if entry.type == "link" then
@@ -266,12 +268,10 @@ M.list = function(url, column_defs, cb)
                       end
                       meta.link = link
                       meta.link_stat = link_stat
-                      cache.store_entry(url, cache_entry)
                       poll()
                     end
                   end)
                 else
-                  cache.store_entry(url, cache_entry)
                   poll()
                 end
               end
