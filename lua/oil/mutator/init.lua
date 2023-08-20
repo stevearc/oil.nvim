@@ -438,7 +438,10 @@ M.process_actions = function(actions, cb)
       elseif err then
         finish(err)
       else
-        cache.perform_action(action)
+        -- proactively update the cache (helps to keep file IDs stable)
+        -- pcall is because this can fail for the experimental buffers adapter.
+        -- HACK: this should be fixed for the buffers adapter at some point.
+        pcall(cache.perform_action, action)
         next_action()
       end
     end)

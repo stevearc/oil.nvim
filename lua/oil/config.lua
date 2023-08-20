@@ -132,6 +132,7 @@ local default_config = {
 default_config.adapters = {
   ["oil://"] = "files",
   ["oil-ssh://"] = "ssh",
+  ["oil-buffers://"] = "buffers",
 }
 default_config.adapter_aliases = {}
 
