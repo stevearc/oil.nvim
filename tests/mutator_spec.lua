@@ -4,6 +4,7 @@ local constants = require("oil.constants")
 local mutator = require("oil.mutator")
 local parser = require("oil.mutator.parser")
 local test_adapter = require("oil.adapters.test")
+local test_util = require("tests.test_util")
 local util = require("oil.util")
 local view = require("oil.view")
 
@@ -24,6 +25,7 @@ a.describe("mutator", function()
     end
     test_adapter.test_clear()
     cache.clear_everything()
+    test_util.reset_editor()
   end)
 
   describe("parser", function()
