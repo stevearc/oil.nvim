@@ -213,19 +213,13 @@ end
 
 ---@param url string
 ---@param column_defs string[]
----@param callback fun(err: nil|string, entries: nil|oil.InternalEntry[])
-M.list = function(url, column_defs, callback)
+---@param cb fun(err?: string, fetch_more?: fun())
+M.list = function(url, column_defs, cb)
   local _, path = util.parse_url(url)
   assert(path)
   local dir = fs.posix_to_os_path(path)
   local fetch_meta = columns.get_metadata_fetcher(M, column_defs)
-  cache.begin_update_url(url)
-  local function cb(err, data)
-    if err or not data then
-      cache.end_update_url(url)
-    end
-    callback(err, data)
-  end
+
   ---@diagnostic disable-next-line: param-type-mismatch
   uv.fs_opendir(dir, function(open_err, fd)
     if open_err then
@@ -238,11 +232,7 @@ M.list = function(url, column_defs, callback)
       end
     end
     local read_next
-    read_next = function(read_err)
-      if read_err then
-        cb(read_err)
-        return
-      end
+    read_next = function()
       uv.fs_readdir(fd, function(err, entries)
         if err then
           uv.fs_closedir(fd, function()
@@ -254,8 +244,7 @@ M.list = function(url, column_defs, callback)
             if inner_err then
               cb(inner_err)
             else
-              cb(nil, true)
-              read_next()
+              cb(nil, read_next)
             end
           end)
           for _, entry in ipairs(entries) do

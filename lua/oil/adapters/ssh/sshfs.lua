@@ -124,6 +124,9 @@ end
 
 local dir_meta = {}
 
+---@param url string
+---@param path string
+---@param callback fun(err: nil|string, fetch_more?: fun())
 function SSHFS:list_dir(url, path, callback)
   local path_postfix = ""
   if path ~= "" then

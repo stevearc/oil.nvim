@@ -10,17 +10,16 @@ local M = {}
 ---@alias oil.TextChunk string|string[]
 
 ---@class oil.Adapter
----@field name string
----@field list fun(path: string, column_defs: string[], cb: fun(err: nil|string, entries: nil|oil.InternalEntry[]))
----@field is_modifiable fun(bufnr: integer): boolean
----@field get_column fun(name: string): nil|oil.ColumnDefinition
----@field normalize_url fun(url: string, callback: fun(url: string))
----@field get_parent nil|fun(bufname: string): string
----@field supports_xfer nil|table<string, boolean>
----@field render_action nil|fun(action: oil.Action): string
----@field perform_action nil|fun(action: oil.Action, cb: fun(err: nil|string))
----@field read_file fun(bufnr: integer)
----@field write_file fun(bufnr: integer)
+---@field name string The unique name of the adapter (this will be set automatically)
+---@field list fun(path: string, column_defs: string[], cb: fun(err: nil|string, fetch_more: nil|fun())) Async function to list a directory. Entries should be stored in the cache.
+---@field is_modifiable fun(bufnr: integer): boolean Return true if this directory is modifiable (allows for directories with read-only permissions).
+---@field get_column fun(name: string): nil|oil.ColumnDefinition If the adapter has any adapter-specific columns, return them when fetched by name.
+---@field normalize_url fun(url: string, callback: fun(url: string)) Before oil opens a url it will be normalized. This allows for link following, path normalizing, and converting an oil file url to the actual path of a file.
+---@field render_action? fun(action: oil.Action): string Render a mutation action for display in the preview window. Only needed if adapter is modifiable.
+---@field perform_action? fun(action: oil.Action, cb: fun(err: nil|string)) Perform a mutation action. Only needed if adapter is modifiable.
+---@field read_file? fun(bufnr: integer) Used for adapters that deal with remote/virtual files. Read the contents of the file into a buffer.
+---@field write_file? fun(bufnr: integer) Used for adapters that deal with remote/virtual files. Write the contents of a buffer to the destination.
+---@field supports_xfer? table<string, boolean> This and all other parts of cross-adapter actions are WIP and not a stable API.
 
 -- TODO remove after https://github.com/folke/neodev.nvim/pull/163 lands
 ---@diagnostic disable: undefined-field

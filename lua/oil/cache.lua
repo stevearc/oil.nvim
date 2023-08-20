@@ -88,12 +88,14 @@ M.create_and_store_entry = function(parent_url, name, type)
   return entry
 end
 
+---@param parent_url string
 M.begin_update_url = function(parent_url)
   parent_url = util.addslash(parent_url)
   tmp_url_directory[parent_url] = url_directory[parent_url]
   url_directory[parent_url] = {}
 end
 
+---@param parent_url string
 M.end_update_url = function(parent_url)
   parent_url = util.addslash(parent_url)
   if not tmp_url_directory[parent_url] then

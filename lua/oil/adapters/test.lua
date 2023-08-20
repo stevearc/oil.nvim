@@ -9,9 +9,9 @@ end
 
 ---@param url string
 ---@param column_defs string[]
----@param cb fun(err: nil|string, entries: nil|oil.InternalEntry[])
+---@param cb fun(err?: string, fetch_more?: fun())
 M.list = function(url, column_defs, cb)
-  cb(nil, cache.list_url(url))
+  cb()
 end
 
 ---@param name string

@@ -206,18 +206,12 @@ end
 
 ---@param url string
 ---@param column_defs string[]
----@param callback fun(err: nil|string, entries: nil|oil.InternalEntry[])
+---@param callback fun(err: nil|string, fetch_more?: fun())
 M.list = function(url, column_defs, callback)
   local res = M.parse_url(url)
 
-  cache.begin_update_url(url)
   local conn = get_connection(url)
-  conn:list_dir(url, res.path, function(err, data)
-    if err or not data then
-      cache.end_update_url(url)
-    end
-    callback(err, data)
-  end)
+  conn:list_dir(url, res.path, callback)
 end
 
 ---@param bufnr integer
