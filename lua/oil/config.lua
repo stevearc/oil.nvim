@@ -60,6 +60,7 @@ local default_config = {
     ["gs"] = "actions.change_sort",
     ["gx"] = "actions.open_external",
     ["g."] = "actions.toggle_hidden",
+    ["g\\"] = "actions.open_trash",
   },
   -- Set to false to disable all of the above keymaps
   use_default_keymaps = true,
@@ -142,6 +143,7 @@ local default_config = {
 default_config.adapters = {
   ["oil://"] = "files",
   ["oil-ssh://"] = "ssh",
+  ["oil-trash://"] = "trash",
 }
 default_config.adapter_aliases = {}
 

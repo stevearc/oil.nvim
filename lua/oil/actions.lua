@@ -302,6 +302,17 @@ M.change_sort = {
   end,
 }
 
+M.open_trash = {
+  desc = "Open the trash for the current directory",
+  callback = function()
+    local dir = oil.get_current_dir()
+    if dir then
+      local url = "oil-trash://" .. dir
+      vim.cmd.edit({ args = { url } })
+    end
+  end,
+}
+
 ---List actions for documentation generation
 ---@private
 M._get_actions = function()

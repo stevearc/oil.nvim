@@ -184,6 +184,7 @@ require("oil").setup({
     ["gs"] = "actions.change_sort",
     ["gx"] = "actions.open_external",
     ["g."] = "actions.toggle_hidden",
+    ["g\\"] = "actions.open_trash",
   },
   -- Set to false to disable all of the above keymaps
   use_default_keymaps = true,

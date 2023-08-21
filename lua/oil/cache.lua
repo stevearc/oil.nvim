@@ -129,16 +129,10 @@ M.get_parent_url = function(id)
 end
 
 ---@param url string
----@return oil.InternalEntry[]
+---@return table<string, oil.InternalEntry[]>
 M.list_url = function(url)
   url = util.addslash(url)
   return url_directory[url] or {}
-end
-
-M.get_entry_by_url = function(url)
-  local parent, name = url:match("^(.+)/([^/]+)$")
-  local cache = url_directory[parent]
-  return cache and cache[name]
 end
 
 ---@param action oil.Action
