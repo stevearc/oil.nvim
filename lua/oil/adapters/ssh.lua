@@ -391,16 +391,17 @@ M.write_file = function(bufnr)
     vim.loop.fs_close(fd)
   end
   vim.cmd.doautocmd({ args = { "BufWritePre", bufname }, mods = { silent = true } })
-  vim.cmd.write({ args = { tmpfile }, bang = true, mods = { silent = true } })
+  vim.cmd.write({ args = { tmpfile }, bang = true, mods = { silent = true, noautocmd = true } })
   local tmp_bufnr = vim.fn.bufadd(tmpfile)
 
   shell.run({ "scp", "-C", tmpfile, scp_url }, function(err)
+    vim.bo[bufnr].modifiable = true
     if err then
       vim.notify(string.format("Error writing file: %s", err), vim.log.levels.ERROR)
+    else
+      vim.bo[bufnr].modified = false
+      vim.cmd.doautocmd({ args = { "BufWritePost", bufname }, mods = { silent = true } })
     end
-    vim.bo[bufnr].modifiable = true
-    vim.bo[bufnr].modified = false
-    vim.cmd.doautocmd({ args = { "BufWritePost", bufname }, mods = { silent = true } })
     vim.loop.fs_unlink(tmpfile)
     vim.api.nvim_buf_delete(tmp_bufnr, { force = true })
   end)
