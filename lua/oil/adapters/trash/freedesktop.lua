@@ -48,7 +48,9 @@ local function get_top_trash_dirs(path)
   for _, top_trash_dir in ipairs(top_trash_dirs) do
     local stat = uv.fs_stat(top_trash_dir)
     if stat and stat.dev == dev and stat.type == "directory" and is_sticky(stat.mode) then
-      table.insert(dirs, fs.join(top_trash_dir, tostring(uv.getuid())))
+      local trash_dir = fs.join(top_trash_dir, tostring(uv.getuid()))
+      ensure_trash_dir(trash_dir)
+      table.insert(dirs, trash_dir)
     end
   end
 
