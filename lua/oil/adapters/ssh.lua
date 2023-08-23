@@ -382,7 +382,6 @@ end
 ---@param bufnr integer
 M.write_file = function(bufnr)
   local bufname = vim.api.nvim_buf_get_name(bufnr)
-  vim.bo[bufnr].modifiable = false
   local url = M.parse_url(bufname)
   local scp_url = url_to_scp(url)
   local tmpdir = fs.join(vim.fn.stdpath("cache"), "oil")
@@ -391,6 +390,7 @@ M.write_file = function(bufnr)
     vim.loop.fs_close(fd)
   end
   vim.cmd.doautocmd({ args = { "BufWritePre", bufname }, mods = { silent = true } })
+  vim.bo[bufnr].modifiable = false
   vim.cmd.write({ args = { tmpfile }, bang = true, mods = { silent = true, noautocmd = true } })
   local tmp_bufnr = vim.fn.bufadd(tmpfile)
 
