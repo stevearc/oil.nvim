@@ -83,12 +83,11 @@ end
 function SSHConnection.new(url)
   local command = SSHConnection.create_ssh_command(url)
   vim.list_extend(command, {
-    "/bin/bash",
-    "--norc",
+    "/bin/sh",
     "-c",
     -- HACK: For some reason in my testing if I just have "echo READY" it doesn't appear, but if I echo
     -- anything prior to that, it *will* appear. The first line gets swallowed.
-    "echo '_make_newline_'; echo '===READY==='; exec /bin/bash --norc",
+    "echo '_make_newline_'; echo '===READY==='; exec /bin/sh",
   })
   local term_bufnr = vim.api.nvim_create_buf(false, true)
   local self = setmetatable({

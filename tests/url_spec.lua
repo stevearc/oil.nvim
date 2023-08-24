@@ -4,7 +4,7 @@ describe("url", function()
   it("get_url_for_path", function()
     local cases = {
       { "", "oil://" .. util.addslash(vim.fn.getcwd()) },
-      { "term://~/oil.nvim//52953:/bin/bash", "oil://" .. vim.loop.os_homedir() .. "/oil.nvim/" },
+      { "term://~/oil.nvim//52953:/bin/sh", "oil://" .. vim.loop.os_homedir() .. "/oil.nvim/" },
       { "/foo/bar.txt", "oil:///foo/", "bar.txt" },
       { "oil:///foo/bar.txt", "oil:///foo/", "bar.txt" },
       { "oil:///", "oil:///" },
