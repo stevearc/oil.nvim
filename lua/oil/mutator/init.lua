@@ -17,30 +17,30 @@ local FIELD_TYPE = constants.FIELD_TYPE
 
 ---@alias oil.Action oil.CreateAction|oil.DeleteAction|oil.MoveAction|oil.CopyAction|oil.ChangeAction
 
----@class oil.CreateAction
+---@class (exact) oil.CreateAction
 ---@field type "create"
 ---@field url string
 ---@field entry_type oil.EntryType
 ---@field link nil|string
 
----@class oil.DeleteAction
+---@class (exact) oil.DeleteAction
 ---@field type "delete"
 ---@field url string
 ---@field entry_type oil.EntryType
 
----@class oil.MoveAction
+---@class (exact) oil.MoveAction
 ---@field type "move"
 ---@field entry_type oil.EntryType
 ---@field src_url string
 ---@field dest_url string
 
----@class oil.CopyAction
+---@class (exact) oil.CopyAction
 ---@field type "copy"
 ---@field entry_type oil.EntryType
 ---@field src_url string
 ---@field dest_url string
 
----@class oil.ChangeAction
+---@class (exact) oil.ChangeAction
 ---@field type "change"
 ---@field entry_type oil.EntryType
 ---@field url string
@@ -71,6 +71,7 @@ M.create_actions_from_diffs = function(all_diffs)
         if diff.id then
           local by_id = diff_by_id[diff.id]
           -- FIXME this is kind of a hack. We shouldn't be setting undocumented fields on the diff
+          ---@diagnostic disable-next-line: inject-field
           diff.dest = parent_url .. diff.name
           table.insert(by_id, diff)
         else

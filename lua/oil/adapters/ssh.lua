@@ -12,7 +12,7 @@ local M = {}
 
 local FIELD_META = constants.FIELD_META
 
----@class oil.sshUrl
+---@class (exact) oil.sshUrl
 ---@field scheme string
 ---@field host string
 ---@field user nil|string

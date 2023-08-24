@@ -12,7 +12,7 @@ local all_columns = {}
 
 ---@alias oil.ColumnSpec string|table
 
----@class oil.ColumnDefinition
+---@class (exact) oil.ColumnDefinition
 ---@field render fun(entry: oil.InternalEntry, conf: nil|table): nil|oil.TextChunk
 ---@field parse fun(line: string, conf: nil|table): nil|string, nil|string
 ---@field meta_fields nil|table<string, fun(parent_url: string, entry: oil.InternalEntry, cb: fun(err: nil|string))>

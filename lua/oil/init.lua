@@ -1,6 +1,6 @@
 local M = {}
 
----@class oil.Entry
+---@class (exact) oil.Entry
 ---@field name string
 ---@field type oil.EntryType
 ---@field id nil|integer Will be nil if it hasn't been persisted to disk yet
@@ -9,7 +9,7 @@ local M = {}
 ---@alias oil.EntryType "file"|"directory"|"socket"|"link"|"fifo"
 ---@alias oil.TextChunk string|string[]
 
----@class oil.Adapter
+---@class (exact) oil.Adapter
 ---@field name string The unique name of the adapter (this will be set automatically)
 ---@field list fun(path: string, column_defs: string[], cb: fun(err?: string, entries?: oil.InternalEntry[], fetch_more?: fun())) Async function to list a directory.
 ---@field is_modifiable fun(bufnr: integer): boolean Return true if this directory is modifiable (allows for directories with read-only permissions).
@@ -23,6 +23,7 @@ local M = {}
 
 -- TODO remove after https://github.com/folke/neodev.nvim/pull/163 lands
 ---@diagnostic disable: undefined-field
+---@diagnostic disable: inject-field
 
 ---Get the entry on a specific line (1-indexed)
 ---@param bufnr integer

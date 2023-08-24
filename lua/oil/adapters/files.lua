@@ -385,6 +385,7 @@ M.perform_action = function(action, cb)
           junction = false,
         }
       end
+      ---@diagnostic disable-next-line: param-type-mismatch
       uv.fs_symlink(target, path, flags, cb)
     else
       fs.touch(path, cb)

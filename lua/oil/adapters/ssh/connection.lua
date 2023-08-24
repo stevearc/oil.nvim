@@ -1,10 +1,22 @@
 local layout = require("oil.layout")
 local util = require("oil.util")
 
----@class oil.sshConnection
+---@class (exact) oil.sshCommand
+---@field cmd string|string[]
+---@field cb fun(err?: string, output?: string[])
+---@field running? boolean
+
+---@class (exact) oil.sshConnection
+---@field new fun(url: oil.sshUrl): oil.sshConnection
+---@field create_ssh_command fun(url: oil.sshUrl): string[]
 ---@field meta {user?: string, groups?: string[]}
+---@field connection_error nil|string
+---@field connected boolean
 ---@field private term_bufnr integer
 ---@field private jid integer
+---@field private term_winid nil|integer
+---@field private commands oil.sshCommand[]
+---@field private _stdout string[]
 local SSHConnection = {}
 
 local function output_extend(agg, output)
@@ -114,6 +126,7 @@ function SSHConnection.new(url)
     pty = true, -- This is require for interactivity
     on_stdout = function(j, output)
       pcall(vim.api.nvim_chan_send, self.term_id, table.concat(output, "\r\n"))
+      ---@diagnostic disable-next-line: invisible
       local new_i_start = output_extend(self._stdout, output)
       self:_handle_output(new_i_start)
     end,

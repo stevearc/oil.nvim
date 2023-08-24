@@ -1,6 +1,7 @@
 local util = require("oil.util")
 
----@class oil.Trie
+---@class (exact) oil.Trie
+---@field new fun(): oil.Trie
 ---@field private root table
 local Trie = {}
 

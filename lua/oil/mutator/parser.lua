@@ -13,19 +13,19 @@ local FIELD_META = constants.FIELD_META
 
 ---@alias oil.Diff oil.DiffNew|oil.DiffDelete|oil.DiffChange
 
----@class oil.DiffNew
+---@class (exact) oil.DiffNew
 ---@field type "new"
 ---@field name string
 ---@field entry_type oil.EntryType
 ---@field id nil|integer
 ---@field link nil|string
 
----@class oil.DiffDelete
+---@class (exact) oil.DiffDelete
 ---@field type "delete"
 ---@field name string
 ---@field id integer
 ---
----@class oil.DiffChange
+---@class (exact) oil.DiffChange
 ---@field type "change"
 ---@field entry_type oil.EntryType
 ---@field name string
@@ -56,7 +56,7 @@ local function compare_link_target(meta, parsed_entry)
   return meta_name == parsed_name
 end
 
----@class oil.ParseResult
+---@class (exact) oil.ParseResult
 ---@field data table Parsed entry data
 ---@field ranges table<string, integer[]> Locations of the various columns
 ---@field entry nil|oil.InternalEntry If the entry already exists

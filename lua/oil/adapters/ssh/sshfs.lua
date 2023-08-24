@@ -4,7 +4,8 @@ local permissions = require("oil.adapters.files.permissions")
 local SSHConnection = require("oil.adapters.ssh.connection")
 local util = require("oil.util")
 
----@class oil.sshFs
+---@class (exact) oil.sshFs
+---@field new fun(url: oil.sshUrl): oil.sshFs
 ---@field conn oil.sshConnection
 local SSHFS = {}
 
