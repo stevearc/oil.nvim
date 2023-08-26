@@ -195,7 +195,7 @@ a.describe("mutator", function()
       })
       local diffs = parser.parse(bufnr)
       assert.are.same({
-        { type = "new",    id = file[FIELD_ID], name = "b.txt", entry_type = "file" },
+        { type = "new", id = file[FIELD_ID], name = "b.txt", entry_type = "file" },
         { type = "delete", id = file[FIELD_ID], name = "a.txt" },
       }, diffs)
     end)
@@ -314,7 +314,7 @@ a.describe("mutator", function()
       local bufnr = vim.api.nvim_get_current_buf()
       local diffs = {
         { type = "delete", name = "a.txt", id = file[FIELD_ID] },
-        { type = "new",    name = "b.txt", entry_type = "file", id = file[FIELD_ID] },
+        { type = "new", name = "b.txt", entry_type = "file", id = file[FIELD_ID] },
       }
       local actions = mutator.create_actions_from_diffs({
         [bufnr] = diffs,
@@ -335,8 +335,8 @@ a.describe("mutator", function()
       local bufnr = vim.api.nvim_get_current_buf()
       local diffs = {
         { type = "delete", name = "a.txt", id = file[FIELD_ID] },
-        { type = "new",    name = "b.txt", entry_type = "file", id = file[FIELD_ID] },
-        { type = "new",    name = "a.txt", entry_type = "file" },
+        { type = "new", name = "b.txt", entry_type = "file", id = file[FIELD_ID] },
+        { type = "new", name = "a.txt", entry_type = "file" },
       }
       local actions = mutator.create_actions_from_diffs({
         [bufnr] = diffs,
@@ -363,9 +363,9 @@ a.describe("mutator", function()
       local bufnr = vim.api.nvim_get_current_buf()
       local diffs = {
         { type = "delete", name = "a.txt", id = afile[FIELD_ID] },
-        { type = "new",    name = "b.txt", entry_type = "file", id = afile[FIELD_ID] },
+        { type = "new", name = "b.txt", entry_type = "file", id = afile[FIELD_ID] },
         { type = "delete", name = "b.txt", id = bfile[FIELD_ID] },
-        { type = "new",    name = "a.txt", entry_type = "file", id = bfile[FIELD_ID] },
+        { type = "new", name = "a.txt", entry_type = "file", id = bfile[FIELD_ID] },
       }
       math.randomseed(2983982)
       local actions = mutator.create_actions_from_diffs({

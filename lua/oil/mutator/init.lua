@@ -289,7 +289,7 @@ M.enforce_action_order = function(actions)
         -- We've detected a move cycle (e.g. MOVE /a -> /b + MOVE /b -> /a)
         -- Split one of the moves and retry
         local intermediate_url =
-            string.format("%s__oil_tmp_%05d", loop_action.src_url, math.random(999999))
+          string.format("%s__oil_tmp_%05d", loop_action.src_url, math.random(999999))
         local move_1 = {
           type = "move",
           entry_type = loop_action.entry_type,
