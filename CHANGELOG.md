@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.1](https://github.com/stevearc/oil.nvim/compare/v2.0.0...v2.0.1) (2023-08-26)
+
+
+### Bug Fixes
+
+* data loss bug when move + delete ([#162](https://github.com/stevearc/oil.nvim/issues/162)) ([f86d494](https://github.com/stevearc/oil.nvim/commit/f86d49446ae344ba3762d5705505aa09c1c1d4ee))
+
 ## [2.0.0](https://github.com/stevearc/oil.nvim/compare/v1.1.0...v2.0.0) (2023-08-24)
 
 
