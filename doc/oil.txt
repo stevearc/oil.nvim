@@ -75,7 +75,7 @@ OPTIONS                                                              *oil-option
         ["gs"] = "actions.change_sort",
         ["gx"] = "actions.open_external",
         ["g."] = "actions.toggle_hidden",
-        ["g\\"] = "actions.open_trash",
+        ["g\\"] = "actions.toggle_trash",
       },
       -- Set to false to disable all of the above keymaps
       use_default_keymaps = true,
@@ -372,9 +372,6 @@ open_external                                              *actions.open_externa
 open_terminal                                              *actions.open_terminal*
     Open a terminal in the current directory
 
-open_trash                                                    *actions.open_trash*
-    Open the trash for the current directory
-
 parent                                                            *actions.parent*
     Navigate to the parent path
 
@@ -411,6 +408,9 @@ tcd                                                                  *actions.tc
 
 toggle_hidden                                              *actions.toggle_hidden*
     Toggle hidden files and directories
+
+toggle_trash                                                *actions.toggle_trash*
+    Jump back and forth the trash for the current directory
 
 --------------------------------------------------------------------------------
 HIGHLIGHTS                                                        *oil-highlights*

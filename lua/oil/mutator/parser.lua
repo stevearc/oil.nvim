@@ -143,10 +143,80 @@ M.parse_line = function(adapter, line, column_defs)
 end
 
 ---@param bufnr integer
+---@param adapter oil.Adapter
 ---@return oil.Diff[]
----@return table[] Parsing errors
-M.parse = function(bufnr)
+---@return oil.ParseError[] errors Parsing errors
+local function parse_lines_for_no_change_adapter(bufnr, adapter)
+  ---@type oil.Diff[]
   local diffs = {}
+  ---@type oil.ParseError[]
+  local errors = {}
+  local bufname = vim.api.nvim_buf_get_name(bufnr)
+  local scheme, path = util.parse_url(bufname)
+  local parent_url = scheme .. path
+  local children = cache.list_url(parent_url)
+  ---@type table<integer, boolean>
+  local original_ids = {}
+  for _, entry in pairs(children) do
+    original_ids[entry[FIELD_ID]] = true
+  end
+
+  local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, true)
+  for i, line in ipairs(lines) do
+    local id_str = line:match("^/(%d+) ")
+    if id_str then
+      local id = assert(tonumber(id_str))
+      local entry = cache.get_entry_by_id(id)
+      if not entry then
+        table.insert(errors, {
+          lnum = i - 1,
+          col = 0,
+          message = "Invalid file ID",
+        })
+      else
+        if original_ids[id] then
+          original_ids[id] = nil
+        else
+          local other_parent_url = cache.get_parent_url(id)
+          local other_adapter = assert(config.get_adapter_by_scheme(other_parent_url))
+          -- Ignore new entries if they're from the same adapter (e.g. moving/copying around in
+          -- the trash). We only care about moving in from a *different* adapter.
+          if adapter ~= other_adapter then
+            table.insert(diffs, {
+              type = "new",
+              name = entry[FIELD_NAME],
+              entry_type = entry[FIELD_TYPE],
+            })
+          end
+        end
+      end
+    end
+  end
+
+  for id in pairs(original_ids) do
+    local entry = assert(cache.get_entry_by_id(id))
+    table.insert(diffs, {
+      type = "delete",
+      name = entry[FIELD_NAME],
+      id = id,
+    })
+  end
+
+  return diffs, errors
+end
+
+---@class (exact) oil.ParseError
+---@field lnum integer
+---@field col integer
+---@field message string
+
+---@param bufnr integer
+---@return oil.Diff[] diffs
+---@return oil.ParseError[] errors Parsing errors
+M.parse = function(bufnr)
+  ---@type oil.Diff[]
+  local diffs = {}
+  ---@type oil.ParseError[]
   local errors = {}
   local bufname = vim.api.nvim_buf_get_name(bufnr)
   local adapter = util.get_adapter(bufnr)
@@ -158,11 +228,18 @@ M.parse = function(bufnr)
     })
     return diffs, errors
   end
-  local scheme, path = util.parse_url(bufname)
-  local parent_url = scheme .. path
-  local column_defs = columns.get_supported_columns(adapter)
-  local children = cache.list_url(parent_url)
+
+  if adapter.disable_changes then
+    return parse_lines_for_no_change_adapter(bufnr, adapter)
+  end
+
   local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, true)
+  local scheme, path = util.parse_url(bufname)
+  local column_defs = columns.get_supported_columns(adapter)
+  local parent_url = scheme .. path
+  local children = cache.list_url(parent_url)
+  -- map from name to entry ID for all entries previously in the buffer
+  ---@type table<string, integer>
   local original_entries = {}
   for _, child in pairs(children) do
     local name = child[FIELD_NAME]
@@ -184,6 +261,7 @@ M.parse = function(bufnr)
   end
   for i, line in ipairs(lines) do
     if line:match("^/%d+") then
+      -- Parse the line for an existing entry
       local result, err = M.parse_line(adapter, line, column_defs)
       if not result or err then
         table.insert(errors, {
@@ -256,6 +334,7 @@ M.parse = function(bufnr)
         end
       end
     else
+      -- Parse a new entry
       local name, isdir = parsedir(vim.trim(line))
       if vim.startswith(name, "/") then
         table.insert(errors, {

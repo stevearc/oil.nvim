@@ -302,14 +302,21 @@ M.change_sort = {
   end,
 }
 
-M.open_trash = {
-  desc = "Open the trash for the current directory",
+M.toggle_trash = {
+  desc = "Jump back and forth the trash for the current directory",
   callback = function()
-    local dir = oil.get_current_dir()
-    if dir then
-      local url = "oil-trash://" .. dir
-      vim.cmd.edit({ args = { url } })
+    local bufname = vim.api.nvim_buf_get_name(0)
+    local scheme, path = util.parse_url(bufname)
+    if scheme == "oil://" then
+      scheme = "oil-trash://"
+    elseif scheme == "oil-trash://" then
+      scheme = "oil://"
+    else
+      vim.notify("No trash found for buffer", vim.log.levels.WARN)
+      return
     end
+    local url = scheme .. path
+    vim.cmd.edit({ args = { url } })
   end,
 }
 

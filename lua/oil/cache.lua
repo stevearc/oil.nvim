@@ -8,6 +8,7 @@ local FIELD_NAME = constants.FIELD_NAME
 local next_id = 1
 
 -- Map<url, Map<entry name, oil.InternalEntry>>
+---@type table<string, table<string, oil.InternalEntry>>
 local url_directory = {}
 
 ---@type table<integer, oil.InternalEntry>
@@ -118,6 +119,14 @@ M.get_entry_by_id = function(id)
   return entries_by_id[id]
 end
 
+---@param url string
+---@return nil|oil.InternalEntry
+M.get_entry_by_url = function(url)
+  local parent_url = vim.fn.fnamemodify(url, ":h")
+  local basename = vim.fn.fnamemodify(url, ":t")
+  return M.list_url(parent_url)[basename]
+end
+
 ---@param id integer
 ---@return string
 M.get_parent_url = function(id)
@@ -129,7 +138,7 @@ M.get_parent_url = function(id)
 end
 
 ---@param url string
----@return table<string, oil.InternalEntry[]>
+---@return table<string, oil.InternalEntry>
 M.list_url = function(url)
   url = util.addslash(url)
   return url_directory[url] or {}

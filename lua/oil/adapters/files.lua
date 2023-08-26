@@ -7,6 +7,7 @@ local permissions = require("oil.adapters.files.permissions")
 local trash = require("oil.adapters.files.trash")
 local util = require("oil.util")
 local uv = vim.uv or vim.loop
+
 local M = {}
 
 local FIELD_NAME = constants.FIELD_NAME

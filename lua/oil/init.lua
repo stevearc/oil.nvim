@@ -21,6 +21,7 @@ local M = {}
 ---@field read_file? fun(bufnr: integer) Used for adapters that deal with remote/virtual files. Read the contents of the file into a buffer.
 ---@field write_file? fun(bufnr: integer) Used for adapters that deal with remote/virtual files. Write the contents of a buffer to the destination.
 ---@field supported_adapters_for_copy? table<string, boolean> Mapping of adapter name to true for all other adapters that can be used as a src or dest for move/copy actions.
+---@field disable_changes? boolean When true, adapter will not support creating new entries or changing (e.g. renaming) existing entries
 
 -- TODO remove after https://github.com/folke/neodev.nvim/pull/163 lands
 ---@diagnostic disable: undefined-field

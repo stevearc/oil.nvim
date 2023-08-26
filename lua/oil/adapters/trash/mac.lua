@@ -6,6 +6,8 @@ local uv = vim.uv or vim.loop
 
 local M = {}
 
+M.disable_changes = true
+
 local function touch_dir(path)
   uv.fs_mkdir(path, 448) -- 0700
 end
@@ -24,6 +26,18 @@ M.normalize_url = function(url, callback)
   local scheme, path = util.parse_url(url)
   assert(path)
   callback(scheme .. "/")
+end
+
+---@param url string
+---@param entry oil.Entry
+---@param cb fun(path: string)
+M.get_entry_path = function(url, entry, cb)
+  local trash_dir = get_trash_dir()
+  local path = fs.join(trash_dir, entry.name)
+  if entry.type == "directory" then
+    path = "oil://" .. path
+  end
+  cb(path)
 end
 
 ---@param url string

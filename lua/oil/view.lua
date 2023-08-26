@@ -511,6 +511,10 @@ end
 ---@return oil.TextChunk[]
 M.format_entry_cols = function(entry, column_defs, col_width, adapter)
   local name = entry[FIELD_NAME]
+  local meta = entry[FIELD_META]
+  if meta and meta.display_name then
+    name = meta.display_name
+  end
   -- First put the unique ID
   local cols = {}
   local id_key = cache.format_id(entry[FIELD_ID])
@@ -531,7 +535,6 @@ M.format_entry_cols = function(entry, column_defs, col_width, adapter)
   elseif entry_type == "socket" then
     table.insert(cols, { name, "OilSocket" })
   elseif entry_type == "link" then
-    local meta = entry[FIELD_META]
     local link_text
     if meta then
       if meta.link_stat and meta.link_stat.type == "directory" then
