@@ -495,7 +495,15 @@ M.perform_action = function(action, cb)
     assert(path)
     path = fs.posix_to_os_path(path)
     if config.delete_to_trash then
-      trash.recursive_delete(path, cb)
+      if config.trash_command then
+        vim.notify_once(
+          "Oil now has native support for trash. Remove the `trash_command` from your config to try it out!",
+          vim.log.levels.WARN
+        )
+        trash.recursive_delete(path, cb)
+      else
+        require("oil.adapters.trash").delete_to_trash(path, cb)
+      end
     else
       fs.recursive_delete(action.entry_type, path, cb)
     end

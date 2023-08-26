@@ -1,7 +1,9 @@
 -- Based on the FreeDesktop.org trash specification
 -- https://specifications.freedesktop.org/trash-spec/trashspec-1.0.html
 -- TODO
+-- * show all trashed files in root of trash
 -- * if open in a trash directory, open with trash adapter
+-- * show the source path of the files when in the root
 local cache = require("oil.cache")
 local config = require("oil.config")
 local constants = require("oil.constants")

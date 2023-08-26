@@ -860,9 +860,13 @@ M.setup = function(opts)
       vim.cmd.tabnew()
     end
     local float = false
+    local trash = false
     for i, v in ipairs(args.fargs) do
       if v == "--float" then
         float = true
+        table.remove(args.fargs, i)
+      elseif v == "--trash" then
+        trash = true
         table.remove(args.fargs, i)
       end
     end
@@ -876,7 +880,11 @@ M.setup = function(opts)
     end
 
     local method = float and "open_float" or "open"
-    M[method](unpack(args.fargs))
+    local path = args.fargs[1]
+    if trash then
+      path = "oil-trash:///"
+    end
+    M[method](path)
   end, { desc = "Open oil file browser on a directory", nargs = "*", complete = "dir" })
   local aug = vim.api.nvim_create_augroup("Oil", {})
 

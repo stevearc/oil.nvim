@@ -4,21 +4,10 @@ import re
 from dataclasses import dataclass, field
 from typing import List
 
-from nvim_doc_tools import (
-    LuaParam,
-    Vimdoc,
-    VimdocSection,
-    generate_md_toc,
-    indent,
-    leftright,
-    parse_functions,
-    read_nvim_json,
-    read_section,
-    render_md_api,
-    render_vimdoc_api,
-    replace_section,
-    wrap,
-)
+from nvim_doc_tools import (LuaParam, Vimdoc, VimdocSection, generate_md_toc,
+                            indent, leftright, parse_functions, read_nvim_json,
+                            read_section, render_md_api, render_vimdoc_api,
+                            replace_section, wrap)
 from nvim_doc_tools.vimdoc import format_vimdoc_params
 
 HERE = os.path.dirname(__file__)
@@ -121,9 +110,17 @@ COL_DEFS = [
         "An icon for the entry's type (requires nvim-web-devicons)",
         HL
         + [
-            LuaParam("default_file", "string", "Fallback icon for files when nvim-web-devicons returns nil"),
+            LuaParam(
+                "default_file",
+                "string",
+                "Fallback icon for files when nvim-web-devicons returns nil",
+            ),
             LuaParam("directory", "string", "Icon for directories"),
-            LuaParam("add_padding", "boolean", "Set to false to remove the extra whitespace after the icon"),
+            LuaParam(
+                "add_padding",
+                "boolean",
+                "Set to false to remove the extra whitespace after the icon",
+            ),
         ],
     ),
     ColumnDef("size", "files, ssh", False, True, "The size of the file", HL + []),
@@ -210,6 +207,36 @@ def get_columns_vimdoc() -> "VimdocSection":
     return section
 
 
+def get_trash_vimdoc() -> "VimdocSection":
+    section = VimdocSection("Trash", "oil-trash", [])
+    section.body.append(
+        """
+Oil has built-in support for using the system trash. When
+`delete_to_trash = true`, any deleted files will be sent to the trash instead
+of being permanently deleted. You can browse the trash for a directory using
+the `toggle_trash` action (bound to `g\\` by default). You can view all files
+in the trash with `:Oil --trash`.
+
+To restore files, simply delete them from the trash and put them in the desired destination, the same as any other file operation. If you delete files from
+the trash they will be permanently deleted (purged).
+
+Linux:
+    Oil supports the FreeDesktop trash specification.
+    https://specifications.freedesktop.org/trash-spec/trashspec-1.0.html
+    All features should work.
+
+Mac:
+    Oil has limited support for MacOS due to the prioprietary nature of the
+    implementation. The trash bin can only be viewed as single dir
+    (instead of being able to see files that were trashed from a directory).
+
+Windows:
+    Oil does not yet support the Windows trash.
+"""
+    )
+    return section
+
+
 def generate_vimdoc():
     doc = Vimdoc("oil.txt", "oil")
     funcs = parse_functions(os.path.join(ROOT, "lua", "oil", "init.lua"))
@@ -220,6 +247,7 @@ def generate_vimdoc():
             get_columns_vimdoc(),
             get_actions_vimdoc(),
             get_highlights_vimdoc(),
+            get_trash_vimdoc(),
         ]
     )
 
