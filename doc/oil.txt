@@ -426,6 +426,9 @@ OilSocket                                                           *hl-OilSocke
 OilLink                                                               *hl-OilLink*
     Soft links in an oil buffer
 
+OilLinkTarget                                                   *hl-OilLinkTarget*
+    The target of a soft link
+
 OilFile                                                               *hl-OilFile*
     Normal files in an oil buffer
 
@@ -452,6 +455,9 @@ OilPurge                                                             *hl-OilPurg
 
 OilTrash                                                             *hl-OilTrash*
     Delete a file to the trash
+
+OilTrashSourcePath                                         *hl-OilTrashSourcePath*
+    Virtual text that shows the original path of file in the trash
 
 --------------------------------------------------------------------------------
 TRASH                                                                  *oil-trash*

@@ -122,8 +122,9 @@ end
 ---@param url string
 ---@return nil|oil.InternalEntry
 M.get_entry_by_url = function(url)
-  local parent_url = vim.fn.fnamemodify(url, ":h")
-  local basename = vim.fn.fnamemodify(url, ":t")
+  local scheme, path = util.parse_url(url)
+  local parent_url = scheme .. vim.fn.fnamemodify(path, ":h")
+  local basename = vim.fn.fnamemodify(path, ":t")
   return M.list_url(parent_url)[basename]
 end
 

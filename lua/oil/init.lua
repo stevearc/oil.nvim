@@ -663,6 +663,11 @@ M._get_highlights = function()
       desc = "Soft links in an oil buffer",
     },
     {
+      name = "OilLinkTarget",
+      link = "Comment",
+      desc = "The target of a soft link",
+    },
+    {
       name = "OilFile",
       link = nil,
       desc = "Normal files in an oil buffer",
@@ -706,6 +711,11 @@ M._get_highlights = function()
       name = "OilTrash",
       link = "OilDelete",
       desc = "Delete a file to the trash",
+    },
+    {
+      name = "OilTrashSourcePath",
+      link = "Comment",
+      desc = "Virtual text that shows the original path of file in the trash",
     },
   }
 end

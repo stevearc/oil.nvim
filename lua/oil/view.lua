@@ -478,6 +478,25 @@ local function render_buffer(bufnr, opts)
   vim.bo[bufnr].modifiable = false
   vim.bo[bufnr].modified = false
   util.set_highlights(bufnr, highlights)
+
+  -- Show original location of trash file as virtual text
+  if adapter.name == "trash" and bufname == "oil-trash:///" then
+    local ns = vim.api.nvim_create_namespace("OilVtext")
+    vim.api.nvim_buf_clear_namespace(bufnr, ns, 0, -1)
+    for i, entry in ipairs(entry_list) do
+      local meta = entry[FIELD_META]
+      ---@type nil|oil.TrashInfo
+      local trash_info = meta and meta.trash_info
+      if trash_info then
+        vim.api.nvim_buf_set_extmark(0, ns, i - 1, 0, {
+          virt_text = {
+            { "➜ " .. trash_info.original_path, "OilTrashSourcePath" },
+          },
+        })
+      end
+    end
+  end
+
   if opts.jump then
     -- TODO why is the schedule necessary?
     vim.schedule(function()
@@ -551,7 +570,7 @@ M.format_entry_cols = function(entry, column_defs, col_width, adapter)
 
     table.insert(cols, { name, "OilLink" })
     if link_text then
-      table.insert(cols, { link_text, "Comment" })
+      table.insert(cols, { link_text, "OilLinkTarget" })
     end
   else
     table.insert(cols, { name, "OilFile" })

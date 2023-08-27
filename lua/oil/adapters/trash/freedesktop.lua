@@ -1,9 +1,8 @@
 -- Based on the FreeDesktop.org trash specification
 -- https://specifications.freedesktop.org/trash-spec/trashspec-1.0.html
 -- TODO
--- * show all trashed files in root of trash
 -- * if open in a trash directory, open with trash adapter
--- * show the source path of the files when in the root
+-- * make sure that the subdirs for trash use the same entry as the root
 local cache = require("oil.cache")
 local config = require("oil.config")
 local constants = require("oil.constants")
@@ -272,14 +271,15 @@ M.list = function(url, column_defs, cb)
                     poll()
                   else
                     local parent = util.addslash(vim.fn.fnamemodify(info.original_path, ":h"))
-                    if path == parent then
+                    if path == parent or path == "/" then
                       local name = vim.fn.fnamemodify(info.trash_file, ":t")
                       ---@diagnostic disable-next-line: undefined-field
                       local cache_entry = cache.create_entry(url, name, info.stat.type)
+                      local display_name = vim.fn.fnamemodify(info.original_path, ":t")
                       cache_entry[FIELD_META] = {
                         stat = info.stat,
                         trash_info = info,
-                        display_name = vim.fn.fnamemodify(info.original_path, ":t"),
+                        display_name = display_name,
                       }
                       table.insert(internal_entries, cache_entry)
                     end
@@ -419,19 +419,24 @@ end
 ---@param info_path string
 ---@param cb fun(err?: string)
 local function write_info_file(path, info_path, cb)
-  uv.fs_open(info_path, "w", 448, function(err, fd)
-    if err then
-      return cb(err)
-    end
-    assert(fd)
-    local deletion_date = vim.fn.strftime("%Y-%m-%dT%H:%M:%S")
-    local contents = string.format("[Trash Info]\nPath=%s\nDeletionDate=%s", path, deletion_date)
-    uv.fs_write(fd, contents, function(write_err)
-      uv.fs_close(fd, function(close_err)
-        cb(write_err or close_err)
+  uv.fs_open(
+    info_path,
+    "w",
+    448,
+    vim.schedule_wrap(function(err, fd)
+      if err then
+        return cb(err)
+      end
+      assert(fd)
+      local deletion_date = vim.fn.strftime("%Y-%m-%dT%H:%M:%S")
+      local contents = string.format("[Trash Info]\nPath=%s\nDeletionDate=%s", path, deletion_date)
+      uv.fs_write(fd, contents, function(write_err)
+        uv.fs_close(fd, function(close_err)
+          cb(write_err or close_err)
+        end)
       end)
     end)
-  end)
+  )
 end
 
 ---@param path string
