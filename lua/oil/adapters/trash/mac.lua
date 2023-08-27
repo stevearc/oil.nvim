@@ -111,7 +111,7 @@ M.get_column = function(name)
   return nil
 end
 
-M.supported_adapters_for_copy = { files = true }
+M.supported_cross_adapter_actions = { files = "move" }
 
 ---@param action oil.Action
 ---@return string

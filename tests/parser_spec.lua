@@ -274,6 +274,7 @@ describe("parser", function()
       local diffs, errors = parser.parse(bufnr)
       assert.are.same({
         {
+          id = file[FIELD_ID],
           type = "new",
           name = "newentry",
           entry_type = "file",

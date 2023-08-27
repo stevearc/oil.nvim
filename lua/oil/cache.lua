@@ -4,6 +4,7 @@ local M = {}
 
 local FIELD_ID = constants.FIELD_ID
 local FIELD_NAME = constants.FIELD_NAME
+local FIELD_META = constants.FIELD_META
 
 local next_id = 1
 
@@ -176,6 +177,8 @@ M.perform_action = function(action)
       dest_parent = {}
       url_directory[dest_parent_url] = dest_parent
     end
+    -- We have to clear the metadata because it can be inaccurate after the move
+    entry[FIELD_META] = nil
     dest_parent[dest_name] = entry
     parent_url_by_id[entry[FIELD_ID]] = dest_parent_url
     entry[FIELD_NAME] = dest_name

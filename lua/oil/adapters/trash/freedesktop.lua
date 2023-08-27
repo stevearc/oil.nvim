@@ -1,7 +1,6 @@
 -- Based on the FreeDesktop.org trash specification
 -- https://specifications.freedesktop.org/trash-spec/trashspec-1.0.html
 -- TODO
--- * if open in a trash directory, open with trash adapter
 -- * make sure that the subdirs for trash use the same entry as the root
 local cache = require("oil.cache")
 local config = require("oil.config")
@@ -354,7 +353,7 @@ M.get_column = function(name)
   return file_columns[name]
 end
 
-M.supported_adapters_for_copy = { files = true }
+M.supported_cross_adapter_actions = { files = "move" }
 
 ---@param action oil.Action
 ---@return string
@@ -497,7 +496,7 @@ M.perform_action = function(action, cb)
         if err then
           return cb(err)
         end
-        purge(trash_info, cb)
+        uv.fs_unlink(trash_info.info_file, cb)
       end)
     else
       error("Must be moving files into or out of trash")

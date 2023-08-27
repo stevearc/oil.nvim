@@ -453,6 +453,7 @@ end
 
 ---@param action oil.Action
 ---@return oil.Adapter
+---@return nil|oil.CrossAdapterAction
 M.get_adapter_for_action = function(action)
   local adapter = config.get_adapter_by_scheme(action.url or action.src_url)
   if not adapter then
@@ -462,15 +463,15 @@ M.get_adapter_for_action = function(action)
     local dest_adapter = assert(config.get_adapter_by_scheme(action.dest_url))
     if adapter ~= dest_adapter then
       if
-        adapter.supported_adapters_for_copy
-        and adapter.supported_adapters_for_copy[dest_adapter.name]
+        adapter.supported_cross_adapter_actions
+        and adapter.supported_cross_adapter_actions[dest_adapter.name]
       then
-        return adapter
+        return adapter, adapter.supported_cross_adapter_actions[dest_adapter.name]
       elseif
-        dest_adapter.supported_adapters_for_copy
-        and dest_adapter.supported_adapters_for_copy[adapter.name]
+        dest_adapter.supported_cross_adapter_actions
+        and dest_adapter.supported_cross_adapter_actions[adapter.name]
       then
-        return dest_adapter
+        return dest_adapter, dest_adapter.supported_cross_adapter_actions[adapter.name]
       else
         error(
           string.format(

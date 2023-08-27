@@ -179,7 +179,7 @@ M.listdir = function(dir, cb)
     end
     read_next()
     ---@diagnostic disable-next-line: param-type-mismatch
-  end, 100) -- TODO do some testing for this
+  end, 10000)
 end
 
 ---@param entry_type oil.EntryType

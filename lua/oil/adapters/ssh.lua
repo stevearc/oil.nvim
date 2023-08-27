@@ -348,7 +348,7 @@ M.perform_action = function(action, cb)
   end
 end
 
-M.supported_adapters_for_copy = { files = true }
+M.supported_cross_adapter_actions = { files = "copy" }
 
 ---@param bufnr integer
 M.read_file = function(bufnr)

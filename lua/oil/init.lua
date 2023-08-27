@@ -8,6 +8,7 @@ local M = {}
 
 ---@alias oil.EntryType "file"|"directory"|"socket"|"link"|"fifo"
 ---@alias oil.TextChunk string|string[]
+---@alias oil.CrossAdapterAction "copy"|"move"
 
 ---@class (exact) oil.Adapter
 ---@field name string The unique name of the adapter (this will be set automatically)
@@ -20,7 +21,7 @@ local M = {}
 ---@field perform_action? fun(action: oil.Action, cb: fun(err: nil|string)) Perform a mutation action. Only needed if adapter is modifiable.
 ---@field read_file? fun(bufnr: integer) Used for adapters that deal with remote/virtual files. Read the contents of the file into a buffer.
 ---@field write_file? fun(bufnr: integer) Used for adapters that deal with remote/virtual files. Write the contents of a buffer to the destination.
----@field supported_adapters_for_copy? table<string, boolean> Mapping of adapter name to true for all other adapters that can be used as a src or dest for move/copy actions.
+---@field supported_cross_adapter_actions? table<string, oil.CrossAdapterAction> Mapping of adapter name to enum for all other adapters that can be used as a src or dest for move/copy actions.
 ---@field disable_changes? boolean When true, adapter will not support creating new entries or changing (e.g. renaming) existing entries
 
 -- TODO remove after https://github.com/folke/neodev.nvim/pull/163 lands
@@ -196,7 +197,6 @@ M.get_buffer_parent_url = function(bufname)
     return parent_url, basename
   else
     assert(path)
-    -- TODO maybe we should remove this special case and turn it into a config
     if scheme == "term://" then
       ---@type string
       path = vim.fn.expand(path:match("^(.*)//")) ---@diagnostic disable-line: assign-type-mismatch

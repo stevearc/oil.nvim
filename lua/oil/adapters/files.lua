@@ -457,7 +457,7 @@ M.render_action = function(action)
         M.to_short_os_path(dest_path, action.entry_type)
       )
     else
-      -- We should never hit this because we don't implement supported_adapters_for_copy
+      -- We should never hit this because we don't implement supported_cross_adapter_actions
       error("files adapter doesn't support cross-adapter move/copy")
     end
   else
@@ -523,7 +523,7 @@ M.perform_action = function(action, cb)
       dest_path = fs.posix_to_os_path(dest_path)
       fs.recursive_move(action.entry_type, src_path, dest_path, cb)
     else
-      -- We should never hit this because we don't implement supported_adapters_for_copy
+      -- We should never hit this because we don't implement supported_cross_adapter_actions
       cb("files adapter doesn't support cross-adapter move")
     end
   elseif action.type == "copy" then
@@ -537,7 +537,7 @@ M.perform_action = function(action, cb)
       dest_path = fs.posix_to_os_path(dest_path)
       fs.recursive_copy(action.entry_type, src_path, dest_path, cb)
     else
-      -- We should never hit this because we don't implement supported_adapters_for_copy
+      -- We should never hit this because we don't implement supported_cross_adapter_actions
       cb("files adapter doesn't support cross-adapter copy")
     end
   else

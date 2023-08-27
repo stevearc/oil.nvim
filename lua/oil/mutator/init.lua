@@ -365,12 +365,12 @@ M.process_actions = function(actions, cb)
   end
   lsp_helpers.will_rename_files(moves)
 
-  -- Convert cross-adapter moves to a copy + delete
+  -- Convert some cross-adapter moves to a copy + delete
   for _, action in ipairs(actions) do
     if action.type == "move" then
-      local src_scheme = util.parse_url(action.src_url)
-      local dest_scheme = util.parse_url(action.dest_url)
-      if src_scheme ~= dest_scheme then
+      local _, cross_action = util.get_adapter_for_action(action)
+      -- Only do the conversion if the cross-adapter support is "copy"
+      if cross_action == "copy" then
         action.type = "copy"
         table.insert(actions, {
           type = "delete",

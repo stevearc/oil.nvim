@@ -184,6 +184,7 @@ local function parse_lines_for_no_change_adapter(bufnr, adapter)
           if adapter ~= other_adapter then
             table.insert(diffs, {
               type = "new",
+              id = entry[FIELD_ID],
               name = entry[FIELD_NAME],
               entry_type = entry[FIELD_TYPE],
             })
