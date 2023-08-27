@@ -162,8 +162,8 @@ M.setup = function(opts)
         "oil.nvim: delete_to_trash is true, but trash is not yet supported on Windows.\nDeleted files will be permanently removed",
         new_conf.trash_command
       )
+      new_conf.delete_to_trash = false
     end
-    new_conf.delete_to_trash = false
   end
 
   for k, v in pairs(new_conf) do
