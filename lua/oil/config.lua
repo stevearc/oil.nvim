@@ -175,46 +175,6 @@ M.setup = function(opts)
     M.adapter_to_scheme[v] = k
   end
   M._adapter_by_scheme = {}
-  if type(M.trash) == "string" then
-    M.trash = vim.fn.fnamemodify(vim.fn.expand(M.trash), ":p")
-  end
-end
-
----@return nil|string
-M.get_trash_url = function()
-  if not M.trash then
-    return nil
-  end
-  local fs = require("oil.fs")
-  if M.trash == true then
-    local data_home = os.getenv("XDG_DATA_HOME") or vim.fn.expand("~/.local/share")
-    local preferred = fs.join(data_home, "trash")
-    local candidates = {
-      preferred,
-    }
-    if fs.is_windows then
-      -- TODO permission issues when using the recycle bin. The folder gets created without
-      -- read/write perms, so all operations fail
-      -- local cwd = vim.fn.getcwd()
-      -- table.insert(candidates, 1, cwd:sub(1, 3) .. "$Recycle.Bin")
-      -- table.insert(candidates, 1, "C:\\$Recycle.Bin")
-    else
-      table.insert(candidates, fs.join(data_home, "Trash", "files"))
-      table.insert(candidates, fs.join(os.getenv("HOME"), ".Trash"))
-    end
-    local trash_dir = preferred
-    for _, candidate in ipairs(candidates) do
-      if vim.fn.isdirectory(candidate) == 1 then
-        trash_dir = candidate
-        break
-      end
-    end
-
-    local oil_trash_dir = vim.fn.fnamemodify(fs.join(trash_dir, "nvim", "oil"), ":p")
-    fs.mkdirp(oil_trash_dir)
-    M.trash = oil_trash_dir
-  end
-  return M.adapter_to_scheme.files .. fs.os_to_posix_path(M.trash)
 end
 
 ---@param scheme nil|string

@@ -7,7 +7,6 @@ local constants = require("oil.constants")
 local lsp_helpers = require("oil.lsp_helpers")
 local oil = require("oil")
 local parser = require("oil.mutator.parser")
-local pathutil = require("oil.pathutil")
 local preview = require("oil.mutator.preview")
 local util = require("oil.util")
 local view = require("oil.view")
@@ -353,30 +352,6 @@ end
 ---@param actions oil.Action[]
 ---@param cb fun(err: nil|string)
 M.process_actions = function(actions, cb)
-  -- convert delete actions to move-to-trash
-  local trash_url = config.get_trash_url()
-  if trash_url then
-    for i, v in ipairs(actions) do
-      if v.type == "delete" then
-        local scheme, path = util.parse_url(v.url)
-        if config.adapters[scheme] == "files" then
-          assert(path)
-          ---@type oil.MoveAction
-          local move_action = {
-            type = "move",
-            src_url = v.url,
-            entry_type = v.entry_type,
-            dest_url = trash_url .. "/" .. pathutil.basename(path) .. string.format(
-              "_%06d",
-              math.random(999999)
-            ),
-          }
-          actions[i] = move_action
-        end
-      end
-    end
-  end
-
   -- send all renames to LSP servers
   local moves = {}
   for _, action in ipairs(actions) do

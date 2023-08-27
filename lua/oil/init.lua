@@ -111,34 +111,6 @@ M.discard_all_changes = function()
   end
 end
 
----Delete all files in the trash directory
----@private
----@note
---- Trash functionality is incomplete and experimental.
-M.empty_trash = function()
-  local config = require("oil.config")
-  local fs = require("oil.fs")
-  local util = require("oil.util")
-  local trash_url = config.get_trash_url()
-  if not trash_url then
-    vim.notify("No trash directory configured", vim.log.levels.WARN)
-    return
-  end
-  local _, path = util.parse_url(trash_url)
-  assert(path)
-  local dir = fs.posix_to_os_path(path)
-  if vim.fn.isdirectory(dir) == 1 then
-    fs.recursive_delete("directory", dir, function(err)
-      if err then
-        vim.notify(string.format("Error emptying trash: %s", err), vim.log.levels.ERROR)
-      else
-        vim.notify("Trash emptied")
-        fs.mkdirp(dir)
-      end
-    end)
-  end
-end
-
 ---Change the display columns for oil
 ---@param cols oil.ColumnSpec[]
 M.set_columns = function(cols)
