@@ -343,6 +343,8 @@ birthtime                                                       *column-birthtim
 ACTIONS                                                              *oil-actions*
 
 These are actions that can be used in the `keymaps` section of config options.
+You can also call them directly with
+`require("oil.actions").action_name.callback()`
 
 cd                                                                    *actions.cd*
     :cd to the current oil directory

@@ -167,7 +167,7 @@ def get_actions_vimdoc() -> "VimdocSection":
     section = VimdocSection("Actions", "oil-actions", ["\n"])
     section.body.extend(
         wrap(
-            "These are actions that can be used in the `keymaps` section of config options."
+            """These are actions that can be used in the `keymaps` section of config options. You can also call them directly with `require("oil.actions").action_name.callback()`"""
         )
     )
     section.body.append("\n")
