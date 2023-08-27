@@ -1,3 +1,5 @@
+local uv = vim.uv or vim.loop
+
 local default_config = {
   -- Oil will take over directory buffers (e.g. `vim .` or `:e src/`)
   -- Set to false if you still want to use netrw.
@@ -154,17 +156,14 @@ M.setup = function(opts)
   end
 
   if new_conf.delete_to_trash then
-    local trash_bin = vim.split(new_conf.trash_command, " ")[1]
-    if vim.fn.executable(trash_bin) == 0 then
-      vim.notify(
-        string.format(
-          "oil.nvim: delete_to_trash is true, but '%s' executable not found.\nDeleted files will be permanently removed.",
-          new_conf.trash_command
-        ),
-        vim.log.levels.WARN
+    local is_windows = uv.os_uname().version:match("Windows")
+    if is_windows then
+      string.format(
+        "oil.nvim: delete_to_trash is true, but trash is not yet supported on Windows.\nDeleted files will be permanently removed",
+        new_conf.trash_command
       )
-      new_conf.delete_to_trash = false
     end
+    new_conf.delete_to_trash = false
   end
 
   for k, v in pairs(new_conf) do

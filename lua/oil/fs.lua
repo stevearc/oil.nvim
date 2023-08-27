@@ -7,6 +7,8 @@ M.is_windows = uv.os_uname().version:match("Windows")
 
 M.is_mac = uv.os_uname().sysname == "Darwin"
 
+M.is_linux = not M.is_windows and not M.is_mac
+
 ---@type string
 M.sep = M.is_windows and "\\" or "/"
 

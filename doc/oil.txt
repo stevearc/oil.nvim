@@ -8,6 +8,7 @@ CONTENTS                                                            *oil-content
   3. Columns                                                     |oil-columns|
   4. Actions                                                     |oil-actions|
   5. Highlights                                               |oil-highlights|
+  6. Trash                                                         |oil-trash|
 
 --------------------------------------------------------------------------------
 OPTIONS                                                              *oil-options*
@@ -45,8 +46,6 @@ OPTIONS                                                              *oil-option
       delete_to_trash = false,
       -- Skip the confirmation popup for simple operations
       skip_confirm_for_simple_edits = false,
-      -- Change this to customize the command used when deleting to trash
-      trash_command = "trash-put",
       -- Selecting a new/moved/renamed file or directory will prompt you to save changes first
       prompt_save_on_select_new_entry = true,
       -- Oil will automatically delete hidden buffers after this delay
@@ -444,6 +443,41 @@ OilCopy                                                               *hl-OilCop
 
 OilChange                                                           *hl-OilChange*
     Change action in the oil preview window
+
+OilRestore                                                         *hl-OilRestore*
+    Restore a file from trash
+
+OilPurge                                                             *hl-OilPurge*
+    Permanently delete a file from trash
+
+OilTrash                                                             *hl-OilTrash*
+    Delete a file to the trash
+
+--------------------------------------------------------------------------------
+TRASH                                                                  *oil-trash*
+
+
+Oil has built-in support for using the system trash. When
+`delete_to_trash = true`, any deleted files will be sent to the trash instead
+of being permanently deleted. You can browse the trash for a directory using
+the `toggle_trash` action (bound to `g\` by default). You can view all files
+in the trash with `:Oil --trash`.
+
+To restore files, simply delete them from the trash and put them in the desired destination, the same as any other file operation. If you delete files from
+the trash they will be permanently deleted (purged).
+
+Linux:
+    Oil supports the FreeDesktop trash specification.
+    https://specifications.freedesktop.org/trash-spec/trashspec-1.0.html
+    All features should work.
+
+Mac:
+    Oil has limited support for MacOS due to the prioprietary nature of the
+    implementation. The trash bin can only be viewed as single dir
+    (instead of being able to see files that were trashed from a directory).
+
+Windows:
+    Oil does not yet support the Windows trash.
 
 ================================================================================
 vim:tw=80:ts=2:ft=help:norl:syntax=help:

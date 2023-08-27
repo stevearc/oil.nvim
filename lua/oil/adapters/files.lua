@@ -437,7 +437,12 @@ M.render_action = function(action)
   elseif action.type == "delete" then
     local _, path = util.parse_url(action.url)
     assert(path)
-    return string.format("DELETE %s", M.to_short_os_path(path, action.entry_type))
+    local short_path = M.to_short_os_path(path, action.entry_type)
+    if config.delete_to_trash then
+      return string.format(" TRASH %s", short_path)
+    else
+      return string.format("DELETE %s", short_path)
+    end
   elseif action.type == "move" or action.type == "copy" then
     local dest_adapter = config.get_adapter_by_scheme(action.dest_url)
     if dest_adapter == M then
@@ -516,7 +521,7 @@ M.perform_action = function(action, cb)
       assert(dest_path)
       src_path = fs.posix_to_os_path(src_path)
       dest_path = fs.posix_to_os_path(dest_path)
-      fs.recursive_move(action.entry_type, src_path, dest_path, vim.schedule_wrap(cb))
+      fs.recursive_move(action.entry_type, src_path, dest_path, cb)
     else
       -- We should never hit this because we don't implement supported_adapters_for_copy
       cb("files adapter doesn't support cross-adapter move")

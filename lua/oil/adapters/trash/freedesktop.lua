@@ -373,7 +373,7 @@ M.render_action = function(action)
       local _, path = util.parse_url(action.src_url)
       assert(path)
       local short_path = files.to_short_os_path(path, action.entry_type)
-      return string.format("DELETE %s", short_path)
+      return string.format(" TRASH %s", short_path)
     elseif dest_adapter.name == "files" then
       local _, path = util.parse_url(action.dest_url)
       assert(path)

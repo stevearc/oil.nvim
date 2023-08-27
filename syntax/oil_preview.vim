@@ -8,9 +8,8 @@ syn match oilDelete /^DELETE /
 syn match oilCopy   /^  COPY /
 syn match oilChange /^CHANGE /
 " Trash operations
-" FIXME add new highlight groups
-syn match oilCreate /^RESTORE /
-syn match oilDelete /^ PURGE /
-syn match oilDelete /^ TRASH /
+syn match oilRestore /^RESTORE /
+syn match oilPurge /^ PURGE /
+syn match oilTrash /^ TRASH /
 
 let b:current_syntax = "oil_preview"

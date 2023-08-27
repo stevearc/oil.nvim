@@ -720,6 +720,21 @@ M._get_highlights = function()
       link = "Special",
       desc = "Change action in the oil preview window",
     },
+    {
+      name = "OilRestore",
+      link = "OilCreate",
+      desc = "Restore a file from trash",
+    },
+    {
+      name = "OilPurge",
+      link = "OilDelete",
+      desc = "Permanently delete a file from trash",
+    },
+    {
+      name = "OilTrash",
+      link = "OilDelete",
+      desc = "Delete a file to the trash",
+    },
   }
 end
 

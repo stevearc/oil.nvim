@@ -1,12 +1,12 @@
 local cache = require("oil.cache")
+local config = require("oil.config")
+local files = require("oil.adapters.files")
 local fs = require("oil.fs")
 local util = require("oil.util")
 
 local uv = vim.uv or vim.loop
 
 local M = {}
-
-M.disable_changes = true
 
 local function touch_dir(path)
   uv.fs_mkdir(path, 448) -- 0700
@@ -78,7 +78,7 @@ M.list = function(url, column_defs, cb)
           end)
 
           for _, entry in ipairs(entries) do
-            -- TODO: read .DS_Store and filter by original dir dir
+            -- TODO: read .DS_Store and filter by original dir
             local cache_entry = cache.create_entry(url, entry.name, entry.type)
             table.insert(internal_entries, cache_entry)
             poll()
@@ -116,10 +116,27 @@ M.supported_adapters_for_copy = { files = true }
 ---@param action oil.Action
 ---@return string
 M.render_action = function(action)
-  -- FIXME
-  if action.type == "create" or action.type == "delete" then
-    return string.format("%s %s", action.type:upper(), action.url)
-  elseif action.type == "move" or action.type == "copy" then
+  if action.type == "create" then
+    return string.format("CREATE %s", action.url)
+  elseif action.type == "delete" then
+    return string.format(" PURGE %s", action.url)
+  elseif action.type == "move" then
+    local src_adapter = assert(config.get_adapter_by_scheme(action.src_url))
+    local dest_adapter = assert(config.get_adapter_by_scheme(action.dest_url))
+    if src_adapter.name == "files" then
+      local _, path = util.parse_url(action.src_url)
+      assert(path)
+      local short_path = files.to_short_os_path(path, action.entry_type)
+      return string.format(" TRASH %s", short_path)
+    elseif dest_adapter.name == "files" then
+      local _, path = util.parse_url(action.dest_url)
+      assert(path)
+      local short_path = files.to_short_os_path(path, action.entry_type)
+      return string.format("RESTORE %s", short_path)
+    else
+      return string.format("  %s %s -> %s", action.type:upper(), action.src_url, action.dest_url)
+    end
+  elseif action.type == "copy" then
     return string.format("  %s %s -> %s", action.type:upper(), action.src_url, action.dest_url)
   else
     error("Bad action type")
@@ -129,32 +146,85 @@ end
 ---@param action oil.Action
 ---@param cb fun(err: nil|string)
 M.perform_action = function(action, cb)
-  -- FIXME
+  local trash_dir = get_trash_dir()
   if action.type == "create" then
-    cb(string.format("Creating files in trash is not supported: %s", action.url))
+    local _, path = util.parse_url(action.url)
+    assert(path)
+    path = trash_dir .. path
+    if action.entry_type == "directory" then
+      uv.fs_mkdir(path, 493, function(err)
+        -- Ignore if the directory already exists
+        if not err or err:match("^EEXIST:") then
+          cb()
+        else
+          cb(err)
+        end
+      end) -- 0755
+    elseif action.entry_type == "link" and action.link then
+      local flags = nil
+      local target = fs.posix_to_os_path(action.link)
+      ---@diagnostic disable-next-line: param-type-mismatch
+      uv.fs_symlink(target, path, flags, cb)
+    else
+      fs.touch(path, cb)
+    end
   elseif action.type == "delete" then
-    -- FIXME how are we going to specify a unique path with just the url? We could dedupe the url
-    -- like we are above, but then how to we recover the trash_info?
-    cb()
-  elseif action.type == "move" then
-    cb()
-  elseif action.type == "copy" then
-    cb()
+    local _, path = util.parse_url(action.url)
+    assert(path)
+    local fullpath = trash_dir .. path
+    fs.recursive_delete(action.entry_type, fullpath, cb)
+  elseif action.type == "move" or action.type == "copy" then
+    local src_adapter = assert(config.get_adapter_by_scheme(action.src_url))
+    local dest_adapter = assert(config.get_adapter_by_scheme(action.dest_url))
+    local _, src_path = util.parse_url(action.src_url)
+    local _, dest_path = util.parse_url(action.dest_url)
+    assert(src_path and dest_path)
+    if src_adapter.name == "files" then
+      dest_path = trash_dir .. dest_path
+    elseif dest_adapter.name == "files" then
+      src_path = trash_dir .. src_path
+    else
+      dest_path = trash_dir .. dest_path
+      src_path = trash_dir .. src_path
+    end
+
+    if action.type == "move" then
+      fs.recursive_move(action.entry_type, src_path, dest_path, cb)
+    else
+      fs.recursive_copy(action.entry_type, src_path, dest_path, cb)
+    end
   else
     cb(string.format("Bad action type: %s", action.type))
   end
 end
 
--- FIXME add keyboard shortcuts for this?
-
-M.restore_file = function()
-  -- FIXME
-end
-
 ---@param path string
 ---@param cb fun(err?: string)
 M.delete_to_trash = function(path, cb)
-  -- FIXME
+  local basename = vim.fs.basename(path)
+  local trash_dir = get_trash_dir()
+  local dest = fs.join(trash_dir, basename)
+  uv.fs_stat(path, function(stat_err, src_stat)
+    if stat_err then
+      return cb(stat_err)
+    end
+    assert(src_stat)
+    if uv.fs_stat(dest) then
+      local date_str = vim.fn.strftime(" %Y-%m-%dT%H:%M:%S")
+      local name_pieces = vim.split(basename, ".", { plain = true })
+      if #name_pieces > 1 then
+        table.insert(name_pieces, #name_pieces - 1, date_str)
+        basename = table.concat(name_pieces)
+      else
+        basename = basename .. date_str
+      end
+      dest = fs.join(trash_dir, basename)
+    end
+
+    local stat_type = src_stat.type
+    ---@cast stat_type oil.EntryType
+    fs.recursive_move(stat_type, path, dest, vim.schedule_wrap(cb))
+  end)
 end
 
 return M

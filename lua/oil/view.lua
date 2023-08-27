@@ -177,8 +177,8 @@ end
 ---Get a list of visible oil buffers and a list of hidden oil buffers
 ---@note
 --- If any buffers are modified, return values are nil
----@return nil|integer[]
----@return nil|integer[]
+---@return nil|integer[] visible
+---@return nil|integer[] hidden
 local function get_visible_hidden_buffers()
   local buffers = M.get_all_buffers()
   local hidden_buffers = {}
@@ -255,7 +255,7 @@ M.initialize = function(bufnr)
     nested = true,
     buffer = bufnr,
     callback = function()
-      -- First wait a short time (10ms) for the buffer change to settle
+      -- First wait a short time (100ms) for the buffer change to settle
       vim.defer_fn(function()
         local visible_buffers = get_visible_hidden_buffers()
         -- Only delete oil buffers if none of them are visible
@@ -271,7 +271,7 @@ M.initialize = function(bufnr)
             end
           end
         end
-      end, 10)
+      end, 100)
     end,
   })
   vim.api.nvim_create_autocmd("BufDelete", {
