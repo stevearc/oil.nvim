@@ -204,27 +204,30 @@ M.delete_to_trash = function(path, cb)
   local basename = vim.fs.basename(path)
   local trash_dir = get_trash_dir()
   local dest = fs.join(trash_dir, basename)
-  uv.fs_stat(path, function(stat_err, src_stat)
-    if stat_err then
-      return cb(stat_err)
-    end
-    assert(src_stat)
-    if uv.fs_stat(dest) then
-      local date_str = vim.fn.strftime(" %Y-%m-%dT%H:%M:%S")
-      local name_pieces = vim.split(basename, ".", { plain = true })
-      if #name_pieces > 1 then
-        table.insert(name_pieces, #name_pieces - 1, date_str)
-        basename = table.concat(name_pieces)
-      else
-        basename = basename .. date_str
+  uv.fs_stat(
+    path,
+    vim.schedule_wrap(function(stat_err, src_stat)
+      if stat_err then
+        return cb(stat_err)
       end
-      dest = fs.join(trash_dir, basename)
-    end
+      assert(src_stat)
+      if uv.fs_stat(dest) then
+        local date_str = vim.fn.strftime(" %Y-%m-%dT%H:%M:%S")
+        local name_pieces = vim.split(basename, ".", { plain = true })
+        if #name_pieces > 1 then
+          table.insert(name_pieces, #name_pieces - 1, date_str)
+          basename = table.concat(name_pieces)
+        else
+          basename = basename .. date_str
+        end
+        dest = fs.join(trash_dir, basename)
+      end
 
-    local stat_type = src_stat.type
-    ---@cast stat_type oil.EntryType
-    fs.recursive_move(stat_type, path, dest, vim.schedule_wrap(cb))
-  end)
+      local stat_type = src_stat.type
+      ---@cast stat_type oil.EntryType
+      fs.recursive_move(stat_type, path, dest, vim.schedule_wrap(cb))
+    end)
+  )
 end
 
 return M
