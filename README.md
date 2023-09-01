@@ -203,7 +203,7 @@ require("oil").setup({
     max_height = 0,
     border = "rounded",
     win_options = {
-      winblend = 10,
+      winblend = 0,
     },
     -- This is the config that will be passed to nvim_open_win.
     -- Change values here to customize the layout
