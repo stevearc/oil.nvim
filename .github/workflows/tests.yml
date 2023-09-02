@@ -1,6 +1,12 @@
 name: Tests
 
-on: [push, pull_request]
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
 
 jobs:
   luacheck:
@@ -17,7 +23,7 @@ jobs:
           sudo luarocks install luacheck
 
       - name: Run Luacheck
-        run: luacheck .
+        run: luacheck lua tests
 
   stylua:
     name: StyLua
@@ -29,7 +35,7 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           version: v0.15.2
-          args: --check .
+          args: --check lua tests
 
   typecheck:
     name: typecheck
@@ -62,6 +68,35 @@ jobs:
         run: |
           bash ./run_tests.sh
 
+  update_docs:
+    name: Update docs
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install Neovim and dependencies
+        run: |
+          bash ./.github/workflows/install_nvim.sh
+
+      - name: Update docs
+        run: |
+          python -m pip install pyparsing==3.0.9
+          make doc
+      - name: Commit changes
+        if: ${{ github.ref == 'refs/heads/master' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          COMMIT_MSG: |
+            [docgen] Update docs
+            skip-checks: true
+        run: |
+          git config user.email "actions@github"
+          git config user.name "Github Actions"
+          git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git
+          git add README.md doc
+          # Only commit and push if we have changes
+          git diff --quiet && git diff --staged --quiet || (git commit -m "${COMMIT_MSG}"; git push origin HEAD:${GITHUB_REF})
+
   release:
     name: release
 
@@ -71,6 +106,7 @@ jobs:
       - stylua
       - typecheck
       - run_tests
+      - update_docs
     runs-on: ubuntu-22.04
     steps:
       - uses: google-github-actions/release-please-action@v3

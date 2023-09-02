@@ -3,7 +3,7 @@ set -e
 PLUGINS="$HOME/.local/share/nvim/site/pack/plugins/start"
 mkdir -p "$PLUGINS"
 
-wget "https://github.com/neovim/neovim/releases/download/${NVIM_TAG}/nvim.appimage"
+wget "https://github.com/neovim/neovim/releases/download/${NVIM_TAG-stable}/nvim.appimage"
 chmod +x nvim.appimage
 ./nvim.appimage --appimage-extract >/dev/null
 rm -f nvim.appimage

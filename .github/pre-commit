@@ -1,5 +1,3 @@
 #!/bin/bash
 set -e
-luacheck lua tests
-
-stylua --check .
+make fastlint

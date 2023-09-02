@@ -1,3 +1,0 @@
-[submodule ".github/nvim_doc_tools"]
-	path = .github/nvim_doc_tools
-	url = https://github.com/stevearc/nvim_doc_tools
