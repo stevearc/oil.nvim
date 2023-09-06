@@ -1,7 +1,6 @@
 # oil.nvim
 
-A [vim-vinegar](https://github.com/tpope/vim-vinegar) like file explorer that
-lets you edit your filesystem like a normal Neovim buffer.
+A [vim-vinegar](https://github.com/tpope/vim-vinegar) like file explorer that lets you edit your filesystem like a normal Neovim buffer.
 
 https://user-images.githubusercontent.com/506791/209727111-6b4a11f4-634a-4efa-9461-80e9717cea94.mp4
 
@@ -20,8 +19,7 @@ https://user-images.githubusercontent.com/506791/209727111-6b4a11f4-634a-4efa-94
 ## Requirements
 
 - Neovim 0.8+
-- (optional) [nvim-web-devicons](https://github.com/nvim-tree/nvim-web-devicons)
-  for file icons
+- (optional) [nvim-web-devicons](https://github.com/nvim-tree/nvim-web-devicons) for file icons
 
 ## Installation
 
@@ -111,20 +109,15 @@ Add the following to your init.lua
 require("oil").setup()
 ```
 
-Then open a directory with `nvim .`. Use `<CR>` to open a file/directory, and
-`-` to go up a directory. Otherwise, just treat it like a normal buffer and make
-changes as you like. Remember to `:w` when you're done to actually perform the
-actions.
+Then open a directory with `nvim .`. Use `<CR>` to open a file/directory, and `-` to go up a directory. Otherwise, just treat it like a normal buffer and make changes as you like. Remember to `:w` when you're done to actually perform the actions.
 
-If you want to mimic the `vim-vinegar` method of navigating to the parent
-directory of a file, add this keymap:
+If you want to mimic the `vim-vinegar` method of navigating to the parent directory of a file, add this keymap:
 
 ```lua
 vim.keymap.set("n", "-", "<CMD>Oil<CR>", { desc = "Open parent directory" })
 ```
 
-You can open a directory with `:edit <path>` or `:Oil <path>`. To open oil in a
-floating window, do `:Oil --float <path>`.
+You can open a directory with `:edit <path>` or `:Oil <path>`. To open oil in a floating window, do `:Oil --float <path>`.
 
 ## Options
 
@@ -262,19 +255,13 @@ require("oil").setup({
 
 ## Adapters
 
-Oil does all of its filesystem interaction through an _adapter_ abstraction. In
-practice, this means that oil can be used to view and modify files in more
-places than just the local filesystem, so long as the destination has an adapter
-implementation.
+Oil does all of its filesystem interaction through an _adapter_ abstraction. In practice, this means that oil can be used to view and modify files in more places than just the local filesystem, so long as the destination has an adapter implementation.
 
-Note that file operations work _across adapters_. This means that you can use
-oil to copy files to/from a remote server using the ssh adapter just as easily
-as you can copy files from one directory to another on your local machine.
+Note that file operations work _across adapters_. This means that you can use oil to copy files to/from a remote server using the ssh adapter just as easily as you can copy files from one directory to another on your local machine.
 
 ### SSH
 
-This adapter allows you to browse files over ssh, much like netrw. To use it,
-simply open a buffer using the following name template:
+This adapter allows you to browse files over ssh, much like netrw. To use it, simply open a buffer using the following name template:
 
 ```
 nvim oil-ssh://[username@]hostname[:port]/[path]
@@ -282,9 +269,7 @@ nvim oil-ssh://[username@]hostname[:port]/[path]
 
 This may look familiar. In fact, this is the same url format that netrw uses.
 
-Note that at the moment the ssh adapter does not support Windows machines, and
-it requires the server to have a `/bin/sh` binary as well as standard unix
-commands (`rm`, `mv`, `mkdir`, `chmod`, `cp`, `touch`, `ln`, `echo`).
+Note that at the moment the ssh adapter does not support Windows machines, and it requires the server to have a `/bin/sh` binary as well as standard unix commands (`rm`, `mv`, `mkdir`, `chmod`, `cp`, `touch`, `ln`, `echo`).
 
 ## API
 
@@ -311,66 +296,41 @@ commands (`rm`, `mv`, `mkdir`, `chmod`, `cp`, `touch`, `ln`, `echo`).
 
 **Q: Why "oil"**?
 
-**A:** From the [vim-vinegar](https://github.com/tpope/vim-vinegar) README, a
-quote by Drew Neil:
+**A:** From the [vim-vinegar](https://github.com/tpope/vim-vinegar) README, a quote by Drew Neil:
 
 > Split windows and the project drawer go together like oil and vinegar
 
-Vinegar was taken. Let's be oil. Plus, I think it's pretty slick ;)
+Vinegar was taken. Let's be oil.
+Plus, I think it's pretty slick ;)
 
 **Q: Why would I want to use oil vs any other plugin?**
 
 **A:**
 
-- You like to use a netrw-like view to browse directories (as opposed to a file
-  tree)
+- You like to use a netrw-like view to browse directories (as opposed to a file tree)
 - AND you want to be able to edit your filesystem like a buffer
-- AND you want to perform cross-directory actions. AFAIK there is no other
-  plugin that does this. (update:
-  [mini.files](https://github.com/echasnovski/mini.nvim/blob/main/readmes/mini-files.md)
-  also offers this functionality)
+- AND you want to perform cross-directory actions. AFAIK there is no other plugin that does this. (update: [mini.files](https://github.com/echasnovski/mini.nvim/blob/main/readmes/mini-files.md) also offers this functionality)
 
-If you don't need those features specifically, check out the alternatives listed
-below
+If you don't need those features specifically, check out the alternatives listed below
 
-**Q: Why write another plugin yourself instead of adding functionality to one
-that already exists**?
+**Q: Why write another plugin yourself instead of adding functionality to one that already exists**?
 
 **A:** Because I am a _maniac control freak_.
 
 **Q: Can oil display files as a tree view**?
 
-**A:** No. A tree view would require a completely different methodology,
-necessitating a complete rewrite. I don't use tree views, so I will leave this
-as a plugin for someone else to write.
+**A:** No. A tree view would require a completely different methodology, necessitating a complete rewrite. I don't use tree views, so I will leave this as a plugin for someone else to write.
 
 **Q: What are some alternatives?**
 
 **A:**
 
-- [mini.files](https://github.com/echasnovski/mini.nvim/blob/main/readmes/mini-files.md):
-  A newer plugin that also supports cross-directory filesystem-as-buffer edits.
-  It utilizes a unique column view.
-- [vim-vinegar](https://github.com/tpope/vim-vinegar): The granddaddy. This made
-  me fall in love with single-directory file browsing. I stopped using it when I
-  encountered netrw bugs and performance issues.
-- [defx.nvim](https://github.com/Shougo/defx.nvim): What I switched to after
-  vim-vinegar. Much more flexible and performant, but requires python and the
-  API is a little hard to work with.
-- [dirbuf.nvim](https://github.com/elihunter173/dirbuf.nvim): The first plugin I
-  encountered that let you edit the filesystem like a buffer. Never used it
-  because it
-  [can't do cross-directory edits](https://github.com/elihunter173/dirbuf.nvim/issues/7).
-- [lir.nvim](https://github.com/tamago324/lir.nvim): What I used prior to
-  writing this plugin. Similar to vim-vinegar, but with better Neovim
-  integration (floating windows, lua API).
-- [vim-dirvish](https://github.com/justinmk/vim-dirvish): Never personally used,
-  but well-established, stable, simple directory browser.
-- [vidir](https://github.com/trapd00r/vidir): Never personally used, but might
-  be the first plugin to come up with the idea of editing a directory like a
-  buffer.
+- [mini.files](https://github.com/echasnovski/mini.nvim/blob/main/readmes/mini-files.md): A newer plugin that also supports cross-directory filesystem-as-buffer edits. It utilizes a unique column view.
+- [vim-vinegar](https://github.com/tpope/vim-vinegar): The granddaddy. This made me fall in love with single-directory file browsing. I stopped using it when I encountered netrw bugs and performance issues.
+- [defx.nvim](https://github.com/Shougo/defx.nvim): What I switched to after vim-vinegar. Much more flexible and performant, but requires python and the API is a little hard to work with.
+- [dirbuf.nvim](https://github.com/elihunter173/dirbuf.nvim): The first plugin I encountered that let you edit the filesystem like a buffer. Never used it because it [can't do cross-directory edits](https://github.com/elihunter173/dirbuf.nvim/issues/7).
+- [lir.nvim](https://github.com/tamago324/lir.nvim): What I used prior to writing this plugin. Similar to vim-vinegar, but with better Neovim integration (floating windows, lua API).
+- [vim-dirvish](https://github.com/justinmk/vim-dirvish): Never personally used, but well-established, stable, simple directory browser.
+- [vidir](https://github.com/trapd00r/vidir): Never personally used, but might be the first plugin to come up with the idea of editing a directory like a buffer.
 
-There's also file trees like
-[neo-tree](https://github.com/nvim-neo-tree/neo-tree.nvim) and
-[nvim-tree](https://github.com/nvim-tree/nvim-tree.lua), but they're really a
-different category entirely.
+There's also file trees like [neo-tree](https://github.com/nvim-neo-tree/neo-tree.nvim) and [nvim-tree](https://github.com/nvim-tree/nvim-tree.lua), but they're really a different category entirely.
