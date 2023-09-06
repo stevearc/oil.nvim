@@ -4,10 +4,21 @@ import re
 from dataclasses import dataclass, field
 from typing import List
 
-from nvim_doc_tools import (LuaParam, Vimdoc, VimdocSection, generate_md_toc,
-                            indent, leftright, parse_functions, read_nvim_json,
-                            read_section, render_md_api, render_vimdoc_api,
-                            replace_section, wrap)
+from nvim_doc_tools import (
+    LuaParam,
+    Vimdoc,
+    VimdocSection,
+    generate_md_toc,
+    indent,
+    leftright,
+    parse_functions,
+    read_nvim_json,
+    read_section,
+    render_md_api,
+    render_vimdoc_api,
+    replace_section,
+    wrap,
+)
 from nvim_doc_tools.vimdoc import format_vimdoc_params
 
 HERE = os.path.dirname(__file__)
@@ -217,8 +228,9 @@ of being permanently deleted. You can browse the trash for a directory using
 the `toggle_trash` action (bound to `g\\` by default). You can view all files
 in the trash with `:Oil --trash`.
 
-To restore files, simply delete them from the trash and put them in the desired destination, the same as any other file operation. If you delete files from
-the trash they will be permanently deleted (purged).
+To restore files, simply delete them from the trash and put them in the desired
+destination, the same as any other file operation. If you delete files from the
+trash they will be permanently deleted (purged).
 
 Linux:
     Oil supports the FreeDesktop trash specification.
@@ -226,7 +238,7 @@ Linux:
     All features should work.
 
 Mac:
-    Oil has limited support for MacOS due to the prioprietary nature of the
+    Oil has limited support for MacOS due to the proprietary nature of the
     implementation. The trash bin can only be viewed as single dir
     (instead of being able to see files that were trashed from a directory).
 

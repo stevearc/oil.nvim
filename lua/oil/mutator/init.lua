@@ -115,7 +115,7 @@ M.create_actions_from_diffs = function(all_diffs)
       else
         local by_id = diff_by_id[diff.id]
         by_id.has_delete = true
-        -- Don't insert the delete. We already know that there is a delete because of the presense
+        -- Don't insert the delete. We already know that there is a delete because of the presence
         -- in the diff_by_id map. The list will only include the 'new' diffs.
       end
     end
