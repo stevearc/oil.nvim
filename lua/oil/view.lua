@@ -394,6 +394,9 @@ local function render_buffer(bufnr, opts)
     local a_isdir = is_entry_directory(a)
     local b_isdir = is_entry_directory(b)
     if a_isdir ~= b_isdir then
+      if config.view_options.sort_by_files then
+        return b_isdir
+      end
       return a_isdir
     end
     return a[FIELD_NAME] < b[FIELD_NAME]
