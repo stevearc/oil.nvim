@@ -142,6 +142,12 @@ M.set_columns = function(cols)
   require("oil.view").set_columns(cols)
 end
 
+---Change the sort order for oil
+---@param sort string[][]
+M.set_sort = function(sort)
+  require("oil.view").set_sort(sort)
+end
+
 ---Change how oil determines if the file is hidden
 ---@param is_hidden_file fun(filename: string, bufnr: nil|integer): boolean Return true if the file/dir should be hidden
 M.set_is_hidden_file = function(is_hidden_file)

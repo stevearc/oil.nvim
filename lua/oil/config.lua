@@ -55,6 +55,7 @@ local default_config = {
     ["_"] = "actions.open_cwd",
     ["`"] = "actions.cd",
     ["~"] = "actions.tcd",
+    ["gs"] = "actions.change_sort",
     ["g."] = "actions.toggle_hidden",
   },
   -- Set to false to disable all of the above keymaps
@@ -70,6 +71,12 @@ local default_config = {
     is_always_hidden = function(name, bufnr)
       return false
     end,
+    sort = {
+      -- sort order can be "asc" or "desc"
+      -- see :help oil-columns to see which columns are sortable
+      { "type", "asc" },
+      { "name", "asc" },
+    },
   },
   -- Configuration for the floating window in oil.open_float
   float = {

@@ -12,7 +12,7 @@ CONTENTS                                                            *oil-content
 --------------------------------------------------------------------------------
 OPTIONS                                                              *oil-options*
 
->
+>lua
     require("oil").setup({
       -- Oil will take over directory buffers (e.g. `vim .` or `:e src/`)
       -- Set to false if you still want to use netrw.
@@ -70,6 +70,7 @@ OPTIONS                                                              *oil-option
         ["_"] = "actions.open_cwd",
         ["`"] = "actions.cd",
         ["~"] = "actions.tcd",
+        ["gs"] = "actions.change_sort",
         ["g."] = "actions.toggle_hidden",
       },
       -- Set to false to disable all of the above keymaps
@@ -85,6 +86,12 @@ OPTIONS                                                              *oil-option
         is_always_hidden = function(name, bufnr)
           return false
         end,
+        sort = {
+          -- sort order can be "asc" or "desc"
+          -- see :help oil-columns to see which columns are sortable
+          { "type", "asc" },
+          { "name", "asc" },
+        },
       },
       -- Configuration for the floating window in oil.open_float
       float = {
@@ -166,6 +173,12 @@ set_columns({cols})                                              *oil.set_column
     Parameters:
       {cols} `oil.ColumnSpec[]`
 
+set_sort({sort})                                                    *oil.set_sort*
+    Change the sort order for oil
+
+    Parameters:
+      {sort} `string[]` []
+
 set_is_hidden_file({is_hidden_file})                      *oil.set_is_hidden_file*
     Change how oil determines if the file is hidden
 
@@ -244,6 +257,7 @@ or as a table to pass parameters (e.g. `{"size", highlight = "Special"}`)
 
 type                                                                 *column-type*
     Adapters: *
+    Sortable: this column can be used in view_props.sort
     The type of the entry (file, directory, link, etc)
 
     Parameters:
@@ -266,6 +280,7 @@ icon                                                                 *column-ico
 
 size                                                                 *column-size*
     Adapters: files, ssh
+    Sortable: this column can be used in view_props.sort
     The size of the file
 
     Parameters:
@@ -283,6 +298,7 @@ permissions                                                   *column-permission
 
 ctime                                                               *column-ctime*
     Adapters: files
+    Sortable: this column can be used in view_props.sort
     Change timestamp of the file
 
     Parameters:
@@ -292,6 +308,7 @@ ctime                                                               *column-ctim
 
 mtime                                                               *column-mtime*
     Adapters: files
+    Sortable: this column can be used in view_props.sort
     Last modified time of the file
 
     Parameters:
@@ -301,6 +318,7 @@ mtime                                                               *column-mtim
 
 atime                                                               *column-atime*
     Adapters: files
+    Sortable: this column can be used in view_props.sort
     Last access time of the file
 
     Parameters:
@@ -310,6 +328,7 @@ atime                                                               *column-atim
 
 birthtime                                                       *column-birthtime*
     Adapters: files
+    Sortable: this column can be used in view_props.sort
     The time the file was created
 
     Parameters:
@@ -324,6 +343,9 @@ These are actions that can be used in the `keymaps` section of config options.
 
 cd                                                                    *actions.cd*
     :cd to the current oil directory
+
+change_sort                                                  *actions.change_sort*
+    Change the sort order
 
 close                                                              *actions.close*
     Close oil and restore original buffer

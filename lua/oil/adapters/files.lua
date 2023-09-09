@@ -13,22 +13,20 @@ local FIELD_NAME = constants.FIELD_NAME
 local FIELD_META = constants.FIELD_META
 
 local function read_link_data(path, cb)
-  uv.fs_readlink(
-    path,
-    vim.schedule_wrap(function(link_err, link)
-      if link_err then
-        cb(link_err)
-      else
-        local stat_path = link
-        if not fs.is_absolute(link) then
-          stat_path = fs.join(vim.fn.fnamemodify(path, ":h"), link)
-        end
-        uv.fs_stat(stat_path, function(stat_err, stat)
-          cb(nil, link, stat)
-        end)
+  uv.fs_readlink(path, function(link_err, link)
+    if link_err then
+      cb(link_err)
+    else
+      assert(link)
+      local stat_path = link
+      if not fs.is_absolute(link) then
+        stat_path = fs.join(vim.fn.fnamemodify(path, ":h"), link)
       end
-    end)
-  )
+      uv.fs_stat(stat_path, function(stat_err, stat)
+        cb(nil, link, stat)
+      end)
+    end
+  end)
 end
 
 ---@param path string
@@ -60,7 +58,7 @@ file_columns.size = {
     local meta = entry[FIELD_META]
     local stat = meta.stat
     if not stat then
-      return ""
+      return columns.EMPTY
     end
     if stat.size >= 1e9 then
       return string.format("%.1fG", stat.size / 1e9)
@@ -70,6 +68,16 @@ file_columns.size = {
       return string.format("%.1fk", stat.size / 1e3)
     else
       return string.format("%d", stat.size)
+    end
+  end,
+
+  get_sort_value = function(entry)
+    local meta = entry[FIELD_META]
+    local stat = meta.stat
+    if stat then
+      return stat.size
+    else
+      return 0
     end
   end,
 
@@ -87,7 +95,7 @@ if not fs.is_windows then
       local meta = entry[FIELD_META]
       local stat = meta.stat
       if not stat then
-        return ""
+        return columns.EMPTY
       end
       return permissions.mode_to_str(stat.mode)
     end,
@@ -145,6 +153,9 @@ for _, time_key in ipairs({ "ctime", "mtime", "atime", "birthtime" }) do
     render = function(entry, conf)
       local meta = entry[FIELD_META]
       local stat = meta.stat
+      if not stat then
+        return columns.EMPTY
+      end
       local fmt = conf and conf.format
       local ret
       if fmt then
@@ -169,6 +180,16 @@ for _, time_key in ipairs({ "ctime", "mtime", "atime", "birthtime" }) do
         pattern = "%S+%s+%d+%s+%d%d:?%d%d"
       end
       return line:match("^(" .. pattern .. ")%s+(.+)$")
+    end,
+
+    get_sort_value = function(entry)
+      local meta = entry[FIELD_META]
+      local stat = meta.stat
+      if stat then
+        return stat[time_key].sec
+      else
+        return 0
+      end
     end,
   }
 end

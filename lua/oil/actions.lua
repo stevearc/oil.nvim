@@ -237,6 +237,32 @@ M.open_cmdline_dir = {
   end,
 }
 
+M.change_sort = {
+  desc = "Change the sort order",
+  callback = function()
+    local sort_cols = { "name", "size", "atime", "mtime", "ctime", "birthtime" }
+    vim.ui.select(sort_cols, { prompt = "Sort by", kind = "oil_sort_col" }, function(col)
+      if not col then
+        return
+      end
+      vim.ui.select(
+        { "ascending", "descending" },
+        { prompt = "Sort order", kind = "oil_sort_order" },
+        function(order)
+          if not order then
+            return
+          end
+          order = order == "ascending" and "asc" or "desc"
+          oil.set_sort({
+            { "type", "asc" },
+            { col, order },
+          })
+        end
+      )
+    end)
+  end,
+}
+
 ---List actions for documentation generation
 ---@private
 M._get_actions = function()

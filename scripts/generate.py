@@ -88,6 +88,7 @@ class ColumnDef:
     name: str
     adapters: str
     editable: bool
+    sortable: bool
     summary: str
     params: List["LuaParam"] = field(default_factory=list)
 
@@ -107,6 +108,7 @@ COL_DEFS = [
         "type",
         "*",
         False,
+        True,
         "The type of the entry (file, directory, link, etc)",
         HL
         + [LuaParam("icons", "table<string, string>", "Mapping of entry type to icon")],
@@ -114,6 +116,7 @@ COL_DEFS = [
     ColumnDef(
         "icon",
         "*",
+        False,
         False,
         "An icon for the entry's type (requires nvim-web-devicons)",
         HL
@@ -123,17 +126,17 @@ COL_DEFS = [
             LuaParam("add_padding", "boolean", "Set to false to remove the extra whitespace after the icon"),
         ],
     ),
-    ColumnDef("size", "files, ssh", False, "The size of the file", HL + []),
+    ColumnDef("size", "files, ssh", False, True, "The size of the file", HL + []),
     ColumnDef(
-        "permissions", "files, ssh", True, "Access permissions of the file", HL + []
+        "permissions", "files, ssh", True, False, "Access permissions of the file", HL + []
     ),
-    ColumnDef("ctime", "files", False, "Change timestamp of the file", HL + TIME + []),
+    ColumnDef("ctime", "files", False, True, "Change timestamp of the file", HL + TIME + []),
     ColumnDef(
-        "mtime", "files", False, "Last modified time of the file", HL + TIME + []
+        "mtime", "files", False, True, "Last modified time of the file", HL + TIME + []
     ),
-    ColumnDef("atime", "files", False, "Last access time of the file", HL + TIME + []),
+    ColumnDef("atime", "files", False, True, "Last access time of the file", HL + TIME + []),
     ColumnDef(
-        "birthtime", "files", False, "The time the file was created", HL + TIME + []
+        "birthtime", "files", False, True, "The time the file was created", HL + TIME + []
     ),
 ]
 
@@ -142,7 +145,7 @@ def get_options_vimdoc() -> "VimdocSection":
     section = VimdocSection("options", "oil-options")
     config_file = os.path.join(ROOT, "lua", "oil", "config.lua")
     opt_lines = read_section(config_file, r"^local default_config =", r"^}$")
-    lines = ["\n", ">\n", '    require("oil").setup({\n']
+    lines = ["\n", ">lua\n", '    require("oil").setup({\n']
     lines.extend(indent(opt_lines, 4))
     lines.extend(["    })\n", "<\n"])
     section.body = lines
@@ -193,6 +196,10 @@ def get_columns_vimdoc() -> "VimdocSection":
     for col in COL_DEFS:
         section.body.append(leftright(col.name, f"*column-{col.name}*"))
         section.body.extend(wrap(f"Adapters: {col.adapters}", 4))
+        if col.sortable:
+            section.body.extend(
+                wrap(f"Sortable: this column can be used in view_props.sort", 4)
+            )
         if col.editable:
             section.body.extend(wrap(f"Editable: this column is read/write", 4))
         section.body.extend(wrap(col.summary, 4))

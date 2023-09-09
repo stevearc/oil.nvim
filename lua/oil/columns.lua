@@ -15,10 +15,11 @@ local all_columns = {}
 ---@class (exact) oil.ColumnDefinition
 ---@field render fun(entry: oil.InternalEntry, conf: nil|table): nil|oil.TextChunk
 ---@field parse fun(line: string, conf: nil|table): nil|string, nil|string
----@field meta_fields nil|table<string, fun(parent_url: string, entry: oil.InternalEntry, cb: fun(err: nil|string))>
+---@field meta_fields? table<string, fun(parent_url: string, entry: oil.InternalEntry, cb: fun(err: nil|string))>
 ---@field compare? fun(entry: oil.InternalEntry, parsed_value: any): boolean
 ---@field render_action? fun(action: oil.ChangeAction): string
 ---@field perform_action? fun(action: oil.ChangeAction, callback: fun(err: nil|string))
+---@field get_sort_value? fun(entry: oil.InternalEntry): number|string
 
 ---@param name string
 ---@param column oil.ColumnDefinition
@@ -29,7 +30,7 @@ end
 ---@param adapter oil.Adapter
 ---@param defn oil.ColumnSpec
 ---@return nil|oil.ColumnDefinition
-local function get_column(adapter, defn)
+M.get_column = function(adapter, defn)
   local name = util.split_config(defn)
   return all_columns[name] or adapter.get_column(name)
 end
@@ -46,7 +47,7 @@ M.get_supported_columns = function(adapter_or_scheme)
   assert(adapter)
   local ret = {}
   for _, def in ipairs(config.columns) do
-    if get_column(adapter, def) then
+    if M.get_column(adapter, def) then
       table.insert(ret, def)
     end
   end
@@ -61,7 +62,7 @@ M.get_metadata_fetcher = function(adapter, column_defs)
   local num_keys = 0
   for _, def in ipairs(column_defs) do
     local name = util.split_config(def)
-    local column = get_column(adapter, name)
+    local column = M.get_column(adapter, name)
     if column and column.meta_fields then
       for k, v in pairs(column.meta_fields) do
         if not keyfetches[k] then
@@ -95,13 +96,15 @@ end
 
 local EMPTY = { "-", "Comment" }
 
+M.EMPTY = EMPTY
+
 ---@param adapter oil.Adapter
 ---@param col_def oil.ColumnSpec
 ---@param entry oil.InternalEntry
 ---@return oil.TextChunk
 M.render_col = function(adapter, col_def, entry)
   local name, conf = util.split_config(col_def)
-  local column = get_column(adapter, name)
+  local column = M.get_column(adapter, name)
   if not column then
     -- This shouldn't be possible because supports_col should return false
     return EMPTY
@@ -150,7 +153,7 @@ M.parse_col = function(adapter, line, col_def)
   if vim.startswith(line, "- ") then
     return nil, line:sub(3)
   end
-  local column = get_column(adapter, name)
+  local column = M.get_column(adapter, name)
   if column then
     return column.parse(line, conf)
   end
@@ -162,7 +165,7 @@ end
 ---@param parsed_value any
 ---@return boolean
 M.compare = function(adapter, col_name, entry, parsed_value)
-  local column = get_column(adapter, col_name)
+  local column = M.get_column(adapter, col_name)
   if column and column.compare then
     return column.compare(entry, parsed_value)
   else
@@ -174,7 +177,7 @@ end
 ---@param action oil.ChangeAction
 ---@return string
 M.render_change_action = function(adapter, action)
-  local column = get_column(adapter, action.column)
+  local column = M.get_column(adapter, action.column)
   if not column then
     error(string.format("Received change action for nonexistant column %s", action.column))
   end
@@ -189,7 +192,7 @@ end
 ---@param action oil.ChangeAction
 ---@param callback fun(err: nil|string)
 M.perform_change_action = function(adapter, action, callback)
-  local column = get_column(adapter, action.column)
+  local column = M.get_column(adapter, action.column)
   if not column then
     return callback(
       string.format("Received change action for nonexistant column %s", action.column)
@@ -236,6 +239,19 @@ local default_type_icons = {
   directory = "dir",
   socket = "sock",
 }
+---@param entry oil.InternalEntry
+---@return boolean
+local function is_entry_directory(entry)
+  local type = entry[FIELD_TYPE]
+  if type == "directory" then
+    return true
+  elseif type == "link" then
+    local meta = entry[FIELD_META]
+    return meta and meta.link_stat and meta.link_stat.type == "directory"
+  else
+    return false
+  end
+end
 M.register("type", {
   render = function(entry, conf)
     local entry_type = entry[FIELD_TYPE]
@@ -248,6 +264,28 @@ M.register("type", {
 
   parse = function(line, conf)
     return line:match("^(%S+)%s+(.*)$")
+  end,
+
+  get_sort_value = function(entry)
+    if is_entry_directory(entry) then
+      return 1
+    else
+      return 2
+    end
+  end,
+})
+
+M.register("name", {
+  render = function(entry, conf)
+    error("Do not use the name column. It is for sorting only")
+  end,
+
+  parse = function(line, conf)
+    error("Do not use the name column. It is for sorting only")
+  end,
+
+  get_sort_value = function(entry)
+    return entry[FIELD_NAME]
   end,
 })
 

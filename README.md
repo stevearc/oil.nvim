@@ -179,6 +179,7 @@ require("oil").setup({
     ["_"] = "actions.open_cwd",
     ["`"] = "actions.cd",
     ["~"] = "actions.tcd",
+    ["gs"] = "actions.change_sort",
     ["g."] = "actions.toggle_hidden",
   },
   -- Set to false to disable all of the above keymaps
@@ -194,6 +195,12 @@ require("oil").setup({
     is_always_hidden = function(name, bufnr)
       return false
     end,
+    sort = {
+      -- sort order can be "asc" or "desc"
+      -- see :help oil-columns to see which columns are sortable
+      { "type", "asc" },
+      { "name", "asc" },
+    },
   },
   -- Configuration for the floating window in oil.open_float
   float = {
@@ -277,6 +284,7 @@ Note that at the moment the ssh adapter does not support Windows machines, and i
 - [get_cursor_entry()](doc/api.md#get_cursor_entry)
 - [discard_all_changes()](doc/api.md#discard_all_changes)
 - [set_columns(cols)](doc/api.md#set_columnscols)
+- [set_sort(sort)](doc/api.md#set_sortsort)
 - [set_is_hidden_file(is_hidden_file)](doc/api.md#set_is_hidden_fileis_hidden_file)
 - [toggle_hidden()](doc/api.md#toggle_hidden)
 - [get_current_dir()](doc/api.md#get_current_dir)

@@ -6,6 +6,7 @@
 - [get_cursor_entry()](#get_cursor_entry)
 - [discard_all_changes()](#discard_all_changes)
 - [set_columns(cols)](#set_columnscols)
+- [set_sort(sort)](#set_sortsort)
 - [set_is_hidden_file(is_hidden_file)](#set_is_hidden_fileis_hidden_file)
 - [toggle_hidden()](#toggle_hidden)
 - [get_current_dir()](#get_current_dir)
@@ -51,6 +52,15 @@ Change the display columns for oil
 | Param | Type               | Desc |
 | ----- | ------------------ | ---- |
 | cols  | `oil.ColumnSpec[]` |      |
+
+## set_sort(sort)
+
+`set_sort(sort)` \
+Change the sort order for oil
+
+| Param | Type       | Desc |
+| ----- | ---------- | ---- |
+| sort  | `string[]` | []   |
 
 ## set_is_hidden_file(is_hidden_file)
 

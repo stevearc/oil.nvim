@@ -157,6 +157,15 @@ ssh_columns.size = {
   parse = function(line, conf)
     return line:match("^(%d+%S*)%s+(.*)$")
   end,
+
+  get_sort_value = function(entry)
+    local meta = entry[FIELD_META]
+    if meta.size then
+      return meta.size
+    else
+      return 0
+    end
+  end,
 }
 
 ---@param name string
