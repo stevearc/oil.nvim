@@ -230,6 +230,22 @@ M.delete_hidden_buffers = function()
   cache.clear_everything()
 end
 
+---@param adapter oil.Adapter
+---@param ranges table<string, integer[]>
+---@return integer
+local function get_first_mutable_column_col(adapter, ranges)
+  local min_col = ranges.name[1]
+  for col_name, start_len in pairs(ranges) do
+    local start = start_len[1]
+    local col_spec = columns.get_column(adapter, col_name)
+    local is_col_mutable = col_spec and col_spec.perform_action ~= nil
+    if is_col_mutable and start < min_col then
+      min_col = start
+    end
+  end
+  return min_col
+end
+
 ---@param bufnr integer
 M.initialize = function(bufnr)
   if bufnr == 0 then
@@ -308,8 +324,8 @@ M.initialize = function(bufnr)
         local line = vim.api.nvim_buf_get_lines(bufnr, cur[1] - 1, cur[1], true)[1]
         local column_defs = columns.get_supported_columns(adapter)
         local result = parser.parse_line(adapter, line, column_defs)
-        if result and result.data then
-          local min_col = result.ranges.id[2] + 1
+        if result and result.ranges then
+          local min_col = get_first_mutable_column_col(adapter, result.ranges)
           if cur[2] < min_col then
             vim.api.nvim_win_set_cursor(0, { cur[1], min_col })
           end
