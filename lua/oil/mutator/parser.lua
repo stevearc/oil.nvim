@@ -207,6 +207,12 @@ M.parse = function(bufnr)
             entry_type = "link",
             link = parsed_entry.link_target,
           })
+        elseif entry[FIELD_TYPE] ~= parsed_entry._type then
+          table.insert(diffs, {
+            type = "new",
+            name = parsed_entry.name,
+            entry_type = parsed_entry._type,
+          })
         else
           original_entries[parsed_entry.name] = nil
         end

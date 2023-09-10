@@ -200,6 +200,20 @@ a.describe("mutator", function()
       }, diffs)
     end)
 
+    it("detects a new trailing slash as a delete + create", function()
+      local file = test_adapter.test_set("/foo", "file")
+      vim.cmd.edit({ args = { "oil-test:///" } })
+      local bufnr = vim.api.nvim_get_current_buf()
+      set_lines(bufnr, {
+        string.format("/%d foo/", file[FIELD_ID]),
+      })
+      local diffs = parser.parse(bufnr)
+      assert.are.same({
+        { type = "new", name = "foo", entry_type = "directory" },
+        { type = "delete", id = file[FIELD_ID], name = "foo" },
+      }, diffs)
+    end)
+
     it("detects renamed files that conflict", function()
       local afile = test_adapter.test_set("/foo/a.txt", "file")
       local bfile = test_adapter.test_set("/foo/b.txt", "file")
