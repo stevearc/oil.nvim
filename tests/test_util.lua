@@ -1,5 +1,6 @@
 require("plenary.async").tests.add_to_env()
 local cache = require("oil.cache")
+local test_adapter = require("oil.adapters.test")
 local M = {}
 
 M.reset_editor = function()
@@ -21,6 +22,7 @@ M.reset_editor = function()
     vim.api.nvim_buf_delete(bufnr, { force = true })
   end
   cache.clear_everything()
+  test_adapter.test_clear()
 end
 
 M.wait_for_autocmd = a.wrap(function(autocmd, cb)
