@@ -1,5 +1,19 @@
 # Changelog
 
+## [2.1.0](https://github.com/stevearc/oil.nvim/compare/v2.0.1...v2.1.0) (2023-09-11)
+
+
+### Features
+
+* api to sort directory contents ([#169](https://github.com/stevearc/oil.nvim/issues/169)) ([879d280](https://github.com/stevearc/oil.nvim/commit/879d280617045d5a00d7a053e86d51c6c80970be))
+
+
+### Bug Fixes
+
+* allow converting a file to directory and vice-versa ([#117](https://github.com/stevearc/oil.nvim/issues/117)) ([926ae06](https://github.com/stevearc/oil.nvim/commit/926ae067eb9a79817a455d5ab2dc6f420beb53c0))
+* change default winblend for floating window to 0 ([#167](https://github.com/stevearc/oil.nvim/issues/167)) ([7033d52](https://github.com/stevearc/oil.nvim/commit/7033d52db012666b85504fe9a678939e49bc14b7))
+* lock cursor to first mutable column ([d4eb4f3](https://github.com/stevearc/oil.nvim/commit/d4eb4f3bbf7770d04070707c947655a5426d7f75))
+
 ## [2.0.1](https://github.com/stevearc/oil.nvim/compare/v2.0.0...v2.0.1) (2023-08-26)
 
 
