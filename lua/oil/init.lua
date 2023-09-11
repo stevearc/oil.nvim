@@ -858,13 +858,17 @@ M.setup = function(opts)
     end
     local float = false
     local trash = false
-    for i, v in ipairs(args.fargs) do
+    local i = 1
+    while i <= #args.fargs do
+      local v = args.fargs[i]
       if v == "--float" then
         float = true
         table.remove(args.fargs, i)
       elseif v == "--trash" then
         trash = true
         table.remove(args.fargs, i)
+      else
+        i = i + 1
       end
     end
 
