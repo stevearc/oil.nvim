@@ -417,7 +417,7 @@ toggle_trash                                                *actions.toggle_tras
 HIGHLIGHTS                                                        *oil-highlights*
 
 OilDir                                                                 *hl-OilDir*
-    Directories in an oil buffer
+    Directory names in an oil buffer
 
 OilDirIcon                                                         *hl-OilDirIcon*
     Icon for directories
@@ -450,13 +450,14 @@ OilChange                                                           *hl-OilChang
     Change action in the oil preview window
 
 OilRestore                                                         *hl-OilRestore*
-    Restore a file from trash
+    Restore (from the trash) action in the oil preview window
 
 OilPurge                                                             *hl-OilPurge*
-    Permanently delete a file from trash
+    Purge (Permanently delete a file from trash) action in the oil preview
+    window
 
 OilTrash                                                             *hl-OilTrash*
-    Delete a file to the trash
+    Trash (delete a file to trash) action in the oil preview window
 
 OilTrashSourcePath                                         *hl-OilTrashSourcePath*
     Virtual text that shows the original path of file in the trash
@@ -482,11 +483,11 @@ Linux:
 
 Mac:
     Oil has limited support for MacOS due to the proprietary nature of the
-    implementation. The trash bin can only be viewed as single dir
+    implementation. The trash bin can only be viewed as a single dir
     (instead of being able to see files that were trashed from a directory).
 
 Windows:
-    Oil does not yet support the Windows trash.
+    Oil does not yet support the Windows trash. PRs are welcome!
 
 ================================================================================
 vim:tw=80:ts=2:ft=help:norl:syntax=help:

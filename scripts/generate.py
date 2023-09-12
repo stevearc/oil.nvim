@@ -136,15 +136,29 @@ COL_DEFS = [
     ),
     ColumnDef("size", "files, ssh", False, True, "The size of the file", HL + []),
     ColumnDef(
-        "permissions", "files, ssh", True, False, "Access permissions of the file", HL + []
+        "permissions",
+        "files, ssh",
+        True,
+        False,
+        "Access permissions of the file",
+        HL + [],
     ),
-    ColumnDef("ctime", "files", False, True, "Change timestamp of the file", HL + TIME + []),
+    ColumnDef(
+        "ctime", "files", False, True, "Change timestamp of the file", HL + TIME + []
+    ),
     ColumnDef(
         "mtime", "files", False, True, "Last modified time of the file", HL + TIME + []
     ),
-    ColumnDef("atime", "files", False, True, "Last access time of the file", HL + TIME + []),
     ColumnDef(
-        "birthtime", "files", False, True, "The time the file was created", HL + TIME + []
+        "atime", "files", False, True, "Last access time of the file", HL + TIME + []
+    ),
+    ColumnDef(
+        "birthtime",
+        "files",
+        False,
+        True,
+        "The time the file was created",
+        HL + TIME + [],
     ),
 ]
 
@@ -239,11 +253,11 @@ Linux:
 
 Mac:
     Oil has limited support for MacOS due to the proprietary nature of the
-    implementation. The trash bin can only be viewed as single dir
+    implementation. The trash bin can only be viewed as a single dir
     (instead of being able to see files that were trashed from a directory).
 
 Windows:
-    Oil does not yet support the Windows trash.
+    Oil does not yet support the Windows trash. PRs are welcome!
 """
     )
     return section

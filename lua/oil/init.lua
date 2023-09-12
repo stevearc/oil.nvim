@@ -645,7 +645,7 @@ M._get_highlights = function()
     {
       name = "OilDir",
       link = "Directory",
-      desc = "Directories in an oil buffer",
+      desc = "Directory names in an oil buffer",
     },
     {
       name = "OilDirIcon",
@@ -700,17 +700,17 @@ M._get_highlights = function()
     {
       name = "OilRestore",
       link = "OilCreate",
-      desc = "Restore a file from trash",
+      desc = "Restore (from the trash) action in the oil preview window",
     },
     {
       name = "OilPurge",
       link = "OilDelete",
-      desc = "Permanently delete a file from trash",
+      desc = "Purge (Permanently delete a file from trash) action in the oil preview window",
     },
     {
       name = "OilTrash",
       link = "OilDelete",
-      desc = "Delete a file to the trash",
+      desc = "Trash (delete a file to trash) action in the oil preview window",
     },
     {
       name = "OilTrashSourcePath",

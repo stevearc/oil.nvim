@@ -1,7 +1,6 @@
 -- Based on the FreeDesktop.org trash specification
 -- https://specifications.freedesktop.org/trash-spec/trashspec-1.0.html
--- TODO
--- * make sure that the subdirs for trash use the same entry as the root
+-- TODO make sure that the subdirs for trash use the same entry as the root
 local cache = require("oil.cache")
 local config = require("oil.config")
 local constants = require("oil.constants")
