@@ -26,12 +26,10 @@ local default_config = {
     conceallevel = 3,
     concealcursor = "nvic",
   },
-  -- Restore window options to previous values when leaving an oil buffer
-  restore_win_options = true,
+  -- Send deleted files to the trash instead of permanently deleting them (:help oil-trash)
+  delete_to_trash = false,
   -- Skip the confirmation popup for simple operations
   skip_confirm_for_simple_edits = false,
-  -- Deleted files will be removed with the trash_command (below).
-  delete_to_trash = false,
   -- Change this to customize the command used when deleting to trash
   trash_command = "trash-put",
   -- Selecting a new/moved/renamed file or directory will prompt you to save changes first

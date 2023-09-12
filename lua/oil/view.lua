@@ -171,25 +171,7 @@ end
 M.set_win_options = function()
   local winid = vim.api.nvim_get_current_win()
   for k, v in pairs(config.win_options) do
-    if config.restore_win_options then
-      local varname = "_oil_" .. k
-      if not pcall(vim.api.nvim_win_get_var, winid, varname) then
-        local prev_value = vim.wo[k]
-        vim.api.nvim_win_set_var(winid, varname, prev_value)
-      end
-    end
     vim.api.nvim_set_option_value(k, v, { scope = "local", win = winid })
-  end
-end
-
-M.restore_win_options = function()
-  local winid = vim.api.nvim_get_current_win()
-  for k in pairs(config.win_options) do
-    local varname = "_oil_" .. k
-    local has_opt, opt = pcall(vim.api.nvim_win_get_var, winid, varname)
-    if has_opt then
-      vim.api.nvim_set_option_value(k, opt, { scope = "local", win = winid })
-    end
   end
 end
 

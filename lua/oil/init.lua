@@ -719,7 +719,6 @@ M.save = function(opts)
 end
 
 local function restore_alt_buf()
-  local config = require("oil.config")
   if vim.bo.filetype == "oil" then
     require("oil.view").set_win_options()
     vim.api.nvim_win_set_var(0, "oil_did_enter", true)
@@ -741,10 +740,6 @@ local function restore_alt_buf()
           vim.fn.setreg("#", alt_buffer)
         end
       end
-    end
-
-    if config.restore_win_options then
-      require("oil.view").restore_win_options()
     end
   end
 end
