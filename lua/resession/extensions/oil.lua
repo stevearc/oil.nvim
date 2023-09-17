@@ -1,11 +1,5 @@
 local M = {}
 
-M.on_save = function()
-  return {}
-end
-
-M.on_load = function(data) end
-
 M.is_win_supported = function(winid, bufnr)
   return vim.bo[bufnr].filetype == "oil"
 end
