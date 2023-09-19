@@ -13,7 +13,7 @@ describe("url", function()
     }
     for _, case in ipairs(cases) do
       local input, expected, expected_basename = unpack(case)
-      local output, basename = oil.get_buffer_parent_url(input)
+      local output, basename = oil.get_buffer_parent_url(input, true)
       assert.equals(expected, output, string.format('Parent url for path "%s" failed', input))
       assert.equals(
         expected_basename,

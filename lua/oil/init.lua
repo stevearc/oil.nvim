@@ -151,9 +151,13 @@ end
 ---Get the oil url for a given directory
 ---@private
 ---@param dir nil|string When nil, use the cwd
----@return nil|string The parent url
+---@param use_oil_parent nil|boolean If in an oil buffer, return the parent (default true)
+---@return string The parent url
 ---@return nil|string The basename (if present) of the file/dir we were just in
-M.get_url_for_path = function(dir)
+M.get_url_for_path = function(dir, use_oil_parent)
+  if use_oil_parent == nil then
+    use_oil_parent = true
+  end
   local config = require("oil.config")
   local fs = require("oil.fs")
   local util = require("oil.util")
@@ -170,15 +174,16 @@ M.get_url_for_path = function(dir)
     return config.adapter_to_scheme.files .. path
   else
     local bufname = vim.api.nvim_buf_get_name(0)
-    return M.get_buffer_parent_url(bufname)
+    return M.get_buffer_parent_url(bufname, use_oil_parent)
   end
 end
 
 ---@private
 ---@param bufname string
+---@param use_oil_parent boolean If in an oil buffer, return the parent
 ---@return string
 ---@return nil|string
-M.get_buffer_parent_url = function(bufname)
+M.get_buffer_parent_url = function(bufname, use_oil_parent)
   local config = require("oil.config")
   local fs = require("oil.fs")
   local pathutil = require("oil.pathutil")
@@ -203,6 +208,9 @@ M.get_buffer_parent_url = function(bufname)
       return config.adapter_to_scheme.files .. util.addslash(path)
     end
 
+    if not use_oil_parent then
+      return bufname
+    end
     local adapter = config.get_adapter_by_scheme(scheme)
     local parent_url
     if adapter and adapter.get_parent then
@@ -853,6 +861,7 @@ M.setup = function(opts)
   config.setup(opts)
   set_colors()
   vim.api.nvim_create_user_command("Oil", function(args)
+    local util = require("oil.util")
     if args.smods.tab == 1 then
       vim.cmd.tabnew()
     end
@@ -883,7 +892,9 @@ M.setup = function(opts)
     local method = float and "open_float" or "open"
     local path = args.fargs[1]
     if trash then
-      path = "oil-trash:///"
+      local url = M.get_url_for_path(path, false)
+      local _, new_path = util.parse_url(url)
+      path = "oil-trash://" .. new_path
     end
     M[method](path)
   end, { desc = "Open oil file browser on a directory", nargs = "*", complete = "dir" })

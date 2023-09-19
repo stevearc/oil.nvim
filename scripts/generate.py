@@ -240,7 +240,7 @@ Oil has built-in support for using the system trash. When
 `delete_to_trash = true`, any deleted files will be sent to the trash instead
 of being permanently deleted. You can browse the trash for a directory using
 the `toggle_trash` action (bound to `g\\` by default). You can view all files
-in the trash with `:Oil --trash`.
+in the trash with `:Oil --trash /`.
 
 To restore files, simply delete them from the trash and put them in the desired
 destination, the same as any other file operation. If you delete files from the
