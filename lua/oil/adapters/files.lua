@@ -233,6 +233,25 @@ M.normalize_url = function(url, callback)
 end
 
 ---@param url string
+---@param entry oil.Entry
+---@param cb fun(path: nil|string)
+M.get_entry_path = function(url, entry, cb)
+  if entry.id then
+    local parent_url = cache.get_parent_url(entry.id)
+    local scheme, path = util.parse_url(parent_url)
+    M.normalize_url(scheme .. path .. entry.name, cb)
+  else
+    if entry.type == "directory" then
+      cb(url)
+    else
+      local _, path = util.parse_url(url)
+      local os_path = vim.fn.fnamemodify(fs.posix_to_os_path(assert(path)), ":p")
+      cb(os_path)
+    end
+  end
+end
+
+---@param url string
 ---@param column_defs string[]
 ---@param cb fun(err?: string, entries?: oil.InternalEntry[], fetch_more?: fun())
 M.list = function(url, column_defs, cb)

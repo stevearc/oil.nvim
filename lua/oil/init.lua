@@ -15,6 +15,7 @@ local M = {}
 ---@field is_modifiable fun(bufnr: integer): boolean Return true if this directory is modifiable (allows for directories with read-only permissions).
 ---@field get_column fun(name: string): nil|oil.ColumnDefinition If the adapter has any adapter-specific columns, return them when fetched by name.
 ---@field normalize_url fun(url: string, callback: fun(url: string)) Before oil opens a url it will be normalized. This allows for link following, path normalizing, and converting an oil file url to the actual path of a file.
+---@field get_entry_path? fun(url: string, entry: oil.Entry, callback: fun(path: nil|string)) Similar to normalize_url, but used when selecting an entry
 ---@field render_action? fun(action: oil.Action): string Render a mutation action for display in the preview window. Only needed if adapter is modifiable.
 ---@field perform_action? fun(action: oil.Action, cb: fun(err: nil|string)) Perform a mutation action. Only needed if adapter is modifiable.
 ---@field read_file? fun(bufnr: integer) Used for adapters that deal with remote/virtual files. Read the contents of the file into a buffer.
@@ -456,6 +457,7 @@ M.select = function(opts, callback)
   local mode = vim.api.nvim_get_mode().mode
   local is_visual = mode:match("^[vV]")
 
+  ---@type oil.Entry[]
   local entries = {}
   if is_visual then
     -- This is the best way to get the visual selection at the moment
@@ -546,9 +548,20 @@ M.select = function(opts, callback)
       end
     end
 
+    local get_edit_path
+    if adapter.get_entry_path then
+      get_edit_path = function(edit_cb)
+        adapter.get_entry_path(url, entry, edit_cb)
+      end
+    else
+      get_edit_path = function(edit_cb)
+        adapter.normalize_url(url, edit_cb)
+      end
+    end
+
     -- Normalize the url before opening to prevent needing to rename them inside the BufReadCmd
     -- Renaming buffers during opening can lead to missed autocmds
-    adapter.normalize_url(url, function(normalized_url)
+    get_edit_path(function(normalized_url)
       local mods = {
         vertical = opts.vertical,
         horizontal = opts.horizontal,
