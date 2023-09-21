@@ -105,7 +105,7 @@ function SSHFS:realpath(path, callback)
     if vim.endswith(abspath, ".") then
       abspath = abspath:sub(1, #abspath - 1)
     end
-    self.conn:run(string.format("ls -fld '%s'", abspath), function(ls_err, ls_lines)
+    self.conn:run(string.format("ls -ald --color=never '%s'", abspath), function(ls_err, ls_lines)
       local type
       if ls_err then
         -- If the file doesn't exist, treat it like a not-yet-existing directory
@@ -133,7 +133,7 @@ function SSHFS:list_dir(url, path, callback)
   if path ~= "" then
     path_postfix = string.format(" '%s'", path)
   end
-  self.conn:run("LANG=C ls -fl" .. path_postfix, function(err, lines)
+  self.conn:run("LANG=C ls -al --color=never" .. path_postfix, function(err, lines)
     if err then
       if err:match("No such file or directory%s*$") then
         -- If the directory doesn't exist, treat the list as a success. We will be able to traverse
@@ -166,7 +166,7 @@ function SSHFS:list_dir(url, path, callback)
     if any_links then
       -- If there were any soft links, then we need to run another ls command with -L so that we can
       -- resolve the type of the link target
-      self.conn:run("ls -fLl" .. path_postfix, function(link_err, link_lines)
+      self.conn:run("ls -aLl --color=never" .. path_postfix, function(link_err, link_lines)
         -- Ignore exit code 1. That just means one of the links could not be resolved.
         if link_err and not link_err:match("^1:") then
           return callback(link_err)
