@@ -168,6 +168,49 @@ M.open_terminal = {
   end,
 }
 
+---Copied from vim.ui.open in Neovim 0.10+
+---@param path string
+---@return nil|string[] cmd
+---@return nil|string error
+local function get_open_cmd(path)
+  if vim.fn.has("mac") == 1 then
+    return { "open", path }
+  elseif vim.fn.has("win32") == 1 then
+    if vim.fn.executable("rundll32") == 1 then
+      return { "rundll32", "url.dll,FileProtocolHandler", path }
+    else
+      return nil, "rundll32 not found"
+    end
+  elseif vim.fn.executable("wslview") == 1 then
+    return { "wslview", path }
+  elseif vim.fn.executable("xdg-open") == 1 then
+    return { "xdg-open", path }
+  else
+    return nil, "no handler found"
+  end
+end
+
+M.open_external = {
+  desc = "Open the entry under the cursor in an external program",
+  callback = function()
+    local entry = oil.get_cursor_entry()
+    local dir = oil.get_current_dir()
+    if not entry or not dir then
+      return
+    end
+    local path = dir .. entry.name
+    -- TODO use vim.ui.open once this is resolved
+    -- https://github.com/neovim/neovim/issues/24567
+    local cmd, err = get_open_cmd(path)
+    if not cmd then
+      vim.notify(string.format("Could not open %s: %s", path, err), vim.log.levels.ERROR)
+      return
+    end
+    local jid = vim.fn.jobstart(cmd, { detach = true })
+    assert(jid > 0, "Failed to start job")
+  end,
+}
+
 M.refresh = {
   desc = "Refresh current directory list",
   callback = function()

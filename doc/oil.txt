@@ -69,6 +69,7 @@ OPTIONS                                                              *oil-option
         ["`"] = "actions.cd",
         ["~"] = "actions.tcd",
         ["gs"] = "actions.change_sort",
+        ["gx"] = "actions.open_external",
         ["g."] = "actions.toggle_hidden",
       },
       -- Set to false to disable all of the above keymaps
@@ -359,6 +360,9 @@ open_cmdline_dir                                        *actions.open_cmdline_di
 
 open_cwd                                                        *actions.open_cwd*
     Open oil in Neovim's current working directory
+
+open_external                                              *actions.open_external*
+    Open the entry under the cursor in an external program
 
 open_terminal                                              *actions.open_terminal*
     Open a terminal in the current directory

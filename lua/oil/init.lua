@@ -15,7 +15,7 @@ local M = {}
 ---@field is_modifiable fun(bufnr: integer): boolean Return true if this directory is modifiable (allows for directories with read-only permissions).
 ---@field get_column fun(name: string): nil|oil.ColumnDefinition If the adapter has any adapter-specific columns, return them when fetched by name.
 ---@field normalize_url fun(url: string, callback: fun(url: string)) Before oil opens a url it will be normalized. This allows for link following, path normalizing, and converting an oil file url to the actual path of a file.
----@field get_entry_path? fun(url: string, entry: oil.Entry, callback: fun(path: nil|string)) Similar to normalize_url, but used when selecting an entry
+---@field get_entry_path? fun(url: string, entry: oil.Entry, callback: fun(path: string)) Similar to normalize_url, but used when selecting an entry
 ---@field render_action? fun(action: oil.Action): string Render a mutation action for display in the preview window. Only needed if adapter is modifiable.
 ---@field perform_action? fun(action: oil.Action, cb: fun(err: nil|string)) Perform a mutation action. Only needed if adapter is modifiable.
 ---@field read_file? fun(bufnr: integer) Used for adapters that deal with remote/virtual files. Read the contents of the file into a buffer.
