@@ -54,6 +54,7 @@ local default_config = {
     ["`"] = "actions.cd",
     ["~"] = "actions.tcd",
     ["gs"] = "actions.change_sort",
+    ["gx"] = "actions.open_external",
     ["g."] = "actions.toggle_hidden",
   },
   -- Set to false to disable all of the above keymaps
