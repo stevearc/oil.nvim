@@ -3,26 +3,43 @@ local layout = require("oil.layout")
 local util = require("oil.util")
 local M = {}
 
+---@param rhs string|table|fun()
+---@return string|fun() rhs
+---@return table opts
+---@return string|nil mode
 local function resolve(rhs)
   if type(rhs) == "string" and vim.startswith(rhs, "actions.") then
     return resolve(actions[vim.split(rhs, ".", { plain = true })[2]])
   elseif type(rhs) == "table" then
     local opts = vim.deepcopy(rhs)
+    local callback = opts.callback
+    local mode = opts.mode
+    if type(rhs.callback) == "string" then
+      local action_opts, action_mode
+      callback, action_opts, action_mode = resolve(rhs.callback)
+      opts = vim.tbl_extend("keep", opts, action_opts)
+      mode = mode or action_mode
+    end
     opts.callback = nil
-    return rhs.callback, opts
+    opts.mode = nil
+    return callback, opts, mode
+  else
+    return rhs, {}
   end
-  return rhs, {}
 end
 
-M.set_keymaps = function(mode, keymaps, bufnr)
+---@param keymaps table<string, string|table|fun()>
+---@param bufnr integer
+M.set_keymaps = function(keymaps, bufnr)
   for k, v in pairs(keymaps) do
-    local rhs, opts = resolve(v)
+    local rhs, opts, mode = resolve(v)
     if rhs then
-      vim.keymap.set(mode, k, rhs, vim.tbl_extend("keep", { buffer = bufnr }, opts))
+      vim.keymap.set(mode or "", k, rhs, vim.tbl_extend("keep", { buffer = bufnr }, opts))
     end
   end
 end
 
+---@param keymaps table<string, string|table|fun()>
 M.show_help = function(keymaps)
   local rhs_to_lhs = {}
   local lhs_to_all_lhs = {}

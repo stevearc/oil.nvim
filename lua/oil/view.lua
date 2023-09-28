@@ -357,7 +357,7 @@ M.initialize = function(bufnr)
       )
     end
   end)
-  keymap_util.set_keymaps("", config.keymaps, bufnr)
+  keymap_util.set_keymaps(config.keymaps, bufnr)
 end
 
 ---@param adapter oil.Adapter

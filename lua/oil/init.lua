@@ -780,7 +780,7 @@ local function load_oil_buffer(bufnr)
     -- (e.g. ssh) because it will set up the filetype keybinds at the *beginning* of the loading
     -- process.
     vim.bo[bufnr].filetype = "oil"
-    keymap_util.set_keymaps("", config.keymaps, bufnr)
+    keymap_util.set_keymaps(config.keymaps, bufnr)
   end
   loading.set_loading(bufnr, true)
   local winid = vim.api.nvim_get_current_win()
