@@ -711,7 +711,9 @@ local function set_colors()
       vim.api.nvim_set_hl(0, conf.name, { default = true, link = conf.link })
     end
   end
-  if not pcall(vim.api.nvim_get_hl_by_name, "FloatTitle") then
+  -- TODO can remove this call once we drop support for Neovim 0.8. FloatTitle was introduced as a
+  -- built-in highlight group in 0.9, and we can start to rely on colorschemes setting it.
+  if not pcall(vim.api.nvim_get_hl_by_name, "FloatTitle", true) then
     local border = vim.api.nvim_get_hl_by_name("FloatBorder", true)
     local normal = vim.api.nvim_get_hl_by_name("Normal", true)
     vim.api.nvim_set_hl(
