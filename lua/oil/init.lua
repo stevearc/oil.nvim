@@ -567,6 +567,7 @@ M.select = function(opts, callback)
         horizontal = opts.horizontal,
         split = opts.split,
         keepalt = true,
+        emsg_silent = true,
       }
       local filename = util.escape_filename(normalized_url)
 
@@ -585,9 +586,6 @@ M.select = function(opts, callback)
         vim.api.nvim_set_current_win(preview_win)
         cmd = "edit"
       else
-        if vim.tbl_isempty(mods) then
-          mods = nil
-        end
         if opts.tab then
           cmd = "tabedit"
         elseif opts.split then
