@@ -1,5 +1,22 @@
 # Changelog
 
+## [2.2.0](https://github.com/stevearc/oil.nvim/compare/v2.1.0...v2.2.0) (2023-09-30)
+
+
+### Features
+
+* action for opening entry in an external program ([#183](https://github.com/stevearc/oil.nvim/issues/183)) ([96a334a](https://github.com/stevearc/oil.nvim/commit/96a334abeb85a26af87585ec3810116c7cb7d172))
+* keymaps can specify mode ([#187](https://github.com/stevearc/oil.nvim/issues/187)) ([977da9a](https://github.com/stevearc/oil.nvim/commit/977da9ac6655b4f52bc26f23f584d9553f419555))
+* make gf work in ssh files ([#186](https://github.com/stevearc/oil.nvim/issues/186)) ([ee81363](https://github.com/stevearc/oil.nvim/commit/ee813638d2d042e4b8e6e8ffd00dae438bdbd4ca))
+
+
+### Bug Fixes
+
+* add busybox support for ssh adapter ([#173](https://github.com/stevearc/oil.nvim/issues/173)) ([a9ceb90](https://github.com/stevearc/oil.nvim/commit/a9ceb90a63955c409b6fbac0f5cfc4c2f43093fd))
+* correctly resolve new files when selected ([#179](https://github.com/stevearc/oil.nvim/issues/179)) ([83e4d04](https://github.com/stevearc/oil.nvim/commit/83e4d049228233df1870c92e160effb33e314396))
+* don't override FloatTitle highlight ([#189](https://github.com/stevearc/oil.nvim/issues/189)) ([5ced687](https://github.com/stevearc/oil.nvim/commit/5ced687ddd08e1f8df27a23884d516a9b24101fc))
+* hide swapfile error when editing file ([#188](https://github.com/stevearc/oil.nvim/issues/188)) ([bfc5a4c](https://github.com/stevearc/oil.nvim/commit/bfc5a4c48f4a53b95648e41d91e49b83fb03e919))
+
 ## [2.1.0](https://github.com/stevearc/oil.nvim/compare/v2.0.1...v2.1.0) (2023-09-11)
 
 
