@@ -10,6 +10,7 @@ local shell = require("oil.shell")
 local util = require("oil.util")
 local M = {}
 
+local FIELD_NAME = constants.FIELD_NAME
 local FIELD_META = constants.FIELD_META
 
 ---@class (exact) oil.sshUrl
@@ -385,6 +386,7 @@ M.read_file = function(bufnr)
     end
     vim.cmd.doautocmd({ args = { "BufReadPost", bufname }, mods = { silent = true } })
     vim.api.nvim_buf_delete(tmp_bufnr, { force = true })
+    vim.keymap.set("n", "gf", M.goto_file, { buffer = bufnr })
   end)
 end
 
@@ -413,6 +415,47 @@ M.write_file = function(bufnr)
     end
     vim.loop.fs_unlink(tmpfile)
     vim.api.nvim_buf_delete(tmp_bufnr, { force = true })
+  end)
+end
+
+M.goto_file = function()
+  local url = M.parse_url(vim.api.nvim_buf_get_name(0))
+  local word = vim.fn.expand("<cWORD>")
+  local fname = vim.fn.matchlist(word, "\\v\\f+")[1]
+  local fullpath = fname
+  if not fs.is_absolute(fname) then
+    local pardir = vim.fs.dirname(url.path)
+    fullpath = fs.join(pardir, fname)
+  end
+  url.path = vim.fs.dirname(fullpath)
+  local parurl = url_to_str(url)
+
+  util.adapter_list_all(M, parurl, {}, function(err, entries)
+    if err then
+      vim.notify(string.format("Error finding file '%s': %s", fname, err), vim.log.levels.ERROR)
+      return
+    end
+    assert(entries)
+    local name_map = {}
+    for _, entry in ipairs(entries) do
+      name_map[entry[FIELD_NAME]] = entry
+    end
+
+    local basename = vim.fs.basename(fullpath)
+    if name_map[basename] then
+      url.path = fullpath
+      vim.cmd.edit({ args = { url_to_str(url) } })
+      return
+    end
+    for suffix in vim.gsplit(vim.o.suffixesadd, ",", { plain = true, trimempty = true }) do
+      local suffixname = basename .. suffix
+      if name_map[suffixname] then
+        url.path = fullpath .. suffix
+        vim.cmd.edit({ args = { url_to_str(url) } })
+        return
+      end
+    end
+    vim.notify(string.format("Can't find file '%s'", fname), vim.log.levels.ERROR)
   end)
 end
 

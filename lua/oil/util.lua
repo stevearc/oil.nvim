@@ -667,4 +667,33 @@ M.buf_get_win = function(bufnr, preferred_win)
   return nil
 end
 
+---@param adapter oil.Adapter
+---@param url string
+---@param opts {columns?: string[], no_cache?: boolean}
+---@param callback fun(err: nil|string, entries: nil|oil.InternalEntry[])
+M.adapter_list_all = function(adapter, url, opts, callback)
+  local cache = require("oil.cache")
+  if not opts.no_cache then
+    local entries = cache.list_url(url)
+    if not vim.tbl_isempty(entries) then
+      return callback(nil, vim.tbl_values(entries))
+    end
+  end
+  local ret = {}
+  adapter.list(url, opts.columns or {}, function(err, entries, fetch_more)
+    if err then
+      callback(err)
+      return
+    end
+    if entries then
+      vim.list_extend(ret, entries)
+    end
+    if fetch_more then
+      vim.defer_fn(fetch_more, 4)
+    else
+      callback(nil, ret)
+    end
+  end)
+end
+
 return M
