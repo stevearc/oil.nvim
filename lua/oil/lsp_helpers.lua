@@ -13,13 +13,16 @@ local function file_matches(filepath, pattern)
       return false
     end
   end
+  local pat = vim.fn.glob2regpat(pattern.glob)
   if vim.tbl_get(pattern, "options", "ignoreCase") then
-    filepath = filepath:lower()
-    pattern.glob = pattern.glob:lower()
+    pat = "\\c" .. pat
   end
 
-  local pat = vim.fn.glob2regpat(pattern.glob)
-  return vim.fn.match(filepath, pat) >= 0
+  local ignorecase = vim.o.ignorecase
+  vim.o.ignorecase = false
+  local match = vim.fn.match(filepath, pat) >= 0
+  vim.o.ignorecase = ignorecase
+  return match
 end
 
 ---@param filepath string
