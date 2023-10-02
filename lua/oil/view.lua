@@ -258,11 +258,18 @@ M.initialize = function(bufnr)
       -- First wait a short time (10ms) for the buffer change to settle
       vim.defer_fn(function()
         local visible_buffers = get_visible_hidden_buffers()
-        -- Only kick off the 2-second timer if we don't have any visible oil buffers
+        -- Only delete oil buffers if none of them are visible
         if visible_buffers and vim.tbl_isempty(visible_buffers) then
-          vim.defer_fn(function()
-            M.delete_hidden_buffers()
-          end, 2000)
+          -- Check if cleanup is enabled
+          if type(config.cleanup_delay_ms) == "number" then
+            if config.cleanup_delay_ms > 0 then
+              vim.defer_fn(function()
+                M.delete_hidden_buffers()
+              end, config.cleanup_delay_ms)
+            else
+              M.delete_hidden_buffers()
+            end
+          end
         end
       end, 10)
     end,
