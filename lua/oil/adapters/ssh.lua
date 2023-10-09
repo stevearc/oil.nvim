@@ -1,12 +1,12 @@
 local config = require("oil.config")
 local constants = require("oil.constants")
-local fs = require("oil.fs")
 local files = require("oil.adapters.files")
+local fs = require("oil.fs")
 local loading = require("oil.loading")
-local permissions = require("oil.adapters.files.permissions")
-local sshfs = require("oil.adapters.ssh.sshfs")
 local pathutil = require("oil.pathutil")
+local permissions = require("oil.adapters.files.permissions")
 local shell = require("oil.shell")
+local sshfs = require("oil.adapters.ssh.sshfs")
 local util = require("oil.util")
 local M = {}
 

@@ -1,5 +1,5 @@
-local config = require("oil.config")
 local columns = require("oil.columns")
+local config = require("oil.config")
 local layout = require("oil.layout")
 local loading = require("oil.loading")
 local util = require("oil.util")

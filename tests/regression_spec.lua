@@ -1,7 +1,7 @@
 require("plenary.async").tests.add_to_env()
+local TmpDir = require("tests.tmpdir")
 local oil = require("oil")
 local test_util = require("tests.test_util")
-local TmpDir = require("tests.tmpdir")
 local view = require("oil.view")
 
 a.describe("regression tests", function()

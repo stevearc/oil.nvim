@@ -1,7 +1,7 @@
+local SSHConnection = require("oil.adapters.ssh.connection")
 local cache = require("oil.cache")
 local constants = require("oil.constants")
 local permissions = require("oil.adapters.files.permissions")
-local SSHConnection = require("oil.adapters.ssh.connection")
 local util = require("oil.util")
 
 ---@class (exact) oil.sshFs
