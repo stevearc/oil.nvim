@@ -48,10 +48,13 @@ end
 ---@return string[]
 local function get_top_trash_dirs(path)
   local dirs = {}
-  local dev = uv.fs_stat(path).dev
+  local dev = (uv.fs_stat(path) or {}).dev
   local top_trash_dirs = vim.fs.find(".Trash", { upward = true, path = path, limit = math.huge })
   for _, top_trash_dir in ipairs(top_trash_dirs) do
     local stat = uv.fs_stat(top_trash_dir)
+    if stat and not dev then
+      dev = stat.dev
+    end
     if stat and stat.dev == dev and stat.type == "directory" and is_sticky(stat.mode) then
       local trash_dir = fs.join(top_trash_dir, tostring(uv.getuid()))
       ensure_trash_dir(trash_dir)
@@ -98,6 +101,21 @@ local function get_write_trash_dir(path)
   local top_trash = fs.join(parent, string.format(".Trash-%d", uv.getuid()))
   ensure_trash_dir(top_trash)
   return top_trash
+end
+
+---@param path string
+---@return boolean
+local function is_dev_root(path)
+  if path == "/" then
+    return true
+  end
+  local stat = uv.fs_stat(path)
+  if not stat then
+    return false
+  end
+  local dev = stat.dev
+  local parent = vim.fs.dirname(path)
+  return uv.fs_stat(parent).dev ~= dev
 end
 
 ---@param path string
@@ -219,6 +237,7 @@ M.list = function(url, column_defs, cb)
   cb = vim.schedule_wrap(cb)
   local _, path = util.parse_url(url)
   assert(path)
+  local is_in_dev_root = is_dev_root(path)
   local trash_dirs = get_read_trash_dirs(path)
   local trash_idx = 0
 
@@ -269,7 +288,7 @@ M.list = function(url, column_defs, cb)
                     poll()
                   else
                     local parent = util.addslash(vim.fn.fnamemodify(info.original_path, ":h"))
-                    if path == parent or path == "/" then
+                    if path == parent or is_in_dev_root then
                       local name = vim.fn.fnamemodify(info.trash_file, ":t")
                       ---@diagnostic disable-next-line: undefined-field
                       local cache_entry = cache.create_entry(url, name, info.stat.type)
