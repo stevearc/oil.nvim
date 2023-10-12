@@ -353,6 +353,17 @@ file_columns.mtime = {
     return ret
   end,
 
+  get_sort_value = function(entry)
+    local meta = entry[FIELD_META]
+    ---@type nil|oil.TrashInfo
+    local trash_info = meta.trash_info
+    if trash_info then
+      return trash_info.deletion_date
+    else
+      return 0
+    end
+  end,
+
   parse = function(line, conf)
     local fmt = conf and conf.format
     local pattern
