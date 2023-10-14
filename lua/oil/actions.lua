@@ -224,14 +224,10 @@ M.refresh = {
   end,
 }
 
-local function open_cmdline_with_args(args)
-  local escaped = vim.api.nvim_replace_termcodes(
-    ": " .. args .. string.rep("<Left>", args:len() + 1),
-    true,
-    false,
-    true
-  )
-  vim.api.nvim_feedkeys(escaped, "n", true)
+local function open_cmdline_with_path(path)
+  local escaped =
+    vim.api.nvim_replace_termcodes(": " .. vim.fn.fnameescape(path) .. "<Home>", true, false, true)
+  vim.api.nvim_feedkeys(escaped, "n", false)
 end
 
 M.open_cmdline = {
@@ -253,7 +249,7 @@ M.open_cmdline = {
       return
     end
     local fullpath = fs.shorten_path(fs.posix_to_os_path(path) .. entry.name)
-    open_cmdline_with_args(fullpath)
+    open_cmdline_with_path(fullpath)
   end,
 }
 
@@ -275,7 +271,7 @@ M.open_cmdline_dir = {
     local fs = require("oil.fs")
     local dir = oil.get_current_dir()
     if dir then
-      open_cmdline_with_args(fs.shorten_path(dir))
+      open_cmdline_with_path(fs.shorten_path(dir))
     end
   end,
 }
