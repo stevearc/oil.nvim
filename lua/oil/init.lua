@@ -569,11 +569,6 @@ M.select = function(opts, callback)
         keepalt = true,
         emsg_silent = true,
       }
-      -- If we're editing a file on disk, shorten the path prior to :edit so the
-      -- display name will show up shortened
-      if adapter.name == "files" and not util.parse_url(normalized_url) then
-        normalized_url = require("oil.fs").shorten_path(normalized_url)
-      end
       local filename = util.escape_filename(normalized_url)
 
       -- If we're previewing a file that hasn't been opened yet, make sure it gets deleted after we
