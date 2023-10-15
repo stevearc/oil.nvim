@@ -420,8 +420,7 @@ end
 
 M.goto_file = function()
   local url = M.parse_url(vim.api.nvim_buf_get_name(0))
-  local word = vim.fn.expand("<cWORD>")
-  local fname = vim.fn.matchlist(word, "\\v\\f+")[1]
+  local fname = vim.fn.expand("<cfile>")
   local fullpath = fname
   if not fs.is_absolute(fname) then
     local pardir = vim.fs.dirname(url.path)
