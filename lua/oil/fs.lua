@@ -116,14 +116,14 @@ local home_dir = assert(uv.os_homedir())
 ---@return string
 M.shorten_path = function(path)
   local cwd = vim.fn.getcwd()
-  if vim.startswith(path, cwd) then
+  if M.is_subpath(cwd, path) then
     local relative = path:sub(cwd:len() + 2)
     if relative == "" then
       relative = "."
     end
     return relative
   end
-  if vim.startswith(path, home_dir) then
+  if M.is_subpath(home_dir, path) then
     return "~" .. path:sub(home_dir:len() + 1)
   end
   return path
