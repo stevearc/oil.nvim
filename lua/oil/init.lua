@@ -23,6 +23,7 @@ local M = {}
 ---@field write_file? fun(bufnr: integer) Used for adapters that deal with remote/virtual files. Write the contents of a buffer to the destination.
 ---@field supported_cross_adapter_actions? table<string, oil.CrossAdapterAction> Mapping of adapter name to enum for all other adapters that can be used as a src or dest for move/copy actions.
 ---@field disable_changes? boolean When true, adapter will not support creating new entries or changing (e.g. renaming) existing entries
+---@field filter_action? fun(action: oil.Action): boolean When present, filter out actions as they are created
 
 -- TODO remove after https://github.com/folke/neodev.nvim/pull/163 lands
 ---@diagnostic disable: undefined-field

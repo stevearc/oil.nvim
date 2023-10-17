@@ -1,6 +1,5 @@
 -- Based on the FreeDesktop.org trash specification
 -- https://specifications.freedesktop.org/trash-spec/trashspec-1.0.html
--- TODO make sure that the subdirs for trash use the same entry as the root
 local cache = require("oil.cache")
 local config = require("oil.config")
 local constants = require("oil.constants")
@@ -104,21 +103,6 @@ local function get_write_trash_dir(path)
 end
 
 ---@param path string
----@return boolean
-local function is_dev_root(path)
-  if path == "/" then
-    return true
-  end
-  local stat = uv.fs_stat(path)
-  if not stat then
-    return false
-  end
-  local dev = stat.dev
-  local parent = vim.fs.dirname(path)
-  return uv.fs_stat(parent).dev ~= dev
-end
-
----@param path string
 ---@return string[]
 local function get_read_trash_dirs(path)
   local dirs = { get_home_trash_dir() }
@@ -141,20 +125,24 @@ M.normalize_url = function(url, callback)
   )
 end
 
----@param _url string
+---@param url string
 ---@param entry oil.Entry
 ---@param cb fun(path: string)
-M.get_entry_path = function(_url, entry, cb)
+M.get_entry_path = function(url, entry, cb)
   local internal_entry = assert(cache.get_entry_by_id(entry.id))
   local meta = internal_entry[FIELD_META]
   ---@type oil.TrashInfo
   local trash_info = meta.trash_info
+  if not trash_info then
+    -- This is a subpath in the trash
+    M.normalize_url(url, cb)
+    return
+  end
   local path = fs.os_to_posix_path(trash_info.trash_file)
   if meta.stat.type == "directory" then
     path = util.addslash(path)
   end
-  local url = "oil://" .. path
-  cb(url)
+  cb("oil://" .. path)
 end
 
 ---@class oil.TrashInfo
@@ -237,7 +225,6 @@ M.list = function(url, column_defs, cb)
   cb = vim.schedule_wrap(cb)
   local _, path = util.parse_url(url)
   assert(path)
-  local is_in_dev_root = is_dev_root(path)
   local trash_dirs = get_read_trash_dirs(path)
   local trash_idx = 0
 
@@ -248,6 +235,16 @@ M.list = function(url, column_defs, cb)
     if not trash_dir then
       return cb()
     end
+
+    -- Show all files from the trash directory if we are in the root of the device, which we can
+    -- tell if the trash dir is a subpath of our current path
+    local show_all_files = fs.is_subpath(path, trash_dir)
+    -- The first trash dir is a special case; it is in the home directory and we should only show
+    -- all entries if we are in the top root path "/"
+    if trash_idx == 1 then
+      show_all_files = path == "/"
+    end
+
     local info_dir = fs.join(trash_dir, "info")
     ---@diagnostic disable-next-line: param-type-mismatch
     uv.fs_opendir(info_dir, function(open_err, fd)
@@ -288,7 +285,7 @@ M.list = function(url, column_defs, cb)
                     poll()
                   else
                     local parent = util.addslash(vim.fn.fnamemodify(info.original_path, ":h"))
-                    if path == parent or is_in_dev_root then
+                    if path == parent or show_all_files then
                       local name = vim.fn.fnamemodify(info.trash_file, ":t")
                       ---@diagnostic disable-next-line: undefined-field
                       local cache_entry = cache.create_entry(url, name, info.stat.type)
@@ -297,6 +294,21 @@ M.list = function(url, column_defs, cb)
                         stat = info.stat,
                         trash_info = info,
                         display_name = display_name,
+                      }
+                      table.insert(internal_entries, cache_entry)
+                    end
+                    if path ~= parent and (show_all_files or fs.is_subpath(path, parent)) then
+                      local name = parent:sub(path:len() + 1)
+                      local next_par = vim.fs.dirname(name)
+                      while next_par ~= "." do
+                        name = next_par
+                        next_par = vim.fs.dirname(name)
+                      end
+                      ---@diagnostic disable-next-line: undefined-field
+                      local cache_entry = cache.create_entry(url, name, "directory")
+
+                      cache_entry[FIELD_META] = {
+                        stat = info.stat,
                       }
                       table.insert(internal_entries, cache_entry)
                     end
@@ -338,16 +350,20 @@ file_columns.mtime = {
     local meta = entry[FIELD_META]
     ---@type oil.TrashInfo
     local trash_info = meta.trash_info
+    local time = trash_info and trash_info.deletion_date or meta.stat and meta.stat.mtime.sec
+    if not time then
+      return nil
+    end
     local fmt = conf and conf.format
     local ret
     if fmt then
-      ret = vim.fn.strftime(fmt, trash_info.deletion_date)
+      ret = vim.fn.strftime(fmt, time)
     else
-      local year = vim.fn.strftime("%Y", trash_info.deletion_date)
+      local year = vim.fn.strftime("%Y", time)
       if year ~= current_year then
-        ret = vim.fn.strftime("%b %d %Y", trash_info.deletion_date)
+        ret = vim.fn.strftime("%b %d %Y", time)
       else
-        ret = vim.fn.strftime("%b %d %H:%M", trash_info.deletion_date)
+        ret = vim.fn.strftime("%b %d %H:%M", time)
       end
     end
     return ret
@@ -383,6 +399,28 @@ M.get_column = function(name)
 end
 
 M.supported_cross_adapter_actions = { files = "move" }
+
+---@param action oil.Action
+---@return boolean
+M.filter_action = function(action)
+  if action.type == "create" then
+    return false
+  elseif action.type == "delete" then
+    local entry = assert(cache.get_entry_by_url(action.url))
+    local meta = entry[FIELD_META]
+    return meta.trash_info ~= nil
+  elseif action.type == "move" then
+    local src_adapter = assert(config.get_adapter_by_scheme(action.src_url))
+    local dest_adapter = assert(config.get_adapter_by_scheme(action.dest_url))
+    return src_adapter.name == "files" or dest_adapter.name == "files"
+  elseif action.type == "copy" then
+    local src_adapter = assert(config.get_adapter_by_scheme(action.src_url))
+    local dest_adapter = assert(config.get_adapter_by_scheme(action.dest_url))
+    return src_adapter.name == "files" or dest_adapter.name == "files"
+  else
+    error(string.format("Bad action type '%s'", action.type))
+  end
+end
 
 ---@param action oil.Action
 ---@return string

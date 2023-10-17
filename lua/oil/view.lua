@@ -2,6 +2,7 @@ local cache = require("oil.cache")
 local columns = require("oil.columns")
 local config = require("oil.config")
 local constants = require("oil.constants")
+local fs = require("oil.fs")
 local keymap_util = require("oil.keymap_util")
 local loading = require("oil.loading")
 local util = require("oil.util")
@@ -427,7 +428,7 @@ local function render_buffer(bufnr, opts)
     jump = false,
     jump_first = false,
   })
-  local scheme = util.parse_url(bufname)
+  local scheme, buf_path = util.parse_url(bufname)
   local adapter = util.get_adapter(bufnr)
   if not scheme or not adapter then
     return false
@@ -480,17 +481,18 @@ local function render_buffer(bufnr, opts)
   util.set_highlights(bufnr, highlights)
 
   -- Show original location of trash file as virtual text
-  if adapter.name == "trash" and bufname == "oil-trash:///" then
+  if adapter.name == "trash" then
     local ns = vim.api.nvim_create_namespace("OilVtext")
     vim.api.nvim_buf_clear_namespace(bufnr, ns, 0, -1)
+    local os_path = fs.posix_to_os_path(assert(buf_path))
     for i, entry in ipairs(entry_list) do
       local meta = entry[FIELD_META]
       ---@type nil|oil.TrashInfo
       local trash_info = meta and meta.trash_info
       if trash_info then
-        vim.api.nvim_buf_set_extmark(0, ns, i - 1, 0, {
+        vim.api.nvim_buf_set_extmark(bufnr, ns, i - 1, 0, {
           virt_text = {
-            { "➜ " .. trash_info.original_path, "OilTrashSourcePath" },
+            { "➜ " .. fs.shorten_path(trash_info.original_path, os_path), "OilTrashSourcePath" },
           },
         })
       end

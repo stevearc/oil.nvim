@@ -65,6 +65,11 @@ M.create_actions_from_diffs = function(all_diffs)
     if not adapter then
       error("Missing adapter")
     end
+    local function add_action(action)
+      if not adapter.filter_action or adapter.filter_action(action) then
+        table.insert(actions, action)
+      end
+    end
     local parent_url = vim.api.nvim_buf_get_name(bufnr)
     for _, diff in ipairs(diffs) do
       if diff.type == "new" then
@@ -86,7 +91,7 @@ M.create_actions_from_diffs = function(all_diffs)
               -- Parse alternations like foo.{js,test.js}
               for _, alt in ipairs(vim.split(alternation, ",")) do
                 local alt_url = url .. "/" .. v:gsub("{[^}]+}", alt)
-                table.insert(actions, {
+                add_action({
                   type = "create",
                   url = alt_url,
                   entry_type = entry_type,
@@ -95,7 +100,7 @@ M.create_actions_from_diffs = function(all_diffs)
               end
             else
               url = url .. "/" .. v
-              table.insert(actions, {
+              add_action({
                 type = "create",
                 url = url,
                 entry_type = entry_type,
@@ -105,7 +110,7 @@ M.create_actions_from_diffs = function(all_diffs)
           end
         end
       elseif diff.type == "change" then
-        table.insert(actions, {
+        add_action({
           type = "change",
           url = parent_url .. diff.name,
           entry_type = diff.entry_type,
@@ -121,6 +126,12 @@ M.create_actions_from_diffs = function(all_diffs)
     end
   end
 
+  local function add_action(action)
+    local adapter = assert(config.get_adapter_by_scheme(action.dest_url or action.url))
+    if not adapter.filter_action or adapter.filter_action(action) then
+      table.insert(actions, action)
+    end
+  end
   for id, diffs in pairs(diff_by_id) do
     local entry = cache.get_entry_by_id(id)
     if not entry then
@@ -131,7 +142,7 @@ M.create_actions_from_diffs = function(all_diffs)
       if has_create then
         -- MOVE (+ optional copies) when has both creates and delete
         for i, diff in ipairs(diffs) do
-          table.insert(actions, {
+          add_action({
             type = i == #diffs and "move" or "copy",
             entry_type = entry[FIELD_TYPE],
             dest_url = diff.dest,
@@ -140,7 +151,7 @@ M.create_actions_from_diffs = function(all_diffs)
         end
       else
         -- DELETE when no create
-        table.insert(actions, {
+        add_action({
           type = "delete",
           entry_type = entry[FIELD_TYPE],
           url = cache.get_parent_url(id) .. entry[FIELD_NAME],
@@ -149,7 +160,7 @@ M.create_actions_from_diffs = function(all_diffs)
     else
       -- COPY when create but no delete
       for _, diff in ipairs(diffs) do
-        table.insert(actions, {
+        add_action({
           type = "copy",
           entry_type = entry[FIELD_TYPE],
           src_url = cache.get_parent_url(id) .. entry[FIELD_NAME],
