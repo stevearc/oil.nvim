@@ -116,11 +116,19 @@ end
 local home_dir = assert(uv.os_homedir())
 
 ---@param path string
+---@param relative_to? string Shorten relative to this path (default cwd)
 ---@return string
-M.shorten_path = function(path)
-  local cwd = vim.fn.getcwd()
-  if M.is_subpath(cwd, path) then
-    local relative = path:sub(cwd:len() + 2)
+M.shorten_path = function(path, relative_to)
+  if not relative_to then
+    relative_to = vim.fn.getcwd()
+  end
+  if M.is_subpath(relative_to, path) then
+    local idx = relative_to:len() + 1
+    -- Trim the dividing slash if it's not included in relative_to
+    if not vim.endswith(relative_to, "/") and not vim.endswith(relative_to, "\\") then
+      idx = idx + 1
+    end
+    local relative = path:sub(idx)
     if relative == "" then
       relative = "."
     end
