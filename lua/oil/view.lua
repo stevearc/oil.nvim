@@ -1,3 +1,4 @@
+local uv = vim.uv or vim.loop
 local cache = require("oil.cache")
 local columns = require("oil.columns")
 local config = require("oil.config")
@@ -228,6 +229,43 @@ local function get_first_mutable_column_col(adapter, ranges)
   return min_col
 end
 
+---Redraw original path virtual text for trash buffer
+---@param bufnr integer
+local function redraw_trash_virtual_text(bufnr)
+  if not vim.api.nvim_buf_is_valid(bufnr) or not vim.api.nvim_buf_is_loaded(bufnr) then
+    return
+  end
+  local parser = require("oil.mutator.parser")
+  local adapter = util.get_adapter(bufnr)
+  if not adapter or adapter.name ~= "trash" then
+    return
+  end
+  local _, buf_path = util.parse_url(vim.api.nvim_buf_get_name(bufnr))
+  local os_path = fs.posix_to_os_path(assert(buf_path))
+  local ns = vim.api.nvim_create_namespace("OilVtext")
+  vim.api.nvim_buf_clear_namespace(bufnr, ns, 0, -1)
+  local column_defs = columns.get_supported_columns(adapter)
+  for lnum, line in ipairs(vim.api.nvim_buf_get_lines(bufnr, 0, -1, true)) do
+    local result = parser.parse_line(adapter, line, column_defs)
+    local entry = result and result.entry
+    if entry then
+      local meta = entry[FIELD_META]
+      ---@type nil|oil.TrashInfo
+      local trash_info = meta and meta.trash_info
+      if trash_info then
+        vim.api.nvim_buf_set_extmark(bufnr, ns, lnum - 1, 0, {
+          virt_text = {
+            {
+              "➜ " .. fs.shorten_path(trash_info.original_path, os_path),
+              "OilTrashSourcePath",
+            },
+          },
+        })
+      end
+    end
+  end
+end
+
 ---@param bufnr integer
 M.initialize = function(bufnr)
   if bufnr == 0 then
@@ -352,6 +390,36 @@ M.initialize = function(bufnr)
       end)
     end,
   })
+
+  -- Watch for TextChanged and update the trash original path extmarks
+  local adapter = util.get_adapter(bufnr)
+  if adapter and adapter.name == "trash" then
+    local debounce_timer = assert(uv.new_timer())
+    local pending = false
+    vim.api.nvim_create_autocmd("TextChanged", {
+      desc = "Update oil virtual text of original path",
+      buffer = bufnr,
+      callback = function()
+        -- Respond immediately to prevent flickering, the set the timer for a "cooldown period"
+        -- If this is called again during the cooldown window, we will rerender after cooldown.
+        if debounce_timer:is_active() then
+          pending = true
+        else
+          redraw_trash_virtual_text(bufnr)
+        end
+        debounce_timer:start(
+          50,
+          0,
+          vim.schedule_wrap(function()
+            if pending then
+              pending = false
+              redraw_trash_virtual_text(bufnr)
+            end
+          end)
+        )
+      end,
+    })
+  end
   M.render_buffer_async(bufnr, {}, function(err)
     if err then
       vim.notify(
@@ -428,7 +496,7 @@ local function render_buffer(bufnr, opts)
     jump = false,
     jump_first = false,
   })
-  local scheme, buf_path = util.parse_url(bufname)
+  local scheme = util.parse_url(bufname)
   local adapter = util.get_adapter(bufnr)
   if not scheme or not adapter then
     return false
@@ -479,25 +547,6 @@ local function render_buffer(bufnr, opts)
   vim.bo[bufnr].modifiable = false
   vim.bo[bufnr].modified = false
   util.set_highlights(bufnr, highlights)
-
-  -- Show original location of trash file as virtual text
-  if adapter.name == "trash" then
-    local ns = vim.api.nvim_create_namespace("OilVtext")
-    vim.api.nvim_buf_clear_namespace(bufnr, ns, 0, -1)
-    local os_path = fs.posix_to_os_path(assert(buf_path))
-    for i, entry in ipairs(entry_list) do
-      local meta = entry[FIELD_META]
-      ---@type nil|oil.TrashInfo
-      local trash_info = meta and meta.trash_info
-      if trash_info then
-        vim.api.nvim_buf_set_extmark(bufnr, ns, i - 1, 0, {
-          virt_text = {
-            { "➜ " .. fs.shorten_path(trash_info.original_path, os_path), "OilTrashSourcePath" },
-          },
-        })
-      end
-    end
-  end
 
   if opts.jump then
     -- TODO why is the schedule necessary?
@@ -636,7 +685,7 @@ M.render_buffer_async = function(bufnr, opts, callback)
     handle_error(string.format("[oil] no adapter for buffer '%s'", bufname))
     return
   end
-  local start_ms = vim.loop.hrtime() / 1e6
+  local start_ms = uv.hrtime() / 1e6
   local seek_after_render_found = false
   local first = true
   vim.bo[bufnr].modifiable = false
@@ -675,7 +724,7 @@ M.render_buffer_async = function(bufnr, opts, callback)
       end
     end
     if fetch_more then
-      local now = vim.loop.hrtime() / 1e6
+      local now = uv.hrtime() / 1e6
       local delta = now - start_ms
       -- If we've been chugging for more than 40ms, go ahead and render what we have
       if delta > 40 then
