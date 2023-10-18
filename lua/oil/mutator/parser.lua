@@ -1,5 +1,6 @@
 local cache = require("oil.cache")
 local columns = require("oil.columns")
+local config = require("oil.config")
 local constants = require("oil.constants")
 local fs = require("oil.fs")
 local util = require("oil.util")
@@ -78,6 +79,18 @@ M.parse_line = function(adapter, line, column_defs)
   ranges.id = { start, value:len() + 1 }
   start = ranges.id[2] + 1
   ret.id = tonumber(value)
+
+  -- Right after a mutation and we reset the cache, the parent url may not be available
+  local ok, parent_url = pcall(cache.get_parent_url, ret.id)
+  if ok then
+    -- If this line was pasted from another adapter, it may have different columns
+    local line_adapter = assert(config.get_adapter_by_scheme(parent_url))
+    if adapter ~= line_adapter then
+      adapter = line_adapter
+      column_defs = columns.get_supported_columns(adapter)
+    end
+  end
+
   for _, def in ipairs(column_defs) do
     local name = util.split_config(def)
     local range = { start }
