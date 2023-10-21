@@ -122,22 +122,25 @@ M.shorten_path = function(path, relative_to)
   if not relative_to then
     relative_to = vim.fn.getcwd()
   end
+  local relpath
   if M.is_subpath(relative_to, path) then
     local idx = relative_to:len() + 1
     -- Trim the dividing slash if it's not included in relative_to
     if not vim.endswith(relative_to, "/") and not vim.endswith(relative_to, "\\") then
       idx = idx + 1
     end
-    local relative = path:sub(idx)
-    if relative == "" then
-      relative = "."
+    relpath = path:sub(idx)
+    if relpath == "" then
+      relpath = "."
     end
-    return relative
   end
   if M.is_subpath(home_dir, path) then
-    return "~" .. path:sub(home_dir:len() + 1)
+    local homepath = "~" .. path:sub(home_dir:len() + 1)
+    if not relpath or homepath:len() < relpath:len() then
+      return homepath
+    end
   end
-  return path
+  return relpath or path
 end
 
 M.mkdirp = function(dir)
