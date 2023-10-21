@@ -1,5 +1,4 @@
 require("plenary.async").tests.add_to_env()
-local cache = require("oil.cache")
 local constants = require("oil.constants")
 local parser = require("oil.mutator.parser")
 local test_adapter = require("oil.adapters.test")
@@ -243,88 +242,5 @@ describe("parser", function()
     })
     local diffs = parser.parse(bufnr)
     assert.are.same({}, diffs)
-  end)
-
-  describe("disable_changes adapter", function()
-    before_each(function()
-      test_adapter.disable_changes = true
-    end)
-
-    after_each(function()
-      test_adapter.disable_changes = nil
-    end)
-
-    it("ignores new files", function()
-      vim.cmd.edit({ args = { "oil-test:///foo/" } })
-      local bufnr = vim.api.nvim_get_current_buf()
-      local lines = { "newentry" }
-      set_lines(bufnr, lines)
-      local diffs, errors = parser.parse(bufnr)
-      assert.are.same({}, diffs)
-      assert.are.same({}, errors)
-    end)
-
-    it("detects new entries", function()
-      vim.cmd.edit({ args = { "oil-test:///foo/" } })
-      local bufnr = vim.api.nvim_get_current_buf()
-      local file = cache.create_and_store_entry("oil:///root/", "newentry", "file")
-      local cols = view.format_entry_cols(file, {}, {}, test_adapter)
-      local lines = util.render_table({ cols }, {})
-      set_lines(bufnr, lines)
-      local diffs, errors = parser.parse(bufnr)
-      assert.are.same({
-        {
-          id = file[FIELD_ID],
-          type = "new",
-          name = "newentry",
-          entry_type = "file",
-        },
-      }, diffs)
-      assert.are.same({}, errors)
-    end)
-
-    it("ignores name changes", function()
-      vim.cmd.edit({ args = { "oil-test:///dir/" } })
-      local bufnr = vim.api.nvim_get_current_buf()
-      local file = test_adapter.test_set("/dir/foo.txt", "file")
-      local lines = {
-        string.format("/%d newname", file[FIELD_ID]),
-      }
-      set_lines(bufnr, lines)
-      local diffs, errors = parser.parse(bufnr)
-      assert.are.same({}, diffs)
-      assert.are.same({}, errors)
-    end)
-
-    it("tolerates files with the same name", function()
-      vim.cmd.edit({ args = { "oil-test:///dir/" } })
-      local bufnr = vim.api.nvim_get_current_buf()
-      local file = test_adapter.test_set("/dir/foo.txt", "file")
-      local file2 = test_adapter.test_set("/dir/bar.txt", "file")
-      local lines = {
-        string.format("/%d newname", file[FIELD_ID]),
-        string.format("/%d newname", file2[FIELD_ID]),
-      }
-      set_lines(bufnr, lines)
-      local diffs, errors = parser.parse(bufnr)
-      assert.are.same({}, diffs)
-      assert.are.same({}, errors)
-    end)
-
-    it("ignores duplicate entries", function()
-      vim.cmd.edit({ args = { "oil-test:///dir/" } })
-      local bufnr = vim.api.nvim_get_current_buf()
-      local file = test_adapter.test_set("/dir/foo.txt", "file")
-      local lines = {
-        string.format("/%d newname", file[FIELD_ID]),
-        string.format("/%d newname", file[FIELD_ID]),
-        string.format("/%d newname", file[FIELD_ID]),
-        string.format("/%d newname", file[FIELD_ID]),
-      }
-      set_lines(bufnr, lines)
-      local diffs, errors = parser.parse(bufnr)
-      assert.are.same({}, diffs)
-      assert.are.same({}, errors)
-    end)
   end)
 end)

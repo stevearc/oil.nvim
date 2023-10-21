@@ -12,8 +12,6 @@ local FIELD_META = constants.FIELD_META
 
 local M = {}
 
-M.disable_changes = true
-
 local function touch_dir(path)
   uv.fs_mkdir(path, 448) -- 0700
 end
@@ -37,6 +35,7 @@ local function get_home_trash_dir()
 end
 
 ---@param mode integer
+---@return boolean
 local function is_sticky(mode)
   local extra = bit.rshift(mode, 9)
   return bit.band(extra, 4) ~= 0
@@ -420,6 +419,15 @@ M.filter_action = function(action)
   else
     error(string.format("Bad action type '%s'", action.type))
   end
+end
+
+---@param err oil.ParseError
+---@return boolean
+M.filter_error = function(err)
+  if err.message == "Duplicate filename" then
+    return false
+  end
+  return true
 end
 
 ---@param action oil.Action

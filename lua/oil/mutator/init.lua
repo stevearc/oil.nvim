@@ -474,6 +474,10 @@ M.try_write_changes = function(confirm)
     if vim.bo[bufnr].modified then
       local diffs, errors = parser.parse(bufnr)
       all_diffs[bufnr] = diffs
+      local adapter = assert(util.get_adapter(bufnr))
+      if adapter.filter_error then
+        errors = vim.tbl_filter(adapter.filter_error, errors)
+      end
       if not vim.tbl_isempty(errors) then
         all_errors[bufnr] = errors
       end
