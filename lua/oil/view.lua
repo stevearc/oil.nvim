@@ -144,10 +144,11 @@ M.unlock_buffers = function()
   end
 end
 
----@param opts table
+---@param opts? table
 ---@note
 --- This DISCARDS ALL MODIFICATIONS a user has made to oil buffers
 M.rerender_all_oil_buffers = function(opts)
+  opts = opts or {}
   local buffers = M.get_all_buffers()
   local hidden_buffers = {}
   for _, bufnr in ipairs(buffers) do
@@ -646,29 +647,22 @@ end
 
 ---@param bufnr integer
 ---@param opts nil|table
----    preserve_undo nil|boolean
 ---    refetch nil|boolean Defaults to true
 ---@param callback nil|fun(err: nil|string)
 M.render_buffer_async = function(bufnr, opts, callback)
   opts = vim.tbl_deep_extend("keep", opts or {}, {
-    preserve_undo = false,
     refetch = true,
   })
   if bufnr == 0 then
     bufnr = vim.api.nvim_get_current_buf()
   end
   local bufname = vim.api.nvim_buf_get_name(bufnr)
-  local scheme, dir = util.parse_url(bufname)
-  local preserve_undo = opts.preserve_undo and config.adapters[scheme] == "files"
-  if not preserve_undo then
-    -- Undo should not return to a blank buffer
-    -- Method taken from :h clear-undo
-    vim.bo[bufnr].undolevels = -1
-  end
+  local _, dir = util.parse_url(bufname)
+  -- Undo should not return to a blank buffer
+  -- Method taken from :h clear-undo
+  vim.bo[bufnr].undolevels = -1
   local handle_error = vim.schedule_wrap(function(message)
-    if not preserve_undo then
-      vim.bo[bufnr].undolevels = vim.api.nvim_get_option_value("undolevels", { scope = "global" })
-    end
+    vim.bo[bufnr].undolevels = vim.api.nvim_get_option_value("undolevels", { scope = "global" })
     util.render_text(bufnr, { "Error: " .. message })
     if callback then
       callback(message)
@@ -697,9 +691,7 @@ M.render_buffer_async = function(bufnr, opts, callback)
     end
     loading.set_loading(bufnr, false)
     render_buffer(bufnr, { jump = true })
-    if not preserve_undo then
-      vim.bo[bufnr].undolevels = vim.api.nvim_get_option_value("undolevels", { scope = "global" })
-    end
+    vim.bo[bufnr].undolevels = vim.api.nvim_get_option_value("undolevels", { scope = "global" })
     vim.bo[bufnr].modifiable = not buffers_locked and adapter.is_modifiable(bufnr)
     if callback then
       callback()

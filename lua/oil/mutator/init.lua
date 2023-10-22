@@ -529,7 +529,7 @@ M.try_write_changes = function(confirm)
         view.unlock_buffers()
         if err then
           vim.notify(string.format("[oil] Error applying actions: %s", err), vim.log.levels.ERROR)
-          view.rerender_all_oil_buffers({ preserve_undo = false })
+          view.rerender_all_oil_buffers()
         else
           local current_entry = oil.get_cursor_entry()
           if current_entry then
@@ -539,7 +539,7 @@ M.try_write_changes = function(confirm)
               vim.split(current_entry.parsed_name or current_entry.name, "/")[1]
             )
           end
-          view.rerender_all_oil_buffers({ preserve_undo = M.trash })
+          view.rerender_all_oil_buffers()
         end
         mutation_in_progress = false
       end)
