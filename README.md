@@ -43,11 +43,13 @@ oil.nvim supports all the usual plugin managers
   <summary>Packer</summary>
 
 ```lua
-require('packer').startup(function()
-    use {
-      'stevearc/oil.nvim',
-      config = function() require('oil').setup() end
-    }
+require("packer").startup(function()
+  use({
+    "stevearc/oil.nvim",
+    config = function()
+      require("oil").setup()
+    end,
+  })
 end)
 ```
 
@@ -57,9 +59,9 @@ end)
   <summary>Paq</summary>
 
 ```lua
-require "paq" {
-    {'stevearc/oil.nvim'};
-}
+require("paq")({
+  { "stevearc/oil.nvim" },
+})
 ```
 
 </details>
@@ -276,7 +278,7 @@ nvim oil-ssh://[username@]hostname[:port]/[path]
 
 This may look familiar. In fact, this is the same url format that netrw uses.
 
-Note that at the moment the ssh adapter does not support Windows machines, and it requires the server to have a `/bin/sh` binary as well as standard unix commands (`rm`, `mv`, `mkdir`, `chmod`, `cp`, `touch`, `ln`, `echo`).
+Note that at the moment the ssh adapter does not support Windows machines, and it requires the server to have a `/bin/sh` binary as well as standard unix commands (`ls`, `rm`, `mv`, `mkdir`, `chmod`, `cp`, `touch`, `ln`, `echo`).
 
 ## API
 
