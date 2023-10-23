@@ -1,16 +1,7 @@
 local fs = require("oil.fs")
+local test_util = require("tests.test_util")
 
-local function throwiferr(err, ...)
-  if err then
-    error(err)
-  else
-    return ...
-  end
-end
-
-local function await(fn, nargs, ...)
-  return throwiferr(a.wrap(fn, nargs)(...))
-end
+local await = test_util.await
 
 ---@param path string
 ---@param cb fun(err: nil|string)
@@ -41,6 +32,7 @@ local TmpDir = {}
 
 TmpDir.new = function()
   local path = await(vim.loop.fs_mkdtemp, 2, "oil_test_XXXXXXXXX")
+  a.util.scheduler()
   return setmetatable({ path = path }, {
     __index = TmpDir,
   })
@@ -60,6 +52,7 @@ function TmpDir:create(paths)
       end
     end
   end
+  a.util.scheduler()
 end
 
 ---@param filepath string
@@ -72,6 +65,7 @@ local read_file = function(filepath)
   local stat = vim.loop.fs_fstat(fd)
   local content = vim.loop.fs_read(fd, stat.size)
   vim.loop.fs_close(fd)
+  a.util.scheduler()
   return content
 end
 
@@ -152,8 +146,23 @@ function TmpDir:assert_fs(paths)
   assert_fs(self.path, paths)
 end
 
+function TmpDir:assert_exists(path)
+  a.util.scheduler()
+  path = fs.join(self.path, path)
+  local stat = vim.loop.fs_stat(path)
+  assert.truthy(stat, string.format("Expected path '%s' to exist", path))
+end
+
+function TmpDir:assert_not_exists(path)
+  a.util.scheduler()
+  path = fs.join(self.path, path)
+  local stat = vim.loop.fs_stat(path)
+  assert.falsy(stat, string.format("Expected path '%s' to not exist", path))
+end
+
 function TmpDir:dispose()
   await(fs.recursive_delete, 3, "directory", self.path)
+  a.util.scheduler()
 end
 
 return TmpDir

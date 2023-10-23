@@ -148,7 +148,11 @@ if not fs.is_windows then
   }
 end
 
-local current_year = vim.fn.strftime("%Y")
+local current_year
+-- Make sure we run this import-time effect in the main loop (mostly for tests)
+vim.schedule(function()
+  current_year = vim.fn.strftime("%Y")
+end)
 
 for _, time_key in ipairs({ "ctime", "mtime", "atime", "birthtime" }) do
   file_columns[time_key] = {

@@ -540,6 +540,7 @@ M.try_write_changes = function(confirm)
             )
           end
           view.rerender_all_oil_buffers()
+          vim.api.nvim_exec_autocmds("User", { pattern = "OilMutationComplete", modeline = false })
         end
         mutation_in_progress = false
       end)

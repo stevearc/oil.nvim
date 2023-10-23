@@ -68,6 +68,7 @@ local function get_top_trash_dirs(path)
   for _, top_trash_dir in ipairs(top_trash_dirs) do
     local stat = uv.fs_stat(top_trash_dir)
     if stat and stat.dev == dev then
+      ensure_trash_dir(top_trash_dir)
       table.insert(dirs, top_trash_dir)
     end
   end
@@ -342,7 +343,11 @@ end
 
 local file_columns = {}
 
-local current_year = vim.fn.strftime("%Y")
+local current_year
+-- Make sure we run this import-time effect in the main loop (mostly for tests)
+vim.schedule(function()
+  current_year = vim.fn.strftime("%Y")
+end)
 
 file_columns.mtime = {
   render = function(entry, conf)

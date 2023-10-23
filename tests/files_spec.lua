@@ -11,8 +11,6 @@ a.describe("files adapter", function()
   a.after_each(function()
     if tmpdir then
       tmpdir:dispose()
-      a.util.scheduler()
-      tmpdir = nil
     end
     test_util.reset_editor()
   end)
