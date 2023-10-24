@@ -93,9 +93,9 @@ local assert_fs = function(root, paths)
     local pieces = vim.split(k, "/")
     local partial_path = ""
     for i, piece in ipairs(pieces) do
-      partial_path = fs.join(partial_path, piece) .. "/"
+      partial_path = partial_path .. piece .. "/"
       if i ~= #pieces then
-        unlisted_dirs[partial_path:sub(2)] = true
+        unlisted_dirs[partial_path] = true
       end
     end
   end

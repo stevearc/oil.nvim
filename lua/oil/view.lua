@@ -428,6 +428,7 @@ M.initialize = function(bufnr)
         vim.log.levels.ERROR
       )
     else
+      vim.b[bufnr].oil_ready = true
       vim.api.nvim_exec_autocmds(
         "User",
         { pattern = "OilEnter", modeline = false, data = { buf = bufnr } }

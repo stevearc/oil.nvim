@@ -74,7 +74,17 @@ M.actions = {
   ---Open oil and wait for it to finish rendering
   ---@param args string[]
   open = function(args)
-    vim.schedule_wrap(vim.cmd.Oil)({ args = args })
+    vim.schedule(function()
+      vim.cmd.Oil({ args = args })
+      -- If this buffer was already open, manually dispatch the autocmd to finish the wait
+      if vim.b.oil_ready then
+        vim.api.nvim_exec_autocmds("User", {
+          pattern = "OilEnter",
+          modeline = false,
+          data = { buf = vim.api.nvim_get_current_buf() },
+        })
+      end
+    end)
     M.wait_for_autocmd({ "User", pattern = "OilEnter" })
   end,
 
