@@ -322,7 +322,7 @@ M.list = function(url, column_defs, cb)
               if close_err then
                 cb(close_err)
               else
-                read_next_trash_dir()
+                vim.schedule(read_next_trash_dir)
               end
             end)
           end
