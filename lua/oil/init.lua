@@ -284,7 +284,6 @@ M.open_float = function(dir)
     height = height,
     row = row,
     col = col,
-    style = "minimal",
     border = config.float.border,
     zindex = 45,
   }
