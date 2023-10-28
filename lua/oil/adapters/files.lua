@@ -13,20 +13,23 @@ local FIELD_NAME = constants.FIELD_NAME
 local FIELD_META = constants.FIELD_META
 
 local function read_link_data(path, cb)
-  uv.fs_readlink(path, function(link_err, link)
-    if link_err then
-      cb(link_err)
-    else
-      assert(link)
-      local stat_path = link
-      if not fs.is_absolute(link) then
-        stat_path = fs.join(vim.fn.fnamemodify(path, ":h"), link)
+  uv.fs_readlink(
+    path,
+    vim.schedule_wrap(function(link_err, link)
+      if link_err then
+        cb(link_err)
+      else
+        assert(link)
+        local stat_path = link
+        if not fs.is_absolute(link) then
+          stat_path = fs.join(vim.fn.fnamemodify(path, ":h"), link)
+        end
+        uv.fs_stat(stat_path, function(stat_err, stat)
+          cb(nil, link, stat)
+        end)
       end
-      uv.fs_stat(stat_path, function(stat_err, stat)
-        cb(nil, link, stat)
-      end)
-    end
-  end)
+    end)
+  )
 end
 
 ---@param path string
