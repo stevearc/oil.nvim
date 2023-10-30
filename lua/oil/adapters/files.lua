@@ -278,12 +278,18 @@ M.list = function(url, column_defs, cb)
     read_next = function()
       uv.fs_readdir(fd, function(err, entries)
         local internal_entries = {}
+        local is_empty = false
         if err then
           uv.fs_closedir(fd, function()
             cb(err)
           end)
           return
-        elseif entries then
+        else
+          -- turn nil to {} so that we can still insert ".."
+          if entries == nil then
+            is_empty = true
+            entries = {}
+          end
           -- HACK: manually insert ".." to the list of entries
           table.insert(entries, { name = "..", type = "directory" });
           local poll = util.cb_collect(#entries, function(inner_err)
@@ -322,7 +328,8 @@ M.list = function(url, column_defs, cb)
               end
             end)
           end
-        else
+        end
+        if is_empty then
           uv.fs_closedir(fd, function(close_err)
             if close_err then
               cb(close_err)
