@@ -284,6 +284,8 @@ M.list = function(url, column_defs, cb)
           end)
           return
         elseif entries then
+          -- HACK: manually insert ".." to the list of entries
+          table.insert(entries, { name = "..", type = "directory" });
           local poll = util.cb_collect(#entries, function(inner_err)
             if inner_err then
               cb(inner_err)
