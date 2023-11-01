@@ -241,6 +241,7 @@ M.initialize = function(bufnr)
     group = "Oil",
   })
   vim.bo[bufnr].buftype = "acwrite"
+  vim.bo[bufnr].swapfile = false
   vim.bo[bufnr].syntax = "oil"
   vim.bo[bufnr].filetype = "oil"
   vim.b[bufnr].EditorConfig_disable = 1
