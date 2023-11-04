@@ -289,8 +289,10 @@ M.open_float = function(dir)
   }
   win_opts = config.float.override(win_opts) or win_opts
 
+  local original_winid = vim.api.nvim_get_current_win()
   local winid = vim.api.nvim_open_win(bufnr, true, win_opts)
   vim.w[winid].is_oil_win = true
+  vim.w[winid].oil_original_win = original_winid
   for k, v in pairs(config.float.win_options) do
     vim.api.nvim_set_option_value(k, v, { scope = "local", win = winid })
   end
@@ -362,9 +364,8 @@ end
 ---Open oil browser in a floating window, or close it if open
 ---@param dir nil|string When nil, open the parent of the current buffer, or the cwd if current buffer is not a file
 M.toggle_float = function(dir)
-  local util = require("oil.util")
-  if util.is_oil_bufnr(0) and util.is_floating_win(0) then
-    vim.api.nvim_win_close(0, true)
+  if vim.w.is_oil_win then
+    M.close()
   else
     M.open_float(dir)
   end
@@ -387,8 +388,13 @@ end
 
 ---Restore the buffer that was present when oil was opened
 M.close = function()
+  -- If we're in a floating oil window, close it and try to restore focus to the original window
   if vim.w.is_oil_win then
+    local original_winid = vim.w.oil_original_win
     vim.api.nvim_win_close(0, true)
+    if original_winid and vim.api.nvim_win_is_valid(original_winid) then
+      vim.api.nvim_set_current_win(original_winid)
+    end
     return
   end
   local ok, bufnr = pcall(vim.api.nvim_win_get_var, 0, "oil_original_buffer")
