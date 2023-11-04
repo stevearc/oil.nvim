@@ -568,39 +568,37 @@ M.select = function(opts, callback)
         keepalt = true,
         emsg_silent = true,
       }
-      -- If we're editing a file on disk, shorten the path prior to :edit so the
-      -- display name will show up shortened
-      if adapter.name == "files" and not util.parse_url(normalized_url) then
-        normalized_url = require("oil.fs").shorten_path(normalized_url)
-      end
-      local filename = util.escape_filename(normalized_url)
+      local filebufnr = vim.fn.bufadd(normalized_url)
 
-      -- If we're previewing a file that hasn't been opened yet, make sure it gets deleted after we
-      -- close the window
-      if opts.preview and not util.parse_url(filename) then
-        local bufnr = vim.fn.bufadd(filename)
-        if vim.fn.bufloaded(bufnr) == 0 then
-          vim.bo[bufnr].bufhidden = "wipe"
-          vim.b[bufnr].oil_preview_buffer = true
+      if opts.preview then
+        -- If we're previewing a file that hasn't been opened yet, make sure it gets deleted after
+        -- we close the window
+        if not vim.endswith(normalized_url, "/") and vim.fn.bufloaded(filebufnr) == 0 then
+          vim.bo[filebufnr].bufhidden = "wipe"
+          vim.b[filebufnr].oil_preview_buffer = true
         end
+      else
+        -- The :buffer command doesn't set buflisted=true
+        vim.bo[filebufnr].buflisted = true
       end
 
       local cmd
       if opts.preview and preview_win then
         vim.api.nvim_set_current_win(preview_win)
-        cmd = "edit"
+        cmd = "buffer"
       else
         if opts.tab then
-          cmd = "tabedit"
+          vim.cmd.tabnew({ mods = mods })
+          cmd = "buffer"
         elseif opts.split then
-          cmd = "split"
+          cmd = "sbuffer"
         else
-          cmd = "edit"
+          cmd = "buffer"
         end
       end
       vim.cmd({
         cmd = cmd,
-        args = { filename },
+        args = { filebufnr },
         mods = mods,
       })
       if opts.preview then
