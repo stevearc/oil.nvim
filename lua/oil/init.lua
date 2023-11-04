@@ -423,6 +423,7 @@ end
 M.select = function(opts, callback)
   local cache = require("oil.cache")
   local config = require("oil.config")
+  local fs = require("oil.fs")
   opts = vim.tbl_extend("keep", opts or {}, {})
   local function finish(err)
     if err then
@@ -527,12 +528,12 @@ M.select = function(opts, callback)
     local child = dir .. entry.name
     local url = scheme .. child
     local is_directory = entry.type == "directory"
-      or (
-        entry.type == "link"
-        and entry.meta
-        and entry.meta.link_stat
-        and entry.meta.link_stat.type == "directory"
-      )
+        or (
+          entry.type == "link"
+          and entry.meta
+          and entry.meta.link_stat
+          and entry.meta.link_stat.type == "directory"
+        )
     if is_directory then
       url = url .. "/"
       -- If this is a new directory BUT we think we already have an entry with this name, disallow
@@ -558,9 +559,11 @@ M.select = function(opts, callback)
       end
     end
 
+    print("url", url, "entry", entry.name)
     -- Normalize the url before opening to prevent needing to rename them inside the BufReadCmd
     -- Renaming buffers during opening can lead to missed autocmds
     get_edit_path(function(normalized_url)
+      print("Normalized url", normalized_url)
       local mods = {
         vertical = opts.vertical,
         horizontal = opts.horizontal,
@@ -569,11 +572,14 @@ M.select = function(opts, callback)
         emsg_silent = true,
       }
       -- If we're editing a file on disk, shorten the path prior to :edit so the
-      -- display name will show up shortened
-      if adapter.name == "files" and not util.parse_url(normalized_url) then
+      -- display name will show up shortened.
+      -- Don't do this on Windows, where ~/home/path.txt doesn't work
+      if adapter.name == "files" and not util.parse_url(normalized_url) and not fs.is_windows then
         normalized_url = require("oil.fs").shorten_path(normalized_url)
+        print("Shortened", normalized_url)
       end
       local filename = util.escape_filename(normalized_url)
+      print("Escaped", filename)
 
       -- If we're previewing a file that hasn't been opened yet, make sure it gets deleted after we
       -- close the window
@@ -617,9 +623,9 @@ M.select = function(opts, callback)
       return finish(err)
     end
     if
-      opts.close
-      and vim.api.nvim_win_is_valid(prev_win)
-      and prev_win ~= vim.api.nvim_get_current_win()
+        opts.close
+        and vim.api.nvim_win_is_valid(prev_win)
+        and prev_win ~= vim.api.nvim_get_current_win()
     then
       vim.api.nvim_win_call(prev_win, function()
         M.close()
@@ -752,7 +758,7 @@ local function restore_alt_buf()
         -- If we are editing the same buffer that we started oil from, set the alternate to be
         -- what it was before we opened oil
         local has_orig_alt, alt_buffer =
-          pcall(vim.api.nvim_win_get_var, 0, "oil_original_alternate")
+            pcall(vim.api.nvim_win_get_var, 0, "oil_original_alternate")
         if has_orig_alt and vim.api.nvim_buf_is_valid(alt_buffer) then
           vim.fn.setreg("#", alt_buffer)
         end

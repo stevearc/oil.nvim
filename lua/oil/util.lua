@@ -1,5 +1,6 @@
 local config = require("oil.config")
 local constants = require("oil.constants")
+local fs = require("oil.fs")
 
 local M = {}
 
@@ -19,8 +20,11 @@ end
 ---@param filename string
 ---@return string
 M.escape_filename = function(filename)
-  local ret = filename:gsub("([%%#$])", "\\%1")
-  return ret
+  if fs.is_windows then
+    filename = filename:gsub("\\", "/")
+    filename = filename:gsub("([$])", "\\%1")
+  end
+  return vim.fn.fnameescape(filename)
 end
 
 local _url_escape_chars = {
@@ -408,7 +412,7 @@ M.add_title_to_win = function(winid, opts)
         end
         local new_title = get_title()
         local new_width =
-          math.min(vim.api.nvim_win_get_width(winid) - 4, 2 + vim.api.nvim_strwidth(new_title))
+            math.min(vim.api.nvim_win_get_width(winid) - 4, 2 + vim.api.nvim_strwidth(new_title))
         vim.api.nvim_buf_set_lines(bufnr, 0, -1, true, { " " .. new_title .. " " })
         vim.bo[bufnr].modified = false
         vim.api.nvim_win_set_width(title_winid, new_width)
@@ -462,13 +466,13 @@ M.get_adapter_for_action = function(action)
     local dest_adapter = assert(config.get_adapter_by_scheme(action.dest_url))
     if adapter ~= dest_adapter then
       if
-        adapter.supported_adapters_for_copy
-        and adapter.supported_adapters_for_copy[dest_adapter.name]
+          adapter.supported_adapters_for_copy
+          and adapter.supported_adapters_for_copy[dest_adapter.name]
       then
         return adapter
       elseif
-        dest_adapter.supported_adapters_for_copy
-        and dest_adapter.supported_adapters_for_copy[adapter.name]
+          dest_adapter.supported_adapters_for_copy
+          and dest_adapter.supported_adapters_for_copy[adapter.name]
       then
         return dest_adapter
       else
@@ -648,9 +652,9 @@ end
 ---@return nil|integer
 M.buf_get_win = function(bufnr, preferred_win)
   if
-    preferred_win
-    and vim.api.nvim_win_is_valid(preferred_win)
-    and vim.api.nvim_win_get_buf(preferred_win) == bufnr
+      preferred_win
+      and vim.api.nvim_win_is_valid(preferred_win)
+      and vim.api.nvim_win_get_buf(preferred_win) == bufnr
   then
     return preferred_win
   end
