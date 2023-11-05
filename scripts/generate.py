@@ -121,22 +121,44 @@ COL_DEFS = [
         "An icon for the entry's type (requires nvim-web-devicons)",
         HL
         + [
-            LuaParam("default_file", "string", "Fallback icon for files when nvim-web-devicons returns nil"),
+            LuaParam(
+                "default_file",
+                "string",
+                "Fallback icon for files when nvim-web-devicons returns nil",
+            ),
             LuaParam("directory", "string", "Icon for directories"),
-            LuaParam("add_padding", "boolean", "Set to false to remove the extra whitespace after the icon"),
+            LuaParam(
+                "add_padding",
+                "boolean",
+                "Set to false to remove the extra whitespace after the icon",
+            ),
         ],
     ),
     ColumnDef("size", "files, ssh", False, True, "The size of the file", HL + []),
     ColumnDef(
-        "permissions", "files, ssh", True, False, "Access permissions of the file", HL + []
+        "permissions",
+        "files, ssh",
+        True,
+        False,
+        "Access permissions of the file",
+        HL + [],
     ),
-    ColumnDef("ctime", "files", False, True, "Change timestamp of the file", HL + TIME + []),
+    ColumnDef(
+        "ctime", "files", False, True, "Change timestamp of the file", HL + TIME + []
+    ),
     ColumnDef(
         "mtime", "files", False, True, "Last modified time of the file", HL + TIME + []
     ),
-    ColumnDef("atime", "files", False, True, "Last access time of the file", HL + TIME + []),
     ColumnDef(
-        "birthtime", "files", False, True, "The time the file was created", HL + TIME + []
+        "atime", "files", False, True, "Last access time of the file", HL + TIME + []
+    ),
+    ColumnDef(
+        "birthtime",
+        "files",
+        False,
+        True,
+        "The time the file was created",
+        HL + TIME + [],
     ),
 ]
 
@@ -170,7 +192,7 @@ def get_actions_vimdoc() -> "VimdocSection":
     section = VimdocSection("Actions", "oil-actions", ["\n"])
     section.body.extend(
         wrap(
-            "These are actions that can be used in the `keymaps` section of config options."
+            """These are actions that can be used in the `keymaps` section of config options. You can also call them directly with `require("oil.actions").action_name.callback()`"""
         )
     )
     section.body.append("\n")
@@ -210,6 +232,37 @@ def get_columns_vimdoc() -> "VimdocSection":
     return section
 
 
+def get_trash_vimdoc() -> "VimdocSection":
+    section = VimdocSection("Trash", "oil-trash", [])
+    section.body.append(
+        """
+Oil has built-in support for using the system trash. When
+`delete_to_trash = true`, any deleted files will be sent to the trash instead
+of being permanently deleted. You can browse the trash for a directory using
+the `toggle_trash` action (bound to `g\\` by default). You can view all files
+in the trash with `:Oil --trash /`.
+
+To restore files, simply delete them from the trash and put them in the desired
+destination, the same as any other file operation. If you delete files from the
+trash they will be permanently deleted (purged).
+
+Linux:
+    Oil supports the FreeDesktop trash specification.
+    https://specifications.freedesktop.org/trash-spec/trashspec-1.0.html
+    All features should work.
+
+Mac:
+    Oil has limited support for MacOS due to the proprietary nature of the
+    implementation. The trash bin can only be viewed as a single dir
+    (instead of being able to see files that were trashed from a directory).
+
+Windows:
+    Oil does not yet support the Windows trash. PRs are welcome!
+"""
+    )
+    return section
+
+
 def generate_vimdoc():
     doc = Vimdoc("oil.txt", "oil")
     funcs = parse_functions(os.path.join(ROOT, "lua", "oil", "init.lua"))
@@ -220,6 +273,7 @@ def generate_vimdoc():
             get_columns_vimdoc(),
             get_actions_vimdoc(),
             get_highlights_vimdoc(),
+            get_trash_vimdoc(),
         ]
     )
 

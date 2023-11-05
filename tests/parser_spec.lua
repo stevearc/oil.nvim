@@ -18,6 +18,7 @@ describe("parser", function()
   after_each(function()
     test_util.reset_editor()
   end)
+
   it("detects new files", function()
     vim.cmd.edit({ args = { "oil-test:///foo/" } })
     local bufnr = vim.api.nvim_get_current_buf()

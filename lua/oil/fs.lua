@@ -7,6 +7,8 @@ M.is_windows = uv.os_uname().version:match("Windows")
 
 M.is_mac = uv.os_uname().sysname == "Darwin"
 
+M.is_linux = not M.is_windows and not M.is_mac
+
 ---@type string
 M.sep = M.is_windows and "\\" or "/"
 
@@ -114,20 +116,31 @@ end
 local home_dir = assert(uv.os_homedir())
 
 ---@param path string
+---@param relative_to? string Shorten relative to this path (default cwd)
 ---@return string
-M.shorten_path = function(path)
-  local cwd = vim.fn.getcwd()
-  if M.is_subpath(cwd, path) then
-    local relative = path:sub(cwd:len() + 2)
-    if relative == "" then
-      relative = "."
+M.shorten_path = function(path, relative_to)
+  if not relative_to then
+    relative_to = vim.fn.getcwd()
+  end
+  local relpath
+  if M.is_subpath(relative_to, path) then
+    local idx = relative_to:len() + 1
+    -- Trim the dividing slash if it's not included in relative_to
+    if not vim.endswith(relative_to, "/") and not vim.endswith(relative_to, "\\") then
+      idx = idx + 1
     end
-    return relative
+    relpath = path:sub(idx)
+    if relpath == "" then
+      relpath = "."
+    end
   end
   if M.is_subpath(home_dir, path) then
-    return "~" .. path:sub(home_dir:len() + 1)
+    local homepath = "~" .. path:sub(home_dir:len() + 1)
+    if not relpath or homepath:len() < relpath:len() then
+      return homepath
+    end
   end
-  return path
+  return relpath or path
 end
 
 M.mkdirp = function(dir)
@@ -177,7 +190,7 @@ M.listdir = function(dir, cb)
     end
     read_next()
     ---@diagnostic disable-next-line: param-type-mismatch
-  end, 100) -- TODO do some testing for this
+  end, 10000)
 end
 
 ---@param entry_type oil.EntryType

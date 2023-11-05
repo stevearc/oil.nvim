@@ -7,7 +7,6 @@ local constants = require("oil.constants")
 local lsp_helpers = require("oil.lsp_helpers")
 local oil = require("oil")
 local parser = require("oil.mutator.parser")
-local pathutil = require("oil.pathutil")
 local preview = require("oil.mutator.preview")
 local util = require("oil.util")
 local view = require("oil.view")
@@ -54,6 +53,7 @@ M.create_actions_from_diffs = function(all_diffs)
   ---@type oil.Action[]
   local actions = {}
 
+  ---@type table<integer, oil.Diff[]>
   local diff_by_id = setmetatable({}, {
     __index = function(t, key)
       local list = {}
@@ -61,6 +61,15 @@ M.create_actions_from_diffs = function(all_diffs)
       return list
     end,
   })
+  ---@param action oil.Action
+  local function add_action(action)
+    local adapter = assert(config.get_adapter_by_scheme(action.dest_url or action.url))
+    if not adapter.filter_action or adapter.filter_action(action) then
+      table.insert(actions, action)
+    end
+  end
+  ---@type table<integer, string>
+  local dest_by_id = {}
   for bufnr, diffs in pairs(all_diffs) do
     local adapter = util.get_adapter(bufnr)
     if not adapter then
@@ -71,9 +80,7 @@ M.create_actions_from_diffs = function(all_diffs)
       if diff.type == "new" then
         if diff.id then
           local by_id = diff_by_id[diff.id]
-          -- FIXME this is kind of a hack. We shouldn't be setting undocumented fields on the diff
-          ---@diagnostic disable-next-line: inject-field
-          diff.dest = parent_url .. diff.name
+          dest_by_id[diff.id] = parent_url .. diff.name
           table.insert(by_id, diff)
         else
           -- Parse nested files like foo/bar/baz
@@ -87,7 +94,7 @@ M.create_actions_from_diffs = function(all_diffs)
               -- Parse alternations like foo.{js,test.js}
               for _, alt in ipairs(vim.split(alternation, ",")) do
                 local alt_url = url .. "/" .. v:gsub("{[^}]+}", alt)
-                table.insert(actions, {
+                add_action({
                   type = "create",
                   url = alt_url,
                   entry_type = entry_type,
@@ -96,7 +103,7 @@ M.create_actions_from_diffs = function(all_diffs)
               end
             else
               url = url .. "/" .. v
-              table.insert(actions, {
+              add_action({
                 type = "create",
                 url = url,
                 entry_type = entry_type,
@@ -106,7 +113,7 @@ M.create_actions_from_diffs = function(all_diffs)
           end
         end
       elseif diff.type == "change" then
-        table.insert(actions, {
+        add_action({
           type = "change",
           url = parent_url .. diff.name,
           entry_type = diff.entry_type,
@@ -115,8 +122,9 @@ M.create_actions_from_diffs = function(all_diffs)
         })
       else
         local by_id = diff_by_id[diff.id]
+        -- HACK: set has_delete field on a list-like table of diffs
         by_id.has_delete = true
-        -- Don't insert the delete. We already know that there is a delete because of the presense
+        -- Don't insert the delete. We already know that there is a delete because of the presence
         -- in the diff_by_id map. The list will only include the 'new' diffs.
       end
     end
@@ -127,21 +135,23 @@ M.create_actions_from_diffs = function(all_diffs)
     if not entry then
       error(string.format("Could not find entry %d", id))
     end
+    ---HACK: access the has_delete field on the list-like table of diffs
+    ---@diagnostic disable-next-line: undefined-field
     if diffs.has_delete then
       local has_create = #diffs > 0
       if has_create then
         -- MOVE (+ optional copies) when has both creates and delete
         for i, diff in ipairs(diffs) do
-          table.insert(actions, {
+          add_action({
             type = i == #diffs and "move" or "copy",
             entry_type = entry[FIELD_TYPE],
-            dest_url = diff.dest,
+            dest_url = dest_by_id[diff.id],
             src_url = cache.get_parent_url(id) .. entry[FIELD_NAME],
           })
         end
       else
         -- DELETE when no create
-        table.insert(actions, {
+        add_action({
           type = "delete",
           entry_type = entry[FIELD_TYPE],
           url = cache.get_parent_url(id) .. entry[FIELD_NAME],
@@ -150,11 +160,11 @@ M.create_actions_from_diffs = function(all_diffs)
     else
       -- COPY when create but no delete
       for _, diff in ipairs(diffs) do
-        table.insert(actions, {
+        add_action({
           type = "copy",
           entry_type = entry[FIELD_TYPE],
           src_url = cache.get_parent_url(id) .. entry[FIELD_NAME],
-          dest_url = diff.dest,
+          dest_url = dest_by_id[diff.id],
         })
       end
     end
@@ -353,30 +363,6 @@ end
 ---@param actions oil.Action[]
 ---@param cb fun(err: nil|string)
 M.process_actions = function(actions, cb)
-  -- convert delete actions to move-to-trash
-  local trash_url = config.get_trash_url()
-  if trash_url then
-    for i, v in ipairs(actions) do
-      if v.type == "delete" then
-        local scheme, path = util.parse_url(v.url)
-        if config.adapters[scheme] == "files" then
-          assert(path)
-          ---@type oil.MoveAction
-          local move_action = {
-            type = "move",
-            src_url = v.url,
-            entry_type = v.entry_type,
-            dest_url = trash_url .. "/" .. pathutil.basename(path) .. string.format(
-              "_%06d",
-              math.random(999999)
-            ),
-          }
-          actions[i] = move_action
-        end
-      end
-    end
-  end
-
   -- send all renames to LSP servers
   local moves = {}
   for _, action in ipairs(actions) do
@@ -390,12 +376,12 @@ M.process_actions = function(actions, cb)
   end
   lsp_helpers.will_rename_files(moves)
 
-  -- Convert cross-adapter moves to a copy + delete
+  -- Convert some cross-adapter moves to a copy + delete
   for _, action in ipairs(actions) do
     if action.type == "move" then
-      local src_scheme = util.parse_url(action.src_url)
-      local dest_scheme = util.parse_url(action.dest_url)
-      if src_scheme ~= dest_scheme then
+      local _, cross_action = util.get_adapter_for_action(action)
+      -- Only do the conversion if the cross-adapter support is "copy"
+      if cross_action == "copy" then
         action.type = "copy"
         table.insert(actions, {
           type = "delete",
@@ -488,6 +474,10 @@ M.try_write_changes = function(confirm)
     if vim.bo[bufnr].modified then
       local diffs, errors = parser.parse(bufnr)
       all_diffs[bufnr] = diffs
+      local adapter = assert(util.get_adapter(bufnr))
+      if adapter.filter_error then
+        errors = vim.tbl_filter(adapter.filter_error, errors)
+      end
       if not vim.tbl_isempty(errors) then
         all_errors[bufnr] = errors
       end
@@ -539,7 +529,7 @@ M.try_write_changes = function(confirm)
         view.unlock_buffers()
         if err then
           vim.notify(string.format("[oil] Error applying actions: %s", err), vim.log.levels.ERROR)
-          view.rerender_all_oil_buffers({ preserve_undo = false })
+          view.rerender_all_oil_buffers()
         else
           local current_entry = oil.get_cursor_entry()
           if current_entry then
@@ -549,7 +539,8 @@ M.try_write_changes = function(confirm)
               vim.split(current_entry.parsed_name or current_entry.name, "/")[1]
             )
           end
-          view.rerender_all_oil_buffers({ preserve_undo = M.trash })
+          view.rerender_all_oil_buffers()
+          vim.api.nvim_exec_autocmds("User", { pattern = "OilMutationComplete", modeline = false })
         end
         mutation_in_progress = false
       end)

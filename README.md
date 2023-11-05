@@ -43,11 +43,13 @@ oil.nvim supports all the usual plugin managers
   <summary>Packer</summary>
 
 ```lua
-require('packer').startup(function()
-    use {
-      'stevearc/oil.nvim',
-      config = function() require('oil').setup() end
-    }
+require("packer").startup(function()
+  use({
+    "stevearc/oil.nvim",
+    config = function()
+      require("oil").setup()
+    end,
+  })
 end)
 ```
 
@@ -57,9 +59,9 @@ end)
   <summary>Paq</summary>
 
 ```lua
-require "paq" {
-    {'stevearc/oil.nvim'};
-}
+require("paq")({
+  { "stevearc/oil.nvim" },
+})
 ```
 
 </details>
@@ -154,8 +156,6 @@ require("oil").setup({
   delete_to_trash = false,
   -- Skip the confirmation popup for simple operations
   skip_confirm_for_simple_edits = false,
-  -- Change this to customize the command used when deleting to trash
-  trash_command = "trash-put",
   -- Selecting a new/moved/renamed file or directory will prompt you to save changes first
   prompt_save_on_select_new_entry = true,
   -- Oil will automatically delete hidden buffers after this delay
@@ -184,6 +184,7 @@ require("oil").setup({
     ["gs"] = "actions.change_sort",
     ["gx"] = "actions.open_external",
     ["g."] = "actions.toggle_hidden",
+    ["g\\"] = "actions.toggle_trash",
   },
   -- Set to false to disable all of the above keymaps
   use_default_keymaps = true,
@@ -277,7 +278,7 @@ nvim oil-ssh://[username@]hostname[:port]/[path]
 
 This may look familiar. In fact, this is the same url format that netrw uses.
 
-Note that at the moment the ssh adapter does not support Windows machines, and it requires the server to have a `/bin/sh` binary as well as standard unix commands (`rm`, `mv`, `mkdir`, `chmod`, `cp`, `touch`, `ln`, `echo`).
+Note that at the moment the ssh adapter does not support Windows machines, and it requires the server to have a `/bin/sh` binary as well as standard unix commands (`ls`, `rm`, `mv`, `mkdir`, `chmod`, `cp`, `touch`, `ln`, `echo`).
 
 ## API
 

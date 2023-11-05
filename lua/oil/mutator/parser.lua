@@ -142,11 +142,18 @@ M.parse_line = function(adapter, line, column_defs)
   return { data = ret, entry = entry, ranges = ranges }
 end
 
+---@class (exact) oil.ParseError
+---@field lnum integer
+---@field col integer
+---@field message string
+
 ---@param bufnr integer
----@return oil.Diff[]
----@return table[] Parsing errors
+---@return oil.Diff[] diffs
+---@return oil.ParseError[] errors Parsing errors
 M.parse = function(bufnr)
+  ---@type oil.Diff[]
   local diffs = {}
+  ---@type oil.ParseError[]
   local errors = {}
   local bufname = vim.api.nvim_buf_get_name(bufnr)
   local adapter = util.get_adapter(bufnr)
@@ -158,11 +165,14 @@ M.parse = function(bufnr)
     })
     return diffs, errors
   end
-  local scheme, path = util.parse_url(bufname)
-  local parent_url = scheme .. path
-  local column_defs = columns.get_supported_columns(adapter)
-  local children = cache.list_url(parent_url)
+
   local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, true)
+  local scheme, path = util.parse_url(bufname)
+  local column_defs = columns.get_supported_columns(adapter)
+  local parent_url = scheme .. path
+  local children = cache.list_url(parent_url)
+  -- map from name to entry ID for all entries previously in the buffer
+  ---@type table<string, integer>
   local original_entries = {}
   for _, child in pairs(children) do
     local name = child[FIELD_NAME]
@@ -184,6 +194,7 @@ M.parse = function(bufnr)
   end
   for i, line in ipairs(lines) do
     if line:match("^/%d+") then
+      -- Parse the line for an existing entry
       local result, err = M.parse_line(adapter, line, column_defs)
       if not result or err then
         table.insert(errors, {
@@ -256,6 +267,7 @@ M.parse = function(bufnr)
         end
       end
     else
+      -- Parse a new entry
       local name, isdir = parsedir(vim.trim(line))
       if vim.startswith(name, "/") then
         table.insert(errors, {

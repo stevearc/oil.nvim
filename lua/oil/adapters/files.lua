@@ -7,6 +7,7 @@ local permissions = require("oil.adapters.files.permissions")
 local trash = require("oil.adapters.files.trash")
 local util = require("oil.util")
 local uv = vim.uv or vim.loop
+
 local M = {}
 
 local FIELD_NAME = constants.FIELD_NAME
@@ -147,7 +148,11 @@ if not fs.is_windows then
   }
 end
 
-local current_year = vim.fn.strftime("%Y")
+local current_year
+-- Make sure we run this import-time effect in the main loop (mostly for tests)
+vim.schedule(function()
+  current_year = vim.fn.strftime("%Y")
+end)
 
 for _, time_key in ipairs({ "ctime", "mtime", "atime", "birthtime" }) do
   file_columns[time_key] = {
@@ -436,7 +441,12 @@ M.render_action = function(action)
   elseif action.type == "delete" then
     local _, path = util.parse_url(action.url)
     assert(path)
-    return string.format("DELETE %s", M.to_short_os_path(path, action.entry_type))
+    local short_path = M.to_short_os_path(path, action.entry_type)
+    if config.delete_to_trash then
+      return string.format(" TRASH %s", short_path)
+    else
+      return string.format("DELETE %s", short_path)
+    end
   elseif action.type == "move" or action.type == "copy" then
     local dest_adapter = config.get_adapter_by_scheme(action.dest_url)
     if dest_adapter == M then
@@ -451,7 +461,7 @@ M.render_action = function(action)
         M.to_short_os_path(dest_path, action.entry_type)
       )
     else
-      -- We should never hit this because we don't implement supported_adapters_for_copy
+      -- We should never hit this because we don't implement supported_cross_adapter_actions
       error("files adapter doesn't support cross-adapter move/copy")
     end
   else
@@ -494,7 +504,15 @@ M.perform_action = function(action, cb)
     assert(path)
     path = fs.posix_to_os_path(path)
     if config.delete_to_trash then
-      trash.recursive_delete(path, cb)
+      if config.trash_command then
+        vim.notify_once(
+          "Oil now has native support for trash. Remove the `trash_command` from your config to try it out!",
+          vim.log.levels.WARN
+        )
+        trash.recursive_delete(path, cb)
+      else
+        require("oil.adapters.trash").delete_to_trash(path, cb)
+      end
     else
       fs.recursive_delete(action.entry_type, path, cb)
     end
@@ -507,9 +525,9 @@ M.perform_action = function(action, cb)
       assert(dest_path)
       src_path = fs.posix_to_os_path(src_path)
       dest_path = fs.posix_to_os_path(dest_path)
-      fs.recursive_move(action.entry_type, src_path, dest_path, vim.schedule_wrap(cb))
+      fs.recursive_move(action.entry_type, src_path, dest_path, cb)
     else
-      -- We should never hit this because we don't implement supported_adapters_for_copy
+      -- We should never hit this because we don't implement supported_cross_adapter_actions
       cb("files adapter doesn't support cross-adapter move")
     end
   elseif action.type == "copy" then
@@ -523,7 +541,7 @@ M.perform_action = function(action, cb)
       dest_path = fs.posix_to_os_path(dest_path)
       fs.recursive_copy(action.entry_type, src_path, dest_path, cb)
     else
-      -- We should never hit this because we don't implement supported_adapters_for_copy
+      -- We should never hit this because we don't implement supported_cross_adapter_actions
       cb("files adapter doesn't support cross-adapter copy")
     end
   else

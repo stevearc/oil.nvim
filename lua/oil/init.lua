@@ -8,6 +8,7 @@ local M = {}
 
 ---@alias oil.EntryType "file"|"directory"|"socket"|"link"|"fifo"
 ---@alias oil.TextChunk string|string[]
+---@alias oil.CrossAdapterAction "copy"|"move"
 
 ---@class (exact) oil.Adapter
 ---@field name string The unique name of the adapter (this will be set automatically)
@@ -20,7 +21,9 @@ local M = {}
 ---@field perform_action? fun(action: oil.Action, cb: fun(err: nil|string)) Perform a mutation action. Only needed if adapter is modifiable.
 ---@field read_file? fun(bufnr: integer) Used for adapters that deal with remote/virtual files. Read the contents of the file into a buffer.
 ---@field write_file? fun(bufnr: integer) Used for adapters that deal with remote/virtual files. Write the contents of a buffer to the destination.
----@field supported_adapters_for_copy? table<string, boolean> Mapping of adapter name to true for all other adapters that can be used as a src or dest for move/copy actions.
+---@field supported_cross_adapter_actions? table<string, oil.CrossAdapterAction> Mapping of adapter name to enum for all other adapters that can be used as a src or dest for move/copy actions.
+---@field filter_action? fun(action: oil.Action): boolean When present, filter out actions as they are created
+---@field filter_error? fun(action: oil.ParseError): boolean When present, filter out errors from parsing a buffer
 
 -- TODO remove after https://github.com/folke/neodev.nvim/pull/163 lands
 ---@diagnostic disable: undefined-field
@@ -110,34 +113,6 @@ M.discard_all_changes = function()
   end
 end
 
----Delete all files in the trash directory
----@private
----@note
---- Trash functionality is incomplete and experimental.
-M.empty_trash = function()
-  local config = require("oil.config")
-  local fs = require("oil.fs")
-  local util = require("oil.util")
-  local trash_url = config.get_trash_url()
-  if not trash_url then
-    vim.notify("No trash directory configured", vim.log.levels.WARN)
-    return
-  end
-  local _, path = util.parse_url(trash_url)
-  assert(path)
-  local dir = fs.posix_to_os_path(path)
-  if vim.fn.isdirectory(dir) == 1 then
-    fs.recursive_delete("directory", dir, function(err)
-      if err then
-        vim.notify(string.format("Error emptying trash: %s", err), vim.log.levels.ERROR)
-      else
-        vim.notify("Trash emptied")
-        fs.mkdirp(dir)
-      end
-    end)
-  end
-end
-
 ---Change the display columns for oil
 ---@param cols oil.ColumnSpec[]
 M.set_columns = function(cols)
@@ -177,9 +152,13 @@ end
 ---Get the oil url for a given directory
 ---@private
 ---@param dir nil|string When nil, use the cwd
----@return nil|string The parent url
+---@param use_oil_parent nil|boolean If in an oil buffer, return the parent (default true)
+---@return string The parent url
 ---@return nil|string The basename (if present) of the file/dir we were just in
-M.get_url_for_path = function(dir)
+M.get_url_for_path = function(dir, use_oil_parent)
+  if use_oil_parent == nil then
+    use_oil_parent = true
+  end
   local config = require("oil.config")
   local fs = require("oil.fs")
   local util = require("oil.util")
@@ -196,15 +175,16 @@ M.get_url_for_path = function(dir)
     return config.adapter_to_scheme.files .. path
   else
     local bufname = vim.api.nvim_buf_get_name(0)
-    return M.get_buffer_parent_url(bufname)
+    return M.get_buffer_parent_url(bufname, use_oil_parent)
   end
 end
 
 ---@private
 ---@param bufname string
+---@param use_oil_parent boolean If in an oil buffer, return the parent
 ---@return string
 ---@return nil|string
-M.get_buffer_parent_url = function(bufname)
+M.get_buffer_parent_url = function(bufname, use_oil_parent)
   local config = require("oil.config")
   local fs = require("oil.fs")
   local pathutil = require("oil.pathutil")
@@ -223,13 +203,15 @@ M.get_buffer_parent_url = function(bufname)
     return parent_url, basename
   else
     assert(path)
-    -- TODO maybe we should remove this special case and turn it into a config
     if scheme == "term://" then
       ---@type string
       path = vim.fn.expand(path:match("^(.*)//")) ---@diagnostic disable-line: assign-type-mismatch
       return config.adapter_to_scheme.files .. util.addslash(path)
     end
 
+    if not use_oil_parent then
+      return bufname
+    end
     local adapter = config.get_adapter_by_scheme(scheme)
     local parent_url
     if adapter and adapter.get_parent then
@@ -672,7 +654,7 @@ M._get_highlights = function()
     {
       name = "OilDir",
       link = "Directory",
-      desc = "Directories in an oil buffer",
+      desc = "Directory names in an oil buffer",
     },
     {
       name = "OilDirIcon",
@@ -688,6 +670,11 @@ M._get_highlights = function()
       name = "OilLink",
       link = nil,
       desc = "Soft links in an oil buffer",
+    },
+    {
+      name = "OilLinkTarget",
+      link = "Comment",
+      desc = "The target of a soft link",
     },
     {
       name = "OilFile",
@@ -718,6 +705,26 @@ M._get_highlights = function()
       name = "OilChange",
       link = "Special",
       desc = "Change action in the oil preview window",
+    },
+    {
+      name = "OilRestore",
+      link = "OilCreate",
+      desc = "Restore (from the trash) action in the oil preview window",
+    },
+    {
+      name = "OilPurge",
+      link = "OilDelete",
+      desc = "Purge (Permanently delete a file from trash) action in the oil preview window",
+    },
+    {
+      name = "OilTrash",
+      link = "OilDelete",
+      desc = "Trash (delete a file to trash) action in the oil preview window",
+    },
+    {
+      name = "OilTrashSourcePath",
+      link = "Comment",
+      desc = "Virtual text that shows the original path of file in the trash",
     },
   }
 end
@@ -855,14 +862,23 @@ M.setup = function(opts)
   config.setup(opts)
   set_colors()
   vim.api.nvim_create_user_command("Oil", function(args)
+    local util = require("oil.util")
     if args.smods.tab == 1 then
       vim.cmd.tabnew()
     end
     local float = false
-    for i, v in ipairs(args.fargs) do
+    local trash = false
+    local i = 1
+    while i <= #args.fargs do
+      local v = args.fargs[i]
       if v == "--float" then
         float = true
         table.remove(args.fargs, i)
+      elseif v == "--trash" then
+        trash = true
+        table.remove(args.fargs, i)
+      else
+        i = i + 1
       end
     end
 
@@ -875,7 +891,13 @@ M.setup = function(opts)
     end
 
     local method = float and "open_float" or "open"
-    M[method](unpack(args.fargs))
+    local path = args.fargs[1]
+    if trash then
+      local url = M.get_url_for_path(path, false)
+      local _, new_path = util.parse_url(url)
+      path = "oil-trash://" .. new_path
+    end
+    M[method](path)
   end, { desc = "Open oil file browser on a directory", nargs = "*", complete = "dir" })
   local aug = vim.api.nvim_create_augroup("Oil", {})
 

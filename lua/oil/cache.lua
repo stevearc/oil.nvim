@@ -4,10 +4,12 @@ local M = {}
 
 local FIELD_ID = constants.FIELD_ID
 local FIELD_NAME = constants.FIELD_NAME
+local FIELD_META = constants.FIELD_META
 
 local next_id = 1
 
 -- Map<url, Map<entry name, oil.InternalEntry>>
+---@type table<string, table<string, oil.InternalEntry>>
 local url_directory = {}
 
 ---@type table<integer, oil.InternalEntry>
@@ -118,6 +120,15 @@ M.get_entry_by_id = function(id)
   return entries_by_id[id]
 end
 
+---@param url string
+---@return nil|oil.InternalEntry
+M.get_entry_by_url = function(url)
+  local scheme, path = util.parse_url(url)
+  local parent_url = scheme .. vim.fn.fnamemodify(path, ":h")
+  local basename = vim.fn.fnamemodify(path, ":t")
+  return M.list_url(parent_url)[basename]
+end
+
 ---@param id integer
 ---@return string
 M.get_parent_url = function(id)
@@ -129,16 +140,10 @@ M.get_parent_url = function(id)
 end
 
 ---@param url string
----@return oil.InternalEntry[]
+---@return table<string, oil.InternalEntry>
 M.list_url = function(url)
   url = util.addslash(url)
   return url_directory[url] or {}
-end
-
-M.get_entry_by_url = function(url)
-  local parent, name = url:match("^(.+)/([^/]+)$")
-  local cache = url_directory[parent]
-  return cache and cache[name]
 end
 
 ---@param action oil.Action
@@ -172,6 +177,8 @@ M.perform_action = function(action)
       dest_parent = {}
       url_directory[dest_parent_url] = dest_parent
     end
+    -- We have to clear the metadata because it can be inaccurate after the move
+    entry[FIELD_META] = nil
     dest_parent[dest_name] = entry
     parent_url_by_id[entry[FIELD_ID]] = dest_parent_url
     entry[FIELD_NAME] = dest_name

@@ -25,6 +25,18 @@ M.reset_editor = function()
   test_adapter.test_clear()
 end
 
+local function throwiferr(err, ...)
+  if err then
+    error(err)
+  else
+    return ...
+  end
+end
+
+M.await = function(fn, nargs, ...)
+  return throwiferr(a.wrap(fn, nargs)(...))
+end
+
 M.wait_for_autocmd = a.wrap(function(autocmd, cb)
   local opts = {
     pattern = "*",
@@ -57,5 +69,49 @@ M.feedkeys = function(actions, timestep)
   vim.api.nvim_feedkeys("", "x", true)
   a.util.sleep(timestep)
 end
+
+M.actions = {
+  ---Open oil and wait for it to finish rendering
+  ---@param args string[]
+  open = function(args)
+    vim.schedule(function()
+      vim.cmd.Oil({ args = args })
+      -- If this buffer was already open, manually dispatch the autocmd to finish the wait
+      if vim.b.oil_ready then
+        vim.api.nvim_exec_autocmds("User", {
+          pattern = "OilEnter",
+          modeline = false,
+          data = { buf = vim.api.nvim_get_current_buf() },
+        })
+      end
+    end)
+    M.wait_for_autocmd({ "User", pattern = "OilEnter" })
+  end,
+
+  ---Save all changes and wait for operation to complete
+  save = function()
+    vim.schedule_wrap(require("oil").save)({ confirm = false })
+    M.wait_for_autocmd({ "User", pattern = "OilMutationComplete" })
+  end,
+
+  ---@param bufnr? integer
+  reload = function(bufnr)
+    M.await(require("oil.view").render_buffer_async, 3, bufnr or 0)
+  end,
+
+  ---Move cursor to a file or directory in an oil buffer
+  ---@param filename string
+  focus = function(filename)
+    local lines = vim.api.nvim_buf_get_lines(0, 0, -1, true)
+    local search = " " .. filename .. "$"
+    for i, line in ipairs(lines) do
+      if line:match(search) then
+        vim.api.nvim_win_set_cursor(0, { i, 0 })
+        return
+      end
+    end
+    error("Could not find file " .. filename)
+  end,
+}
 
 return M

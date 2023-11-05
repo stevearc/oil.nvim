@@ -1,7 +1,9 @@
+local uv = vim.uv or vim.loop
 local cache = require("oil.cache")
 local columns = require("oil.columns")
 local config = require("oil.config")
 local constants = require("oil.constants")
+local fs = require("oil.fs")
 local keymap_util = require("oil.keymap_util")
 local loading = require("oil.loading")
 local util = require("oil.util")
@@ -142,10 +144,11 @@ M.unlock_buffers = function()
   end
 end
 
----@param opts table
+---@param opts? table
 ---@note
 --- This DISCARDS ALL MODIFICATIONS a user has made to oil buffers
 M.rerender_all_oil_buffers = function(opts)
+  opts = opts or {}
   local buffers = M.get_all_buffers()
   local hidden_buffers = {}
   for _, bufnr in ipairs(buffers) do
@@ -177,8 +180,8 @@ end
 ---Get a list of visible oil buffers and a list of hidden oil buffers
 ---@note
 --- If any buffers are modified, return values are nil
----@return nil|integer[]
----@return nil|integer[]
+---@return nil|integer[] visible
+---@return nil|integer[] hidden
 local function get_visible_hidden_buffers()
   local buffers = M.get_all_buffers()
   local hidden_buffers = {}
@@ -227,6 +230,43 @@ local function get_first_mutable_column_col(adapter, ranges)
   return min_col
 end
 
+---Redraw original path virtual text for trash buffer
+---@param bufnr integer
+local function redraw_trash_virtual_text(bufnr)
+  if not vim.api.nvim_buf_is_valid(bufnr) or not vim.api.nvim_buf_is_loaded(bufnr) then
+    return
+  end
+  local parser = require("oil.mutator.parser")
+  local adapter = util.get_adapter(bufnr)
+  if not adapter or adapter.name ~= "trash" then
+    return
+  end
+  local _, buf_path = util.parse_url(vim.api.nvim_buf_get_name(bufnr))
+  local os_path = fs.posix_to_os_path(assert(buf_path))
+  local ns = vim.api.nvim_create_namespace("OilVtext")
+  vim.api.nvim_buf_clear_namespace(bufnr, ns, 0, -1)
+  local column_defs = columns.get_supported_columns(adapter)
+  for lnum, line in ipairs(vim.api.nvim_buf_get_lines(bufnr, 0, -1, true)) do
+    local result = parser.parse_line(adapter, line, column_defs)
+    local entry = result and result.entry
+    if entry then
+      local meta = entry[FIELD_META]
+      ---@type nil|oil.TrashInfo
+      local trash_info = meta and meta.trash_info
+      if trash_info then
+        vim.api.nvim_buf_set_extmark(bufnr, ns, lnum - 1, 0, {
+          virt_text = {
+            {
+              "➜ " .. fs.shorten_path(trash_info.original_path, os_path),
+              "OilTrashSourcePath",
+            },
+          },
+        })
+      end
+    end
+  end
+end
+
 ---@param bufnr integer
 M.initialize = function(bufnr)
   if bufnr == 0 then
@@ -255,7 +295,7 @@ M.initialize = function(bufnr)
     nested = true,
     buffer = bufnr,
     callback = function()
-      -- First wait a short time (10ms) for the buffer change to settle
+      -- First wait a short time (100ms) for the buffer change to settle
       vim.defer_fn(function()
         local visible_buffers = get_visible_hidden_buffers()
         -- Only delete oil buffers if none of them are visible
@@ -271,7 +311,7 @@ M.initialize = function(bufnr)
             end
           end
         end
-      end, 10)
+      end, 100)
     end,
   })
   vim.api.nvim_create_autocmd("BufDelete", {
@@ -351,6 +391,36 @@ M.initialize = function(bufnr)
       end)
     end,
   })
+
+  -- Watch for TextChanged and update the trash original path extmarks
+  local adapter = util.get_adapter(bufnr)
+  if adapter and adapter.name == "trash" then
+    local debounce_timer = assert(uv.new_timer())
+    local pending = false
+    vim.api.nvim_create_autocmd("TextChanged", {
+      desc = "Update oil virtual text of original path",
+      buffer = bufnr,
+      callback = function()
+        -- Respond immediately to prevent flickering, the set the timer for a "cooldown period"
+        -- If this is called again during the cooldown window, we will rerender after cooldown.
+        if debounce_timer:is_active() then
+          pending = true
+        else
+          redraw_trash_virtual_text(bufnr)
+        end
+        debounce_timer:start(
+          50,
+          0,
+          vim.schedule_wrap(function()
+            if pending then
+              pending = false
+              redraw_trash_virtual_text(bufnr)
+            end
+          end)
+        )
+      end,
+    })
+  end
   M.render_buffer_async(bufnr, {}, function(err)
     if err then
       vim.notify(
@@ -358,6 +428,7 @@ M.initialize = function(bufnr)
         vim.log.levels.ERROR
       )
     else
+      vim.b[bufnr].oil_ready = true
       vim.api.nvim_exec_autocmds(
         "User",
         { pattern = "OilEnter", modeline = false, data = { buf = bufnr } }
@@ -478,6 +549,7 @@ local function render_buffer(bufnr, opts)
   vim.bo[bufnr].modifiable = false
   vim.bo[bufnr].modified = false
   util.set_highlights(bufnr, highlights)
+
   if opts.jump then
     -- TODO why is the schedule necessary?
     vim.schedule(function()
@@ -511,6 +583,10 @@ end
 ---@return oil.TextChunk[]
 M.format_entry_cols = function(entry, column_defs, col_width, adapter)
   local name = entry[FIELD_NAME]
+  local meta = entry[FIELD_META]
+  if meta and meta.display_name then
+    name = meta.display_name
+  end
   -- First put the unique ID
   local cols = {}
   local id_key = cache.format_id(entry[FIELD_ID])
@@ -531,7 +607,6 @@ M.format_entry_cols = function(entry, column_defs, col_width, adapter)
   elseif entry_type == "socket" then
     table.insert(cols, { name, "OilSocket" })
   elseif entry_type == "link" then
-    local meta = entry[FIELD_META]
     local link_text
     if meta then
       if meta.link_stat and meta.link_stat.type == "directory" then
@@ -548,7 +623,7 @@ M.format_entry_cols = function(entry, column_defs, col_width, adapter)
 
     table.insert(cols, { name, "OilLink" })
     if link_text then
-      table.insert(cols, { link_text, "Comment" })
+      table.insert(cols, { link_text, "OilLinkTarget" })
     end
   else
     table.insert(cols, { name, "OilFile" })
@@ -573,29 +648,22 @@ end
 
 ---@param bufnr integer
 ---@param opts nil|table
----    preserve_undo nil|boolean
 ---    refetch nil|boolean Defaults to true
 ---@param callback nil|fun(err: nil|string)
 M.render_buffer_async = function(bufnr, opts, callback)
   opts = vim.tbl_deep_extend("keep", opts or {}, {
-    preserve_undo = false,
     refetch = true,
   })
   if bufnr == 0 then
     bufnr = vim.api.nvim_get_current_buf()
   end
   local bufname = vim.api.nvim_buf_get_name(bufnr)
-  local scheme, dir = util.parse_url(bufname)
-  local preserve_undo = opts.preserve_undo and config.adapters[scheme] == "files"
-  if not preserve_undo then
-    -- Undo should not return to a blank buffer
-    -- Method taken from :h clear-undo
-    vim.bo[bufnr].undolevels = -1
-  end
+  local _, dir = util.parse_url(bufname)
+  -- Undo should not return to a blank buffer
+  -- Method taken from :h clear-undo
+  vim.bo[bufnr].undolevels = -1
   local handle_error = vim.schedule_wrap(function(message)
-    if not preserve_undo then
-      vim.bo[bufnr].undolevels = vim.api.nvim_get_option_value("undolevels", { scope = "global" })
-    end
+    vim.bo[bufnr].undolevels = vim.api.nvim_get_option_value("undolevels", { scope = "global" })
     util.render_text(bufnr, { "Error: " .. message })
     if callback then
       callback(message)
@@ -612,7 +680,7 @@ M.render_buffer_async = function(bufnr, opts, callback)
     handle_error(string.format("[oil] no adapter for buffer '%s'", bufname))
     return
   end
-  local start_ms = vim.loop.hrtime() / 1e6
+  local start_ms = uv.hrtime() / 1e6
   local seek_after_render_found = false
   local first = true
   vim.bo[bufnr].modifiable = false
@@ -624,9 +692,7 @@ M.render_buffer_async = function(bufnr, opts, callback)
     end
     loading.set_loading(bufnr, false)
     render_buffer(bufnr, { jump = true })
-    if not preserve_undo then
-      vim.bo[bufnr].undolevels = vim.api.nvim_get_option_value("undolevels", { scope = "global" })
-    end
+    vim.bo[bufnr].undolevels = vim.api.nvim_get_option_value("undolevels", { scope = "global" })
     vim.bo[bufnr].modifiable = not buffers_locked and adapter.is_modifiable(bufnr)
     if callback then
       callback()
@@ -651,7 +717,7 @@ M.render_buffer_async = function(bufnr, opts, callback)
       end
     end
     if fetch_more then
-      local now = vim.loop.hrtime() / 1e6
+      local now = uv.hrtime() / 1e6
       local delta = now - start_ms
       -- If we've been chugging for more than 40ms, go ahead and render what we have
       if delta > 40 then
