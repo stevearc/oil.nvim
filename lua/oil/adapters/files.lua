@@ -208,7 +208,7 @@ end
 M.normalize_url = function(url, callback)
   local scheme, path = util.parse_url(url)
   assert(path)
-  if fs.is_windows and path == '/' then
+  if fs.is_windows and path == "/" then
     return callback(url)
   end
   local os_path = vim.fn.fnamemodify(fs.posix_to_os_path(path), ":p")
@@ -263,16 +263,16 @@ end
 local function list_windows_drives(url, column_defs, cb)
   local fetch_meta = columns.get_metadata_fetcher(M, column_defs)
   local stdout = ""
-  local jid = vim.fn.jobstart({ 'wmic', 'logicaldisk', 'get', 'name' }, {
+  local jid = vim.fn.jobstart({ "wmic", "logicaldisk", "get", "name" }, {
     stdout_buffered = true,
     on_stdout = function(_, data)
-      stdout = table.concat(data, '\n')
+      stdout = table.concat(data, "\n")
     end,
     on_exit = function(_, code)
       if code ~= 0 then
         return cb("Error listing windows devices")
       end
-      local lines = vim.split(stdout, '\n', { plain = true, trimempty = true })
+      local lines = vim.split(stdout, "\n", { plain = true, trimempty = true })
       -- Remove the "Name" header
       table.remove(lines, 1)
       local internal_entries = {}
@@ -301,7 +301,7 @@ local function list_windows_drives(url, column_defs, cb)
           end)
         end
       end
-    end
+    end,
   })
   if jid <= 0 then
     cb("Could not list windows devices")
@@ -314,7 +314,7 @@ end
 M.list = function(url, column_defs, cb)
   local _, path = util.parse_url(url)
   assert(path)
-  if fs.is_windows and path == '/' then
+  if fs.is_windows and path == "/" then
     return list_windows_drives(url, column_defs, cb)
   end
   local dir = fs.posix_to_os_path(path)
@@ -395,7 +395,7 @@ M.is_modifiable = function(bufnr)
   local bufname = vim.api.nvim_buf_get_name(bufnr)
   local _, path = util.parse_url(bufname)
   assert(path)
-  if fs.is_windows and path == '/' then
+  if fs.is_windows and path == "/" then
     return false
   end
   local dir = fs.posix_to_os_path(path)
