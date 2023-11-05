@@ -1,5 +1,26 @@
 # Changelog
 
+## [2.3.0](https://github.com/stevearc/oil.nvim/compare/v2.2.0...v2.3.0) (2023-11-04)
+
+
+### Features
+
+* add support for LSP willRenameFiles ([#184](https://github.com/stevearc/oil.nvim/issues/184)) ([8f3c1d2](https://github.com/stevearc/oil.nvim/commit/8f3c1d2d2e4f7b81d19f353c61cb4ccba6a26496))
+* make buffer cleanup delay configurable ([#191](https://github.com/stevearc/oil.nvim/issues/191)) ([a9f7f69](https://github.com/stevearc/oil.nvim/commit/a9f7f6927de2ceab01c9dfddd5a0d96330fe6374))
+
+
+### Bug Fixes
+
+* call vimL function in main loop ([#206](https://github.com/stevearc/oil.nvim/issues/206)) ([8418e94](https://github.com/stevearc/oil.nvim/commit/8418e94734e2572b422aead6e28d5a4c5b543d1f))
+* case handling for LSP willRenameFiles ([deba4db](https://github.com/stevearc/oil.nvim/commit/deba4db1aca6e3970c94499401da001694d01138))
+* disable swapfile for oil buffers ([#190](https://github.com/stevearc/oil.nvim/issues/190)) ([2e6996b](https://github.com/stevearc/oil.nvim/commit/2e6996b0757c454a8bbf1eb719d0b0b065442213))
+* more correct gf binding for ssh files ([1641357](https://github.com/stevearc/oil.nvim/commit/164135793d893efad9ed6f90ac74a1ab54c4182a))
+* parse errors when moving files across adapters ([4088efb](https://github.com/stevearc/oil.nvim/commit/4088efb8ff664b6f1624aab5dac6c3fe11d3962c))
+* path shortening does proper subpath detection ([054247b](https://github.com/stevearc/oil.nvim/commit/054247b9c1799edd5874231973db621553062a43))
+* restore original window when closing floating win ([#208](https://github.com/stevearc/oil.nvim/issues/208)) ([aea896a](https://github.com/stevearc/oil.nvim/commit/aea896a880e294c97a7c395dd8a6c89bdc93c644))
+* shorten path when opening files ([#194](https://github.com/stevearc/oil.nvim/issues/194), [#197](https://github.com/stevearc/oil.nvim/issues/197)) ([3275996](https://github.com/stevearc/oil.nvim/commit/3275996ce65f142d0e96b9fc2658f94e5bd43ad5))
+* shorten path when opening files ([#194](https://github.com/stevearc/oil.nvim/issues/194)) ([6cbc8d7](https://github.com/stevearc/oil.nvim/commit/6cbc8d725d3964cb08d679774db67d41fa002647))
+
 ## [2.2.0](https://github.com/stevearc/oil.nvim/compare/v2.1.0...v2.2.0) (2023-09-30)
 
 
