@@ -150,8 +150,9 @@ end
 M.parse_col = function(adapter, line, col_def)
   local name, conf = util.split_config(col_def)
   -- If rendering failed, there will just be a "-"
-  if vim.startswith(line, "- ") then
-    return nil, line:sub(3)
+  local empty_col, rem = line:match("^(-%s+)(.*)$")
+  if empty_col then
+    return nil, rem
   end
   local column = M.get_column(adapter, name)
   if column then
