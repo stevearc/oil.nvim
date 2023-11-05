@@ -15,11 +15,10 @@ local FIELD_META = constants.FIELD_META
 -- map of path->last entry under cursor
 local last_cursor_entry = {}
 
----@param entry oil.InternalEntry
+---@param name string
 ---@param bufnr integer
 ---@return boolean
-M.should_display = function(entry, bufnr)
-  local name = entry[FIELD_NAME]
+M.should_display = function(name, bufnr)
   return not config.view_options.is_always_hidden(name, bufnr)
     and (not config.view_options.is_hidden_file(name, bufnr) or config.view_options.show_hidden)
 end
@@ -450,8 +449,14 @@ local function render_buffer(bufnr, opts)
   for i in ipairs(column_defs) do
     col_width[i + 1] = 1
   end
+
+  if M.should_display("..", bufnr) then
+    local cols = M.format_entry_cols({ 0, "..", "directory" }, column_defs, col_width, adapter)
+    table.insert(line_table, cols)
+  end
+
   for _, entry in ipairs(entry_list) do
-    if not M.should_display(entry, bufnr) then
+    if not M.should_display(entry[FIELD_NAME], bufnr) then
       goto continue
     end
     local cols = M.format_entry_cols(entry, column_defs, col_width, adapter)

@@ -165,8 +165,9 @@ M.parse = function(bufnr)
   local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, true)
   local original_entries = {}
   for _, child in pairs(children) do
-    if view.should_display(child, bufnr) then
-      original_entries[child[FIELD_NAME]] = child[FIELD_ID]
+    local name = child[FIELD_NAME]
+    if view.should_display(name, bufnr) then
+      original_entries[name] = child[FIELD_ID]
     end
   end
   local seen_names = {}
@@ -190,6 +191,9 @@ M.parse = function(bufnr)
           lnum = i - 1,
           col = 0,
         })
+        goto continue
+      elseif result.data.id == 0 then
+        -- Ignore entries with ID 0 (typically the "../" entry)
         goto continue
       end
       local parsed_entry = result.data

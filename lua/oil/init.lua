@@ -55,6 +55,7 @@ M.get_entry_on_line = function(bufnr, lnum)
       return entry
     else
       return {
+        id = result.data.id,
         name = result.data.name,
         type = result.data._type,
         parsed_name = result.data.name,
@@ -429,6 +430,7 @@ end
 M.select = function(opts, callback)
   local cache = require("oil.cache")
   local config = require("oil.config")
+  local pathutil = require("oil.pathutil")
   opts = vim.tbl_extend("keep", opts or {}, {})
   local function finish(err)
     if err then
@@ -496,12 +498,15 @@ M.select = function(opts, callback)
   local bufname = vim.api.nvim_buf_get_name(0)
   local any_moved = false
   for _, entry in ipairs(entries) do
-    local is_new_entry = entry.id == nil
-    local is_moved_from_dir = entry.id and cache.get_parent_url(entry.id) ~= bufname
-    local is_renamed = entry.parsed_name ~= entry.name
-    if is_new_entry or is_moved_from_dir or is_renamed then
-      any_moved = true
-      break
+    -- Ignore entries with ID 0 (typically the "../" entry)
+    if entry.id ~= 0 then
+      local is_new_entry = entry.id == nil
+      local is_moved_from_dir = entry.id and cache.get_parent_url(entry.id) ~= bufname
+      local is_renamed = entry.parsed_name ~= entry.name
+      if is_new_entry or is_moved_from_dir or is_renamed then
+        any_moved = true
+        break
+      end
     end
   end
   if any_moved and not opts.preview and config.prompt_save_on_select_new_entry then
@@ -521,6 +526,8 @@ M.select = function(opts, callback)
   end
   local prev_win = vim.api.nvim_get_current_win()
 
+  local scheme, dir = util.parse_url(bufname)
+  assert(scheme and dir)
   -- Async iter over entries so we can normalize the url before opening
   local i = 1
   local function open_next_entry(cb)
@@ -529,9 +536,7 @@ M.select = function(opts, callback)
     if not entry then
       return cb()
     end
-    local scheme, dir = util.parse_url(bufname)
-    local child = dir .. entry.name
-    local url = scheme .. child
+    local url = scheme .. dir .. entry.name
     local is_directory = entry.type == "directory"
       or (
         entry.type == "link"
@@ -554,7 +559,11 @@ M.select = function(opts, callback)
     end
 
     local get_edit_path
-    if adapter.get_entry_path then
+    if entry.name == ".." then
+      get_edit_path = function(edit_cb)
+        edit_cb(scheme .. pathutil.parent(dir))
+      end
+    elseif adapter.get_entry_path then
       get_edit_path = function(edit_cb)
         adapter.get_entry_path(url, entry, edit_cb)
       end
