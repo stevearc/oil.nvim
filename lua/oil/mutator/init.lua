@@ -53,6 +53,7 @@ M.create_actions_from_diffs = function(all_diffs)
   ---@type oil.Action[]
   local actions = {}
 
+  ---@type table<integer, oil.Diff[]>
   local diff_by_id = setmetatable({}, {
     __index = function(t, key)
       local list = {}
@@ -60,12 +61,14 @@ M.create_actions_from_diffs = function(all_diffs)
       return list
     end,
   })
+  ---@param action oil.Action
   local function add_action(action)
     local adapter = assert(config.get_adapter_by_scheme(action.dest_url or action.url))
     if not adapter.filter_action or adapter.filter_action(action) then
       table.insert(actions, action)
     end
   end
+  ---@type table<integer, string>
   local dest_by_id = {}
   for bufnr, diffs in pairs(all_diffs) do
     local adapter = util.get_adapter(bufnr)
@@ -119,6 +122,7 @@ M.create_actions_from_diffs = function(all_diffs)
         })
       else
         local by_id = diff_by_id[diff.id]
+        -- HACK: set has_delete field on a list-like table of diffs
         by_id.has_delete = true
         -- Don't insert the delete. We already know that there is a delete because of the presence
         -- in the diff_by_id map. The list will only include the 'new' diffs.
@@ -131,6 +135,8 @@ M.create_actions_from_diffs = function(all_diffs)
     if not entry then
       error(string.format("Could not find entry %d", id))
     end
+    ---HACK: access the has_delete field on the list-like table of diffs
+    ---@diagnostic disable-next-line: undefined-field
     if diffs.has_delete then
       local has_create = #diffs > 0
       if has_create then
