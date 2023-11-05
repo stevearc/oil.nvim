@@ -60,24 +60,24 @@ M.create_actions_from_diffs = function(all_diffs)
       return list
     end,
   })
+  local function add_action(action)
+    local adapter = assert(config.get_adapter_by_scheme(action.dest_url or action.url))
+    if not adapter.filter_action or adapter.filter_action(action) then
+      table.insert(actions, action)
+    end
+  end
+  local dest_by_id = {}
   for bufnr, diffs in pairs(all_diffs) do
     local adapter = util.get_adapter(bufnr)
     if not adapter then
       error("Missing adapter")
-    end
-    local function add_action(action)
-      if not adapter.filter_action or adapter.filter_action(action) then
-        table.insert(actions, action)
-      end
     end
     local parent_url = vim.api.nvim_buf_get_name(bufnr)
     for _, diff in ipairs(diffs) do
       if diff.type == "new" then
         if diff.id then
           local by_id = diff_by_id[diff.id]
-          -- FIXME this is kind of a hack. We shouldn't be setting undocumented fields on the diff
-          ---@diagnostic disable-next-line: inject-field
-          diff.dest = parent_url .. diff.name
+          dest_by_id[diff.id] = parent_url .. diff.name
           table.insert(by_id, diff)
         else
           -- Parse nested files like foo/bar/baz
@@ -126,12 +126,6 @@ M.create_actions_from_diffs = function(all_diffs)
     end
   end
 
-  local function add_action(action)
-    local adapter = assert(config.get_adapter_by_scheme(action.dest_url or action.url))
-    if not adapter.filter_action or adapter.filter_action(action) then
-      table.insert(actions, action)
-    end
-  end
   for id, diffs in pairs(diff_by_id) do
     local entry = cache.get_entry_by_id(id)
     if not entry then
@@ -145,7 +139,7 @@ M.create_actions_from_diffs = function(all_diffs)
           add_action({
             type = i == #diffs and "move" or "copy",
             entry_type = entry[FIELD_TYPE],
-            dest_url = diff.dest,
+            dest_url = dest_by_id[diff.id],
             src_url = cache.get_parent_url(id) .. entry[FIELD_NAME],
           })
         end
@@ -164,7 +158,7 @@ M.create_actions_from_diffs = function(all_diffs)
           type = "copy",
           entry_type = entry[FIELD_TYPE],
           src_url = cache.get_parent_url(id) .. entry[FIELD_NAME],
-          dest_url = diff.dest,
+          dest_url = dest_by_id[diff.id],
         })
       end
     end
