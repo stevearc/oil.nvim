@@ -49,8 +49,8 @@ local fs_stat_meta_fields = {
   stat = function(parent_url, entry, cb)
     local _, path = util.parse_url(parent_url)
     assert(path)
-    local dir = fs.posix_to_os_path(path)
-    uv.fs_stat(fs.join(dir, entry[FIELD_NAME]), cb)
+    local dir = fs.posix_to_os_path(path .. entry[FIELD_NAME])
+    uv.fs_stat(dir, cb)
   end,
 }
 
@@ -208,6 +208,9 @@ end
 M.normalize_url = function(url, callback)
   local scheme, path = util.parse_url(url)
   assert(path)
+  if fs.is_windows and path == '/' then
+    return callback(url)
+  end
   local os_path = vim.fn.fnamemodify(fs.posix_to_os_path(path), ":p")
   uv.fs_realpath(os_path, function(err, new_os_path)
     local realpath = new_os_path or os_path
@@ -257,9 +260,63 @@ end
 ---@param url string
 ---@param column_defs string[]
 ---@param cb fun(err?: string, entries?: oil.InternalEntry[], fetch_more?: fun())
+local function list_windows_drives(url, column_defs, cb)
+  local fetch_meta = columns.get_metadata_fetcher(M, column_defs)
+  local stdout = ""
+  local jid = vim.fn.jobstart({ 'wmic', 'logicaldisk', 'get', 'name' }, {
+    stdout_buffered = true,
+    on_stdout = function(_, data)
+      stdout = table.concat(data, '\n')
+    end,
+    on_exit = function(_, code)
+      if code ~= 0 then
+        return cb("Error listing windows devices")
+      end
+      local lines = vim.split(stdout, '\n', { plain = true, trimempty = true })
+      -- Remove the "Name" header
+      table.remove(lines, 1)
+      local internal_entries = {}
+      local complete_disk_cb = util.cb_collect(#lines, function(err)
+        if err then
+          cb(err)
+        else
+          cb(nil, internal_entries)
+        end
+      end)
+
+      for _, disk in ipairs(lines) do
+        if disk:match("^%s*$") then
+          -- Skip empty line
+          complete_disk_cb()
+        else
+          disk = disk:gsub(":%s*$", "")
+          local cache_entry = cache.create_entry(url, disk, "directory")
+          fetch_meta(url, cache_entry, function(err)
+            if err then
+              complete_disk_cb(err)
+            else
+              table.insert(internal_entries, cache_entry)
+              complete_disk_cb()
+            end
+          end)
+        end
+      end
+    end
+  })
+  if jid <= 0 then
+    cb("Could not list windows devices")
+  end
+end
+
+---@param url string
+---@param column_defs string[]
+---@param cb fun(err?: string, entries?: oil.InternalEntry[], fetch_more?: fun())
 M.list = function(url, column_defs, cb)
   local _, path = util.parse_url(url)
   assert(path)
+  if fs.is_windows and path == '/' then
+    return list_windows_drives(url, column_defs, cb)
+  end
   local dir = fs.posix_to_os_path(path)
   local fetch_meta = columns.get_metadata_fetcher(M, column_defs)
 
@@ -294,29 +351,25 @@ M.list = function(url, column_defs, cb)
           for _, entry in ipairs(entries) do
             local cache_entry = cache.create_entry(url, entry.name, entry.type)
             fetch_meta(url, cache_entry, function(meta_err)
-              if err then
-                poll(meta_err)
-              else
-                table.insert(internal_entries, cache_entry)
-                local meta = cache_entry[FIELD_META]
-                -- Make sure we always get fs_stat info for links
-                if entry.type == "link" then
-                  read_link_data(fs.join(dir, entry.name), function(link_err, link, link_stat)
-                    if link_err then
-                      poll(link_err)
-                    else
-                      if not meta then
-                        meta = {}
-                        cache_entry[FIELD_META] = meta
-                      end
-                      meta.link = link
-                      meta.link_stat = link_stat
-                      poll()
+              table.insert(internal_entries, cache_entry)
+              local meta = cache_entry[FIELD_META]
+              -- Make sure we always get fs_stat info for links
+              if entry.type == "link" then
+                read_link_data(fs.join(dir, entry.name), function(link_err, link, link_stat)
+                  if link_err then
+                    poll(link_err)
+                  else
+                    if not meta then
+                      meta = {}
+                      cache_entry[FIELD_META] = meta
                     end
-                  end)
-                else
-                  poll()
-                end
+                    meta.link = link
+                    meta.link_stat = link_stat
+                    poll()
+                  end
+                end)
+              else
+                poll()
               end
             end)
           end
@@ -342,6 +395,9 @@ M.is_modifiable = function(bufnr)
   local bufname = vim.api.nvim_buf_get_name(bufnr)
   local _, path = util.parse_url(bufname)
   assert(path)
+  if fs.is_windows and path == '/' then
+    return false
+  end
   local dir = fs.posix_to_os_path(path)
   local stat = uv.fs_stat(dir)
   if not stat then
