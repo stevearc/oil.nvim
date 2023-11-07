@@ -77,15 +77,21 @@ M.will_rename_files = function(actions)
 
   local clients = vim.lsp.get_active_clients()
   for _, client in ipairs(clients) do
-    local pairs = get_matching_paths(client, path_pairs)
-    if pairs then
+    local matching_paths = get_matching_paths(client, path_pairs)
+    if matching_paths then
+      local open_buffers = vim.api.nvim_list_bufs()
+      local is_open = {}
+      for _, bufnr in ipairs(open_buffers) do
+        is_open[bufnr] = true
+      end
+
       client.request("workspace/willRenameFiles", {
         files = vim.tbl_map(function(pair)
           return {
             oldUri = vim.uri_from_fname(pair.src),
             newUri = vim.uri_from_fname(pair.dest),
           }
-        end, pairs),
+        end, matching_paths),
       }, function(_, result)
         if result then
           vim.lsp.util.apply_workspace_edit(result, client.offset_encoding)
@@ -94,7 +100,9 @@ M.will_rename_files = function(actions)
             vim.api.nvim_buf_call(bufnr, function()
               vim.cmd("w")
             end)
-            vim.api.nvim_buf_delete(bufnr, { force = true }) -- This line will close the buffer
+            if not is_open[bufnr] then
+              vim.api.nvim_buf_delete(bufnr, { force = true })
+            end
           end
         end
       end)
