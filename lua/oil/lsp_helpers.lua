@@ -89,6 +89,13 @@ M.will_rename_files = function(actions)
       }, function(_, result)
         if result then
           vim.lsp.util.apply_workspace_edit(result, client.offset_encoding)
+          for uri, _ in pairs(result.changes) do
+            local bufnr = vim.uri_to_bufnr(uri)
+            vim.api.nvim_buf_call(bufnr, function()
+              vim.cmd("w")
+            end)
+            vim.api.nvim_buf_delete(bufnr, { force = true }) -- This line will close the buffer
+          end
         end
       end)
     end
