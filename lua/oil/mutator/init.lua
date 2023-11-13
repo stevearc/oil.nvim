@@ -456,9 +456,13 @@ end
 local mutation_in_progress = false
 
 ---@param confirm nil|boolean
-M.try_write_changes = function(confirm)
+---@param cb? fun(err: nil|string)
+M.try_write_changes = function(confirm, cb)
+  if not cb then
+    cb = function(_err) end
+  end
   if mutation_in_progress then
-    error("Cannot perform mutation when already in progress")
+    cb("Cannot perform mutation when already in progress")
     return
   end
   local current_buf = vim.api.nvim_get_current_buf()
@@ -495,7 +499,6 @@ M.try_write_changes = function(confirm)
   local ns = vim.api.nvim_create_namespace("Oil")
   vim.diagnostic.reset(ns)
   if not vim.tbl_isempty(all_errors) then
-    vim.notify("Error parsing oil buffers", vim.log.levels.ERROR)
     for bufnr, errors in pairs(all_errors) do
       vim.diagnostic.set(ns, bufnr, errors)
     end
@@ -514,13 +517,17 @@ M.try_write_changes = function(confirm)
       vim.api.nvim_win_set_buf(0, bufnr)
       pcall(vim.api.nvim_win_set_cursor, 0, { errs[1].lnum + 1, errs[1].col })
     end
-    return unlock()
+    unlock()
+    cb("Error parsing oil buffers")
+    return
   end
 
   local actions = M.create_actions_from_diffs(all_diffs)
   preview.show(actions, confirm, function(proceed)
     if not proceed then
-      return unlock()
+      unlock()
+      cb("Canceled")
+      return
     end
 
     M.process_actions(
@@ -528,7 +535,7 @@ M.try_write_changes = function(confirm)
       vim.schedule_wrap(function(err)
         view.unlock_buffers()
         if err then
-          vim.notify(string.format("[oil] Error applying actions: %s", err), vim.log.levels.ERROR)
+          err = string.format("[oil] Error applying actions: %s", err)
           view.rerender_all_oil_buffers()
         else
           local current_entry = oil.get_cursor_entry()
@@ -543,6 +550,7 @@ M.try_write_changes = function(confirm)
           vim.api.nvim_exec_autocmds("User", { pattern = "OilMutationComplete", modeline = false })
         end
         mutation_in_progress = false
+        cb(err)
       end)
     )
   end)

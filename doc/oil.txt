@@ -238,13 +238,17 @@ select({opts}, {callback})                                            *oil.selec
       {callback} `nil|fun(err: nil|string)` Called once all entries have been
                  opened
 
-save({opts})                                                            *oil.save*
+save({opts}, {cb})                                                      *oil.save*
     Save all changes
 
     Parameters:
       {opts} `nil|table`
           {confirm} `nil|boolean` Show confirmation when true, never when false,
                     respect skip_confirm_for_simple_edits if nil
+      {cb}   `nil|fun(err: nil|string)` Called when mutations complete.
+
+    Note:
+      If you provide your own callback function, there will be no notification for errors.
 
 setup({opts})                                                          *oil.setup*
     Initialize oil

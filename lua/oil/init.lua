@@ -749,10 +749,20 @@ end
 ---Save all changes
 ---@param opts nil|table
 ---    confirm nil|boolean Show confirmation when true, never when false, respect skip_confirm_for_simple_edits if nil
-M.save = function(opts)
+---@param cb? fun(err: nil|string) Called when mutations complete.
+---@note
+--- If you provide your own callback function, there will be no notification for errors.
+M.save = function(opts, cb)
   opts = opts or {}
+  if not cb then
+    cb = function(err)
+      if err and err ~= "Canceled" then
+        vim.notify(err, vim.log.levels.ERROR)
+      end
+    end
+  end
   local mutator = require("oil.mutator")
-  mutator.try_write_changes(opts.confirm)
+  mutator.try_write_changes(opts.confirm, cb)
 end
 
 local function restore_alt_buf()
@@ -944,10 +954,28 @@ M.setup = function(opts)
     pattern = scheme_pattern,
     nested = true,
     callback = function(params)
+      local winid = vim.api.nvim_get_current_win()
+      local last_cmd = vim.fn.histget("cmd", -1)
+      local last_expr = vim.fn.histget("expr", -1)
+      -- If the user issued a :wq or similar, we should quit after saving
+      local quit_after_save = last_cmd == "wq" or last_cmd == "x" or last_expr == "ZZ"
+      local quit_all = last_cmd:match("^wqal*$")
       local bufname = vim.api.nvim_buf_get_name(params.buf)
       if vim.endswith(bufname, "/") then
         vim.cmd.doautocmd({ args = { "BufWritePre", params.file }, mods = { silent = true } })
-        M.save()
+        M.save(nil, function(err)
+          if err then
+            if err ~= "Canceled" then
+              vim.notify(err, vim.log.levels.ERROR)
+            end
+          elseif winid == vim.api.nvim_get_current_win() then
+            if quit_after_save then
+              vim.cmd.quit()
+            elseif quit_all then
+              vim.cmd.quitall()
+            end
+          end
+        end)
         vim.cmd.doautocmd({ args = { "BufWritePost", params.file }, mods = { silent = true } })
       else
         local adapter = config.get_adapter_by_scheme(bufname)

@@ -684,6 +684,7 @@ M.render_buffer_async = function(bufnr, opts, callback)
   local seek_after_render_found = false
   local first = true
   vim.bo[bufnr].modifiable = false
+  vim.bo[bufnr].modified = false
   loading.set_loading(bufnr, true)
 
   local finish = vim.schedule_wrap(function()

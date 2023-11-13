@@ -297,7 +297,7 @@ Note that at the moment the ssh adapter does not support Windows machines, and i
 - [open(dir)](doc/api.md#opendir)
 - [close()](doc/api.md#close)
 - [select(opts, callback)](doc/api.md#selectopts-callback)
-- [save(opts)](doc/api.md#saveopts)
+- [save(opts, cb)](doc/api.md#saveopts-cb)
 - [setup(opts)](doc/api.md#setupopts)
 
 <!-- /API -->
