@@ -574,8 +574,9 @@ M.select = function(opts, callback)
           vim.bo[filebufnr].bufhidden = "wipe"
           vim.b[filebufnr].oil_preview_buffer = true
         end
-      else
+      elseif not vim.endswith(normalized_url, "/") then
         -- The :buffer command doesn't set buflisted=true
+        -- So do that for non-diretory-buffers
         vim.bo[filebufnr].buflisted = true
       end
 
