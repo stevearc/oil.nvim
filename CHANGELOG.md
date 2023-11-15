@@ -1,5 +1,22 @@
 # Changelog
 
+## [2.4.0](https://github.com/stevearc/oil.nvim/compare/v2.3.0...v2.4.0) (2023-11-15)
+
+
+### Features
+
+* display ../ entry in oil buffers ([#166](https://github.com/stevearc/oil.nvim/issues/166)) ([d8f0d91](https://github.com/stevearc/oil.nvim/commit/d8f0d91b10ec53da722b0909697b57c2f5368245))
+* trash support for linux and mac ([#165](https://github.com/stevearc/oil.nvim/issues/165)) ([6175bd6](https://github.com/stevearc/oil.nvim/commit/6175bd646272335c8db93264760760d8f2a611d5))
+
+
+### Bug Fixes
+
+* can view drives on Windows ([126a8a2](https://github.com/stevearc/oil.nvim/commit/126a8a23465312683edf646555b3031bfe56796d))
+* don't set buflisted on oil buffers ([#220](https://github.com/stevearc/oil.nvim/issues/220)) ([873d505](https://github.com/stevearc/oil.nvim/commit/873d505e5bfdd65317ea97ead8faa6c56bac04c0))
+* line parsing for empty columns ([0715f1b](https://github.com/stevearc/oil.nvim/commit/0715f1b0aacef70573ed6300c12039831fbd81c3))
+* previewing and editing files on windows ([#214](https://github.com/stevearc/oil.nvim/issues/214)) ([3727410](https://github.com/stevearc/oil.nvim/commit/3727410e4875ad8ba339c585859a9391d643b9ed))
+* quit after mutations when :wq or similar ([#221](https://github.com/stevearc/oil.nvim/issues/221)) ([af13ce3](https://github.com/stevearc/oil.nvim/commit/af13ce333f89c54a47e6772b55fed2438ee6957c))
+
 ## [2.3.0](https://github.com/stevearc/oil.nvim/compare/v2.2.0...v2.3.0) (2023-11-04)
 
 
