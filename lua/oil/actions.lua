@@ -224,6 +224,9 @@ M.refresh = {
       end
     end
     vim.cmd.edit({ bang = true })
+
+    -- :h CTRL-L-default
+    vim.cmd.nohlsearch()
   end,
 }
 
