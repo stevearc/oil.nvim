@@ -338,6 +338,10 @@ M.open_float = function(dir)
   end
 
   vim.cmd.edit({ args = { util.escape_filename(parent_url) }, mods = { keepalt = true } })
+  -- :edit will set buflisted = true, but we may not want that
+  if config.buf_options.buflisted ~= nil then
+    vim.api.nvim_buf_set_option(0, "buflisted", config.buf_options.buflisted)
+  end
 
   if vim.fn.has("nvim-0.9") == 0 then
     util.add_title_to_win(winid)
@@ -357,6 +361,7 @@ end
 ---Open oil browser for a directory
 ---@param dir nil|string When nil, open the parent of the current buffer, or the cwd if current buffer is not a file
 M.open = function(dir)
+  local config = require("oil.config")
   local util = require("oil.util")
   local view = require("oil.view")
   local parent_url, basename = M.get_url_for_path(dir)
@@ -367,6 +372,10 @@ M.open = function(dir)
     view.set_last_cursor(parent_url, basename)
   end
   vim.cmd.edit({ args = { util.escape_filename(parent_url) }, mods = { keepalt = true } })
+  -- :edit will set buflisted = true, but we may not want that
+  if config.buf_options.buflisted ~= nil then
+    vim.api.nvim_buf_set_option(0, "buflisted", config.buf_options.buflisted)
+  end
 end
 
 ---Restore the buffer that was present when oil was opened
