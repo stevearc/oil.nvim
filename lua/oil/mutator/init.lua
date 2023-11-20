@@ -68,8 +68,6 @@ M.create_actions_from_diffs = function(all_diffs)
       table.insert(actions, action)
     end
   end
-  ---@type table<integer, string>
-  local dest_by_id = {}
   for bufnr, diffs in pairs(all_diffs) do
     local adapter = util.get_adapter(bufnr)
     if not adapter then
@@ -80,7 +78,9 @@ M.create_actions_from_diffs = function(all_diffs)
       if diff.type == "new" then
         if diff.id then
           local by_id = diff_by_id[diff.id]
-          dest_by_id[diff.id] = parent_url .. diff.name
+          ---HACK: set the destination on this diff for use later
+          ---@diagnostic disable-next-line: inject-field
+          diff.dest = parent_url .. diff.name
           table.insert(by_id, diff)
         else
           -- Parse nested files like foo/bar/baz
@@ -145,7 +145,9 @@ M.create_actions_from_diffs = function(all_diffs)
           add_action({
             type = i == #diffs and "move" or "copy",
             entry_type = entry[FIELD_TYPE],
-            dest_url = dest_by_id[diff.id],
+            ---HACK: access the dest field we set above
+            ---@diagnostic disable-next-line: undefined-field
+            dest_url = diff.dest,
             src_url = cache.get_parent_url(id) .. entry[FIELD_NAME],
           })
         end
@@ -164,7 +166,9 @@ M.create_actions_from_diffs = function(all_diffs)
           type = "copy",
           entry_type = entry[FIELD_TYPE],
           src_url = cache.get_parent_url(id) .. entry[FIELD_NAME],
-          dest_url = dest_by_id[diff.id],
+          ---HACK: access the dest field we set above
+          ---@diagnostic disable-next-line: undefined-field
+          dest_url = diff.dest,
         })
       end
     end

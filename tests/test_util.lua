@@ -114,4 +114,18 @@ M.actions = {
   end,
 }
 
+---Get the raw list of filenames from an unmodified oil buffer
+---@param bufnr? integer
+---@return string[]
+M.parse_entries = function(bufnr)
+  bufnr = bufnr or 0
+  if vim.bo[bufnr].modified then
+    error("parse_entries doesn't work on a modified oil buffer")
+  end
+  local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, true)
+  return vim.tbl_map(function(line)
+    return line:match("^/%d+ +(.+)$")
+  end, lines)
+end
+
 return M
