@@ -145,9 +145,10 @@ M.unlock_buffers = function()
 end
 
 ---@param opts? table
+---@param callback? fun(err: nil|string)
 ---@note
 --- This DISCARDS ALL MODIFICATIONS a user has made to oil buffers
-M.rerender_all_oil_buffers = function(opts)
+M.rerender_all_oil_buffers = function(opts, callback)
   opts = opts or {}
   local buffers = M.get_all_buffers()
   local hidden_buffers = {}
@@ -159,13 +160,15 @@ M.rerender_all_oil_buffers = function(opts)
       hidden_buffers[vim.api.nvim_win_get_buf(winid)] = nil
     end
   end
+  local cb = util.cb_collect(#buffers, callback or function() end)
   for _, bufnr in ipairs(buffers) do
     if hidden_buffers[bufnr] then
       vim.b[bufnr].oil_dirty = opts
       -- We also need to mark this as nomodified so it doesn't interfere with quitting vim
       vim.bo[bufnr].modified = false
+      vim.schedule(cb)
     else
-      M.render_buffer_async(bufnr, opts)
+      M.render_buffer_async(bufnr, opts, cb)
     end
   end
 end

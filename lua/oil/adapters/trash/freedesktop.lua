@@ -12,14 +12,10 @@ local FIELD_META = constants.FIELD_META
 
 local M = {}
 
-local function touch_dir(path)
-  uv.fs_mkdir(path, 448) -- 0700
-end
-
 local function ensure_trash_dir(path)
-  touch_dir(path)
-  touch_dir(fs.join(path, "info"))
-  touch_dir(fs.join(path, "files"))
+  local mode = 448 -- 0700
+  fs.mkdirp(fs.join(path, "info"), mode)
+  fs.mkdirp(fs.join(path, "files"), mode)
 end
 
 ---Gets the location of the home trash dir, creating it if necessary

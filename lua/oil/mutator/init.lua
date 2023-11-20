@@ -536,7 +536,9 @@ M.try_write_changes = function(confirm, cb)
         view.unlock_buffers()
         if err then
           err = string.format("[oil] Error applying actions: %s", err)
-          view.rerender_all_oil_buffers()
+          view.rerender_all_oil_buffers(nil, function()
+            cb(err)
+          end)
         else
           local current_entry = oil.get_cursor_entry()
           if current_entry then
@@ -546,11 +548,15 @@ M.try_write_changes = function(confirm, cb)
               vim.split(current_entry.parsed_name or current_entry.name, "/")[1]
             )
           end
-          view.rerender_all_oil_buffers()
-          vim.api.nvim_exec_autocmds("User", { pattern = "OilMutationComplete", modeline = false })
+          view.rerender_all_oil_buffers(nil, function(render_err)
+            vim.api.nvim_exec_autocmds(
+              "User",
+              { pattern = "OilMutationComplete", modeline = false }
+            )
+            cb(render_err)
+          end)
         end
         mutation_in_progress = false
-        cb(err)
       end)
     )
   end)

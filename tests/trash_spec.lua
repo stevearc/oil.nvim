@@ -20,16 +20,22 @@ end
 
 a.describe("freedesktop", function()
   local tmpdir
+  local tmphome
+  local home = vim.env.XDG_DATA_HOME
   a.before_each(function()
     require("oil.config").delete_to_trash = true
     tmpdir = TmpDir.new()
+    tmphome = TmpDir.new()
     package.loaded["oil.adapters.trash"] = require("oil.adapters.trash.freedesktop")
-    local trash_dir = string.format(".Trash-%d", uv.getuid())
-    tmpdir:create({ fs.join(trash_dir, "__dummy__") })
+    vim.env.XDG_DATA_HOME = tmphome.path
   end)
   a.after_each(function()
+    vim.env.XDG_DATA_HOME = home
     if tmpdir then
       tmpdir:dispose()
+    end
+    if tmphome then
+      tmphome:dispose()
     end
     test_util.reset_editor()
     package.loaded["oil.adapters.trash"] = nil
@@ -140,12 +146,8 @@ a.describe("freedesktop", function()
     test_util.actions.save()
     test_util.actions.reload()
     assert.are.same({ "a.txt" }, parse_entries(0))
-    local uid = uv.getuid()
     tmpdir:assert_fs({
       ["a.txt"] = "a.txt",
-      [".Trash-" .. uid .. "/__dummy__"] = ".Trash-" .. uid .. "/__dummy__",
-      [".Trash-" .. uid .. "/files/"] = true,
-      [".Trash-" .. uid .. "/info/"] = true,
     })
   end)
 
