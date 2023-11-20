@@ -317,7 +317,7 @@ M.initialize = function(bufnr)
       end, 100)
     end,
   })
-  vim.api.nvim_create_autocmd("BufDelete", {
+  vim.api.nvim_create_autocmd("BufUnload", {
     group = "Oil",
     nested = true,
     once = true,
