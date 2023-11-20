@@ -1,7 +1,5 @@
-local uv = vim.uv or vim.loop
 require("plenary.async").tests.add_to_env()
 local TmpDir = require("tests.tmpdir")
-local fs = require("oil.fs")
 local test_util = require("tests.test_util")
 
 ---Get the raw list of filenames from an unmodified oil buffer
