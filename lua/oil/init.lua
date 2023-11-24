@@ -165,7 +165,7 @@ M.get_url_for_path = function(dir, use_oil_parent)
   if vim.bo.filetype == "netrw" and not dir then
     dir = vim.b.netrw_curdir
   end
-  if dir then
+  if type(dir) == "string" then
     local scheme = util.parse_url(dir)
     if scheme then
       return dir
