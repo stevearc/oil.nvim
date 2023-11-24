@@ -109,7 +109,7 @@ local ssh_columns = {}
 ssh_columns.permissions = {
   render = function(entry, conf)
     local meta = entry[FIELD_META]
-    return permissions.mode_to_str(meta.mode)
+    return meta and permissions.mode_to_str(meta.mode)
   end,
 
   parse = function(line, conf)
@@ -142,7 +142,7 @@ ssh_columns.permissions = {
 ssh_columns.size = {
   render = function(entry, conf)
     local meta = entry[FIELD_META]
-    if not meta.size then
+    if not meta or not meta.size then
       return ""
     elseif meta.size >= 1e9 then
       return string.format("%.1fG", meta.size / 1e9)

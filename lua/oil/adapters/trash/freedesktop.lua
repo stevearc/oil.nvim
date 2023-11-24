@@ -348,6 +348,9 @@ end)
 file_columns.mtime = {
   render = function(entry, conf)
     local meta = entry[FIELD_META]
+    if not meta then
+      return nil
+    end
     ---@type oil.TrashInfo
     local trash_info = meta.trash_info
     local time = trash_info and trash_info.deletion_date or meta.stat and meta.stat.mtime.sec
