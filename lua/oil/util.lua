@@ -302,7 +302,21 @@ M.render_table = function(lines, col_width)
       table.insert(pieces, text)
       local col_end = col + text:len() + 1
       if hl then
-        table.insert(highlights, { hl, #str_lines, col, col_end })
+        if type(hl) == "table" then
+          -- hl has the form { [1]: hl_name, [2]: col_start, [3]: col_end }[]
+          -- Notice that col_start and col_end are relative position inside
+          -- that col, so we need to add the offset to them
+          for _, sub_hl in ipairs(hl) do
+            table.insert(highlights, {
+              sub_hl[1],
+              #str_lines,
+              col + sub_hl[2],
+              col + sub_hl[3],
+            })
+          end
+        else
+          table.insert(highlights, { hl, #str_lines, col, col_end })
+        end
       end
       col = col_end
     end

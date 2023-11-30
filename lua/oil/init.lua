@@ -7,7 +7,7 @@ local M = {}
 ---@field parsed_name nil|string
 
 ---@alias oil.EntryType "file"|"directory"|"socket"|"link"|"fifo"
----@alias oil.TextChunk string|string[]
+---@alias oil.TextChunk string|string[]|{ [1]: string, [2]: { [1]: string, [2]: integer, [3]: integer }[] }
 ---@alias oil.CrossAdapterAction "copy"|"move"
 
 ---@class (exact) oil.Adapter
