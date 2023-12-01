@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.4.1](https://github.com/stevearc/oil.nvim/compare/v2.4.0...v2.4.1) (2023-12-01)
+
+
+### Bug Fixes
+
+* buffer data cleared when setting buflisted = false ([303f318](https://github.com/stevearc/oil.nvim/commit/303f31895e7ce10df250c88c7a5f7d8d9c56f0fc))
+* bug copying file multiple times ([05cb825](https://github.com/stevearc/oil.nvim/commit/05cb8257cb9257144e63f41ccfe5a41ba3d1003c))
+* crash in ssh and trash adapter detail columns ([#235](https://github.com/stevearc/oil.nvim/issues/235)) ([e89a8f8](https://github.com/stevearc/oil.nvim/commit/e89a8f8adeef2dfab851fd056d38ee7afc97c249))
+* oil.select respects splitbelow and splitright ([#233](https://github.com/stevearc/oil.nvim/issues/233)) ([636989b](https://github.com/stevearc/oil.nvim/commit/636989b603fb95032efa9d3e1b3323c8bb533e91))
+* preserve buflisted when re-opening oil buffers ([#220](https://github.com/stevearc/oil.nvim/issues/220)) ([6566f45](https://github.com/stevearc/oil.nvim/commit/6566f457e44498adc6835bed5402b38386fa1438))
+
 ## [2.4.0](https://github.com/stevearc/oil.nvim/compare/v2.3.0...v2.4.0) (2023-11-15)
 
 
