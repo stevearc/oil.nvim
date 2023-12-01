@@ -431,11 +431,15 @@ M.select = function(opts, callback)
       callback(err)
     end
   end
-  if opts.horizontal or opts.vertical or opts.preview then
-    opts.split = opts.split or "belowright"
-  end
   if opts.preview and not opts.horizontal and opts.vertical == nil then
     opts.vertical = true
+  end
+  if not opts.split and (opts.horizontal or opts.vertical or opts.preview) then
+    if opts.horizontal then
+      opts.split = vim.o.splitbelow and "belowright" or "aboveleft"
+    else
+      opts.split = vim.o.splitright and "belowright" or "aboveleft"
+    end
   end
   if opts.tab and (opts.preview or opts.split) then
     return finish("Cannot set preview or split when tab = true")
