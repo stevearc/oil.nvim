@@ -1129,12 +1129,9 @@ M.setup = function(opts)
     pattern = "*",
     callback = function(params)
       local util = require("oil.util")
-      for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
-        local bufname = vim.api.nvim_buf_get_name(bufnr)
-        local scheme = util.parse_url(bufname)
-        if config.adapters[scheme] and vim.api.nvim_buf_line_count(bufnr) == 1 then
-          load_oil_buffer(bufnr)
-        end
+      local scheme = util.parse_url(params.file)
+      if config.adapters[scheme] and vim.api.nvim_buf_line_count(params.buf) == 1 then
+        load_oil_buffer(params.buf)
       end
     end,
   })
