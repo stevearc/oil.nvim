@@ -17,4 +17,29 @@ local M = {}
 --   error("No trash found")
 -- end
 
+---@param path string
+---@param cb fun(err?: string)
+M.delete_to_trash = function(path, cb)
+  vim.system({
+    "powershell",
+    "-ExecutionPolicy",
+    "Bypass",
+    "-Command",
+    ([[
+$path = Get-Item '%s'
+$shell = New-Object -ComObject 'Shell.Application'
+$folder = $shell.NameSpace(0)
+$folder.ParseName($path.FullName).InvokeVerb('delete')
+]]):format(path),
+  }, {
+    text = false,
+  }, function(data)
+    if data.stderr and data.stderr ~= "" then
+      cb(data.stderr)
+    else
+      cb()
+    end
+  end)
+end
+
 return M
