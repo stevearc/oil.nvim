@@ -1128,6 +1128,9 @@ M.setup = function(opts)
     group = aug,
     pattern = "*",
     callback = function(params)
+      if vim.g.SessionLoad ~= 1 then
+        return
+      end
       local util = require("oil.util")
       local scheme = util.parse_url(params.file)
       if config.adapters[scheme] and vim.api.nvim_buf_line_count(params.buf) == 1 then
