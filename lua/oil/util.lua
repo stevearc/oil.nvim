@@ -697,4 +697,54 @@ M.adapter_list_all = function(adapter, url, opts, callback)
   end)
 end
 
+M.send_to_quickfix = function(opts)
+  if type(opts) ~= "table" then
+    opts = {}
+  end
+  local oil = require("oil")
+  local dir = oil.get_current_dir()
+  if type(dir) ~= "string" then
+    return
+  end
+
+  local qf_entries = {}
+  for i = 1, vim.fn.line("$") do
+    local entry = oil.get_entry_on_line(0, i)
+    if
+      entry
+      and (
+        entry.type == "file" and opts.files ~= false
+        or entry.type == "directory" and opts.directories ~= false
+      )
+    then
+      local qf_entry = {
+        filename = dir .. entry.name,
+        lnum = 1,
+        col = 1,
+        text = entry.name,
+      }
+      table.insert(qf_entries, qf_entry)
+    end
+  end
+  if #qf_entries == 0 then
+    vim.notify_once("[oil] No entries found to send to quickfix", vim.log.levels.ERROR)
+    return
+  end
+  vim.api.nvim_exec_autocmds("QuickFixCmdPre", {})
+  local qf_title = "oil results"
+  if opts.files == false and opts.directories ~= false then
+    qf_title = "oil directories"
+  elseif opts.files ~= false and opts.directories == false then
+    qf_title = "oil files"
+  end
+  if opts.target == "loclist" then
+    vim.fn.setloclist(0, qf_entries, opts.mode)
+    vim.fn.setloclist(0, {}, "a", { title = qf_title })
+  else
+    vim.fn.setqflist(qf_entries, opts.mode)
+    vim.fn.setqflist({}, "a", { title = qf_title })
+  end
+  vim.api.nvim_exec_autocmds("QuickFixCmdPost", {})
+end
+
 return M
