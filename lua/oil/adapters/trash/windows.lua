@@ -20,9 +20,9 @@ if vim.fn.has("nvim-0.10") == 1 then
 else
   powershell_date_grammar = {
     ---@param input string
-    ---@return integer
+    ---@return integer?
     match = function(self, input)
-      return input:match("/Date%((%d+)%)/")
+      return tonumber(input:match("/Date%((%d+)%)/"))
     end,
   }
 end
