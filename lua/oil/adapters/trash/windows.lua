@@ -21,7 +21,7 @@ else
   powershell_date_grammar = {
     ---@param input string
     ---@return integer
-    match = function(input)
+    match = function(self, input)
       return input:match("/Date%((%d+)%)/")
     end,
   }
