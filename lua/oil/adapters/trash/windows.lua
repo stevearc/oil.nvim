@@ -112,6 +112,35 @@ M.is_modifiable = function(_bufnr)
   return true
 end
 
+-- TODO: do something similar?
+-- local file_columns = {}
+-- file_columns.mtime = {
+--   render = function(entry, conf)
+--     local meta = entry[FIELD_META]
+--     if not meta then
+--       return nil
+--     end
+--     ---@type oil.TrashInfo
+--     local trash_info = meta.trash_info
+--     local time = trash_info and trash_info.deletion_date or meta.stat and meta.stat.mtime.sec
+--     if not time then
+--       return nil
+--     end
+--     local fmt = conf and conf.format
+--     local ret
+--     if fmt then
+--       ret = vim.fn.strftime(fmt, time)
+--     else
+--       local year = vim.fn.strftime("%Y", time)
+--       if year ~= current_year then
+--         ret = vim.fn.strftime("%b %d %Y", time)
+--       else
+--         ret = vim.fn.strftime("%b %d %H:%M", time)
+--       end
+--     end
+--     return ret
+--   end,
+
 --TODO: is this ok?
 ---@param name string
 ---@return nil|oil.ColumnDefinition
@@ -136,7 +165,6 @@ M.normalize_url = function(url, callback)
   )
 end
 
---TODO: use cache
 ---@param url string
 ---@param entry oil.Entry
 ---@param cb fun(path: string)
