@@ -41,9 +41,8 @@ end
 ---@param column_defs string[]
 ---@param cb fun(err?: string, entries?: oil.InternalEntry[], fetch_more?: fun())
 M.list = function(url, column_defs, cb)
-  -- TODO: is this needed?
-  -- local _, path = util.parse_url(url)
-  -- assert(path)
+  local _, path = util.parse_url(url)
+  assert(path)
 
   ---@type string?
   local stdout
