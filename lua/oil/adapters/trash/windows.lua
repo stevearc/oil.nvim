@@ -1,27 +1,274 @@
+local util = require("oil.util")
+local uv = vim.uv or vim.loop
+local cache = require("oil.cache")
+local config = require("oil.config")
+local constants = require("oil.constants")
+local files = require("oil.adapters.files")
+local fs = require("oil.fs")
+
+local FIELD_META = constants.FIELD_META
+
+local powershell_date_grammar
+if vim.fn.has("nvim-0.10") == 1 then
+  local P, R, V = vim.lpeg.P, vim.lpeg.R, vim.lpeg.V
+
+  powershell_date_grammar = P({
+    "date",
+    delimiter = P("/"),
+    date = V("delimiter") * P("Date(") * (R("09") ^ 1 / tonumber) * P(")") * V("delimiter"),
+  })
+else
+  powershell_date_grammar = {
+    ---@param input string
+    ---@return integer
+    match = function(input)
+      return input:match("/Date%((%d+)%)/")
+    end,
+  }
+end
+
 -- Work in progress
 local M = {}
 
--- ---@return string
--- local function get_trash_dir()
---   -- TODO permission issues when using the recycle bin. The folder gets created without
---   -- read/write perms, so all operations fail
---   local cwd = vim.fn.getcwd()
---   local trash_dir = cwd:sub(1, 3) .. "$Recycle.Bin"
---   if vim.fn.isdirectory(trash_dir) == 1 then
---     return trash_dir
---   end
---   trash_dir = "C:\\$Recycle.Bin"
---   if vim.fn.isdirectory(trash_dir) == 1 then
---     return trash_dir
---   end
---   error("No trash found")
--- end
+---@param line string
+---@return string
+local remove_cr = function(line)
+  local result = line:gsub("\r", "")
+  return result
+end
+
+---@param url string
+---@param column_defs string[]
+---@param cb fun(err?: string, entries?: oil.InternalEntry[], fetch_more?: fun())
+M.list = function(url, column_defs, cb)
+  -- TODO: is this needed?
+  -- local _, path = util.parse_url(url)
+  -- assert(path)
+
+  ---@type string?
+  local stdout
+
+  local jid = vim.fn.jobstart({
+    "powershell",
+    "-NoProfile",
+    "-ExecutionPolicy",
+    "Bypass",
+    "-Command",
+    [[
+$shell = New-Object -ComObject 'Shell.Application'
+$folder = $shell.NameSpace(0xa)
+$data = @(foreach ($i in $folder.items())
+    {
+        @{
+            IsFolder=$i.IsFolder;
+            ModifyDate=$i.ModifyDate;Name=$i.Name;
+            Path=$i.Path;
+            OriginalPath=$i.ExtendedProperty('DeletedFrom')
+        }
+    })
+ConvertTo-Json $data
+]],
+  }, {
+    stdout_buffered = true,
+    on_stdout = function(_, data)
+      stdout = table.concat(vim.tbl_map(remove_cr, data), "\n")
+    end,
+    on_exit = function(_, code)
+      if code ~= 0 then
+        return cb("Error listing files on trash")
+      end
+      assert(stdout)
+      local raw_entries = vim.json.decode(stdout)
+      local entries = vim.tbl_map(
+        ---@param entry {IsFolder: boolean, ModifyDate: string, Name: string, Path: string, OriginalPath: string}
+        ---@return {[1]:nil, [2]:string, [3]:string, [4]:{stat: uv_fs_t, trash_info: oil.TrashInfo, display_name: string}}
+        function(entry)
+          local cache_entry =
+            cache.create_entry(url, entry.Name, entry.IsFolder and "directory" or "file")
+          cache_entry[FIELD_META] = {
+            stat = nil,
+            trash_info = {
+              trash_file = entry.Path,
+              info_file = nil,
+              original_path = entry.OriginalPath,
+              deletion_date = powershell_date_grammar:match(entry.ModifyDate),
+              stat = nil,
+            },
+            display_name = entry.Name,
+          }
+          return cache_entry
+        end,
+        raw_entries
+      )
+      cb(nil, entries)
+    end,
+  })
+  if jid <= 0 then
+    cb("Could not list windows devices")
+  end
+end
+
+--TODO: is this ok?
+M.is_modifiable = function(_bufnr)
+  return true
+end
+
+--TODO: is this ok?
+---@param name string
+---@return nil|oil.ColumnDefinition
+M.get_column = function(name)
+  return nil
+end
+
+--TODO: is this ok?
+---@param url string
+---@param callback fun(url: string)
+M.normalize_url = function(url, callback)
+  local scheme, path = util.parse_url(url)
+  assert(path)
+  local os_path = vim.fn.fnamemodify(fs.posix_to_os_path(path), ":p")
+  assert(os_path)
+  uv.fs_realpath(
+    os_path,
+    vim.schedule_wrap(function(_err, new_os_path)
+      local realpath = new_os_path or os_path
+      callback(scheme .. util.addslash(fs.os_to_posix_path(realpath)))
+    end)
+  )
+end
+
+--TODO: use cache
+---@param url string
+---@param entry oil.Entry
+---@param cb fun(path: string)
+M.get_entry_path = function(url, entry, cb)
+  local internal_entry = assert(cache.get_entry_by_id(entry.id))
+  local meta = internal_entry[FIELD_META] --[[@as {stat: uv_fs_t, trash_info: oil.TrashInfo, display_name: string}]]
+  local trash_info = meta.trash_info
+
+  local path = fs.os_to_posix_path(trash_info.trash_file)
+  if entry.type == "directory" then
+    path = util.addslash(path)
+  end
+  cb("oil://" .. path)
+end
+
+--TODO: is this ok?
+---@param action oil.Action
+---@return string
+M.render_action = function(action)
+  if action.type == "create" then
+    return string.format("CREATE %s", action.url)
+  elseif action.type == "delete" then
+    return string.format(" PURGE %s", action.url)
+  elseif action.type == "move" then
+    local src_adapter = assert(config.get_adapter_by_scheme(action.src_url))
+    local dest_adapter = assert(config.get_adapter_by_scheme(action.dest_url))
+    if src_adapter.name == "files" then
+      local _, path = util.parse_url(action.src_url)
+      assert(path)
+      local short_path = files.to_short_os_path(path, action.entry_type)
+      return string.format(" TRASH %s", short_path)
+    elseif dest_adapter.name == "files" then
+      local _, path = util.parse_url(action.dest_url)
+      assert(path)
+      local short_path = files.to_short_os_path(path, action.entry_type)
+      return string.format("RESTORE %s", short_path)
+    else
+      return string.format("  %s %s -> %s", action.type:upper(), action.src_url, action.dest_url)
+    end
+  elseif action.type == "copy" then
+    return string.format("  %s %s -> %s", action.type:upper(), action.src_url, action.dest_url)
+  else
+    error("Bad action type")
+  end
+end
+
+---@param action oil.Action
+---@param cb fun(err: nil|string)
+M.perform_action = function(action, cb)
+  if action.type == "create" then
+    -- TODO: do nothing?
+  elseif action.type == "delete" then
+    local entry = assert(cache.get_entry_by_url(action.url))
+    local meta = entry[FIELD_META] --[[@as {stat: uv_fs_t, trash_info: oil.TrashInfo, display_name: string}]]
+    local trash_info = meta.trash_info
+
+    local jid = vim.fn.jobstart({
+      "powershell",
+      "-NoProfile",
+      "-ExecutionPolicy",
+      "Bypass",
+      "-Command",
+      ([[
+$path = Get-Item '%s'
+Remove-Item $path -Recurse -Confirm:$false
+]]):format(trash_info.trash_file),
+    }, {
+      on_exit = function(_, code)
+        if code ~= 0 then
+          return cb("Error purging file")
+        end
+        cb()
+      end,
+    })
+    if jid <= 0 then
+      cb("Could not purge item")
+    end
+  elseif action.type == "move" then
+    local src_adapter = assert(config.get_adapter_by_scheme(action.src_url))
+    local dest_adapter = assert(config.get_adapter_by_scheme(action.dest_url))
+    if src_adapter.name == "files" then
+      local _, path = util.parse_url(action.src_url)
+      M.delete_to_trash(assert(path), cb)
+    elseif dest_adapter.name == "files" then
+      -- Restore
+      local _, dest_path = util.parse_url(action.dest_url)
+      assert(dest_path)
+      local entry = assert(cache.get_entry_by_url(action.src_url))
+      local meta = entry[FIELD_META] --[[@as {stat: uv_fs_t, trash_info: oil.TrashInfo, display_name: string}]]
+      local trash_info = meta.trash_info
+
+      local jid = vim.fn.jobstart({
+        "powershell",
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-Command",
+        ([[
+$path = Get-Item '%s'
+$shell = New-Object -ComObject 'Shell.Application'
+$folder = $shell.NameSpace(0xa)
+$folder.ParseName($path.FullName).InvokeVerb('undelete')
+]]):format(trash_info.trash_file),
+      }, {
+        stdout_buffered = true,
+        on_exit = function(_, code)
+          if code ~= 0 then
+            return cb("Error restoring file")
+          end
+          cb()
+        end,
+      })
+      if jid <= 0 then
+        cb("Could not restore file")
+      end
+    end
+  elseif action.type == "copy" then
+    -- TODO: ...
+  else
+    cb(string.format("Bad action type: %s", action.type))
+  end
+end
+
+M.supported_cross_adapter_actions = { files = "move" }
 
 ---@param path string
 ---@param cb fun(err?: string)
 M.delete_to_trash = function(path, cb)
-  vim.system({
+  local jid = vim.fn.jobstart({
     "powershell",
+    "-NoProfile",
     "-ExecutionPolicy",
     "Bypass",
     "-Command",
@@ -32,14 +279,17 @@ $folder = $shell.NameSpace(0)
 $folder.ParseName($path.FullName).InvokeVerb('delete')
 ]]):format(path),
   }, {
-    text = false,
-  }, function(data)
-    if data.stderr and data.stderr ~= "" then
-      cb(data.stderr)
-    else
+    stdout_buffered = true,
+    on_exit = function(_, code)
+      if code ~= 0 then
+        return cb("Error sendig file to trash")
+      end
       cb()
-    end
-  end)
+    end,
+  })
+  if jid <= 0 then
+    cb("Could not list windows devices")
+  end
 end
 
 return M
