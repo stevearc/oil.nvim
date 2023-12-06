@@ -62,7 +62,7 @@ $data = @(foreach ($i in $folder.items())
             IsFolder=$i.IsFolder;
             ModifyDate=$i.ModifyDate;Name=$i.Name;
             Path=$i.Path;
-            OriginalPath=$i.ExtendedProperty('DeletedFrom')
+            OriginalPath=-join($i.ExtendedProperty('DeletedFrom'), "\", $i.Name)
         }
     })
 ConvertTo-Json $data
@@ -184,10 +184,13 @@ end
 ---@param action oil.Action
 ---@return string
 M.render_action = function(action)
-  if action.type == "create" then
-    return string.format("CREATE %s", action.url)
-  elseif action.type == "delete" then
-    return string.format(" PURGE %s", action.url)
+  if action.type == "delete" then
+    local entry = assert(cache.get_entry_by_url(action.url))
+    local meta = entry[FIELD_META]
+    ---@type oil.TrashInfo
+    local trash_info = meta.trash_info
+    local short_path = fs.shorten_path(trash_info.original_path)
+    return string.format(" PURGE %s", short_path)
   elseif action.type == "move" then
     local src_adapter = assert(config.get_adapter_by_scheme(action.src_url))
     local dest_adapter = assert(config.get_adapter_by_scheme(action.dest_url))
@@ -202,12 +205,26 @@ M.render_action = function(action)
       local short_path = files.to_short_os_path(path, action.entry_type)
       return string.format("RESTORE %s", short_path)
     else
-      return string.format("  %s %s -> %s", action.type:upper(), action.src_url, action.dest_url)
+      error("Must be moving files into or out of trash")
     end
   elseif action.type == "copy" then
-    return string.format("  %s %s -> %s", action.type:upper(), action.src_url, action.dest_url)
+    local src_adapter = assert(config.get_adapter_by_scheme(action.src_url))
+    local dest_adapter = assert(config.get_adapter_by_scheme(action.dest_url))
+    if src_adapter.name == "files" then
+      local _, path = util.parse_url(action.src_url)
+      assert(path)
+      local short_path = files.to_short_os_path(path, action.entry_type)
+      return string.format("  COPY %s -> TRASH", short_path)
+    elseif dest_adapter.name == "files" then
+      local _, path = util.parse_url(action.dest_url)
+      assert(path)
+      local short_path = files.to_short_os_path(path, action.entry_type)
+      return string.format("RESTORE %s", short_path)
+    else
+      error("Must be copying files into or out of trash")
+    end
   else
-    error("Bad action type")
+    error(string.format("Bad action type '%s'", action.type))
   end
 end
 
