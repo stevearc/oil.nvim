@@ -47,11 +47,8 @@ local function get_matching_paths(client, path_pairs)
   end
   local ret = {}
   for _, pair in ipairs(path_pairs) do
-    if fs.is_subpath(client.config.root_dir, pair.src) then
-      local relative_file = pair.src:sub(client.config.root_dir:len() + 2)
-      if any_match(relative_file, filters) then
-        table.insert(ret, pair)
-      end
+    if fs.is_subpath(client.config.root_dir, pair.src) and any_match(pair.src, filters) then
+      table.insert(ret, pair)
     end
   end
   if vim.tbl_isempty(ret) then
