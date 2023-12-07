@@ -727,7 +727,7 @@ M.send_to_quickfix = function(opts)
     end
   end
   if #qf_entries == 0 then
-    vim.notify_once("[oil] No entries found to send to quickfix", vim.log.levels.ERROR)
+    vim.notify("[oil] No entries found to send to quickfix", vim.log.levels.ERROR)
     return
   end
   vim.api.nvim_exec_autocmds("QuickFixCmdPre", {})
