@@ -697,6 +697,9 @@ M.adapter_list_all = function(adapter, url, opts, callback)
   end)
 end
 
+---Send files from the current oil directory to quickfix
+---based on the provided options.
+---@param opts {target?: "qflist"|"loclist", mode?: "r"|"a"}
 M.send_to_quickfix = function(opts)
   if type(opts) ~= "table" then
     opts = {}
@@ -726,10 +729,11 @@ M.send_to_quickfix = function(opts)
   end
   vim.api.nvim_exec_autocmds("QuickFixCmdPre", {})
   local qf_title = "oil files"
+  local mode = opts.mode == "a" and "a" or "r"
   if opts.target == "loclist" then
-    vim.fn.setloclist(0, {}, opts.mode, { title = qf_title, items = qf_entries })
+    vim.fn.setloclist(0, {}, mode, { title = qf_title, items = qf_entries })
   else
-    vim.fn.setqflist({}, opts.mode, { title = qf_title, items = qf_entries })
+    vim.fn.setqflist({}, mode, { title = qf_title, items = qf_entries })
   end
   vim.api.nvim_exec_autocmds("QuickFixCmdPost", {})
 end

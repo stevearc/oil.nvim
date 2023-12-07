@@ -341,7 +341,8 @@ M.send_to_qflist = {
   desc = "Sends files in the current oil directory to the quickfix list, replacing the previous entries.",
   callback = function()
     util.send_to_quickfix({
-      mode = " ",
+      target = "qflist",
+      mode = "r",
     })
   end,
 }
@@ -350,6 +351,7 @@ M.add_to_qflist = {
   desc = "Adds files in the current oil directory to the quickfix list, keeping the previous entries.",
   callback = function()
     util.send_to_quickfix({
+      target = "qflist",
       mode = "a",
     })
   end,
@@ -360,7 +362,7 @@ M.send_to_loclist = {
   callback = function()
     util.send_to_quickfix({
       target = "loclist",
-      mode = " ",
+      mode = "r",
     })
   end,
 }
