@@ -509,11 +509,7 @@ M.select = function(opts, callback)
     end
   end
 
-  -- Close the preview window if we're not previewing the selection
   local preview_win = util.get_preview_win()
-  if not opts.preview and preview_win then
-    vim.api.nvim_win_close(preview_win, true)
-  end
   local prev_win = vim.api.nvim_get_current_win()
 
   local scheme, dir = util.parse_url(bufname)
@@ -545,6 +541,10 @@ M.select = function(opts, callback)
     else
       if vim.w.is_oil_win then
         vim.api.nvim_win_close(0, false)
+      end
+      -- Close the preview window if we're not previewing the selection
+      if not opts.preview and preview_win then
+        vim.api.nvim_win_close(preview_win, true)
       end
     end
 
