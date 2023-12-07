@@ -120,6 +120,8 @@ local default_config = {
     win_options = {
       winblend = 0,
     },
+    -- Whether the preview window is automatically updated when the cursor is moved
+    update_on_cursor_moved = true,
   },
   -- Configuration for the floating progress window
   progress = {
