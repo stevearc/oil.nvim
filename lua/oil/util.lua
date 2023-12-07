@@ -709,9 +709,12 @@ M.send_to_quickfix = function(opts)
   if type(dir) ~= "string" then
     return
   end
-
+  local range = M.get_visual_range()
+  if not range then
+    range = { start_lnum = 1, end_lnum = vim.fn.line("$") }
+  end
   local qf_entries = {}
-  for i = 1, vim.fn.line("$") do
+  for i = range.start_lnum, range.end_lnum do
     local entry = oil.get_entry_on_line(0, i)
     if entry and entry.type == "file" then
       local qf_entry = {
@@ -724,7 +727,7 @@ M.send_to_quickfix = function(opts)
     end
   end
   if #qf_entries == 0 then
-    vim.notify("[oil] No entries found to send to quickfix", vim.log.levels.ERROR)
+    vim.notify("[oil] No entries found to send to quickfix", vim.log.levels.WARN)
     return
   end
   vim.api.nvim_exec_autocmds("QuickFixCmdPre", {})
@@ -736,6 +739,24 @@ M.send_to_quickfix = function(opts)
     vim.fn.setqflist({}, mode, { title = qf_title, items = qf_entries })
   end
   vim.api.nvim_exec_autocmds("QuickFixCmdPost", {})
+end
+
+---Get the current visual selection range. If not in visual mode, return nil.
+---@return {start_lnum: integer, end_lnum: integer}?
+M.get_visual_range = function()
+  local mode = vim.api.nvim_get_mode().mode
+  local is_visual = mode:match("^[vV]")
+  if not is_visual then
+    return
+  end
+  -- This is the best way to get the visual selection at the moment
+  -- https://github.com/neovim/neovim/pull/13896
+  local _, start_lnum, _, _ = unpack(vim.fn.getpos("v"))
+  local _, end_lnum, _, _, _ = unpack(vim.fn.getcurpos())
+  if start_lnum > end_lnum then
+    start_lnum, end_lnum = end_lnum, start_lnum
+  end
+  return { start_lnum = start_lnum, end_lnum = end_lnum }
 end
 
 return M
