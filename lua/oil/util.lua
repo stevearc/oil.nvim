@@ -727,11 +727,9 @@ M.send_to_quickfix = function(opts)
   vim.api.nvim_exec_autocmds("QuickFixCmdPre", {})
   local qf_title = "oil files"
   if opts.target == "loclist" then
-    vim.fn.setloclist(0, qf_entries, opts.mode)
-    vim.fn.setloclist(0, {}, "a", { title = qf_title })
+    vim.fn.setloclist(0, {}, opts.mode, { title = qf_title, items = qf_entries })
   else
-    vim.fn.setqflist(qf_entries, opts.mode)
-    vim.fn.setqflist({}, "a", { title = qf_title })
+    vim.fn.setqflist({}, opts.mode, { title = qf_title, items = qf_entries })
   end
   vim.api.nvim_exec_autocmds("QuickFixCmdPost", {})
 end
