@@ -710,13 +710,7 @@ M.send_to_quickfix = function(opts)
   local qf_entries = {}
   for i = 1, vim.fn.line("$") do
     local entry = oil.get_entry_on_line(0, i)
-    if
-      entry
-      and (
-        entry.type == "file" and opts.files ~= false
-        or entry.type == "directory" and opts.directories ~= false
-      )
-    then
+    if entry and entry.type == "file" then
       local qf_entry = {
         filename = dir .. entry.name,
         lnum = 1,
@@ -731,12 +725,7 @@ M.send_to_quickfix = function(opts)
     return
   end
   vim.api.nvim_exec_autocmds("QuickFixCmdPre", {})
-  local qf_title = "oil results"
-  if opts.files == false and opts.directories ~= false then
-    qf_title = "oil directories"
-  elseif opts.files ~= false and opts.directories == false then
-    qf_title = "oil files"
-  end
+  local qf_title = "oil files"
   if opts.target == "loclist" then
     vim.fn.setloclist(0, qf_entries, opts.mode)
     vim.fn.setloclist(0, {}, "a", { title = qf_title })
