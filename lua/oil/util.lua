@@ -294,7 +294,8 @@ M.render_table = function(lines, col_width)
     for i, chunk in ipairs(cols) do
       local text, hl
       if type(chunk) == "table" then
-        text, hl = unpack(chunk)
+        text = chunk[1]
+        hl = chunk[2]
       else
         text = chunk
       end
