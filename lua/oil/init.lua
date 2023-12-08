@@ -7,7 +7,10 @@ local M = {}
 ---@field parsed_name nil|string
 
 ---@alias oil.EntryType "file"|"directory"|"socket"|"link"|"fifo"
----@alias oil.TextChunk string|string[]
+---@alias oil.HlRange { [1]: string, [2]: integer, [3]: integer } A tuple of highlight group name, col_start, col_end
+---@alias oil.HlTuple { [1]: string, [2]: string } A tuple of text, highlight group
+---@alias oil.HlRangeTuple { [1]: string, [2]: oil.HlRange[] } A tuple of text, internal highlights
+---@alias oil.TextChunk string|oil.HlTuple|oil.HlRangeTuple
 ---@alias oil.CrossAdapterAction "copy"|"move"
 
 ---@class (exact) oil.Adapter
