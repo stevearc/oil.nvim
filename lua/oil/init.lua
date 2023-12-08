@@ -456,20 +456,12 @@ M.select = function(opts, callback)
     return finish("Could not find adapter for current buffer")
   end
 
-  local mode = vim.api.nvim_get_mode().mode
-  local is_visual = mode:match("^[vV]")
+  local visual_range = util.get_visual_range()
 
   ---@type oil.Entry[]
   local entries = {}
-  if is_visual then
-    -- This is the best way to get the visual selection at the moment
-    -- https://github.com/neovim/neovim/pull/13896
-    local _, start_lnum, _, _ = unpack(vim.fn.getpos("v"))
-    local _, end_lnum, _, _, _ = unpack(vim.fn.getcurpos())
-    if start_lnum > end_lnum then
-      start_lnum, end_lnum = end_lnum, start_lnum
-    end
-    for i = start_lnum, end_lnum do
+  if visual_range then
+    for i = visual_range.start_lnum, visual_range.end_lnum do
       local entry = M.get_entry_on_line(0, i)
       if entry then
         table.insert(entries, entry)

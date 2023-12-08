@@ -697,4 +697,66 @@ M.adapter_list_all = function(adapter, url, opts, callback)
   end)
 end
 
+---Send files from the current oil directory to quickfix
+---based on the provided options.
+---@param opts {target?: "qflist"|"loclist", mode?: "r"|"a"}
+M.send_to_quickfix = function(opts)
+  if type(opts) ~= "table" then
+    opts = {}
+  end
+  local oil = require("oil")
+  local dir = oil.get_current_dir()
+  if type(dir) ~= "string" then
+    return
+  end
+  local range = M.get_visual_range()
+  if not range then
+    range = { start_lnum = 1, end_lnum = vim.fn.line("$") }
+  end
+  local qf_entries = {}
+  for i = range.start_lnum, range.end_lnum do
+    local entry = oil.get_entry_on_line(0, i)
+    if entry and entry.type == "file" then
+      local qf_entry = {
+        filename = dir .. entry.name,
+        lnum = 1,
+        col = 1,
+        text = entry.name,
+      }
+      table.insert(qf_entries, qf_entry)
+    end
+  end
+  if #qf_entries == 0 then
+    vim.notify("[oil] No entries found to send to quickfix", vim.log.levels.WARN)
+    return
+  end
+  vim.api.nvim_exec_autocmds("QuickFixCmdPre", {})
+  local qf_title = "oil files"
+  local mode = opts.mode == "a" and "a" or "r"
+  if opts.target == "loclist" then
+    vim.fn.setloclist(0, {}, mode, { title = qf_title, items = qf_entries })
+  else
+    vim.fn.setqflist({}, mode, { title = qf_title, items = qf_entries })
+  end
+  vim.api.nvim_exec_autocmds("QuickFixCmdPost", {})
+end
+
+---Get the current visual selection range. If not in visual mode, return nil.
+---@return {start_lnum: integer, end_lnum: integer}?
+M.get_visual_range = function()
+  local mode = vim.api.nvim_get_mode().mode
+  local is_visual = mode:match("^[vV]")
+  if not is_visual then
+    return
+  end
+  -- This is the best way to get the visual selection at the moment
+  -- https://github.com/neovim/neovim/pull/13896
+  local _, start_lnum, _, _ = unpack(vim.fn.getpos("v"))
+  local _, end_lnum, _, _, _ = unpack(vim.fn.getcurpos())
+  if start_lnum > end_lnum then
+    start_lnum, end_lnum = end_lnum, start_lnum
+  end
+  return { start_lnum = start_lnum, end_lnum = end_lnum }
+end
+
 return M
