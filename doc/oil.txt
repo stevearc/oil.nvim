@@ -350,6 +350,14 @@ These are actions that can be used in the `keymaps` section of config options.
 You can also call them directly with
 `require("oil.actions").action_name.callback()`
 
+add_to_loclist                                            *actions.add_to_loclist*
+    Adds files in the current oil directory to the location list, keeping the
+    previous entries.
+
+add_to_qflist                                              *actions.add_to_qflist*
+    Adds files in the current oil directory to the quickfix list, keeping the
+    previous entries.
+
 cd                                                                    *actions.cd*
     :cd to the current oil directory
 
@@ -404,6 +412,14 @@ select_tab                                                    *actions.select_ta
 
 select_vsplit                                              *actions.select_vsplit*
     Open the entry under the cursor in a vertical split
+
+send_to_loclist                                          *actions.send_to_loclist*
+    Sends files in the current oil directory to the location list, replacing the
+    previous entries.
+
+send_to_qflist                                            *actions.send_to_qflist*
+    Sends files in the current oil directory to the quickfix list, replacing the
+    previous entries.
 
 show_help                                                      *actions.show_help*
     Show default keymaps
