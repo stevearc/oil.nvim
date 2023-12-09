@@ -13,6 +13,16 @@ local function file_matches(filepath, pattern)
       return false
     end
   end
+
+  if vim.lsp._watchfiles then
+    local glob = pattern.glob
+    local path = filepath
+    if vim.tbl_get(pattern, "options", "ignoreCase") then
+      glob, path = glob:lower(), path:lower()
+    end
+    return vim.lsp._watchfiles._match(glob, path)
+  end
+
   local pat = vim.fn.glob2regpat(pattern.glob)
   if vim.tbl_get(pattern, "options", "ignoreCase") then
     pat = "\\c" .. pat
@@ -41,14 +51,17 @@ end
 ---@return nil|{src: string, dest: string}
 local function get_matching_paths(client, path_pairs)
   local filters =
-    vim.tbl_get(client.server_capabilities, "workspace", "fileOperations", "willRename", "filters")
+      vim.tbl_get(client.server_capabilities, "workspace", "fileOperations", "willRename", "filters")
   if not filters then
     return nil
   end
   local ret = {}
   for _, pair in ipairs(path_pairs) do
-    if fs.is_subpath(client.config.root_dir, pair.src) and any_match(pair.src, filters) then
-      table.insert(ret, pair)
+    if fs.is_subpath(client.config.root_dir, pair.src) then
+      local relative_file = pair.src:sub(client.config.root_dir:len() + 2)
+      if any_match(pair.src, filters) or any_match(relative_file, filters) then
+        table.insert(ret, pair)
+      end
     end
   end
   if vim.tbl_isempty(ret) then
