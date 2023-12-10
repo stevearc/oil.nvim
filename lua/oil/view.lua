@@ -364,34 +364,36 @@ M.initialize = function(bufnr)
         end
       end
 
-      -- Debounce and update the preview window
-      if timer then
-        timer:again()
-        return
-      end
-      timer = vim.loop.new_timer()
-      if not timer then
-        return
-      end
-      timer:start(10, 100, function()
-        timer:stop()
-        timer:close()
-        timer = nil
-        vim.schedule(function()
-          if vim.api.nvim_get_current_buf() ~= bufnr then
-            return
-          end
-          local entry = oil.get_cursor_entry()
-          if entry then
-            local winid = util.get_preview_win()
-            if winid then
-              if entry.id ~= vim.w[winid].oil_entry_id then
-                oil.select({ preview = true })
+      if config.preview.update_on_cursor_moved then
+        -- Debounce and update the preview window
+        if timer then
+          timer:again()
+          return
+        end
+        timer = vim.loop.new_timer()
+        if not timer then
+          return
+        end
+        timer:start(10, 100, function()
+          timer:stop()
+          timer:close()
+          timer = nil
+          vim.schedule(function()
+            if vim.api.nvim_get_current_buf() ~= bufnr then
+              return
+            end
+            local entry = oil.get_cursor_entry()
+            if entry then
+              local winid = util.get_preview_win()
+              if winid then
+                if entry.id ~= vim.w[winid].oil_entry_id then
+                  oil.select({ preview = true })
+                end
               end
             end
-          end
+          end)
         end)
-      end)
+      end
     end,
   })
 
