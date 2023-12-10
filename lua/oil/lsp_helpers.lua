@@ -51,7 +51,7 @@ end
 ---@return nil|{src: string, dest: string}
 local function get_matching_paths(client, path_pairs)
   local filters =
-      vim.tbl_get(client.server_capabilities, "workspace", "fileOperations", "willRename", "filters")
+    vim.tbl_get(client.server_capabilities, "workspace", "fileOperations", "willRename", "filters")
   if not filters then
     return nil
   end
