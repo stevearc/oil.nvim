@@ -4,7 +4,7 @@ local cache = require("oil.cache")
 local columns = require("oil.columns")
 local config = require("oil.config")
 local constants = require("oil.constants")
-local lsp_helpers = require("oil.lsp_helpers")
+local lsp_helpers = require("oil.lsp.helpers")
 local oil = require("oil")
 local parser = require("oil.mutator.parser")
 local preview = require("oil.mutator.preview")
@@ -367,18 +367,7 @@ end
 ---@param actions oil.Action[]
 ---@param cb fun(err: nil|string)
 M.process_actions = function(actions, cb)
-  -- send all renames to LSP servers
-  local moves = {}
-  for _, action in ipairs(actions) do
-    if action.type == "move" then
-      local src_adapter = assert(config.get_adapter_by_scheme(action.src_url))
-      local dest_adapter = assert(config.get_adapter_by_scheme(action.dest_url))
-      if src_adapter.name == "files" and dest_adapter.name == "files" then
-        table.insert(moves, action)
-      end
-    end
-  end
-  lsp_helpers.will_rename_files(moves)
+  local did_complete = lsp_helpers.will_perform_file_operations(actions)
 
   -- Convert some cross-adapter moves to a copy + delete
   for _, action in ipairs(actions) do
@@ -426,6 +415,7 @@ M.process_actions = function(actions, cb)
       return
     end
     if idx > #actions then
+      did_complete()
       finish()
       return
     end
