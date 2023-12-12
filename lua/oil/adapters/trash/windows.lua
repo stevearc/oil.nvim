@@ -7,6 +7,7 @@ local files = require("oil.adapters.files")
 local fs = require("oil.fs")
 
 local FIELD_META = constants.FIELD_META
+local FIELD_TYPE = constants.FIELD_TYPE
 
 local M = {}
 
@@ -93,6 +94,7 @@ end
 ---@field trash_file string?
 ---@field original_path string?
 ---@field deletion_date string?
+---@field info_file string?
 
 ---@param url string
 ---@param column_defs string[]
@@ -110,7 +112,17 @@ M.list = function(url, column_defs, cb)
       return
     end
 
-    local entries = vim.tbl_map(
+    local raw_displayed_entries = vim.tbl_filter(
+      ---@param entry {IsFolder: boolean, DeletionDate: integer, Name: string, Path: string, OriginalPath: string}
+      function(entry)
+        local parent = win_addslash(assert(vim.fn.fnamemodify(entry.OriginalPath, ":h")))
+        local is_in_path = path == parent
+        local is_subpath = fs.is_subpath(path, parent)
+        return is_in_path or is_subpath or show_all_files
+      end,
+      raw_entries
+    )
+    local displayed_entries = vim.tbl_map(
       ---@param entry {IsFolder: boolean, DeletionDate: integer, Name: string, Path: string, OriginalPath: string}
       ---@return {[1]:nil, [2]:string, [3]:string, [4]:{stat: uv_fs_t, trash_info: oil.WindowsTrashInfo, display_name: string}}
       function(entry)
@@ -119,15 +131,30 @@ M.list = function(url, column_defs, cb)
         --- @type oil.InternalEntry
         local cache_entry
         if path == parent or show_all_files then
-          local unique_name = assert(vim.fn.fnamemodify(entry.Path, ":t"))
+          local deleted_file_tail = assert(vim.fn.fnamemodify(entry.Path, ":t"))
+          local deleted_file_head = assert(vim.fn.fnamemodify(entry.Path, ":h"))
+          local info_file_head = deleted_file_head
+          --- @type string?
+          local info_file
           cache_entry =
-            cache.create_entry(url, unique_name, entry.IsFolder and "directory" or "file")
+            cache.create_entry(url, deleted_file_tail, entry.IsFolder and "directory" or "file")
+          -- info_file on windows has the following format: $I<6 char hash>.<extension>
+          -- the hash is the same for the deleted file and the info file
+          -- so, we take the hash (and extension) from the deleted file
+          --
+          -- see https://superuser.com/questions/368890/how-does-the-recycle-bin-in-windows-work/1736690#1736690
+          local info_file_tail = deleted_file_tail:match("^%$R(.*)$") --[[@as string?]]
+          if info_file_tail then
+            info_file_tail = "$I" .. info_file_tail
+            info_file = info_file_head .. "\\" .. info_file_tail
+          end
           cache_entry[FIELD_META] = {
             stat = nil,
             trash_info = {
               trash_file = entry.Path,
               original_path = entry.OriginalPath,
               deletion_date = entry.DeletionDate,
+              info_file = info_file,
             },
             display_name = entry.Name,
           }
@@ -145,9 +172,9 @@ M.list = function(url, column_defs, cb)
         end
         return cache_entry
       end,
-      raw_entries
+      raw_displayed_entries
     )
-    cb(nil, entries)
+    cb(nil, displayed_entries)
   end)
 end
 
@@ -326,30 +353,41 @@ M.render_action = function(action)
   end
 end
 
----@param path string
+---@param trash_info oil.WindowsTrashInfo
 ---@param cb fun(err?: string, raw_entries: oil.WindowsRawEntry[]?)
-local purge = function(path, cb)
-  local jid = vim.fn.jobstart({
-    "powershell",
-    "-NoProfile",
-    "-ExecutionPolicy",
-    "Bypass",
-    "-Command",
-    ([[
-$path = Get-Item '%s'
-Remove-Item $path -Recurse -Confirm:$false
-]]):format(path:gsub("'", "''")),
-  }, {
-    on_exit = function(_, code)
-      if code ~= 0 then
-        return cb("Error purging file")
+local purge = function(trash_info, cb)
+  fs.recursive_delete("file", trash_info.info_file, function(err)
+    if err then
+      return cb(err)
+    end
+    fs.recursive_delete("file", trash_info.trash_file, cb)
+  end)
+end
+
+---@param path string
+---@param type string
+---@param cb fun(err?: string, trash_info?: oil.TrashInfo)
+local function create_trash_info_and_copy(path, type, cb)
+  local temp_path = path .. "temp"
+  -- create a temporary copy on the same location
+  fs.recursive_copy(
+    type,
+    path,
+    temp_path,
+    vim.schedule_wrap(function(err)
+      if err then
+        return cb(err)
       end
-      cb()
-    end,
-  })
-  if jid <= 0 then
-    cb("Could not purge item")
-  end
+      -- delete original file
+      M.delete_to_trash(path, function(err)
+        if err then
+          return cb(err)
+        end
+        -- rename temporary copy to the original file name
+        fs.recursive_move(type, temp_path, path, cb)
+      end)
+    end)
+  )
 end
 
 ---@param action oil.Action
@@ -360,7 +398,7 @@ M.perform_action = function(action, cb)
     local meta = entry[FIELD_META] --[[@as {stat: uv_fs_t, trash_info: oil.WindowsTrashInfo, display_name: string}]]
     local trash_info = meta.trash_info
 
-    purge(trash_info.trash_file, cb)
+    purge(trash_info, cb)
   elseif action.type == "move" then
     local src_adapter = assert(config.get_adapter_by_scheme(action.src_url))
     local dest_adapter = assert(config.get_adapter_by_scheme(action.dest_url))
@@ -371,38 +409,38 @@ M.perform_action = function(action, cb)
       -- Restore
       local _, dest_path = util.parse_url(action.dest_url)
       assert(dest_path)
+      dest_path = fs.posix_to_os_path(dest_path)
       local entry = assert(cache.get_entry_by_url(action.src_url))
       local meta = entry[FIELD_META] --[[@as {stat: uv_fs_t, trash_info: oil.WindowsTrashInfo, display_name: string}]]
       local trash_info = meta.trash_info
-
-      local jid = vim.fn.jobstart({
-        "powershell",
-        "-NoProfile",
-        "-ExecutionPolicy",
-        "Bypass",
-        "-Command",
-        -- 0xa is the constant for Recycle Bin. See https://learn.microsoft.com/en-us/windows/win32/api/shldisp/ne-shldisp-shellspecialfolderconstants
-        ([[
-$path = Get-Item '%s'
-$shell = New-Object -ComObject 'Shell.Application'
-$folder = $shell.NameSpace(0xa)
-$folder.ParseName($path.FullName).InvokeVerb('undelete')
-]]):format(trash_info.trash_file),
-      }, {
-        stdout_buffered = true,
-        on_exit = function(_, code)
-          if code ~= 0 then
-            return cb("Error restoring file")
-          end
-          cb()
-        end,
-      })
-      if jid <= 0 then
-        cb("Could not restore file")
-      end
+      fs.recursive_move(action.entry_type, trash_info.trash_file, dest_path, function(err)
+        if err then
+          return cb(err)
+        end
+        uv.fs_unlink(trash_info.info_file, cb)
+      end)
     end
   elseif action.type == "copy" then
-    -- TODO: ...
+    local src_adapter = assert(config.get_adapter_by_scheme(action.src_url))
+    local dest_adapter = assert(config.get_adapter_by_scheme(action.dest_url))
+    if src_adapter.name == "files" then
+      local _, path = util.parse_url(action.src_url)
+      assert(path)
+      path = fs.posix_to_os_path(path)
+      local entry = assert(cache.get_entry_by_url(action.src_url))
+      create_trash_info_and_copy(path, entry[FIELD_TYPE], cb)
+    elseif dest_adapter.name == "files" then
+      -- Restore
+      local _, dest_path = util.parse_url(action.dest_url)
+      assert(dest_path)
+      dest_path = fs.posix_to_os_path(dest_path)
+      local entry = assert(cache.get_entry_by_url(action.src_url))
+      local meta = entry[FIELD_META] --[[@as {stat: uv_fs_t, trash_info: oil.WindowsTrashInfo, display_name: string}]]
+      local trash_info = meta.trash_info
+      fs.recursive_copy(action.entry_type, trash_info.trash_file, dest_path, cb)
+    else
+      error("Must be moving files into or out of trash")
+    end
   else
     cb(string.format("Bad action type: %s", action.type))
   end
