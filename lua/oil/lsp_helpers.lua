@@ -72,28 +72,17 @@ local function get_matching_paths(client, path_pairs)
   end
 end
 
----@param bufnr number
----@return boolean
-local function should_save_buffer(bufnr)
-  local autosave = config.lsp_rename_autosave
-  if autosave == "unmodified" then
-    local is_modified = vim.api.nvim_buf_get_option_value("modified", { buf = bufnr })
-    return not is_modified
-  end
-  if type(autosave) ~= "boolean" then
-    return false
-  end
-  return autosave
-end
-
----@return table<number, boolean>
-local function get_open_buffers()
-  local is_open = {}
+---@return table<number, {is_open: boolean, is_modified: boolean}>
+local function get_buffers_status()
+  local buffers_status = {}
   local buffers = vim.api.nvim_list_bufs()
   for _, bufnr in ipairs(buffers) do
-    is_open[bufnr] = true
+    buffers_status[bufnr] = {
+      is_open = true,
+      is_modified = vim.api.nvim_get_option_value("modified", { buf = bufnr }),
+    }
   end
-  return is_open
+  return buffers_status
 end
 
 ---Process LSP rename in the background
@@ -123,20 +112,23 @@ M.will_rename_files = function(actions)
         end, matching_paths),
       }, function(_, result)
         if result then
+          local buffers_status = get_buffers_status()
           vim.lsp.util.apply_workspace_edit(result, client.offset_encoding)
-          if config.lsp_rename_autosave == false then
+          local autosave = config.lsp_rename_autosave
+          if autosave == false then
             return
           end
 
-          local open_buffers = get_open_buffers()
           for uri, _ in pairs(result.changes) do
             local bufnr = vim.uri_to_bufnr(uri)
-            if should_save_buffer(bufnr) then
+            local is_modified = buffers_status[bufnr] and buffers_status[bufnr].is_modified
+            local should_save = autosave == true or (autosave == "unmodified" and not is_modified)
+            if should_save then
               vim.api.nvim_buf_call(bufnr, function()
                 vim.cmd("update")
               end)
             end
-            if not open_buffers[bufnr] then
+            if not buffers_status[bufnr].is_open then
               vim.api.nvim_buf_delete(bufnr, { force = true })
             end
           end
