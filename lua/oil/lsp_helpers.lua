@@ -1,3 +1,4 @@
+local config = require("oil.config")
 local fs = require("oil.fs")
 local util = require("oil.util")
 
@@ -71,6 +72,30 @@ local function get_matching_paths(client, path_pairs)
   end
 end
 
+---@param bufnr number
+---@return boolean
+local function should_save_buffer(bufnr)
+  local autosave = config.lsp_rename_autosave
+  if autosave == "unmodified" then
+    local is_modified = vim.api.nvim_buf_get_option_value("modified", { buf = bufnr })
+    return not is_modified
+  end
+  if type(autosave) ~= "boolean" then
+    return false
+  end
+  return autosave
+end
+
+---@return table<number, boolean>
+local function get_open_buffers()
+  local is_open = {}
+  local buffers = vim.api.nvim_list_bufs()
+  for _, bufnr in ipairs(buffers) do
+    is_open[bufnr] = true
+  end
+  return is_open
+end
+
 ---Process LSP rename in the background
 ---@param actions oil.MoveAction[]
 M.will_rename_files = function(actions)
@@ -89,12 +114,6 @@ M.will_rename_files = function(actions)
   for _, client in ipairs(clients) do
     local matching_paths = get_matching_paths(client, path_pairs)
     if matching_paths then
-      local open_buffers = vim.api.nvim_list_bufs()
-      local is_open = {}
-      for _, bufnr in ipairs(open_buffers) do
-        is_open[bufnr] = true
-      end
-
       client.request("workspace/willRenameFiles", {
         files = vim.tbl_map(function(pair)
           return {
@@ -105,12 +124,19 @@ M.will_rename_files = function(actions)
       }, function(_, result)
         if result then
           vim.lsp.util.apply_workspace_edit(result, client.offset_encoding)
+          if config.lsp_rename_autosave == false then
+            return
+          end
+
+          local open_buffers = get_open_buffers()
           for uri, _ in pairs(result.changes) do
             local bufnr = vim.uri_to_bufnr(uri)
-            vim.api.nvim_buf_call(bufnr, function()
-              vim.cmd("w")
-            end)
-            if not is_open[bufnr] then
+            if should_save_buffer(bufnr) then
+              vim.api.nvim_buf_call(bufnr, function()
+                vim.cmd("update")
+              end)
+            end
+            if not open_buffers[bufnr] then
               vim.api.nvim_buf_delete(bufnr, { force = true })
             end
           end
