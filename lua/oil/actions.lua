@@ -224,6 +224,9 @@ M.refresh = {
       end
     end
     vim.cmd.edit({ bang = true })
+
+    -- :h CTRL-L-default
+    vim.cmd.nohlsearch()
   end,
 }
 
@@ -331,6 +334,46 @@ M.toggle_trash = {
     end
     vim.cmd.edit({ args = { url } })
     vim.b.oil_trash_toggle_src = bufnr
+  end,
+}
+
+M.send_to_qflist = {
+  desc = "Sends files in the current oil directory to the quickfix list, replacing the previous entries.",
+  callback = function()
+    util.send_to_quickfix({
+      target = "qflist",
+      mode = "r",
+    })
+  end,
+}
+
+M.add_to_qflist = {
+  desc = "Adds files in the current oil directory to the quickfix list, keeping the previous entries.",
+  callback = function()
+    util.send_to_quickfix({
+      target = "qflist",
+      mode = "a",
+    })
+  end,
+}
+
+M.send_to_loclist = {
+  desc = "Sends files in the current oil directory to the location list, replacing the previous entries.",
+  callback = function()
+    util.send_to_quickfix({
+      target = "loclist",
+      mode = "r",
+    })
+  end,
+}
+
+M.add_to_loclist = {
+  desc = "Adds files in the current oil directory to the location list, keeping the previous entries.",
+  callback = function()
+    util.send_to_quickfix({
+      target = "loclist",
+      mode = "a",
+    })
   end,
 }
 

@@ -143,7 +143,10 @@ M.shorten_path = function(path, relative_to)
   return relpath or path
 end
 
-M.mkdirp = function(dir)
+---@param dir string
+---@param mode? integer
+M.mkdirp = function(dir, mode)
+  mode = mode or 493
   local mod = ""
   local path = dir
   while vim.fn.isdirectory(path) == 0 do
@@ -153,7 +156,7 @@ M.mkdirp = function(dir)
   while mod ~= "" do
     mod = mod:sub(3)
     path = vim.fn.fnamemodify(dir, mod)
-    uv.fs_mkdir(path, 493)
+    uv.fs_mkdir(path, mode)
   end
 end
 

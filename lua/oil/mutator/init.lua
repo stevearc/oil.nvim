@@ -68,8 +68,6 @@ M.create_actions_from_diffs = function(all_diffs)
       table.insert(actions, action)
     end
   end
-  ---@type table<integer, string>
-  local dest_by_id = {}
   for bufnr, diffs in pairs(all_diffs) do
     local adapter = util.get_adapter(bufnr)
     if not adapter then
@@ -80,7 +78,9 @@ M.create_actions_from_diffs = function(all_diffs)
       if diff.type == "new" then
         if diff.id then
           local by_id = diff_by_id[diff.id]
-          dest_by_id[diff.id] = parent_url .. diff.name
+          ---HACK: set the destination on this diff for use later
+          ---@diagnostic disable-next-line: inject-field
+          diff.dest = parent_url .. diff.name
           table.insert(by_id, diff)
         else
           -- Parse nested files like foo/bar/baz
@@ -145,7 +145,9 @@ M.create_actions_from_diffs = function(all_diffs)
           add_action({
             type = i == #diffs and "move" or "copy",
             entry_type = entry[FIELD_TYPE],
-            dest_url = dest_by_id[diff.id],
+            ---HACK: access the dest field we set above
+            ---@diagnostic disable-next-line: undefined-field
+            dest_url = diff.dest,
             src_url = cache.get_parent_url(id) .. entry[FIELD_NAME],
           })
         end
@@ -164,7 +166,9 @@ M.create_actions_from_diffs = function(all_diffs)
           type = "copy",
           entry_type = entry[FIELD_TYPE],
           src_url = cache.get_parent_url(id) .. entry[FIELD_NAME],
-          dest_url = dest_by_id[diff.id],
+          ---HACK: access the dest field we set above
+          ---@diagnostic disable-next-line: undefined-field
+          dest_url = diff.dest,
         })
       end
     end
@@ -456,9 +460,13 @@ end
 local mutation_in_progress = false
 
 ---@param confirm nil|boolean
-M.try_write_changes = function(confirm)
+---@param cb? fun(err: nil|string)
+M.try_write_changes = function(confirm, cb)
+  if not cb then
+    cb = function(_err) end
+  end
   if mutation_in_progress then
-    error("Cannot perform mutation when already in progress")
+    cb("Cannot perform mutation when already in progress")
     return
   end
   local current_buf = vim.api.nvim_get_current_buf()
@@ -495,7 +503,6 @@ M.try_write_changes = function(confirm)
   local ns = vim.api.nvim_create_namespace("Oil")
   vim.diagnostic.reset(ns)
   if not vim.tbl_isempty(all_errors) then
-    vim.notify("Error parsing oil buffers", vim.log.levels.ERROR)
     for bufnr, errors in pairs(all_errors) do
       vim.diagnostic.set(ns, bufnr, errors)
     end
@@ -514,13 +521,17 @@ M.try_write_changes = function(confirm)
       vim.api.nvim_win_set_buf(0, bufnr)
       pcall(vim.api.nvim_win_set_cursor, 0, { errs[1].lnum + 1, errs[1].col })
     end
-    return unlock()
+    unlock()
+    cb("Error parsing oil buffers")
+    return
   end
 
   local actions = M.create_actions_from_diffs(all_diffs)
   preview.show(actions, confirm, function(proceed)
     if not proceed then
-      return unlock()
+      unlock()
+      cb("Canceled")
+      return
     end
 
     M.process_actions(
@@ -528,8 +539,10 @@ M.try_write_changes = function(confirm)
       vim.schedule_wrap(function(err)
         view.unlock_buffers()
         if err then
-          vim.notify(string.format("[oil] Error applying actions: %s", err), vim.log.levels.ERROR)
-          view.rerender_all_oil_buffers()
+          err = string.format("[oil] Error applying actions: %s", err)
+          view.rerender_all_oil_buffers(nil, function()
+            cb(err)
+          end)
         else
           local current_entry = oil.get_cursor_entry()
           if current_entry then
@@ -539,8 +552,13 @@ M.try_write_changes = function(confirm)
               vim.split(current_entry.parsed_name or current_entry.name, "/")[1]
             )
           end
-          view.rerender_all_oil_buffers()
-          vim.api.nvim_exec_autocmds("User", { pattern = "OilMutationComplete", modeline = false })
+          view.rerender_all_oil_buffers(nil, function(render_err)
+            vim.api.nvim_exec_autocmds(
+              "User",
+              { pattern = "OilMutationComplete", modeline = false }
+            )
+            cb(render_err)
+          end)
         end
         mutation_in_progress = false
       end)

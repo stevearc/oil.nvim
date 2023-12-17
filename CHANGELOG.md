@@ -1,5 +1,33 @@
 # Changelog
 
+## [2.4.1](https://github.com/stevearc/oil.nvim/compare/v2.4.0...v2.4.1) (2023-12-01)
+
+
+### Bug Fixes
+
+* buffer data cleared when setting buflisted = false ([303f318](https://github.com/stevearc/oil.nvim/commit/303f31895e7ce10df250c88c7a5f7d8d9c56f0fc))
+* bug copying file multiple times ([05cb825](https://github.com/stevearc/oil.nvim/commit/05cb8257cb9257144e63f41ccfe5a41ba3d1003c))
+* crash in ssh and trash adapter detail columns ([#235](https://github.com/stevearc/oil.nvim/issues/235)) ([e89a8f8](https://github.com/stevearc/oil.nvim/commit/e89a8f8adeef2dfab851fd056d38ee7afc97c249))
+* oil.select respects splitbelow and splitright ([#233](https://github.com/stevearc/oil.nvim/issues/233)) ([636989b](https://github.com/stevearc/oil.nvim/commit/636989b603fb95032efa9d3e1b3323c8bb533e91))
+* preserve buflisted when re-opening oil buffers ([#220](https://github.com/stevearc/oil.nvim/issues/220)) ([6566f45](https://github.com/stevearc/oil.nvim/commit/6566f457e44498adc6835bed5402b38386fa1438))
+
+## [2.4.0](https://github.com/stevearc/oil.nvim/compare/v2.3.0...v2.4.0) (2023-11-15)
+
+
+### Features
+
+* display ../ entry in oil buffers ([#166](https://github.com/stevearc/oil.nvim/issues/166)) ([d8f0d91](https://github.com/stevearc/oil.nvim/commit/d8f0d91b10ec53da722b0909697b57c2f5368245))
+* trash support for linux and mac ([#165](https://github.com/stevearc/oil.nvim/issues/165)) ([6175bd6](https://github.com/stevearc/oil.nvim/commit/6175bd646272335c8db93264760760d8f2a611d5))
+
+
+### Bug Fixes
+
+* can view drives on Windows ([126a8a2](https://github.com/stevearc/oil.nvim/commit/126a8a23465312683edf646555b3031bfe56796d))
+* don't set buflisted on oil buffers ([#220](https://github.com/stevearc/oil.nvim/issues/220)) ([873d505](https://github.com/stevearc/oil.nvim/commit/873d505e5bfdd65317ea97ead8faa6c56bac04c0))
+* line parsing for empty columns ([0715f1b](https://github.com/stevearc/oil.nvim/commit/0715f1b0aacef70573ed6300c12039831fbd81c3))
+* previewing and editing files on windows ([#214](https://github.com/stevearc/oil.nvim/issues/214)) ([3727410](https://github.com/stevearc/oil.nvim/commit/3727410e4875ad8ba339c585859a9391d643b9ed))
+* quit after mutations when :wq or similar ([#221](https://github.com/stevearc/oil.nvim/issues/221)) ([af13ce3](https://github.com/stevearc/oil.nvim/commit/af13ce333f89c54a47e6772b55fed2438ee6957c))
+
 ## [2.3.0](https://github.com/stevearc/oil.nvim/compare/v2.2.0...v2.3.0) (2023-11-04)
 
 

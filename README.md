@@ -244,6 +244,8 @@ require("oil").setup({
     win_options = {
       winblend = 0,
     },
+    -- Whether the preview window is automatically updated when the cursor is moved
+    update_on_cursor_moved = true,
   },
   -- Configuration for the floating progress window
   progress = {
@@ -297,7 +299,7 @@ Note that at the moment the ssh adapter does not support Windows machines, and i
 - [open(dir)](doc/api.md#opendir)
 - [close()](doc/api.md#close)
 - [select(opts, callback)](doc/api.md#selectopts-callback)
-- [save(opts)](doc/api.md#saveopts)
+- [save(opts, cb)](doc/api.md#saveopts-cb)
 - [setup(opts)](doc/api.md#setupopts)
 
 <!-- /API -->

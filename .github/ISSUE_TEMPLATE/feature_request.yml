@@ -26,6 +26,15 @@ body:
       placeholder: I am trying to do X. My current workflow is Y.
     validations:
       required: false
+  - type: dropdown
+    attributes:
+      label: What is the significance of this feature?
+      options:
+        - nice to have
+        - strongly desired
+        - cannot use this plugin without it
+    validations:
+      required: true
   - type: textarea
     attributes:
       label: Additional details

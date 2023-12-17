@@ -7,7 +7,10 @@ local M = {}
 ---@field parsed_name nil|string
 
 ---@alias oil.EntryType "file"|"directory"|"socket"|"link"|"fifo"
----@alias oil.TextChunk string|string[]
+---@alias oil.HlRange { [1]: string, [2]: integer, [3]: integer } A tuple of highlight group name, col_start, col_end
+---@alias oil.HlTuple { [1]: string, [2]: string } A tuple of text, highlight group
+---@alias oil.HlRangeTuple { [1]: string, [2]: oil.HlRange[] } A tuple of text, internal highlights
+---@alias oil.TextChunk string|oil.HlTuple|oil.HlRangeTuple
 ---@alias oil.CrossAdapterAction "copy"|"move"
 
 ---@class (exact) oil.Adapter
@@ -338,6 +341,10 @@ M.open_float = function(dir)
   end
 
   vim.cmd.edit({ args = { util.escape_filename(parent_url) }, mods = { keepalt = true } })
+  -- :edit will set buflisted = true, but we may not want that
+  if config.buf_options.buflisted ~= nil then
+    vim.api.nvim_buf_set_option(0, "buflisted", config.buf_options.buflisted)
+  end
 
   if vim.fn.has("nvim-0.9") == 0 then
     util.add_title_to_win(winid)
@@ -357,6 +364,7 @@ end
 ---Open oil browser for a directory
 ---@param dir nil|string When nil, open the parent of the current buffer, or the cwd if current buffer is not a file
 M.open = function(dir)
+  local config = require("oil.config")
   local util = require("oil.util")
   local view = require("oil.view")
   local parent_url, basename = M.get_url_for_path(dir)
@@ -367,6 +375,10 @@ M.open = function(dir)
     view.set_last_cursor(parent_url, basename)
   end
   vim.cmd.edit({ args = { util.escape_filename(parent_url) }, mods = { keepalt = true } })
+  -- :edit will set buflisted = true, but we may not want that
+  if config.buf_options.buflisted ~= nil then
+    vim.api.nvim_buf_set_option(0, "buflisted", config.buf_options.buflisted)
+  end
 end
 
 ---Restore the buffer that was present when oil was opened
@@ -422,11 +434,15 @@ M.select = function(opts, callback)
       callback(err)
     end
   end
-  if opts.horizontal or opts.vertical or opts.preview then
-    opts.split = opts.split or "belowright"
-  end
   if opts.preview and not opts.horizontal and opts.vertical == nil then
     opts.vertical = true
+  end
+  if not opts.split and (opts.horizontal or opts.vertical or opts.preview) then
+    if opts.horizontal then
+      opts.split = vim.o.splitbelow and "belowright" or "aboveleft"
+    else
+      opts.split = vim.o.splitright and "belowright" or "aboveleft"
+    end
   end
   if opts.tab and (opts.preview or opts.split) then
     return finish("Cannot set preview or split when tab = true")
@@ -443,20 +459,12 @@ M.select = function(opts, callback)
     return finish("Could not find adapter for current buffer")
   end
 
-  local mode = vim.api.nvim_get_mode().mode
-  local is_visual = mode:match("^[vV]")
+  local visual_range = util.get_visual_range()
 
   ---@type oil.Entry[]
   local entries = {}
-  if is_visual then
-    -- This is the best way to get the visual selection at the moment
-    -- https://github.com/neovim/neovim/pull/13896
-    local _, start_lnum, _, _ = unpack(vim.fn.getpos("v"))
-    local _, end_lnum, _, _, _ = unpack(vim.fn.getcurpos())
-    if start_lnum > end_lnum then
-      start_lnum, end_lnum = end_lnum, start_lnum
-    end
-    for i = start_lnum, end_lnum do
+  if visual_range then
+    for i = visual_range.start_lnum, visual_range.end_lnum do
       local entry = M.get_entry_on_line(0, i)
       if entry then
         table.insert(entries, entry)
@@ -565,39 +573,38 @@ M.select = function(opts, callback)
         keepalt = true,
         emsg_silent = true,
       }
-      -- If we're editing a file on disk, shorten the path prior to :edit so the
-      -- display name will show up shortened
-      if adapter.name == "files" and not util.parse_url(normalized_url) then
-        normalized_url = require("oil.fs").shorten_path(normalized_url)
-      end
-      local filename = util.escape_filename(normalized_url)
+      local filebufnr = vim.fn.bufadd(normalized_url)
 
-      -- If we're previewing a file that hasn't been opened yet, make sure it gets deleted after we
-      -- close the window
-      if opts.preview and not util.parse_url(filename) then
-        local bufnr = vim.fn.bufadd(filename)
-        if vim.fn.bufloaded(bufnr) == 0 then
-          vim.bo[bufnr].bufhidden = "wipe"
-          vim.b[bufnr].oil_preview_buffer = true
+      if opts.preview then
+        -- If we're previewing a file that hasn't been opened yet, make sure it gets deleted after
+        -- we close the window
+        if not vim.endswith(normalized_url, "/") and vim.fn.bufloaded(filebufnr) == 0 then
+          vim.bo[filebufnr].bufhidden = "wipe"
+          vim.b[filebufnr].oil_preview_buffer = true
         end
+      elseif not vim.endswith(normalized_url, "/") then
+        -- The :buffer command doesn't set buflisted=true
+        -- So do that for non-diretory-buffers
+        vim.bo[filebufnr].buflisted = true
       end
 
       local cmd
       if opts.preview and preview_win then
         vim.api.nvim_set_current_win(preview_win)
-        cmd = "edit"
+        cmd = "buffer"
       else
         if opts.tab then
-          cmd = "tabedit"
+          vim.cmd.tabnew({ mods = mods })
+          cmd = "buffer"
         elseif opts.split then
-          cmd = "split"
+          cmd = "sbuffer"
         else
-          cmd = "edit"
+          cmd = "buffer"
         end
       end
       vim.cmd({
         cmd = cmd,
-        args = { filename },
+        args = { filebufnr },
         mods = mods,
       })
       if opts.preview then
@@ -751,10 +758,20 @@ end
 ---Save all changes
 ---@param opts nil|table
 ---    confirm nil|boolean Show confirmation when true, never when false, respect skip_confirm_for_simple_edits if nil
-M.save = function(opts)
+---@param cb? fun(err: nil|string) Called when mutations complete.
+---@note
+--- If you provide your own callback function, there will be no notification for errors.
+M.save = function(opts, cb)
   opts = opts or {}
+  if not cb then
+    cb = function(err)
+      if err and err ~= "Canceled" then
+        vim.notify(err, vim.log.levels.ERROR)
+      end
+    end
+  end
   local mutator = require("oil.mutator")
-  mutator.try_write_changes(opts.confirm)
+  mutator.try_write_changes(opts.confirm, cb)
 end
 
 local function restore_alt_buf()
@@ -946,10 +963,28 @@ M.setup = function(opts)
     pattern = scheme_pattern,
     nested = true,
     callback = function(params)
+      local winid = vim.api.nvim_get_current_win()
+      local last_cmd = vim.fn.histget("cmd", -1)
+      local last_expr = vim.fn.histget("expr", -1)
+      -- If the user issued a :wq or similar, we should quit after saving
+      local quit_after_save = last_cmd == "wq" or last_cmd == "x" or last_expr == "ZZ"
+      local quit_all = last_cmd:match("^wqal*$")
       local bufname = vim.api.nvim_buf_get_name(params.buf)
       if vim.endswith(bufname, "/") then
         vim.cmd.doautocmd({ args = { "BufWritePre", params.file }, mods = { silent = true } })
-        M.save()
+        M.save(nil, function(err)
+          if err then
+            if err ~= "Canceled" then
+              vim.notify(err, vim.log.levels.ERROR)
+            end
+          elseif winid == vim.api.nvim_get_current_win() then
+            if quit_after_save then
+              vim.cmd.quit()
+            elseif quit_all then
+              vim.cmd.quitall()
+            end
+          end
+        end)
         vim.cmd.doautocmd({ args = { "BufWritePost", params.file }, mods = { silent = true } })
       else
         local adapter = config.get_adapter_by_scheme(bufname)
@@ -1088,13 +1123,13 @@ M.setup = function(opts)
     group = aug,
     pattern = "*",
     callback = function(params)
+      if vim.g.SessionLoad ~= 1 then
+        return
+      end
       local util = require("oil.util")
-      for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
-        local bufname = vim.api.nvim_buf_get_name(bufnr)
-        local scheme = util.parse_url(bufname)
-        if config.adapters[scheme] and vim.api.nvim_buf_line_count(bufnr) == 1 then
-          load_oil_buffer(bufnr)
-        end
+      local scheme = util.parse_url(params.file)
+      if config.adapters[scheme] and vim.api.nvim_buf_line_count(params.buf) == 1 then
+        load_oil_buffer(params.buf)
       end
     end,
   })

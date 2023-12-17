@@ -145,9 +145,10 @@ M.unlock_buffers = function()
 end
 
 ---@param opts? table
+---@param callback? fun(err: nil|string)
 ---@note
 --- This DISCARDS ALL MODIFICATIONS a user has made to oil buffers
-M.rerender_all_oil_buffers = function(opts)
+M.rerender_all_oil_buffers = function(opts, callback)
   opts = opts or {}
   local buffers = M.get_all_buffers()
   local hidden_buffers = {}
@@ -159,13 +160,15 @@ M.rerender_all_oil_buffers = function(opts)
       hidden_buffers[vim.api.nvim_win_get_buf(winid)] = nil
     end
   end
+  local cb = util.cb_collect(#buffers, callback or function() end)
   for _, bufnr in ipairs(buffers) do
     if hidden_buffers[bufnr] then
       vim.b[bufnr].oil_dirty = opts
       -- We also need to mark this as nomodified so it doesn't interfere with quitting vim
       vim.bo[bufnr].modified = false
+      vim.schedule(cb)
     else
-      M.render_buffer_async(bufnr, opts)
+      M.render_buffer_async(bufnr, opts, cb)
     end
   end
 end
@@ -314,7 +317,7 @@ M.initialize = function(bufnr)
       end, 100)
     end,
   })
-  vim.api.nvim_create_autocmd("BufDelete", {
+  vim.api.nvim_create_autocmd("BufUnload", {
     group = "Oil",
     nested = true,
     once = true,
@@ -361,34 +364,36 @@ M.initialize = function(bufnr)
         end
       end
 
-      -- Debounce and update the preview window
-      if timer then
-        timer:again()
-        return
-      end
-      timer = vim.loop.new_timer()
-      if not timer then
-        return
-      end
-      timer:start(10, 100, function()
-        timer:stop()
-        timer:close()
-        timer = nil
-        vim.schedule(function()
-          if vim.api.nvim_get_current_buf() ~= bufnr then
-            return
-          end
-          local entry = oil.get_cursor_entry()
-          if entry then
-            local winid = util.get_preview_win()
-            if winid then
-              if entry.id ~= vim.w[winid].oil_entry_id then
-                oil.select({ preview = true })
+      if config.preview.update_on_cursor_moved then
+        -- Debounce and update the preview window
+        if timer then
+          timer:again()
+          return
+        end
+        timer = vim.loop.new_timer()
+        if not timer then
+          return
+        end
+        timer:start(10, 100, function()
+          timer:stop()
+          timer:close()
+          timer = nil
+          vim.schedule(function()
+            if vim.api.nvim_get_current_buf() ~= bufnr then
+              return
+            end
+            local entry = oil.get_cursor_entry()
+            if entry then
+              local winid = util.get_preview_win()
+              if winid then
+                if entry.id ~= vim.w[winid].oil_entry_id then
+                  oil.select({ preview = true })
+                end
               end
             end
-          end
+          end)
         end)
-      end)
+      end
     end,
   })
 
@@ -684,6 +689,7 @@ M.render_buffer_async = function(bufnr, opts, callback)
   local seek_after_render_found = false
   local first = true
   vim.bo[bufnr].modifiable = false
+  vim.bo[bufnr].modified = false
   loading.set_loading(bufnr, true)
 
   local finish = vim.schedule_wrap(function()

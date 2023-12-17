@@ -134,6 +134,8 @@ OPTIONS                                                              *oil-option
         win_options = {
           winblend = 0,
         },
+        -- Whether the preview window is automatically updated when the cursor is moved
+        update_on_cursor_moved = true,
       },
       -- Configuration for the floating progress window
       progress = {
@@ -238,13 +240,17 @@ select({opts}, {callback})                                            *oil.selec
       {callback} `nil|fun(err: nil|string)` Called once all entries have been
                  opened
 
-save({opts})                                                            *oil.save*
+save({opts}, {cb})                                                      *oil.save*
     Save all changes
 
     Parameters:
       {opts} `nil|table`
           {confirm} `nil|boolean` Show confirmation when true, never when false,
                     respect skip_confirm_for_simple_edits if nil
+      {cb}   `nil|fun(err: nil|string)` Called when mutations complete.
+
+    Note:
+      If you provide your own callback function, there will be no notification for errors.
 
 setup({opts})                                                          *oil.setup*
     Initialize oil
@@ -346,6 +352,14 @@ These are actions that can be used in the `keymaps` section of config options.
 You can also call them directly with
 `require("oil.actions").action_name.callback()`
 
+add_to_loclist                                            *actions.add_to_loclist*
+    Adds files in the current oil directory to the location list, keeping the
+    previous entries.
+
+add_to_qflist                                              *actions.add_to_qflist*
+    Adds files in the current oil directory to the quickfix list, keeping the
+    previous entries.
+
 cd                                                                    *actions.cd*
     :cd to the current oil directory
 
@@ -400,6 +414,14 @@ select_tab                                                    *actions.select_ta
 
 select_vsplit                                              *actions.select_vsplit*
     Open the entry under the cursor in a vertical split
+
+send_to_loclist                                          *actions.send_to_loclist*
+    Sends files in the current oil directory to the location list, replacing the
+    previous entries.
+
+send_to_qflist                                            *actions.send_to_qflist*
+    Sends files in the current oil directory to the quickfix list, replacing the
+    previous entries.
 
 show_help                                                      *actions.show_help*
     Show default keymaps

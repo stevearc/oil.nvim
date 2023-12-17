@@ -15,7 +15,7 @@
 - [open(dir)](#opendir)
 - [close()](#close)
 - [select(opts, callback)](#selectopts-callback)
-- [save(opts)](#saveopts)
+- [save(opts, cb)](#saveopts-cb)
 - [setup(opts)](#setupopts)
 
 <!-- /TOC -->
@@ -132,15 +132,21 @@ Select the entry under the cursor
 |          | close                        | `boolean`                                          | Close the original oil buffer once selection is made |
 | callback | `nil\|fun(err: nil\|string)` | Called once all entries have been opened           |                                                      |
 
-## save(opts)
+## save(opts, cb)
 
-`save(opts)` \
+`save(opts, cb)` \
 Save all changes
 
-| Param | Type         | Desc           |                                                                                             |
-| ----- | ------------ | -------------- | ------------------------------------------------------------------------------------------- |
-| opts  | `nil\|table` |                |                                                                                             |
-|       | confirm      | `nil\|boolean` | Show confirmation when true, never when false, respect skip_confirm_for_simple_edits if nil |
+| Param | Type                         | Desc                            |                                                                                             |
+| ----- | ---------------------------- | ------------------------------- | ------------------------------------------------------------------------------------------- |
+| opts  | `nil\|table`                 |                                 |                                                                                             |
+|       | confirm                      | `nil\|boolean`                  | Show confirmation when true, never when false, respect skip_confirm_for_simple_edits if nil |
+| cb    | `nil\|fun(err: nil\|string)` | Called when mutations complete. |                                                                                             |
+
+**Note:**
+<pre>
+If you provide your own callback function, there will be no notification for errors.
+</pre>
 
 ## setup(opts)
 

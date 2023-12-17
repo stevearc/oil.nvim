@@ -12,7 +12,6 @@ a.describe("regression tests", function()
   a.after_each(function()
     if tmpdir then
       tmpdir:dispose()
-      a.util.scheduler()
       tmpdir = nil
     end
     test_util.reset_editor()
@@ -116,5 +115,20 @@ a.describe("regression tests", function()
     vim.cmd.edit({ bang = true })
     test_util.wait_for_autocmd({ "User", pattern = "OilEnter" })
     assert.are.same({ bufnr }, require("oil.view").get_all_buffers())
+  end)
+
+  a.it("can copy a file multiple times", function()
+    test_util.actions.open({ tmpdir.path })
+    vim.api.nvim_feedkeys("ifoo.txt", "x", true)
+    test_util.actions.save()
+    vim.api.nvim_feedkeys("yyp$ciWbar.txt", "x", true)
+    vim.api.nvim_feedkeys("yyp$ciWbaz.txt", "x", true)
+    test_util.actions.save()
+    assert.are.same({ "bar.txt", "baz.txt", "foo.txt" }, test_util.parse_entries(0))
+    tmpdir:assert_fs({
+      ["foo.txt"] = "",
+      ["bar.txt"] = "",
+      ["baz.txt"] = "",
+    })
   end)
 end)

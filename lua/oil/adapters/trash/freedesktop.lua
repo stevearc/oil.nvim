@@ -12,14 +12,10 @@ local FIELD_META = constants.FIELD_META
 
 local M = {}
 
-local function touch_dir(path)
-  uv.fs_mkdir(path, 448) -- 0700
-end
-
 local function ensure_trash_dir(path)
-  touch_dir(path)
-  touch_dir(fs.join(path, "info"))
-  touch_dir(fs.join(path, "files"))
+  local mode = 448 -- 0700
+  fs.mkdirp(fs.join(path, "info"), mode)
+  fs.mkdirp(fs.join(path, "files"), mode)
 end
 
 ---Gets the location of the home trash dir, creating it if necessary
@@ -352,6 +348,9 @@ end)
 file_columns.mtime = {
   render = function(entry, conf)
     local meta = entry[FIELD_META]
+    if not meta then
+      return nil
+    end
     ---@type oil.TrashInfo
     local trash_info = meta.trash_info
     local time = trash_info and trash_info.deletion_date or meta.stat and meta.stat.mtime.sec
