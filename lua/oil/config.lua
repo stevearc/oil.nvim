@@ -1,4 +1,3 @@
-local uv = vim.uv or vim.loop
 
 local default_config = {
   -- Oil will take over directory buffers (e.g. `vim .` or `:e src/`)
@@ -12,6 +11,8 @@ local default_config = {
     -- "size",
     -- "mtime",
   },
+  -- Prevent these columns from being edited in normal mode (cursor cannot move to them)
+  normal_uneditable = { },
   -- Buffer-local options to use for oil buffers
   buf_options = {
     buflisted = false,

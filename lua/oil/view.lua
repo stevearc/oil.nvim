@@ -225,7 +225,9 @@ local function get_first_mutable_column_col(adapter, ranges)
   for col_name, start_len in pairs(ranges) do
     local start = start_len[1]
     local col_spec = columns.get_column(adapter, col_name)
-    local is_col_mutable = col_spec and col_spec.perform_action ~= nil
+    local is_col_mutable = col_spec
+        and col_spec.perform_action ~= nil
+        and not vim.tbl_contains(config.normal_uneditable, col_name)
     if is_col_mutable and start < min_col then
       min_col = start
     end

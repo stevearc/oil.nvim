@@ -136,6 +136,8 @@ require("oil").setup({
     -- "size",
     -- "mtime",
   },
+  -- Prevent these columns from being edited
+  normal_uneditable = { },
   -- Buffer-local options to use for oil buffers
   buf_options = {
     buflisted = false,
