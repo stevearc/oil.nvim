@@ -3,6 +3,7 @@ local util = require("oil.util")
 
 local M = {}
 
+---@alias oil.Path string
 ---@alias oil.PathPair {src: string, dest: string}
 
 ---@param filepath string
@@ -50,7 +51,7 @@ local function any_match(filepath, filters)
   return false
 end
 
----@return nil|oil.PathPair[]
+---@return nil|oil.Path[]|oil.PathPair[]
 local function get_matching_paths(client, file_op, path_pairs)
   local filters =
     vim.tbl_get(client.server_capabilities, "workspace", "fileOperations", file_op, "filters")
@@ -59,9 +60,10 @@ local function get_matching_paths(client, file_op, path_pairs)
   end
   local ret = {}
   for _, pair in ipairs(path_pairs) do
-    if fs.is_subpath(client.config.root_dir, pair.src) then
-      local relative_file = pair.src:sub(client.config.root_dir:len() + 2)
-      if any_match(pair.src, filters) or any_match(relative_file, filters) then
+    local path = type(pair) == "string" and pair or pair.src -- differentiate between oil.Path and oil.PathPair
+    if fs.is_subpath(client.config.root_dir, path) then
+      local relative_file = path:sub(client.config.root_dir:len() + 2)
+      if any_match(path, filters) or any_match(relative_file, filters) then
         table.insert(ret, pair)
       end
     end
@@ -90,6 +92,20 @@ local parse_pairs = function(actions)
   return path_pairs
 end
 
+---@param actions oil.DeleteAction[]|oil.CreateAction[]
+---@return oil.Path[]
+local parse_paths = function(actions)
+  ---@type oil.Path[]
+  local paths = {}
+  for _, action in ipairs(actions) do
+    local _, path = util.parse_url(action.url)
+    assert(path)
+    local file = fs.posix_to_os_path(path)
+    table.insert(paths, file)
+  end
+  return paths
+end
+
 ---Process LSP will rename in the background
 ---@param actions oil.MoveAction[]
 M.will_rename_files = function(actions)
@@ -99,6 +115,7 @@ M.will_rename_files = function(actions)
   for _, client in ipairs(clients) do
     local pairs = get_matching_paths(client, "willRename", path_pairs)
     if pairs then
+      ---@cast pairs oil.PathPair[]
       client.request("workspace/willRenameFiles", {
         files = vim.tbl_map(function(pair)
           return {
@@ -124,6 +141,7 @@ M.did_rename_files = function(actions)
   for _, client in ipairs(clients) do
     local pairs = get_matching_paths(client, "didRename", path_pairs)
     if pairs then
+      ---@cast pairs oil.PathPair[]
       client.notify("workspace/didRenameFiles", {
         files = vim.tbl_map(function(pair)
           return {
@@ -131,6 +149,90 @@ M.did_rename_files = function(actions)
             newUri = vim.uri_from_fname(pair.dest),
           }
         end, pairs),
+      })
+    end
+  end
+end
+
+---Process LSP will create in the background
+---@param actions oil.CreateAction[]
+M.will_create_files = function(actions)
+  local paths = parse_paths(actions)
+
+  local clients = vim.lsp.get_active_clients()
+  for _, client in ipairs(clients) do
+    local filtered = get_matching_paths(client, "willCreate", paths)
+    if filtered then
+      ---@cast filtered oil.Path[]
+      client.request("workspace/willCreateFiles", {
+        files = vim.tbl_map(function(path)
+          return { uri = vim.uri_from_fname(path) }
+        end, filtered),
+      }, function(_, result)
+        if result then
+          vim.lsp.util.apply_workspace_edit(result, client.offset_encoding)
+        end
+      end)
+    end
+  end
+end
+
+---Emit LSP did create notification
+---@param actions oil.CreateAction[]
+M.did_create_files = function(actions)
+  local paths = parse_paths(actions)
+
+  local clients = vim.lsp.get_active_clients()
+  for _, client in ipairs(clients) do
+    local filtered = get_matching_paths(client, "didCreate", paths)
+    if filtered then
+      ---@cast filtered oil.Path[]
+      client.notify("workspace/didCreateFiles", {
+        files = vim.tbl_map(function(path)
+          return { uri = vim.uri_from_fname(path) }
+        end, filtered),
+      })
+    end
+  end
+end
+
+---Process LSP will delete in the background
+---@param actions oil.DeleteAction[]
+M.will_delete_files = function(actions)
+  local paths = parse_paths(actions)
+
+  local clients = vim.lsp.get_active_clients()
+  for _, client in ipairs(clients) do
+    local filtered = get_matching_paths(client, "willDelete", paths)
+    if filtered then
+      ---@cast filtered oil.Path[]
+      client.request("workspace/willDeleteFiles", {
+        files = vim.tbl_map(function(path)
+          return { uri = vim.uri_from_fname(path) }
+        end, filtered),
+      }, function(_, result)
+        if result then
+          vim.lsp.util.apply_workspace_edit(result, client.offset_encoding)
+        end
+      end)
+    end
+  end
+end
+
+---Emit LSP did delete notification
+---@param actions oil.DeleteAction[]
+M.did_delete_files = function(actions)
+  local paths = parse_paths(actions)
+
+  local clients = vim.lsp.get_active_clients()
+  for _, client in ipairs(clients) do
+    local filtered = get_matching_paths(client, "didDelete", paths)
+    if filtered then
+      ---@cast filtered oil.Path[]
+      client.notify("workspace/didDeleteFiles", {
+        files = vim.tbl_map(function(path)
+          return { uri = vim.uri_from_fname(path) }
+        end, filtered),
       })
     end
   end

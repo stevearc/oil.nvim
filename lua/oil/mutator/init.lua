@@ -375,12 +375,38 @@ local is_file_move = function(action)
   return false
 end
 
+---@param action oil.Action
+---@return boolean
+local is_file_create = function(action)
+  return action.type == "create"
+    and assert(config.get_adapter_by_scheme(action.url)).name == "files"
+end
+
+---@param action oil.Action
+---@return boolean
+local is_file_delete = function(action)
+  return action.type == "delete"
+    and assert(config.get_adapter_by_scheme(action.url)).name == "files"
+end
+
+---@return {create: oil.CreateAction[], delete: oil.DeleteAction[], move: oil.MoveAction[]}
+local sort_file_actions = function(actions)
+  local ret = { create = {}, delete = {}, move = {} }
+  for _, action in ipairs(actions) do
+    if is_file_create(action) then
+      table.insert(ret.create, action)
+    elseif is_file_delete(action) then
+      table.insert(ret.delete, action)
+    elseif is_file_move(action) then
+      table.insert(ret.move, action)
+    end
+  end
+  return ret
+end
+
 ---@param actions oil.Action[]
 ---@param cb fun(err: nil|string)
 M.process_actions = function(actions, cb)
-  -- send all file move actions to LSP servers
-  lsp_helpers.will_rename_files(vim.tbl_filter(is_file_move, actions))
-
   -- Convert some cross-adapter moves to a copy + delete
   for _, action in ipairs(actions) do
     if action.type == "move" then
@@ -397,13 +423,23 @@ M.process_actions = function(actions, cb)
     end
   end
 
-  local moved = {}
+  local file_actions = sort_file_actions(actions)
+  -- send all file operations to LSP servers
+  lsp_helpers.will_create_files(file_actions.create)
+  lsp_helpers.will_delete_files(file_actions.delete)
+  lsp_helpers.will_rename_files(file_actions.move)
+
+  local successful_actions = {}
   local finished = false
   local progress = Progress.new()
   local function finish(...)
     if not finished then
       finished = true
-      lsp_helpers.did_rename_files(moved)
+      local successful_file_actions = sort_file_actions(successful_actions)
+      -- send all successful file operations to LSP servers
+      lsp_helpers.did_create_files(successful_file_actions.create)
+      lsp_helpers.did_delete_files(successful_file_actions.delete)
+      lsp_helpers.did_rename_files(successful_file_actions.move)
       progress:close()
       cb(...)
     end
@@ -446,9 +482,7 @@ M.process_actions = function(actions, cb)
       elseif err then
         finish(err)
       else
-        if is_file_move(action) then
-          table.insert(moved, action)
-        end
+        table.insert(successful_actions, action)
         cache.perform_action(action)
         next_action()
       end
