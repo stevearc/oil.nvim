@@ -364,21 +364,22 @@ M.enforce_action_order = function(actions)
   return ret
 end
 
+---@param action oil.Action
+---@return boolean
+local is_file_move = function(action)
+  if action.type == "move" then
+    local src_adapter = assert(config.get_adapter_by_scheme(action.src_url))
+    local dest_adapter = assert(config.get_adapter_by_scheme(action.dest_url))
+    return src_adapter.name == "files" and dest_adapter.name == "files"
+  end
+  return false
+end
+
 ---@param actions oil.Action[]
 ---@param cb fun(err: nil|string)
 M.process_actions = function(actions, cb)
-  -- send all renames to LSP servers
-  local moves = {}
-  for _, action in ipairs(actions) do
-    if action.type == "move" then
-      local src_adapter = assert(config.get_adapter_by_scheme(action.src_url))
-      local dest_adapter = assert(config.get_adapter_by_scheme(action.dest_url))
-      if src_adapter.name == "files" and dest_adapter.name == "files" then
-        table.insert(moves, action)
-      end
-    end
-  end
-  lsp_helpers.will_rename_files(moves)
+  -- send all file move actions to LSP servers
+  lsp_helpers.will_rename_files(vim.tbl_filter(is_file_move, actions))
 
   -- Convert some cross-adapter moves to a copy + delete
   for _, action in ipairs(actions) do
@@ -396,11 +397,13 @@ M.process_actions = function(actions, cb)
     end
   end
 
+  local moved = {}
   local finished = false
   local progress = Progress.new()
   local function finish(...)
     if not finished then
       finished = true
+      lsp_helpers.did_rename_files(moved)
       progress:close()
       cb(...)
     end
@@ -443,6 +446,9 @@ M.process_actions = function(actions, cb)
       elseif err then
         finish(err)
       else
+        if is_file_move(action) then
+          table.insert(moved, action)
+        end
         cache.perform_action(action)
         next_action()
       end
