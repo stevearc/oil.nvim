@@ -78,8 +78,7 @@ local function get_buffers_status()
   local buffers = vim.api.nvim_list_bufs()
   for _, bufnr in ipairs(buffers) do
     buffers_status[bufnr] = {
-      is_open = true,
-      is_modified = vim.api.nvim_get_option_value("modified", { buf = bufnr }),
+      is_modified = vim.bo[bufnr].modified,
     }
   end
   return buffers_status
@@ -119,17 +118,18 @@ M.will_rename_files = function(actions)
             return
           end
 
-          for uri, _ in pairs(result.changes) do
+          for uri in pairs(result.changes) do
             local bufnr = vim.uri_to_bufnr(uri)
-            local is_modified = buffers_status[bufnr] and buffers_status[bufnr].is_modified
+            local is_open = buffers_status[bufnr] ~= nil
+            local is_modified = is_open and buffers_status[bufnr].is_modified
             local should_save = autosave == true or (autosave == "unmodified" and not is_modified)
             if should_save then
               vim.api.nvim_buf_call(bufnr, function()
-                vim.cmd("update")
+                vim.cmd.update()
               end)
-            end
-            if not buffers_status[bufnr].is_open then
-              vim.api.nvim_buf_delete(bufnr, { force = true })
+              if not is_open then
+                vim.api.nvim_buf_delete(bufnr, { force = true })
+              end
             end
           end
         end
