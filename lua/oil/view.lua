@@ -233,6 +233,27 @@ local function get_first_mutable_column_col(adapter, ranges)
   return min_col
 end
 
+---Force cursor to be after hidden/immutable columns
+local function constrain_cursor()
+  local parser = require("oil.mutator.parser")
+
+  local adapter = util.get_adapter(0)
+  if not adapter then
+    return
+  end
+
+  local cur = vim.api.nvim_win_get_cursor(0)
+  local line = vim.api.nvim_buf_get_lines(0, cur[1] - 1, cur[1], true)[1]
+  local column_defs = columns.get_supported_columns(adapter)
+  local result = parser.parse_line(adapter, line, column_defs)
+  if result and result.ranges then
+    local min_col = get_first_mutable_column_col(adapter, result.ranges)
+    if cur[2] < min_col then
+      vim.api.nvim_win_set_cursor(0, { cur[1], min_col })
+    end
+  end
+end
+
 ---Redraw original path virtual text for trash buffer
 ---@param bufnr integer
 local function redraw_trash_virtual_text(bufnr)
@@ -338,31 +359,27 @@ M.initialize = function(bufnr)
     end,
   })
   local timer
+  vim.api.nvim_create_autocmd("InsertEnter", {
+    desc = "Constrain oil cursor position",
+    group = "Oil",
+    buffer = bufnr,
+    callback = function()
+      -- For some reason the cursor bounces back to its original position,
+      -- so we have to defer the call
+      vim.schedule(constrain_cursor)
+    end,
+  })
   vim.api.nvim_create_autocmd("CursorMoved", {
     desc = "Update oil preview window",
     group = "Oil",
     buffer = bufnr,
     callback = function()
       local oil = require("oil")
-      local parser = require("oil.mutator.parser")
       if vim.wo.previewwindow then
         return
       end
 
-      -- Force the cursor to be after the (concealed) ID at the beginning of the line
-      local adapter = util.get_adapter(bufnr)
-      if adapter then
-        local cur = vim.api.nvim_win_get_cursor(0)
-        local line = vim.api.nvim_buf_get_lines(bufnr, cur[1] - 1, cur[1], true)[1]
-        local column_defs = columns.get_supported_columns(adapter)
-        local result = parser.parse_line(adapter, line, column_defs)
-        if result and result.ranges then
-          local min_col = get_first_mutable_column_col(adapter, result.ranges)
-          if cur[2] < min_col then
-            vim.api.nvim_win_set_cursor(0, { cur[1], min_col })
-          end
-        end
-      end
+      constrain_cursor()
 
       if config.preview.update_on_cursor_moved then
         -- Debounce and update the preview window
