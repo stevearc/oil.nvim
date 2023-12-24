@@ -165,6 +165,9 @@ require("oil").setup({
   -- Set to true to autosave buffers that are updated with LSP willRenameFiles
   -- Set to "unmodified" to only save unmodified buffers
   lsp_rename_autosave = false,
+  -- Constrain the cursor to the editable parts of the oil buffer
+  -- Set to `false` to disable, or "name" to keep it on the file names
+  constrain_cursor = "editable",
   -- Keymaps in oil buffer. Can be any value that `vim.keymap.set` accepts OR a table of keymap
   -- options with a `callback` (e.g. { callback = function() ... end, desc = "", mode = "n" })
   -- Additionally, if it is a string that matches "actions.<name>",

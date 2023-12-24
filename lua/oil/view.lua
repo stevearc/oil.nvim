@@ -235,6 +235,9 @@ end
 
 ---Force cursor to be after hidden/immutable columns
 local function constrain_cursor()
+  if not config.constrain_cursor then
+    return
+  end
   local parser = require("oil.mutator.parser")
 
   local adapter = util.get_adapter(0)
@@ -247,7 +250,16 @@ local function constrain_cursor()
   local column_defs = columns.get_supported_columns(adapter)
   local result = parser.parse_line(adapter, line, column_defs)
   if result and result.ranges then
-    local min_col = get_first_mutable_column_col(adapter, result.ranges)
+    local min_col
+    if config.constrain_cursor == "editable" then
+      min_col = get_first_mutable_column_col(adapter, result.ranges)
+    elseif config.constrain_cursor == "name" then
+      min_col = result.ranges.name[1]
+    else
+      error(
+        string.format('Unexpected value "%s" for option constrain_cursor', config.constrain_cursor)
+      )
+    end
     if cur[2] < min_col then
       vim.api.nvim_win_set_cursor(0, { cur[1], min_col })
     end
