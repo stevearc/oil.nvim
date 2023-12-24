@@ -212,6 +212,11 @@ M.get_buffer_parent_url = function(bufname, use_oil_parent)
       return config.adapter_to_scheme.files .. util.addslash(path)
     end
 
+    -- This is some unknown buffer scheme
+    if not config.adapters[scheme] then
+      return vim.fn.getcwd()
+    end
+
     if not use_oil_parent then
       return bufname
     end
