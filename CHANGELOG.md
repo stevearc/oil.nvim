@@ -1,5 +1,31 @@
 # Changelog
 
+## [2.5.0](https://github.com/stevearc/oil.nvim/compare/v2.4.1...v2.5.0) (2023-12-26)
+
+
+### Features
+
+* actions for sending oil entries to quickfix ([#249](https://github.com/stevearc/oil.nvim/issues/249)) ([3ffb830](https://github.com/stevearc/oil.nvim/commit/3ffb8309e6eda961c7edb9ecbe6a340fe9e24b43))
+* add 'update_on_cursor_moved' option to preview window ([#250](https://github.com/stevearc/oil.nvim/issues/250)) ([ea612fe](https://github.com/stevearc/oil.nvim/commit/ea612fe926a24ea20b2b3856e1ba60bdaaae9383))
+* allow multiple hlgroups inside one column ([#240](https://github.com/stevearc/oil.nvim/issues/240)) ([a173b57](https://github.com/stevearc/oil.nvim/commit/a173b5776c66a31ce08552677c1eae7ab015835f))
+* constrain_cursor option (closes [#257](https://github.com/stevearc/oil.nvim/issues/257)) ([71b1ef5](https://github.com/stevearc/oil.nvim/commit/71b1ef5edfcee7c58fe611fdd79bfafcb9fb0531))
+* option to auto-save files affected by will_rename_files ([#218](https://github.com/stevearc/oil.nvim/issues/218)) ([48d8ea8](https://github.com/stevearc/oil.nvim/commit/48d8ea8f4a6590ef7339ff0fdb97cef3e238dd86))
+* refresh action also clears search highlight ([#228](https://github.com/stevearc/oil.nvim/issues/228)) ([8283457](https://github.com/stevearc/oil.nvim/commit/82834573bbca27c240f30087ff642b807ed1872a))
+* support all LSP workspace file operations ([#264](https://github.com/stevearc/oil.nvim/issues/264)) ([250e0af](https://github.com/stevearc/oil.nvim/commit/250e0af7a54d750792be8b1d6165b76b6603a867))
+
+
+### Bug Fixes
+
+* constrain cursor when entering insert mode ([a60c6d1](https://github.com/stevearc/oil.nvim/commit/a60c6d10fd66de275c1d00451c918104ef9b6d10))
+* handle opening oil from buffers with foreign schemes ([#256](https://github.com/stevearc/oil.nvim/issues/256)) ([22ab2ce](https://github.com/stevearc/oil.nvim/commit/22ab2ce1d56832588a634e7737404d9344698bd3))
+* **trash:** error deleting dangling symbolic links to trash ([#251](https://github.com/stevearc/oil.nvim/issues/251)) ([5d9e436](https://github.com/stevearc/oil.nvim/commit/5d9e4368d49aec00b1e0d9ea520e1403ad6ad634))
+* willRename source path ([#248](https://github.com/stevearc/oil.nvim/issues/248)) ([24027ed](https://github.com/stevearc/oil.nvim/commit/24027ed8d7f3ee5c38cfd713915e2e16d89e79b3))
+
+
+### Performance Improvements
+
+* speed up session loading ([#246](https://github.com/stevearc/oil.nvim/issues/246)) ([b3c24f4](https://github.com/stevearc/oil.nvim/commit/b3c24f4b3b2d38483241292a330cd6eb00734dac))
+
 ## [2.4.1](https://github.com/stevearc/oil.nvim/compare/v2.4.0...v2.4.1) (2023-12-01)
 
 
