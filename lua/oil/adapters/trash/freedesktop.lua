@@ -42,10 +42,10 @@ end
 ---@return string[]
 local function get_top_trash_dirs(path)
   local dirs = {}
-  local dev = (uv.fs_stat(path) or {}).dev
+  local dev = (uv.fs_lstat(path) or {}).dev
   local top_trash_dirs = vim.fs.find(".Trash", { upward = true, path = path, limit = math.huge })
   for _, top_trash_dir in ipairs(top_trash_dirs) do
-    local stat = uv.fs_stat(top_trash_dir)
+    local stat = uv.fs_lstat(top_trash_dir)
     if stat and not dev then
       dev = stat.dev
     end
@@ -62,7 +62,7 @@ local function get_top_trash_dirs(path)
     { upward = true, path = path, limit = math.huge }
   )
   for _, top_trash_dir in ipairs(top_trash_dirs) do
-    local stat = uv.fs_stat(top_trash_dir)
+    local stat = uv.fs_lstat(top_trash_dir)
     if stat and stat.dev == dev then
       ensure_trash_dir(top_trash_dir)
       table.insert(dirs, top_trash_dir)
@@ -75,9 +75,9 @@ end
 ---@param path string
 ---@return string
 local function get_write_trash_dir(path)
-  local dev = uv.fs_stat(path).dev
+  local dev = uv.fs_lstat(path).dev
   local home_trash = get_home_trash_dir()
-  if uv.fs_stat(home_trash).dev == dev then
+  if uv.fs_lstat(home_trash).dev == dev then
     return home_trash
   end
 
@@ -88,7 +88,7 @@ local function get_write_trash_dir(path)
 
   local parent = vim.fn.fnamemodify(path, ":h")
   local next_parent = vim.fn.fnamemodify(parent, ":h")
-  while parent ~= next_parent and uv.fs_stat(next_parent).dev == dev do
+  while parent ~= next_parent and uv.fs_lstat(next_parent).dev == dev do
     parent = next_parent
     next_parent = vim.fn.fnamemodify(parent, ":h")
   end
@@ -200,7 +200,7 @@ local function read_trash_info(info_file, cb)
 
           local basename = vim.fn.fnamemodify(info_file, ":t:r")
           trash_info.trash_file = fs.join(trash_base, "files", basename)
-          uv.fs_stat(trash_info.trash_file, function(trash_stat_err, trash_stat)
+          uv.fs_lstat(trash_info.trash_file, function(trash_stat_err, trash_stat)
             if trash_stat_err then
               cb(".trashinfo file points to non-existant file")
             else
@@ -526,7 +526,7 @@ local function create_trash_info(path, cb)
   local name = string.format("%s-%d.%d", basename, now, math.random(100000, 999999))
   local dest_path = fs.join(trash_dir, "files", name)
   local dest_info = fs.join(trash_dir, "info", name .. ".trashinfo")
-  uv.fs_stat(path, function(err, stat)
+  uv.fs_lstat(path, function(err, stat)
     if err then
       return cb(err)
     end
