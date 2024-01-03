@@ -1,5 +1,3 @@
-local uv = vim.uv or vim.loop
-
 local default_config = {
   -- Oil will take over directory buffers (e.g. `vim .` or `:e src/`)
   -- Set to false if you still want to use netrw.
@@ -161,17 +159,6 @@ M.setup = function(opts)
   local new_conf = vim.tbl_deep_extend("keep", opts or {}, default_config)
   if not new_conf.use_default_keymaps then
     new_conf.keymaps = opts.keymaps or {}
-  end
-
-  if new_conf.delete_to_trash then
-    local is_windows = uv.os_uname().version:match("Windows")
-    if is_windows then
-      vim.notify(
-        "oil.nvim: delete_to_trash is true, but trash is not yet supported on Windows.\nDeleted files will be permanently removed",
-        vim.log.levels.WARN
-      )
-      new_conf.delete_to_trash = false
-    end
   end
 
   for k, v in pairs(new_conf) do
