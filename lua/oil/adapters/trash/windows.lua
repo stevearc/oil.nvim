@@ -182,6 +182,12 @@ M.is_modifiable = function(_bufnr)
   return true
 end
 
+local current_year
+-- Make sure we run this import-time effect in the main loop (mostly for tests)
+vim.schedule(function()
+  current_year = vim.fn.strftime("%Y")
+end)
+
 local file_columns = {}
 file_columns.mtime = {
   render = function(entry, conf)
