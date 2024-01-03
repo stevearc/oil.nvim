@@ -385,9 +385,9 @@ local function create_trash_info_and_copy(path, type, cb)
         return cb(err)
       end
       -- delete original file
-      M.delete_to_trash(path, function(err)
-        if err then
-          return cb(err)
+      M.delete_to_trash(path, function(err2)
+        if err2 then
+          return cb(err2)
         end
         -- rename temporary copy to the original file name
         fs.recursive_move(type, temp_path, path, cb)
