@@ -421,7 +421,9 @@ end
 M.select = function(opts, callback)
   local cache = require("oil.cache")
   local config = require("oil.config")
+  local constants = require("oil.constants")
   local pathutil = require("oil.pathutil")
+  local FIELD_META = constants.FIELD_META
   opts = vim.tbl_extend("keep", opts or {}, {})
   local function finish(err)
     if err then
@@ -498,6 +500,13 @@ M.select = function(opts, callback)
       local is_new_entry = entry.id == nil
       local is_moved_from_dir = entry.id and cache.get_parent_url(entry.id) ~= bufname
       local is_renamed = entry.parsed_name ~= entry.name
+      local internal_entry = entry.id and cache.get_entry_by_id(entry.id)
+      if internal_entry then
+        local meta = internal_entry[FIELD_META]
+        if meta and meta.display_name then
+          is_renamed = entry.parsed_name ~= meta.display_name
+        end
+      end
       if is_new_entry or is_moved_from_dir or is_renamed then
         any_moved = true
         break
