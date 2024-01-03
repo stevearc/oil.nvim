@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.6.0](https://github.com/stevearc/oil.nvim/compare/v2.5.0...v2.6.0) (2024-01-03)
+
+
+### Features
+
+* **trash:** support for deleting to windows recycle bin ([#243](https://github.com/stevearc/oil.nvim/issues/243)) ([553b7a0](https://github.com/stevearc/oil.nvim/commit/553b7a0ac129c0e7a7bbde72f9fbfe7c9f4be6c3))
+
 ## [2.5.0](https://github.com/stevearc/oil.nvim/compare/v2.4.1...v2.5.0) (2023-12-26)
 
 
