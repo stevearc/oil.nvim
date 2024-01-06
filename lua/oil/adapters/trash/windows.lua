@@ -42,23 +42,84 @@ end
 ---@field Path string
 ---@field OriginalPath string
 
----@param cb fun(err?: string, raw_entries: oil.WindowsRawEntry[]?)
-local get_raw_entries = function(cb)
-  ---@type string?
-  local stdout
+---@type integer?
+local get_entries_jid
+---@type string[]
+local stdout = {}
+local is_reading_data = true
+---@type fun(err?: string, raw_entries: oil.WindowsRawEntry[]?)?
+local get_entries_last_cb
 
+---@param cb fun(err?: string, raw_entries: oil.WindowsRawEntry[]?)
+---@return integer? jid
+local get_entries_start_powershell = function(cb)
   local jid = vim.fn.jobstart({
     "powershell",
     "-NoProfile",
+    "-NoLogo",
     "-ExecutionPolicy",
     "Bypass",
+    "-NoExit",
     "-Command",
-    -- The first line configures Windows Powershell to use UTF-8 for input and output
-    -- 0xa is the constant for Recycle Bin. See https://learn.microsoft.com/en-us/windows/win32/api/shldisp/ne-shldisp-shellspecialfolderconstants
+    "-",
+  }, {
+    ---@param data string[]
+    on_stdout = function(_, data)
+      if not get_entries_last_cb then
+        return
+      end
+      for _, fragment in ipairs(data) do
+        if fragment == "__END__" then
+          local cb2 = get_entries_last_cb
+          get_entries_last_cb = nil
+          is_reading_data = false
+          local json = table.concat(stdout, "")
+          if json == "" then
+            json = "[]"
+          end
+          local ok, raw_entries = pcall(vim.json.decode, json)
+          if not ok then
+            cb2("error")
+            return
+          end
+          stdout = {}
+          cb2(nil, raw_entries)
+        elseif is_reading_data then
+          table.insert(stdout, fragment)
+        end
+      end
+    end,
+  })
+  if jid <= 0 then
+    cb("Could not list windows devices")
+    return
+  end
+  -- The first line configures Windows Powershell to use UTF-8 for input and output
+  -- 0xa is the constant for Recycle Bin. See https://learn.microsoft.com/en-us/windows/win32/api/shldisp/ne-shldisp-shellspecialfolderconstants
+  vim.api.nvim_chan_send(
+    jid,
     [[
 $OutputEncoding = [Console]::InputEncoding = [Console]::OutputEncoding = New-Object System.Text.UTF8Encoding
 $shell = New-Object -ComObject 'Shell.Application'
 $folder = $shell.NameSpace(0xa)
+]]
+  )
+  return jid
+end
+
+---@param cb fun(err?: string, raw_entries: oil.WindowsRawEntry[]?)
+local get_raw_entries = function(cb)
+  if not get_entries_jid then
+    get_entries_jid = assert(get_entries_start_powershell(cb))
+  end
+  if get_entries_last_cb then
+    get_entries_last_cb("Cancelled")
+  end
+  get_entries_last_cb = cb
+  is_reading_data = true
+  vim.api.nvim_chan_send(
+    get_entries_jid,
+    [[
 $data = @(foreach ($i in $folder.items())
     {
         @{
@@ -69,25 +130,11 @@ $data = @(foreach ($i in $folder.items())
             OriginalPath=-join($i.ExtendedProperty('DeletedFrom'), "\", $i.Name)
         }
     })
-ConvertTo-Json $data
-]],
-  }, {
-    stdout_buffered = true,
-    on_stdout = function(_, data)
-      stdout = table.concat(data, "\n")
-    end,
-    on_exit = function(_, code)
-      if code ~= 0 then
-        return cb("Error listing files on trash")
-      end
-      assert(stdout)
-      local raw_entries = vim.json.decode(stdout)
-      cb(nil, raw_entries)
-    end,
-  })
-  if jid <= 0 then
-    cb("Could not list windows devices")
-  end
+ConvertTo-Json $data -Compress
+Write-Host '__END__'
+
+]]
+  )
 end
 
 ---@class oil.WindowsTrashInfo
@@ -454,34 +501,69 @@ end
 
 M.supported_cross_adapter_actions = { files = "move" }
 
----@param path string
----@param cb fun(err?: string)
-M.delete_to_trash = function(path, cb)
+---@type integer?
+local delete_to_trash_jid
+---@type fun(err?: string, raw_entries: oil.WindowsRawEntry[]?)?
+local delete_to_trash_last_cb
+
+---@param cb fun(err?: string, raw_entries: oil.WindowsRawEntry[]?)
+---@return integer? jid
+local delete_to_trash_start_powershell = function(cb)
   local jid = vim.fn.jobstart({
     "powershell",
     "-NoProfile",
+    "-NoLogo",
     "-ExecutionPolicy",
     "Bypass",
+    "-NoExit",
     "-Command",
-    -- 0 is the constant for Windows Desktop. See https://learn.microsoft.com/en-us/windows/win32/api/shldisp/ne-shldisp-shellspecialfolderconstants
-    ([[
-$path = Get-Item '%s'
-$shell = New-Object -ComObject 'Shell.Application'
-$folder = $shell.NameSpace(0)
-$folder.ParseName($path.FullName).InvokeVerb('delete')
-]]):format(path:gsub("'", "''")),
+    "-",
   }, {
-    stdout_buffered = true,
-    on_exit = function(_, code)
-      if code ~= 0 then
-        return cb("Error sendig file to trash")
+    on_stdout = function(_, data)
+      if not delete_to_trash_last_cb then
+        return
       end
-      cb()
+      for _, fragment in ipairs(data) do
+        if fragment == "__END__" then
+          delete_to_trash_last_cb()
+          delete_to_trash_last_cb = nil
+        end
+      end
     end,
   })
   if jid <= 0 then
     cb("Could not list windows devices")
+    return
   end
+  -- 0 is the constant for Windows Desktop. See https://learn.microsoft.com/en-us/windows/win32/api/shldisp/ne-shldisp-shellspecialfolderconstants
+  vim.api.nvim_chan_send(
+    jid,
+    [[
+$shell = New-Object -ComObject 'Shell.Application'
+$folder = $shell.NameSpace(0)
+]]
+  )
+  return jid
+end
+
+---@param path string
+---@param cb fun(err?: string)
+M.delete_to_trash = function(path, cb)
+  if not delete_to_trash_jid then
+    delete_to_trash_jid = assert(delete_to_trash_start_powershell(cb))
+  end
+  if delete_to_trash_last_cb then
+    delete_to_trash_last_cb()
+  end
+  delete_to_trash_last_cb = cb
+  vim.api.nvim_chan_send(
+    delete_to_trash_jid,
+    ([[
+$path = Get-Item '%s'
+$folder.ParseName($path.FullName).InvokeVerb('delete')
+Write-Host '__END__'
+]]):format(path:gsub("'", "''"))
+  )
 end
 
 return M
