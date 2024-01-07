@@ -98,7 +98,7 @@ local function get_matching_paths(client, filters, paths)
 
   local workspace_folders = vim.tbl_map(function(folder)
     return vim.uri_to_fname(folder.uri)
-  end, client.workspace_folders)
+  end, client.workspace_folders or {})
   local function get_matching_workspace(path)
     for _, workspace in ipairs(workspace_folders) do
       if fs.is_subpath(workspace, path) then
