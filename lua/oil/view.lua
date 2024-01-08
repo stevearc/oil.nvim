@@ -426,6 +426,31 @@ M.initialize = function(bufnr)
     end,
   })
 
+  vim.api.nvim_create_autocmd("BufWinEnter", {
+    desc = "Update preview window when displaying a buffer",
+    group = "Oil",
+    buffer = bufnr,
+    callback = function()
+      local oil = require("oil")
+      if vim.wo.previewwindow then
+        return
+      end
+
+      if vim.api.nvim_get_current_buf() ~= bufnr then
+        return
+      end
+      local entry = oil.get_cursor_entry()
+      if entry then
+        local preview_win_id = util.get_preview_win()
+        if preview_win_id then
+          if entry.id ~= vim.w[preview_win_id].oil_entry_id then
+            oil.select({ preview = true })
+          end
+        end
+      end
+    end,
+  })
+
   -- Watch for TextChanged and update the trash original path extmarks
   local adapter = util.get_adapter(bufnr)
   if adapter and adapter.name == "trash" then

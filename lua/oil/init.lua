@@ -529,6 +529,7 @@ M.select = function(opts, callback)
     vim.api.nvim_win_close(preview_win, true)
   end
   local prev_win = vim.api.nvim_get_current_win()
+  local keep_preview_alive
 
   local scheme, dir = util.parse_url(bufname)
   assert(scheme and dir)
@@ -602,6 +603,14 @@ M.select = function(opts, callback)
         vim.bo[filebufnr].buflisted = true
       end
 
+      -- If a preview window is open, and we are selecting a directory,
+      -- persist the preview window
+      if not opts.preview and preview_win then
+        if vim.endswith(normalized_url, "/") then
+          keep_preview_alive = true
+        end
+      end
+
       local cmd
       if opts.preview and preview_win then
         vim.api.nvim_set_current_win(preview_win)
@@ -642,6 +651,9 @@ M.select = function(opts, callback)
       vim.api.nvim_win_call(prev_win, function()
         M.close()
       end)
+    end
+    if keep_preview_alive then
+      M.select({preview = true})
     end
     finish()
   end)
