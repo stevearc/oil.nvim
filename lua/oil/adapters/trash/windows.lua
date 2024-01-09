@@ -47,7 +47,7 @@ end
 local get_entries_powershell
 
 ---@param cb fun(err?: string, raw_entries: oil.WindowsRawEntry[]?)
-local _get_entries = function(cb)
+local run_get_entries_command = function(cb)
   get_entries_powershell:run(
     [[
 $data = @(foreach ($i in $folder.items())
@@ -95,11 +95,11 @@ $folder = $shell.NameSpace(0xa)
           cb(err)
           return
         end
-        _get_entries(cb)
+        run_get_entries_command(cb)
       end
     )
   else
-    _get_entries(cb)
+    run_get_entries_command(cb)
   end
 end
 
@@ -472,7 +472,7 @@ local delete_to_trash_powershell
 
 ---@param path string
 ---@param cb fun(err?: string)
-local function _delete_to_trash(path, cb)
+local function run_delete_to_trash_command(path, cb)
   delete_to_trash_powershell:run(
     ([[
 $path = Get-Item '%s'
@@ -500,11 +500,11 @@ $folder = $shell.NameSpace(0)
           cb(err)
           return
         end
-        _delete_to_trash(path, cb)
+        run_delete_to_trash_command(path, cb)
       end
     )
   else
-    _delete_to_trash(path, cb)
+    run_delete_to_trash_command(path, cb)
   end
 end
 
