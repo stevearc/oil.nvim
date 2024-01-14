@@ -110,6 +110,7 @@ describe("parser", function()
       {
         message = "Malformed ID at start of line",
         lnum = 0,
+        end_lnum = 1,
         col = 0,
       },
     }, errors)
@@ -126,6 +127,7 @@ describe("parser", function()
       {
         message = "No filename found",
         lnum = 0,
+        end_lnum = 1,
         col = 0,
       },
     }, errors)
@@ -143,6 +145,7 @@ describe("parser", function()
       {
         message = "Duplicate filename",
         lnum = 1,
+        end_lnum = 2,
         col = 0,
       },
     }, errors)
@@ -161,6 +164,7 @@ describe("parser", function()
       {
         message = "Duplicate filename",
         lnum = 1,
+        end_lnum = 2,
         col = 0,
       },
     }, errors)

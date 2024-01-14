@@ -463,6 +463,7 @@ M.try_write_changes = function(confirm, cb)
   local was_modified = vim.bo.modified
   local buffers = view.get_all_buffers()
   local all_diffs = {}
+  ---@type table<integer, oil.ParseError[]>
   local all_errors = {}
 
   mutation_in_progress = true

@@ -187,7 +187,7 @@ M.parse = function(bufnr)
       name = name:lower()
     end
     if seen_names[name] then
-      table.insert(errors, { message = "Duplicate filename", lnum = i - 1, col = 0 })
+      table.insert(errors, { message = "Duplicate filename", lnum = i - 1, end_lnum = i, col = 0 })
     else
       seen_names[name] = true
     end
@@ -200,6 +200,7 @@ M.parse = function(bufnr)
         table.insert(errors, {
           message = err,
           lnum = i - 1,
+          end_lnum = i,
           col = 0,
         })
         goto continue
@@ -221,6 +222,7 @@ M.parse = function(bufnr)
         table.insert(errors, {
           message = message,
           lnum = i - 1,
+          end_lnum = i,
           col = 0,
         })
         goto continue
@@ -273,6 +275,7 @@ M.parse = function(bufnr)
         table.insert(errors, {
           message = "Paths cannot start with '/'",
           lnum = i - 1,
+          end_lnum = i,
           col = 0,
         })
         goto continue
