@@ -1,0 +1,16 @@
+name: Remove Question Label on Issue Comment
+
+on: [issue_comment]
+
+jobs:
+  # Remove the "question" label when a new comment is added.
+  # This lets me ask a question, tag the issue with "question", and filter out all "question"-tagged
+  # issues in my "needs triage" filter.
+  remove_question:
+    runs-on: ubuntu-latest
+    if: github.event.sender.login != 'stevearc'
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-ecosystem/action-remove-labels@v1
+        with:
+          labels: question
