@@ -18,7 +18,7 @@ function PowershellConnection.new()
     is_reading_data = false,
   }, { __index = PowershellConnection })
 
-  self.jid = vim.fn.jobstart({
+  local jid = vim.fn.jobstart({
     "powershell",
     "-NoProfile",
     "-NoLogo",
@@ -43,12 +43,21 @@ function PowershellConnection.new()
             cb(success .. ": " .. output, output)
           end
           self.stdout = {}
+          self:_consume()
         elseif self.is_reading_data then
           table.insert(self.stdout, fragment)
         end
       end
     end,
   })
+
+  if jid == 0 then
+    self:_set_connection_error("passed invalid arguments to 'powershell'")
+  elseif jid == -1 then
+    self:_set_connection_error("'powershell' is not executable")
+  else
+    self.jid = jid
+  end
 
   return self
 end
