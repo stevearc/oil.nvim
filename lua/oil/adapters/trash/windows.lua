@@ -1,11 +1,11 @@
 local util = require("oil.util")
 local uv = vim.uv or vim.loop
-local Powershell = require("oil.adapters.trash.windows.powershell-connection")
 local cache = require("oil.cache")
 local config = require("oil.config")
 local constants = require("oil.constants")
 local files = require("oil.adapters.files")
 local fs = require("oil.fs")
+local powershell_trash = require("oil.adapters.trash.windows.powershell-trash")
 
 local FIELD_META = constants.FIELD_META
 local FIELD_TYPE = constants.FIELD_TYPE
@@ -36,54 +36,6 @@ local win_addslash = function(path)
   end
 end
 
----@class oil.WindowsRawEntry
----@field IsFolder boolean
----@field DeletionDate integer
----@field Name string
----@field Path string
----@field OriginalPath string
-
----@type oil.PowershellConnection
--- The first line configures Windows Powershell to use UTF-8 for input and output
--- 0xa is the constant for Recycle Bin. See https://learn.microsoft.com/en-us/windows/win32/api/shldisp/ne-shldisp-shellspecialfolderconstants
-local get_entries_powershell = Powershell.new([[
-$OutputEncoding = [Console]::InputEncoding = [Console]::OutputEncoding = New-Object System.Text.UTF8Encoding
-$shell = New-Object -ComObject 'Shell.Application'
-$folder = $shell.NameSpace(0xa)
-]])
-
----@param cb fun(err?: string, raw_entries: oil.WindowsRawEntry[]?)
-local get_raw_entries = function(cb)
-  get_entries_powershell:run(
-    [[
-$data = @(foreach ($i in $folder.items())
-    {
-        @{
-            IsFolder=$i.IsFolder;
-            DeletionDate=([DateTimeOffset]$i.extendedproperty('datedeleted')).ToUnixTimeSeconds();
-            Name=$i.Name;
-            Path=$i.Path;
-            OriginalPath=-join($i.ExtendedProperty('DeletedFrom'), "\", $i.Name)
-        }
-    })
-ConvertTo-Json $data -Compress
-]],
-    function(err, string)
-      if err then
-        cb(err)
-        return
-      end
-
-      local ok, value = pcall(vim.json.decode, string)
-      if not ok then
-        cb(value)
-        return
-      end
-      cb(nil, value)
-    end
-  )
-end
-
 ---@class oil.WindowsTrashInfo
 ---@field trash_file string?
 ---@field original_path string?
@@ -100,7 +52,7 @@ M.list = function(url, column_defs, cb)
   local trash_dir = get_trash_dir()
   local show_all_files = fs.is_subpath(path, trash_dir)
 
-  get_raw_entries(function(err, raw_entries)
+  powershell_trash.list_raw_entries(function(err, raw_entries)
     if err then
       cb(err)
       return
@@ -448,25 +400,10 @@ end
 
 M.supported_cross_adapter_actions = { files = "move" }
 
----@type oil.PowershellConnection
--- 0 is the constant for Windows Desktop. See https://learn.microsoft.com/en-us/windows/win32/api/shldisp/ne-shldisp-shellspecialfolderconstants
-local delete_to_trash_powershell = Powershell.new([[
-$shell = New-Object -ComObject 'Shell.Application'
-$folder = $shell.NameSpace(0)
-]])
-
 ---@param path string
 ---@param cb fun(err?: string)
 M.delete_to_trash = function(path, cb)
-  delete_to_trash_powershell:run(
-    ([[
-$path = Get-Item '%s'
-$folder.ParseName($path.FullName).InvokeVerb('delete')
-]]):format(path:gsub("'", "''")),
-    function(err)
-      cb(err)
-    end
-  )
+  powershell_trash.delete_to_trash(path, cb)
 end
 
 return M

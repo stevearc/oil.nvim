@@ -1,13 +1,14 @@
 ---@class (exact) oil.PowershellCommand
 ---@field cmd string
----@field cb? fun(err?: string, output?: string)
+---@field cb fun(err?: string, output?: string)
 ---@field running? boolean
 
 ---@class oil.PowershellConnection
 ---@field private jid integer
----@field commands oil.PowershellCommand[]
----@field stdout string[]
----@field is_reading_data boolean
+---@field private execution_error? string
+---@field private commands oil.PowershellCommand[]
+---@field private stdout string[]
+---@field private is_reading_data boolean
 local PowershellConnection = {}
 
 ---@param init_command? string
@@ -19,6 +20,13 @@ function PowershellConnection.new(init_command)
     is_reading_data = false,
   }, { __index = PowershellConnection })
 
+  self:_init(init_command)
+
+  return self
+end
+
+---@param init_command? string
+function PowershellConnection:_init(init_command)
   local jid = vim.fn.jobstart({
     "powershell",
     "-NoProfile",
@@ -38,9 +46,9 @@ function PowershellConnection.new(init_command)
           local cb = self.commands[1].cb
           table.remove(self.commands, 1)
           local success = fragment:match("===DONE%((%a+)%)===")
-          if success == "True" and cb then
+          if success == "True" then
             cb(nil, output)
-          elseif success == "False" and cb then
+          elseif success == "False" then
             cb(success .. ": " .. output, output)
           end
           self.stdout = {}
@@ -53,25 +61,24 @@ function PowershellConnection.new(init_command)
   })
 
   if jid == 0 then
-    self:_set_connection_error("passed invalid arguments to 'powershell'")
+    self:_set_error("passed invalid arguments to 'powershell'")
   elseif jid == -1 then
-    self:_set_connection_error("'powershell' is not executable")
+    self:_set_error("'powershell' is not executable")
   else
     self.jid = jid
   end
 
   if init_command then
-    table.insert(self.commands, { cmd = init_command })
+    table.insert(self.commands, { cmd = init_command, cb = function() end })
+    self:_consume()
   end
-
-  return self
 end
 
 ---@param command string
 ---@param cb fun(err?: string, output?: string[])
 function PowershellConnection:run(command, cb)
-  if self.connection_error then
-    cb(self.connection_error)
+  if self.execution_error then
+    cb(self.execution_error)
   else
     table.insert(self.commands, { cmd = command, cb = cb })
     self:_consume()
@@ -92,11 +99,11 @@ function PowershellConnection:_consume()
 end
 
 ---@param err string
-function PowershellConnection:_set_connection_error(err)
-  if self.connection_error then
+function PowershellConnection:_set_error(err)
+  if self.execution_error then
     return
   end
-  self.connection_error = err
+  self.execution_error = err
   local commands = self.commands
   self.commands = {}
   for _, cmd in ipairs(commands) do
