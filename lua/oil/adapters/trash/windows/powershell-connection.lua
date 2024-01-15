@@ -1,6 +1,6 @@
 ---@class (exact) oil.PowershellCommand
 ---@field cmd string
----@field cb fun(err?: string, output?: string)
+---@field cb? fun(err?: string, output?: string)
 ---@field running? boolean
 
 ---@class oil.PowershellConnection
@@ -10,8 +10,9 @@
 ---@field is_reading_data boolean
 local PowershellConnection = {}
 
+---@param init_command? string
 ---@return oil.PowershellConnection
-function PowershellConnection.new()
+function PowershellConnection.new(init_command)
   local self = setmetatable({
     commands = {},
     stdout = {},
@@ -37,9 +38,9 @@ function PowershellConnection.new()
           local cb = self.commands[1].cb
           table.remove(self.commands, 1)
           local success = fragment:match("===DONE%((%a+)%)===")
-          if success == "True" then
+          if success == "True" and cb then
             cb(nil, output)
-          elseif success == "False" then
+          elseif success == "False" and cb then
             cb(success .. ": " .. output, output)
           end
           self.stdout = {}
@@ -57,6 +58,10 @@ function PowershellConnection.new()
     self:_set_connection_error("'powershell' is not executable")
   else
     self.jid = jid
+  end
+
+  if init_command then
+    table.insert(self.commands, { cmd = init_command })
   end
 
   return self
@@ -79,6 +84,8 @@ function PowershellConnection:_consume()
     if not cmd.running then
       cmd.running = true
       self.is_reading_data = true
+      -- $? contains the execution status of the last command.
+      -- see https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_automatic_variables?view=powershell-7.4#section-1
       vim.api.nvim_chan_send(self.jid, cmd.cmd .. '\nWrite-Host "===DONE($?)==="\n')
     end
   end

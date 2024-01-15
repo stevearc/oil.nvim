@@ -44,10 +44,16 @@ end
 ---@field OriginalPath string
 
 ---@type oil.PowershellConnection
-local get_entries_powershell
+-- The first line configures Windows Powershell to use UTF-8 for input and output
+-- 0xa is the constant for Recycle Bin. See https://learn.microsoft.com/en-us/windows/win32/api/shldisp/ne-shldisp-shellspecialfolderconstants
+local get_entries_powershell = Powershell.new([[
+$OutputEncoding = [Console]::InputEncoding = [Console]::OutputEncoding = New-Object System.Text.UTF8Encoding
+$shell = New-Object -ComObject 'Shell.Application'
+$folder = $shell.NameSpace(0xa)
+]])
 
 ---@param cb fun(err?: string, raw_entries: oil.WindowsRawEntry[]?)
-local run_get_entries_command = function(cb)
+local get_raw_entries = function(cb)
   get_entries_powershell:run(
     [[
 $data = @(foreach ($i in $folder.items())
@@ -76,31 +82,6 @@ ConvertTo-Json $data -Compress
       cb(nil, value)
     end
   )
-end
-
----@param cb fun(err?: string, raw_entries: oil.WindowsRawEntry[]?)
-local get_raw_entries = function(cb)
-  if not get_entries_powershell then
-    get_entries_powershell = Powershell:new()
-    -- The first line configures Windows Powershell to use UTF-8 for input and output
-    -- 0xa is the constant for Recycle Bin. See https://learn.microsoft.com/en-us/windows/win32/api/shldisp/ne-shldisp-shellspecialfolderconstants
-    get_entries_powershell:run(
-      [[
-$OutputEncoding = [Console]::InputEncoding = [Console]::OutputEncoding = New-Object System.Text.UTF8Encoding
-$shell = New-Object -ComObject 'Shell.Application'
-$folder = $shell.NameSpace(0xa)
-]],
-      function(err)
-        if err then
-          cb(err)
-          return
-        end
-        run_get_entries_command(cb)
-      end
-    )
-  else
-    run_get_entries_command(cb)
-  end
 end
 
 ---@class oil.WindowsTrashInfo
@@ -468,11 +449,15 @@ end
 M.supported_cross_adapter_actions = { files = "move" }
 
 ---@type oil.PowershellConnection
-local delete_to_trash_powershell
+-- 0 is the constant for Windows Desktop. See https://learn.microsoft.com/en-us/windows/win32/api/shldisp/ne-shldisp-shellspecialfolderconstants
+local delete_to_trash_powershell = Powershell.new([[
+$shell = New-Object -ComObject 'Shell.Application'
+$folder = $shell.NameSpace(0)
+]])
 
 ---@param path string
 ---@param cb fun(err?: string)
-local function run_delete_to_trash_command(path, cb)
+M.delete_to_trash = function(path, cb)
   delete_to_trash_powershell:run(
     ([[
 $path = Get-Item '%s'
@@ -482,30 +467,6 @@ $folder.ParseName($path.FullName).InvokeVerb('delete')
       cb(err)
     end
   )
-end
-
----@param path string
----@param cb fun(err?: string)
-M.delete_to_trash = function(path, cb)
-  if not delete_to_trash_powershell then
-    delete_to_trash_powershell = Powershell:new()
-    -- 0 is the constant for Windows Desktop. See https://learn.microsoft.com/en-us/windows/win32/api/shldisp/ne-shldisp-shellspecialfolderconstants
-    delete_to_trash_powershell:run(
-      [[
-$shell = New-Object -ComObject 'Shell.Application'
-$folder = $shell.NameSpace(0)
-]],
-      function(err)
-        if err then
-          cb(err)
-          return
-        end
-        run_delete_to_trash_command(path, cb)
-      end
-    )
-  else
-    run_delete_to_trash_command(path, cb)
-  end
 end
 
 return M
