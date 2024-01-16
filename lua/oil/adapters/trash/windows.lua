@@ -5,6 +5,7 @@ local config = require("oil.config")
 local constants = require("oil.constants")
 local files = require("oil.adapters.files")
 local fs = require("oil.fs")
+local powershell_trash = require("oil.adapters.trash.windows.powershell-trash")
 
 local FIELD_META = constants.FIELD_META
 local FIELD_TYPE = constants.FIELD_TYPE
@@ -35,61 +36,6 @@ local win_addslash = function(path)
   end
 end
 
----@class oil.WindowsRawEntry
----@field IsFolder boolean
----@field DeletionDate integer
----@field Name string
----@field Path string
----@field OriginalPath string
-
----@param cb fun(err?: string, raw_entries: oil.WindowsRawEntry[]?)
-local get_raw_entries = function(cb)
-  ---@type string?
-  local stdout
-
-  local jid = vim.fn.jobstart({
-    "powershell",
-    "-NoProfile",
-    "-ExecutionPolicy",
-    "Bypass",
-    "-Command",
-    -- The first line configures Windows Powershell to use UTF-8 for input and output
-    -- 0xa is the constant for Recycle Bin. See https://learn.microsoft.com/en-us/windows/win32/api/shldisp/ne-shldisp-shellspecialfolderconstants
-    [[
-$OutputEncoding = [Console]::InputEncoding = [Console]::OutputEncoding = New-Object System.Text.UTF8Encoding
-$shell = New-Object -ComObject 'Shell.Application'
-$folder = $shell.NameSpace(0xa)
-$data = @(foreach ($i in $folder.items())
-    {
-        @{
-            IsFolder=$i.IsFolder;
-            DeletionDate=([DateTimeOffset]$i.extendedproperty('datedeleted')).ToUnixTimeSeconds();
-            Name=$i.Name;
-            Path=$i.Path;
-            OriginalPath=-join($i.ExtendedProperty('DeletedFrom'), "\", $i.Name)
-        }
-    })
-ConvertTo-Json $data
-]],
-  }, {
-    stdout_buffered = true,
-    on_stdout = function(_, data)
-      stdout = table.concat(data, "\n")
-    end,
-    on_exit = function(_, code)
-      if code ~= 0 then
-        return cb("Error listing files on trash")
-      end
-      assert(stdout)
-      local raw_entries = vim.json.decode(stdout)
-      cb(nil, raw_entries)
-    end,
-  })
-  if jid <= 0 then
-    cb("Could not list windows devices")
-  end
-end
-
 ---@class oil.WindowsTrashInfo
 ---@field trash_file string?
 ---@field original_path string?
@@ -106,7 +52,7 @@ M.list = function(url, column_defs, cb)
   local trash_dir = get_trash_dir()
   local show_all_files = fs.is_subpath(path, trash_dir)
 
-  get_raw_entries(function(err, raw_entries)
+  powershell_trash.list_raw_entries(function(err, raw_entries)
     if err then
       cb(err)
       return
@@ -457,31 +403,7 @@ M.supported_cross_adapter_actions = { files = "move" }
 ---@param path string
 ---@param cb fun(err?: string)
 M.delete_to_trash = function(path, cb)
-  local jid = vim.fn.jobstart({
-    "powershell",
-    "-NoProfile",
-    "-ExecutionPolicy",
-    "Bypass",
-    "-Command",
-    -- 0 is the constant for Windows Desktop. See https://learn.microsoft.com/en-us/windows/win32/api/shldisp/ne-shldisp-shellspecialfolderconstants
-    ([[
-$path = Get-Item '%s'
-$shell = New-Object -ComObject 'Shell.Application'
-$folder = $shell.NameSpace(0)
-$folder.ParseName($path.FullName).InvokeVerb('delete')
-]]):format(path:gsub("'", "''")),
-  }, {
-    stdout_buffered = true,
-    on_exit = function(_, code)
-      if code ~= 0 then
-        return cb("Error sendig file to trash")
-      end
-      cb()
-    end,
-  })
-  if jid <= 0 then
-    cb("Could not list windows devices")
-  end
+  powershell_trash.delete_to_trash(path, cb)
 end
 
 return M
