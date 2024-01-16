@@ -84,12 +84,8 @@ local function get_matching_paths(client, filters, paths)
   local function match_any_pattern(workspace, path)
     local relative_path = path:sub(workspace:len() + 2)
     for _, match_fn in ipairs(match_fns) do
-      if match_fn(relative_path) then
-        return true
-      end
-      -- nvim 0.9 doesn't have full glob support, so we need to check the full path as well as the
-      -- relative path because `**/*.ts` won't match `foo.ts`
-      if vim.fn.has("nvim-0.10") == 0 and match_fn(path) then
+      -- The glob pattern might be relative to workspace OR absolute
+      if match_fn(relative_path) or match_fn(path) then
         return true
       end
     end
