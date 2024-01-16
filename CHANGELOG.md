@@ -1,5 +1,20 @@
 # Changelog
 
+## [2.6.1](https://github.com/stevearc/oil.nvim/compare/v2.6.0...v2.6.1) (2024-01-16)
+
+
+### Bug Fixes
+
+* crash when LSP client workspace_folders is nil ([#269](https://github.com/stevearc/oil.nvim/issues/269)) ([c4cc824](https://github.com/stevearc/oil.nvim/commit/c4cc8240f1c71defcb67c45da96e44b968d29e5f))
+* diagnostic float would not open if scope=cursor ([#275](https://github.com/stevearc/oil.nvim/issues/275)) ([a1af7a1](https://github.com/stevearc/oil.nvim/commit/a1af7a1b593d8d28581ef0de82a6977721601afa))
+* **lsp_rename:** handle absolute path glob filters ([#279](https://github.com/stevearc/oil.nvim/issues/279)) ([ec24334](https://github.com/stevearc/oil.nvim/commit/ec24334471e7ccbfb7488910159245dc7327a07d))
+* **trash:** mac error deleting dangling symbolic links to trash ([#251](https://github.com/stevearc/oil.nvim/issues/251)) ([49b2b3f](https://github.com/stevearc/oil.nvim/commit/49b2b3f4a50bcd546decf751e5834de9b6f38d97))
+
+
+### Performance Improvements
+
+* **windows:** use a single powershell process for trash operations ([#271](https://github.com/stevearc/oil.nvim/issues/271)) ([e71b6ca](https://github.com/stevearc/oil.nvim/commit/e71b6caa95bd29225536df64fdcd8fb0f758bb09))
+
 ## [2.6.0](https://github.com/stevearc/oil.nvim/compare/v2.5.0...v2.6.0) (2024-01-03)
 
 
