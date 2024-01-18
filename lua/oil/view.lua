@@ -685,7 +685,6 @@ end
 ---    refetch nil|boolean Defaults to true
 ---@param callback nil|fun(err: nil|string)
 M.render_buffer_async = function(bufnr, opts, callback)
-  vim.b[bufnr].oil_ready = false
   opts = vim.tbl_deep_extend("keep", opts or {}, {
     refetch = true,
   })
