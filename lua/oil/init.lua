@@ -384,6 +384,12 @@ M.open = function(dir)
   if config.buf_options.buflisted ~= nil then
     vim.api.nvim_buf_set_option(0, "buflisted", config.buf_options.buflisted)
   end
+
+  -- If preview window exists, update its content
+  local preview_win_id = util.get_preview_win()
+  if preview_win_id then
+    M.select({ preview = true })
+  end
 end
 
 ---Restore the buffer that was present when oil was opened
@@ -523,13 +529,8 @@ M.select = function(opts, callback)
     end
   end
 
-  -- Close the preview window if we're not previewing the selection
   local preview_win = util.get_preview_win()
-  if not opts.preview and preview_win then
-    vim.api.nvim_win_close(preview_win, true)
-  end
   local prev_win = vim.api.nvim_get_current_win()
-  local keep_preview_alive
 
   local scheme, dir = util.parse_url(bufname)
   assert(scheme and dir)
@@ -589,26 +590,19 @@ M.select = function(opts, callback)
         emsg_silent = true,
       }
       local filebufnr = vim.fn.bufadd(normalized_url)
+      local entry_is_file = not vim.endswith(normalized_url, "/")
 
       if opts.preview then
         -- If we're previewing a file that hasn't been opened yet, make sure it gets deleted after
         -- we close the window
-        if not vim.endswith(normalized_url, "/") and vim.fn.bufloaded(filebufnr) == 0 then
+        if entry_is_file and vim.fn.bufloaded(filebufnr) == 0 then
           vim.bo[filebufnr].bufhidden = "wipe"
           vim.b[filebufnr].oil_preview_buffer = true
         end
-      elseif not vim.endswith(normalized_url, "/") then
+      elseif entry_is_file then
         -- The :buffer command doesn't set buflisted=true
         -- So do that for non-diretory-buffers
         vim.bo[filebufnr].buflisted = true
-      end
-
-      -- If a preview window is open, and we are selecting a directory,
-      -- persist the preview window
-      if not opts.preview and preview_win then
-        if vim.endswith(normalized_url, "/") then
-          keep_preview_alive = true
-        end
       end
 
       local cmd
@@ -630,6 +624,12 @@ M.select = function(opts, callback)
         args = { filebufnr },
         mods = mods,
       })
+
+      if not opts.preview and preview_win and entry_is_file then
+        vim.api.nvim_win_close(preview_win, true)
+        vim.api.nvim_set_current_win(prev_win)
+      end
+
       if opts.preview then
         vim.api.nvim_set_option_value("previewwindow", true, { scope = "local", win = 0 })
         vim.w.oil_entry_id = entry.id
@@ -652,9 +652,20 @@ M.select = function(opts, callback)
         M.close()
       end)
     end
-    if keep_preview_alive then
-      M.select({preview = true})
-    end
+
+    util.run_after_load(0, function()
+      local oil = require("oil")
+      local cursor_entry = oil.get_cursor_entry()
+      if cursor_entry then
+        local preview_win_id = util.get_preview_win()
+        if preview_win_id then
+          if cursor_entry.id ~= vim.w[preview_win_id].oil_entry_id then
+            M.select({ preview = true })
+          end
+        end
+      end
+    end)
+
     finish()
   end)
 end
