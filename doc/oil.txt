@@ -3,15 +3,16 @@
 --------------------------------------------------------------------------------
 CONTENTS                                                            *oil-contents*
 
-  1. Options                                                     |oil-options|
-  2. Api                                                             |oil-api|
-  3. Columns                                                     |oil-columns|
-  4. Actions                                                     |oil-actions|
-  5. Highlights                                               |oil-highlights|
-  6. Trash                                                         |oil-trash|
+  1. Config                                                       |oil-config|
+  2. Options                                                     |oil-options|
+  3. Api                                                             |oil-api|
+  4. Columns                                                     |oil-columns|
+  5. Actions                                                     |oil-actions|
+  6. Highlights                                               |oil-highlights|
+  7. Trash                                                         |oil-trash|
 
 --------------------------------------------------------------------------------
-OPTIONS                                                              *oil-options*
+CONFIG                                                                *oil-config*
 
 >lua
     require("oil").setup({
@@ -44,9 +45,10 @@ OPTIONS                                                              *oil-option
       },
       -- Send deleted files to the trash instead of permanently deleting them (:help oil-trash)
       delete_to_trash = false,
-      -- Skip the confirmation popup for simple operations
+      -- Skip the confirmation popup for simple operations (:help oil.skip_confirm_for_simple_edits)
       skip_confirm_for_simple_edits = false,
       -- Selecting a new/moved/renamed file or directory will prompt you to save changes first
+      -- (:help prompt_save_on_select_new_entry)
       prompt_save_on_select_new_entry = true,
       -- Oil will automatically delete hidden buffers after this delay
       -- You can set the delay to false to disable cleanup entirely
@@ -159,6 +161,39 @@ OPTIONS                                                              *oil-option
       },
     })
 <
+
+--------------------------------------------------------------------------------
+OPTIONS                                                              *oil-options*
+
+
+skip_confirm_for_simple_edits                  *oil.skip_confirm_for_simple_edits*
+    type: `boolean` default: `false`
+    Before performing filesystem operations, Oil displays a confirmation popup to ensure
+    that all operations are intentional. When this option is `true`, the popup will be
+    skipped if the operations:
+        * contain no deletes
+        * contain no cross-adapter moves or copies (e.g. from local to ssh)
+        * contain at most one copy or move
+        * contain at most five creates
+
+prompt_save_on_select_new_entry              *oil.prompt_save_on_select_new_entry*
+    type: `boolean` default: `true`
+    There are two cases where this option is relevant:
+    1. You copy a file to a new location, then you select it and make edits before
+       saving.
+    2. You copy a directory to a new location, then you enter the directory and make
+       changes before saving.
+
+    In case 1, when you edit the file you are actually editing the original file because
+    oil has not yet moved/copied it to its new location. This means that the original
+    file will, perhaps unexpectedly, also be changed by any edits you make.
+
+    Case 2 is similar; when you edit the directory you are again actually editing the
+    original location of the directory. If you add new files, those files will be
+    created in both the original location and the copied directory.
+
+    When this option is `true`, Oil will prompt you to save before entering a file or
+    directory that is pending within oil, but does not exist on disk.
 
 --------------------------------------------------------------------------------
 API                                                                      *oil-api*
@@ -515,7 +550,7 @@ Mac:
     (instead of being able to see files that were trashed from a directory).
 
 Windows:
-    Oil supports the Recycle bin. All features should work.
+    Oil does not yet support the Windows trash. PRs are welcome!
 
 ================================================================================
 vim:tw=80:ts=2:ft=help:norl:syntax=help:

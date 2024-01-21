@@ -164,13 +164,50 @@ COL_DEFS = [
 
 
 def get_options_vimdoc() -> "VimdocSection":
-    section = VimdocSection("options", "oil-options")
+    section = VimdocSection("config", "oil-config")
     config_file = os.path.join(ROOT, "lua", "oil", "config.lua")
     opt_lines = read_section(config_file, r"^local default_config =", r"^}$")
     lines = ["\n", ">lua\n", '    require("oil").setup({\n']
     lines.extend(indent(opt_lines, 4))
     lines.extend(["    })\n", "<\n"])
     section.body = lines
+    return section
+
+
+def get_options_detail_vimdoc() -> "VimdocSection":
+    section = VimdocSection("options", "oil-options")
+    section.body.append(
+        """
+skip_confirm_for_simple_edits                  *oil.skip_confirm_for_simple_edits*
+    type: `boolean` default: `false`
+    Before performing filesystem operations, Oil displays a confirmation popup to ensure
+    that all operations are intentional. When this option is `true`, the popup will be
+    skipped if the operations:
+        * contain no deletes
+        * contain no cross-adapter moves or copies (e.g. from local to ssh)
+        * contain at most one copy or move
+        * contain at most five creates
+
+prompt_save_on_select_new_entry              *oil.prompt_save_on_select_new_entry*
+    type: `boolean` default: `true`
+    There are two cases where this option is relevant:
+    1. You copy a file to a new location, then you select it and make edits before
+       saving.
+    2. You copy a directory to a new location, then you enter the directory and make
+       changes before saving.
+
+    In case 1, when you edit the file you are actually editing the original file because
+    oil has not yet moved/copied it to its new location. This means that the original
+    file will, perhaps unexpectedly, also be changed by any edits you make.
+
+    Case 2 is similar; when you edit the directory you are again actually editing the
+    original location of the directory. If you add new files, those files will be
+    created in both the original location and the copied directory.
+
+    When this option is `true`, Oil will prompt you to save before entering a file or
+    directory that is pending within oil, but does not exist on disk.
+"""
+    )
     return section
 
 
@@ -269,6 +306,7 @@ def generate_vimdoc():
     doc.sections.extend(
         [
             get_options_vimdoc(),
+            get_options_detail_vimdoc(),
             VimdocSection("API", "oil-api", render_vimdoc_api("oil", funcs)),
             get_columns_vimdoc(),
             get_actions_vimdoc(),
