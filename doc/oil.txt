@@ -515,7 +515,7 @@ Mac:
     (instead of being able to see files that were trashed from a directory).
 
 Windows:
-    Oil does not yet support the Windows trash. PRs are welcome!
+    Oil supports the Recycle bin. All features should work.
 
 ================================================================================
 vim:tw=80:ts=2:ft=help:norl:syntax=help:
