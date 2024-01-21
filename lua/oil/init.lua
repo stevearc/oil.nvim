@@ -386,10 +386,12 @@ M.open = function(dir)
   end
 
   -- If preview window exists, update its content
-  local preview_win_id = util.get_preview_win()
-  if preview_win_id then
-    M.select({ preview = true })
-  end
+  util.run_after_load(0, function()
+    local preview_win_id = util.get_preview_win()
+    if preview_win_id then
+      M.select({ preview = true })
+    end
+  end)
 end
 
 ---Restore the buffer that was present when oil was opened
