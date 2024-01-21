@@ -629,7 +629,6 @@ M.select = function(opts, callback)
 
       if not opts.preview and preview_win and entry_is_file then
         vim.api.nvim_win_close(preview_win, true)
-        vim.api.nvim_set_current_win(prev_win)
       end
 
       if opts.preview then
