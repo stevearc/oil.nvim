@@ -366,6 +366,23 @@ M.toggle_float = function(dir)
   end
 end
 
+---@param oil_bufnr? integer
+local function update_preview_window(oil_bufnr)
+  oil_bufnr = oil_bufnr or 0
+  local util = require("oil.util")
+  util.run_after_load(oil_bufnr, function()
+    local cursor_entry = M.get_cursor_entry()
+    if cursor_entry then
+      local preview_win_id = util.get_preview_win()
+      if preview_win_id then
+        if cursor_entry.id ~= vim.w[preview_win_id].oil_entry_id then
+          M.select({ preview = true })
+        end
+      end
+    end
+  end)
+end
+
 ---Open oil browser for a directory
 ---@param dir nil|string When nil, open the parent of the current buffer, or the cwd if current buffer is not a file
 M.open = function(dir)
@@ -386,12 +403,7 @@ M.open = function(dir)
   end
 
   -- If preview window exists, update its content
-  util.run_after_load(0, function()
-    local preview_win_id = util.get_preview_win()
-    if preview_win_id then
-      M.select({ preview = true })
-    end
-  end)
+  update_preview_window()
 end
 
 ---Restore the buffer that was present when oil was opened
@@ -654,18 +666,7 @@ M.select = function(opts, callback)
       end)
     end
 
-    util.run_after_load(0, function()
-      local oil = require("oil")
-      local cursor_entry = oil.get_cursor_entry()
-      if cursor_entry then
-        local preview_win_id = util.get_preview_win()
-        if preview_win_id then
-          if cursor_entry.id ~= vim.w[preview_win_id].oil_entry_id then
-            M.select({ preview = true })
-          end
-        end
-      end
-    end)
+    update_preview_window()
 
     finish()
   end)
