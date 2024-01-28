@@ -639,10 +639,6 @@ M.select = function(opts, callback)
         mods = mods,
       })
 
-      if not opts.preview and preview_win and entry_is_file then
-        vim.api.nvim_win_close(preview_win, true)
-      end
-
       if opts.preview then
         vim.api.nvim_set_option_value("previewwindow", true, { scope = "local", win = 0 })
         vim.w.oil_entry_id = entry.id
@@ -910,6 +906,20 @@ local function load_oil_buffer(bufnr)
   adapter.normalize_url(bufname, finish)
 end
 
+local function close_preview_window_if_not_in_oil()
+  local util = require("oil.util")
+
+  if not util.is_oil_bufnr(0) then
+    local preview_win_id = util.get_preview_win()
+    if preview_win_id then
+      local current_win_id = vim.api.nvim_get_current_win()
+      if current_win_id and current_win_id ~= preview_win_id then
+        vim.api.nvim_win_close(preview_win_id, true)
+      end
+    end
+  end
+end
+
 ---Initialize oil
 ---@param opts nil|table
 M.setup = function(opts)
@@ -1072,6 +1082,8 @@ M.setup = function(opts)
         -- Oil buffers have to run it in BufReadCmd after confirming they are a directory or a file
         restore_alt_buf()
       end
+
+      close_preview_window_if_not_in_oil()
     end,
   })
 
