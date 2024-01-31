@@ -268,6 +268,10 @@ require("oil").setup({
       winblend = 0,
     },
   },
+  -- Configuration for the floating SSH window
+  ssh = {
+    border = "rounded",
+  },
 })
 ```
 
