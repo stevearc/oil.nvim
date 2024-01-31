@@ -1,4 +1,5 @@
 local actions = require("oil.actions")
+local config = require("oil.config")
 local layout = require("oil.layout")
 local util = require("oil.util")
 local M = {}
@@ -111,7 +112,7 @@ M.show_help = function(keymaps)
     height = math.min(editor_height, #lines),
     zindex = 150,
     style = "minimal",
-    border = "rounded",
+    border = config.keymaps_help.border,
   })
   local function close()
     if vim.api.nvim_win_is_valid(winid) then
