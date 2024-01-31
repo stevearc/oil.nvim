@@ -142,6 +142,10 @@ local default_config = {
       winblend = 0,
     },
   },
+  -- Configuration for the floating SSH window
+  ssh = {
+    border = "rounded",
+  },
 }
 
 -- The adapter API hasn't really stabilized yet. We're not ready to advertise or encourage people to
