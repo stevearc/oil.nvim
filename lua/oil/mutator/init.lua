@@ -101,6 +101,14 @@ M.create_actions_from_diffs = function(all_diffs)
                   link = diff.link,
                 })
               end
+            else
+              url = url .. "/" .. v
+              add_action({
+                type = "create",
+                url = url,
+                entry_type = entry_type,
+                link = diff.link,
+              })
             end
           else
             -- TODO: Add to not create if already exists
