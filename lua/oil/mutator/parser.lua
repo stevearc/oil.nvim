@@ -210,14 +210,12 @@ M.parse = function(bufnr)
       end
       local parsed_entry = result.data
       local entry = result.entry
-      if not parsed_entry.name or parsed_entry.name:match("/") or not entry then
+      if not parsed_entry.name or not entry then
         local message
         if not parsed_entry.name then
           message = "No filename found"
         elseif not entry then
           message = "Could not find existing entry (was the ID changed?)"
-        else
-          message = "Filename cannot contain '/'"
         end
         table.insert(errors, {
           message = message,
