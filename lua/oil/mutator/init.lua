@@ -76,21 +76,21 @@ M.create_actions_from_diffs = function(all_diffs)
     local parent_url = vim.api.nvim_buf_get_name(bufnr)
     for _, diff in ipairs(diffs) do
       if diff.type == "new" then
-        if diff.id then
-          local by_id = diff_by_id[diff.id]
-          ---HACK: set the destination on this diff for use later
-          ---@diagnostic disable-next-line: inject-field
-          diff.dest = parent_url .. diff.name
-          table.insert(by_id, diff)
-        else
-          -- Parse nested files like foo/bar/baz
-          local pieces = vim.split(diff.name, "/")
-          local url = parent_url:gsub("/$", "")
-          for i, v in ipairs(pieces) do
-            local is_last = i == #pieces
-            local entry_type = is_last and diff.entry_type or "directory"
-            local alternation = v:match("{([^}]+)}")
-            if is_last and alternation then
+        -- Parse nested files like foo/bar/baz
+        local pieces = vim.split(diff.name, "/")
+        local url = parent_url:gsub("/$", "")
+        for i, v in ipairs(pieces) do
+          local is_last = i == #pieces
+          local entry_type = is_last and diff.entry_type or "directory"
+          local alternation = v:match("{([^}]+)}")
+          if is_last then
+            if diff.id then
+              local by_id = diff_by_id[diff.id]
+              ---HACK: set the destination on this diff for use later
+              ---@diagnostic disable-next-line: inject-field
+              diff.dest = parent_url .. diff.name
+              table.insert(by_id, diff)
+            elseif alternation then
               -- Parse alternations like foo.{js,test.js}
               for _, alt in ipairs(vim.split(alternation, ",")) do
                 local alt_url = url .. "/" .. v:gsub("{[^}]+}", alt)
@@ -101,16 +101,21 @@ M.create_actions_from_diffs = function(all_diffs)
                   link = diff.link,
                 })
               end
-            else
-              url = url .. "/" .. v
-              add_action({
-                type = "create",
-                url = url,
-                entry_type = entry_type,
-                link = diff.link,
-              })
             end
+          else
+            -- TODO: Add to not create if already exists
+            if v == "." or v == ".." then
+              goto continue
+            end
+            url = url .. "/" .. v
+            add_action({
+              type = "create",
+              url = url,
+              entry_type = entry_type,
+              link = diff.link,
+            })
           end
+          ::continue::
         end
       elseif diff.type == "change" then
         add_action({
@@ -304,7 +309,7 @@ M.enforce_action_order = function(actions)
         -- We've detected a move cycle (e.g. MOVE /a -> /b + MOVE /b -> /a)
         -- Split one of the moves and retry
         local intermediate_url =
-          string.format("%s__oil_tmp_%05d", loop_action.src_url, math.random(999999))
+            string.format("%s__oil_tmp_%05d", loop_action.src_url, math.random(999999))
         local move_1 = {
           type = "move",
           entry_type = loop_action.entry_type,
