@@ -196,6 +196,8 @@ require("oil").setup({
   -- Set to false to disable all of the above keymaps
   use_default_keymaps = true,
   view_options = {
+    -- Show header line with the name of the current directory
+    show_header_line = false,
     -- Show files and directories that start with "."
     show_hidden = false,
     -- This function defines what is considered a "hidden" file

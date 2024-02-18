@@ -7,6 +7,7 @@ local fs = require("oil.fs")
 local keymap_util = require("oil.keymap_util")
 local loading = require("oil.loading")
 local util = require("oil.util")
+local init = require("oil.init")
 local M = {}
 
 local FIELD_ID = constants.FIELD_ID
@@ -555,6 +556,10 @@ local function render_buffer(bufnr, opts)
     col_width[i + 1] = 1
   end
 
+  if config.view_options.show_header_line then
+    -- add header line that shows the name of the current directory
+    table.insert(line_table, { init.get_current_dir() })
+  end
   if M.should_display("..", bufnr) then
     local cols = M.format_entry_cols({ 0, "..", "directory" }, column_defs, col_width, adapter)
     table.insert(line_table, cols)

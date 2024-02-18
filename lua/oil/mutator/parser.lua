@@ -166,7 +166,13 @@ M.parse = function(bufnr)
     return diffs, errors
   end
 
-  local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, true)
+
+  local idx = 0
+  if config.view_options.show_header_line then
+    -- Start with index 1 instead of 0 to skip header line with the name of the current directory
+    idx = 1
+  end
+  local lines = vim.api.nvim_buf_get_lines(bufnr, idx, -1, true)
   local scheme, path = util.parse_url(bufname)
   local column_defs = columns.get_supported_columns(adapter)
   local parent_url = scheme .. path
