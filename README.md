@@ -169,6 +169,8 @@ require("oil").setup({
   -- Constrain the cursor to the editable parts of the oil buffer
   -- Set to `false` to disable, or "name" to keep it on the file names
   constrain_cursor = "editable",
+  -- Set to true to watch the filesystem for changes and reload oil
+  experimental_watch_for_changes = false,
   -- Keymaps in oil buffer. Can be any value that `vim.keymap.set` accepts OR a table of keymap
   -- options with a `callback` (e.g. { callback = function() ... end, desc = "", mode = "n" })
   -- Additionally, if it is a string that matches "actions.<name>",

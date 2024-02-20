@@ -112,7 +112,11 @@ M.set_sort = function(new_sort)
   end
 end
 
+---@class oil.ViewData
+---@field fs_event? any uv_fs_event_t
+
 -- List of bufnrs
+---@type table<integer, oil.ViewData>
 local session = {}
 
 ---@return integer[]
@@ -320,7 +324,7 @@ M.initialize = function(bufnr)
   vim.bo[bufnr].syntax = "oil"
   vim.bo[bufnr].filetype = "oil"
   vim.b[bufnr].EditorConfig_disable = 1
-  session[bufnr] = true
+  session[bufnr] = {}
   for k, v in pairs(config.buf_options) do
     vim.api.nvim_buf_set_option(bufnr, k, v)
   end
@@ -356,7 +360,11 @@ M.initialize = function(bufnr)
     once = true,
     buffer = bufnr,
     callback = function()
+      local view_data = session[bufnr]
       session[bufnr] = nil
+      if view_data and view_data.fs_event then
+        view_data.fs_event:stop()
+      end
     end,
   })
   vim.api.nvim_create_autocmd("BufEnter", {
@@ -426,8 +434,38 @@ M.initialize = function(bufnr)
     end,
   })
 
-  -- Watch for TextChanged and update the trash original path extmarks
   local adapter = util.get_adapter(bufnr)
+
+  -- Set up a watcher that will refresh the directory
+  if adapter and adapter.name == "files" and config.experimental_watch_for_changes then
+    local fs_event = assert(uv.new_fs_event())
+    local bufname = vim.api.nvim_buf_get_name(bufnr)
+    local _, dir = util.parse_url(bufname)
+    fs_event:start(
+      assert(dir),
+      {},
+      vim.schedule_wrap(function(err, filename, events)
+        local mutator = require("oil.mutator")
+        if err or vim.bo[bufnr].modified or vim.b[bufnr].oil_dirty or mutator.is_mutating() then
+          return
+        end
+
+        -- If the buffer is currently visible, rerender
+        for _, winid in ipairs(vim.api.nvim_list_wins()) do
+          if vim.api.nvim_win_is_valid(winid) and vim.api.nvim_win_get_buf(winid) == bufnr then
+            M.render_buffer_async(bufnr)
+            return
+          end
+        end
+
+        -- If it is not currently visible, mark it as dirty
+        vim.b[bufnr].oil_dirty = {}
+      end)
+    )
+    session[bufnr].fs_event = fs_event
+  end
+
+  -- Watch for TextChanged and update the trash original path extmarks
   if adapter and adapter.name == "trash" then
     local debounce_timer = assert(uv.new_timer())
     local pending = false
@@ -680,6 +718,8 @@ local function get_used_columns()
   return cols
 end
 
+local pending_renders = {}
+
 ---@param bufnr integer
 ---@param opts nil|table
 ---    refetch nil|boolean Defaults to true
@@ -691,14 +731,33 @@ M.render_buffer_async = function(bufnr, opts, callback)
   if bufnr == 0 then
     bufnr = vim.api.nvim_get_current_buf()
   end
+
+  -- If we're already rendering, queue up another rerender after it's complete
+  if vim.b[bufnr].oil_rendering then
+    if not pending_renders[bufnr] then
+      pending_renders[bufnr] = { callback }
+    elseif callback then
+      table.insert(pending_renders[bufnr], callback)
+    end
+    return
+  end
+
   local bufname = vim.api.nvim_buf_get_name(bufnr)
+  vim.b[bufnr].oil_rendering = true
   local _, dir = util.parse_url(bufname)
   -- Undo should not return to a blank buffer
   -- Method taken from :h clear-undo
   vim.bo[bufnr].undolevels = -1
   local handle_error = vim.schedule_wrap(function(message)
+    vim.b[bufnr].oil_rendering = false
     vim.bo[bufnr].undolevels = vim.api.nvim_get_option_value("undolevels", { scope = "global" })
     util.render_text(bufnr, { "Error: " .. message })
+    if pending_renders[bufnr] then
+      for _, cb in ipairs(pending_renders) do
+        cb(message)
+      end
+      pending_renders[bufnr] = nil
+    end
     if callback then
       callback(message)
     else
@@ -725,12 +784,25 @@ M.render_buffer_async = function(bufnr, opts, callback)
     if not vim.api.nvim_buf_is_valid(bufnr) then
       return
     end
+    vim.b[bufnr].oil_rendering = false
     loading.set_loading(bufnr, false)
     render_buffer(bufnr, { jump = true })
     vim.bo[bufnr].undolevels = vim.api.nvim_get_option_value("undolevels", { scope = "global" })
     vim.bo[bufnr].modifiable = not buffers_locked and adapter.is_modifiable(bufnr)
     if callback then
       callback()
+    end
+
+    -- If there were any concurrent calls to render this buffer, process them now
+    if pending_renders[bufnr] then
+      local all_cbs = pending_renders[bufnr]
+      pending_renders[bufnr] = nil
+      local new_cb = function(...)
+        for _, cb in ipairs(all_cbs) do
+          cb(...)
+        end
+      end
+      M.render_buffer_async(bufnr, {}, new_cb)
     end
   end)
   if not opts.refetch then

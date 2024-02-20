@@ -449,6 +449,11 @@ end
 
 local mutation_in_progress = false
 
+---@return boolean
+M.is_mutating = function()
+  return mutation_in_progress
+end
+
 ---@param confirm nil|boolean
 ---@param cb? fun(err: nil|string)
 M.try_write_changes = function(confirm, cb)
