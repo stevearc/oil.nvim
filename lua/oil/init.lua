@@ -642,6 +642,7 @@ M.select = function(opts, callback)
       if opts.preview then
         vim.api.nvim_set_option_value("previewwindow", true, { scope = "local", win = 0 })
         vim.w.oil_entry_id = entry.id
+        vim.w.oil_source_win = prev_win
         vim.api.nvim_set_current_win(prev_win)
       end
       open_next_entry(cb)
@@ -908,16 +909,21 @@ end
 
 local function close_preview_window_if_not_in_oil()
   local util = require("oil.util")
+  local preview_win_id = util.get_preview_win()
+  if not preview_win_id or not vim.w[preview_win_id].oil_entry_id then
+    return
+  end
 
-  if not util.is_oil_bufnr(0) then
-    local preview_win_id = util.get_preview_win()
-    if preview_win_id then
-      local current_win_id = vim.api.nvim_get_current_win()
-      if current_win_id and current_win_id ~= preview_win_id then
-        vim.api.nvim_win_close(preview_win_id, true)
-      end
+  local oil_source_win = vim.w[preview_win_id].oil_source_win
+  if oil_source_win and vim.api.nvim_win_is_valid(oil_source_win) then
+    local src_buf = vim.api.nvim_win_get_buf(oil_source_win)
+    if vim.bo[src_buf].filetype == "oil" then
+      return
     end
   end
+
+  -- This can fail if it's the last window open
+  pcall(vim.api.nvim_win_close, preview_win_id, true)
 end
 
 ---Initialize oil
