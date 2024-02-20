@@ -193,6 +193,10 @@ require("oil").setup({
     ["g."] = "actions.toggle_hidden",
     ["g\\"] = "actions.toggle_trash",
   },
+  -- Configuration for the floating keymaps help window
+  keymaps_help = {
+    border = "rounded",
+  },
   -- Set to false to disable all of the above keymaps
   use_default_keymaps = true,
   view_options = {
@@ -267,6 +271,10 @@ require("oil").setup({
     win_options = {
       winblend = 0,
     },
+  },
+  -- Configuration for the floating SSH window
+  ssh = {
+    border = "rounded",
   },
 })
 ```
