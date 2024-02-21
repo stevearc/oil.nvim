@@ -5,6 +5,7 @@ local M = {}
 ---@field type oil.EntryType
 ---@field id nil|integer Will be nil if it hasn't been persisted to disk yet
 ---@field parsed_name nil|string
+---@field meta nil|table
 
 ---@alias oil.EntryType "file"|"directory"|"socket"|"link"|"fifo"
 ---@alias oil.HlRange { [1]: string, [2]: integer, [3]: integer } A tuple of highlight group name, col_start, col_end
@@ -28,9 +29,7 @@ local M = {}
 ---@field filter_action? fun(action: oil.Action): boolean When present, filter out actions as they are created
 ---@field filter_error? fun(action: oil.ParseError): boolean When present, filter out errors from parsing a buffer
 
--- TODO remove after https://github.com/folke/neodev.nvim/pull/163 lands
----@diagnostic disable: undefined-field
----@diagnostic disable: inject-field
+---@diagnostic disable: deprecated
 
 ---Get the entry on a specific line (1-indexed)
 ---@param bufnr integer

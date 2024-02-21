@@ -39,6 +39,8 @@ jobs:
       - uses: stevearc/nvim-typecheck-action@v1
         with:
           path: lua
+          neodev-version: nightly
+          nvim-version: nightly
 
   run_tests:
     strategy:
