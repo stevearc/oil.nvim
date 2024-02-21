@@ -7,7 +7,7 @@ jobs:
     name: Luacheck
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Prepare
         run: |
@@ -23,7 +23,7 @@ jobs:
     name: StyLua
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Stylua
         uses: JohnnyMorganz/stylua-action@v3
         with:
@@ -35,7 +35,7 @@ jobs:
     name: typecheck
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: stevearc/nvim-typecheck-action@v1
         with:
           path: lua
@@ -52,7 +52,7 @@ jobs:
     env:
       NVIM_TAG: ${{ matrix.nvim_tag }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Install Neovim and dependencies
         run: |
@@ -66,7 +66,7 @@ jobs:
     name: Update docs
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Install Neovim and dependencies
         run: |
@@ -108,7 +108,7 @@ jobs:
         with:
           release-type: simple
           package-name: oil.nvim
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: rickstaa/action-create-tag@v1
         if: ${{ steps.release.outputs.release_created }}
         with:
