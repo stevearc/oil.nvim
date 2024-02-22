@@ -26,6 +26,8 @@ local default_config = {
     conceallevel = 3,
     concealcursor = "nvic",
   },
+  -- Open Oil in flaot view by default
+  default_floating_win = false,
   -- Send deleted files to the trash instead of permanently deleting them (:help oil-trash)
   delete_to_trash = false,
   -- Skip the confirmation popup for simple operations (:help oil.skip_confirm_for_simple_edits)
@@ -95,7 +97,6 @@ local default_config = {
   },
   -- Configuration for the floating window in oil.open_float
   float = {
-    open_by_default = false,
     -- Padding around the floating window
     padding = 2,
     max_width = 0,
