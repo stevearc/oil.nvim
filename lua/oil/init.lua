@@ -917,7 +917,7 @@ local function close_preview_window_if_not_in_oil()
   local oil_source_win = vim.w[preview_win_id].oil_source_win
   if oil_source_win and vim.api.nvim_win_is_valid(oil_source_win) then
     local src_buf = vim.api.nvim_win_get_buf(oil_source_win)
-    if vim.bo[src_buf].filetype == "oil" then
+    if util.is_oil_bufnr(src_buf) then
       return
     end
   end
