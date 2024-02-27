@@ -42,7 +42,7 @@ local default_config = {
   lsp_rename_autosave = false,
 
   -- The amount of time LSP waits for file operation before it errors
-  lsp_file_operation_timeout_ms = 5000,
+  lsp_file_operation_timeout_ms = 1000,
 
   -- Constrain the cursor to the editable parts of the oil buffer
   -- Set to `false` to disable, or "name" to keep it on the file names
