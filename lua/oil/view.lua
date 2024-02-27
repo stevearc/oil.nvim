@@ -324,7 +324,7 @@ M.initialize = function(bufnr)
   vim.bo[bufnr].syntax = "oil"
   vim.bo[bufnr].filetype = "oil"
   vim.b[bufnr].EditorConfig_disable = 1
-  session[bufnr] = {}
+  session[bufnr] = session[bufnr] or {}
   for k, v in pairs(config.buf_options) do
     vim.api.nvim_buf_set_option(bufnr, k, v)
   end
@@ -437,7 +437,12 @@ M.initialize = function(bufnr)
   local adapter = util.get_adapter(bufnr)
 
   -- Set up a watcher that will refresh the directory
-  if adapter and adapter.name == "files" and config.experimental_watch_for_changes then
+  if
+    adapter
+    and adapter.name == "files"
+    and config.experimental_watch_for_changes
+    and not session[bufnr].fs_event
+  then
     local fs_event = assert(uv.new_fs_event())
     local bufname = vim.api.nvim_buf_get_name(bufnr)
     local _, dir = util.parse_url(bufname)
