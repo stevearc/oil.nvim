@@ -1,3 +1,4 @@
+local config = require("oil.config")
 local layout = require("oil.layout")
 local util = require("oil.util")
 
@@ -277,7 +278,7 @@ function SSHConnection:open_terminal()
     row = row,
     col = col,
     style = "minimal",
-    border = "rounded",
+    border = config.ssh.border,
   })
   vim.cmd.startinsert()
 end

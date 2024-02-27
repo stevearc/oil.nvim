@@ -43,6 +43,8 @@ local default_config = {
   -- Constrain the cursor to the editable parts of the oil buffer
   -- Set to `false` to disable, or "name" to keep it on the file names
   constrain_cursor = "editable",
+  -- Set to true to watch the filesystem for changes and reload oil
+  experimental_watch_for_changes = false,
   -- Keymaps in oil buffer. Can be any value that `vim.keymap.set` accepts OR a table of keymap
   -- options with a `callback` (e.g. { callback = function() ... end, desc = "", mode = "n" })
   -- Additionally, if it is a string that matches "actions.<name>",
@@ -66,6 +68,10 @@ local default_config = {
     ["gx"] = "actions.open_external",
     ["g."] = "actions.toggle_hidden",
     ["g\\"] = "actions.toggle_trash",
+  },
+  -- Configuration for the floating keymaps help window
+  keymaps_help = {
+    border = "rounded",
   },
   -- Set to false to disable all of the above keymaps
   use_default_keymaps = true,
@@ -141,6 +147,10 @@ local default_config = {
     win_options = {
       winblend = 0,
     },
+  },
+  -- Configuration for the floating SSH window
+  ssh = {
+    border = "rounded",
   },
 }
 

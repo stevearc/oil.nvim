@@ -184,8 +184,8 @@ local function get_open_cmd(path)
     else
       return nil, "rundll32 not found"
     end
-  elseif vim.fn.executable("wslview") == 1 then
-    return { "wslview", path }
+  elseif vim.fn.executable("explorer.exe") == 1 then
+    return { "explorer.exe", path }
   elseif vim.fn.executable("xdg-open") == 1 then
     return { "xdg-open", path }
   else
