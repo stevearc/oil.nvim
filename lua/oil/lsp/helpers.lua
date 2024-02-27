@@ -68,9 +68,10 @@ M.will_perform_file_operations = function(actions)
       end
     end
   end
-  accum(workspace.will_create_files(creates))
-  accum(workspace.will_delete_files(deletes))
-  accum(workspace.will_rename_files(moves))
+  local timeout_ms = config.lsp_file_operation_timeout_ms
+  accum(workspace.will_create_files(creates, { timeout_ms }))
+  accum(workspace.will_delete_files(deletes, { timeout_ms }))
+  accum(workspace.will_rename_files(moves, { timeout_ms }))
   if final_err then
     vim.notify(
       string.format("[lsp] file operation error: %s", vim.inspect(final_err)),
