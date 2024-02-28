@@ -392,4 +392,21 @@ M._get_actions = function()
   return ret
 end
 
+M.run_external = {
+  desc = "Run an external command on an entry",
+  callback = function()
+    vim.ui.input({ prompt = "command: ", completion = "shellcmd" }, function(command)
+      if command == "" then
+        return
+      end
+      local file = oil.get_current_dir() .. oil.get_cursor_entry().name
+      if file == "" then
+        return
+      end
+      local output = vim.fn.system(command .. file)
+      vim.print(output)
+    end)
+  end
+}
+
 return M
