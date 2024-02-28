@@ -403,8 +403,7 @@ M.run_external = {
       if file == "" then
         return
       end
-      local output = vim.fn.system(command .. file)
-      vim.print(output)
+      vim.api.nvim_command(":! " .. command .. " \"" .. file_path .. "\"")
     end)
   end
 }
