@@ -86,7 +86,7 @@ M.will_perform_file_operations = function(actions)
 
     local autosave = config.lsp_file_methods.lsp_rename_autosave or config.lsp_rename_autosave
     if config.lsp_rename_autosave ~= nil then
-      vim.deprecate("lsp_rename_autosave will be deprecated. Move the flag inside lsp_file_methods", nil, 'v2.7.0',
+      vim.deprecate("lsp_rename_autosave at root level", nil, 'v2.7.0',
         'oil.nvim',
         false)
     end
