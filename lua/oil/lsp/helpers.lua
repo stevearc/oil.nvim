@@ -84,13 +84,7 @@ M.will_perform_file_operations = function(actions)
     workspace.did_delete_files(deletes)
     workspace.did_rename_files(moves)
 
-    local autosave = config.lsp_file_methods.lsp_rename_autosave or config.lsp_rename_autosave
-    if config.lsp_rename_autosave ~= nil then
-      vim.deprecate("lsp_rename_autosave at root level", nil, 'v2.7.0',
-        'oil.nvim',
-        false)
-    end
-
+    local autosave = config.lsp_file_methods.autosave_changes
     if autosave == false then
       return
     end
