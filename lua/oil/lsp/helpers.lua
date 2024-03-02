@@ -68,7 +68,7 @@ M.will_perform_file_operations = function(actions)
       end
     end
   end
-  local timeout_ms = config.lsp_file_operation_timeout_ms
+  local timeout_ms = config.lsp_file_methods.timeout_ms
   accum(workspace.will_create_files(creates, { timeout_ms = timeout_ms }))
   accum(workspace.will_delete_files(deletes, { timeout_ms = timeout_ms }))
   accum(workspace.will_rename_files(moves, { timeout_ms = timeout_ms }))
@@ -84,7 +84,13 @@ M.will_perform_file_operations = function(actions)
     workspace.did_delete_files(deletes)
     workspace.did_rename_files(moves)
 
-    local autosave = config.lsp_rename_autosave
+    local autosave = config.lsp_file_methods.lsp_rename_autosave or config.lsp_rename_autosave
+    if config.lsp_rename_autosave ~= nil then
+      vim.deprecate("lsp_rename_autosave will be deprecated. Move the flag inside lsp_file_methods", nil, 'v2.7.0',
+        'oil.nvim',
+        false)
+    end
+
     if autosave == false then
       return
     end

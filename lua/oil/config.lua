@@ -37,13 +37,14 @@ local default_config = {
   -- You can set the delay to false to disable cleanup entirely
   -- Note that the cleanup process only starts when none of the oil buffers are currently displayed
   cleanup_delay_ms = 2000,
-  -- Set to true to autosave buffers that are updated with LSP willRenameFiles
-  -- Set to "unmodified" to only save unmodified buffers
-  lsp_rename_autosave = false,
-
-  -- The amount of time LSP waits for file operation before it errors
-  lsp_file_operation_timeout_ms = 1000,
-
+  -- set various LSP file operation options
+  lsp_file_methods = {
+    -- Time to wait for LSP file operations to complete before skipping
+    timeout_ms = 1000,
+    -- Set to true to autosave buffers that are updated with LSP willRenameFiles
+    -- Set to "unmodified" to only save unmodified buffers
+    lsp_rename_autosave = false,
+  },
   -- Constrain the cursor to the editable parts of the oil buffer
   -- Set to `false` to disable, or "name" to keep it on the file names
   constrain_cursor = "editable",
