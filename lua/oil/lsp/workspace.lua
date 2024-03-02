@@ -146,7 +146,7 @@ local function will_file_operation(method, capability_name, files, options)
         end, matching_files),
       }
       ---@diagnostic disable-next-line: invisible
-      local result, err = client.request_sync(method, params, options.timeout_ms, 0)
+      local result, err = client.request_sync(method, params, options.timeout_ms or 1000, 0)
       if result and result.result then
         if options.apply_edits ~= false then
           vim.lsp.util.apply_workspace_edit(result.result, client.offset_encoding)
@@ -260,7 +260,7 @@ function M.will_rename_files(files, options)
       }
       local result, err =
         ---@diagnostic disable-next-line: invisible
-        client.request_sync(ms.workspace_willRenameFiles, params, options.timeout_ms, 0)
+        client.request_sync(ms.workspace_willRenameFiles, params, options.timeout_ms or 1000, 0)
       if result and result.result then
         if options.apply_edits ~= false then
           vim.lsp.util.apply_workspace_edit(result.result, client.offset_encoding)
