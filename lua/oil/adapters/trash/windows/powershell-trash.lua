@@ -10,10 +10,8 @@ local Powershell = require("oil.adapters.trash.windows.powershell-connection")
 
 local M = {}
 
--- The first line configures Windows Powershell to use UTF-8 for input and output
 -- 0xa is the constant for Recycle Bin. See https://learn.microsoft.com/en-us/windows/win32/api/shldisp/ne-shldisp-shellspecialfolderconstants
 local list_entries_init = [[
-$OutputEncoding = [Console]::InputEncoding = [Console]::OutputEncoding = New-Object System.Text.UTF8Encoding
 $shell = New-Object -ComObject 'Shell.Application'
 $folder = $shell.NameSpace(0xa)
 ]]
