@@ -27,15 +27,12 @@ end
 
 ---@param init_command? string
 function PowershellConnection:_init(init_command)
+  -- 65001 is the UTF-8 codepage
+  -- powershell needs to be launched with the UTF-8 codepage to use it for both stdin and stdout
   local jid = vim.fn.jobstart({
-    "powershell",
-    "-NoProfile",
-    "-NoLogo",
-    "-ExecutionPolicy",
-    "Bypass",
-    "-NoExit",
-    "-Command",
-    "-",
+    "cmd",
+    "/c",
+    '"chcp 65001 && powershell -NoProfile -NoLogo -ExecutionPolicy Bypass -NoExit -Command -"',
   }, {
     ---@param data string[]
     on_stdout = function(_, data)
