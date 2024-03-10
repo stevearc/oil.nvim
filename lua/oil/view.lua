@@ -515,6 +515,32 @@ M.initialize = function(bufnr)
   keymap_util.set_keymaps(config.keymaps, bufnr)
 end
 
+--- Compare two strings while also treating multi-digit integers atomically
+---@param a_val string
+---@param b_val string
+---@param order string
+---@return boolean
+local function natural_sort_compare(a_val, b_val, order)
+  ---This method pads integers with zeroes so that they are always 12 digits long.
+  ---As a result, comparing strings that have integers of different sizes work
+  ---as if we were comparing integers (instead of strings of integers)
+  ---
+  ---Note: if the file name has integers of more than 12 digits, this padding does not work
+  ---@param int integer
+  local function pad_to_compare(int)
+    return string.format("%012d", int)
+  end
+
+  local a_val_padded = string.gsub(a_val, "%d+", pad_to_compare)
+  local b_val_padded = string.gsub(b_val, "%d+", pad_to_compare)
+
+  if order == "desc" then
+    return a_val_padded > b_val_padded
+  else
+    return a_val_padded < b_val_padded
+  end
+end
+
 ---@param adapter oil.Adapter
 ---@return fun(a: oil.InternalEntry, b: oil.InternalEntry): boolean
 local function get_sort_function(adapter)
@@ -547,11 +573,7 @@ local function get_sort_function(adapter)
       local a_val = get_sort_value(a)
       local b_val = get_sort_value(b)
       if a_val ~= b_val then
-        if order == "desc" then
-          return a_val > b_val
-        else
-          return a_val < b_val
-        end
+        return natural_sort_compare(a_val, b_val, order)
       end
     end
     return a[FIELD_NAME] < b[FIELD_NAME]
