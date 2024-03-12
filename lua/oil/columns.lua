@@ -279,6 +279,10 @@ M.register("type", {
   end,
 })
 
+local function pad_number(int)
+  return string.format("%012d", int)
+end
+
 M.register("name", {
   render = function(entry, conf)
     error("Do not use the name column. It is for sorting only")
@@ -289,7 +293,11 @@ M.register("name", {
   end,
 
   get_sort_value = function(entry)
-    return entry[FIELD_NAME]
+    if config.view_options.natural_order then
+      return entry[FIELD_NAME]:gsub("%d+", pad_number)
+    else
+      return entry[FIELD_NAME]
+    end
   end,
 })
 
