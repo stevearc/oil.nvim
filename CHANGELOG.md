@@ -1,5 +1,27 @@
 # Changelog
 
+## [2.7.0](https://github.com/stevearc/oil.nvim/compare/v2.6.1...v2.7.0) (2024-03-13)
+
+
+### Features
+
+* add ability to alter lsp file operation timeout ([#317](https://github.com/stevearc/oil.nvim/issues/317)) ([29a06fc](https://github.com/stevearc/oil.nvim/commit/29a06fcc906f57894c1bc768219ba590e03d1121))
+* add border config for SSH and keymaps help window ([#299](https://github.com/stevearc/oil.nvim/issues/299)) ([e27cc4e](https://github.com/stevearc/oil.nvim/commit/e27cc4e13812f96c0851de67015030a823cc0fbd))
+* do not close preview when switching dirs ([#277](https://github.com/stevearc/oil.nvim/issues/277)) ([bf753c3](https://github.com/stevearc/oil.nvim/commit/bf753c3e3f8736939ad5597f92329dfe7b1df4f5))
+* experimental option to watch directory for changes ([#292](https://github.com/stevearc/oil.nvim/issues/292)) ([bcfe7d1](https://github.com/stevearc/oil.nvim/commit/bcfe7d1ec5bbf41dd78726f579a363028d208c1a))
+* use natural sort order by default ([#328](https://github.com/stevearc/oil.nvim/issues/328)) ([71b076b](https://github.com/stevearc/oil.nvim/commit/71b076b3afb40663222564c74162db555aeee62d))
+
+
+### Bug Fixes
+
+* actions.open_external uses explorer.exe in WSL ([#273](https://github.com/stevearc/oil.nvim/issues/273)) ([6953c2c](https://github.com/stevearc/oil.nvim/commit/6953c2c17d8ae7454b28c44c8767eebede312e6f))
+* close preview window when leaving oil buffer ([#296](https://github.com/stevearc/oil.nvim/issues/296)) ([132b4ea](https://github.com/stevearc/oil.nvim/commit/132b4ea0740c417b9d717411cab4cf187e1fd095))
+* correctly reset bufhidden for formerly previewed buffers ([#291](https://github.com/stevearc/oil.nvim/issues/291)) ([0de8e60](https://github.com/stevearc/oil.nvim/commit/0de8e60e3d8d3d1ff9378526b4722f1ea326e1cb))
+* potential leak in experimental file watcher ([c437f3c](https://github.com/stevearc/oil.nvim/commit/c437f3c5b0da0a9cc6a222d87212cce11b80ba75))
+* spurious exits from faulty :wq detection ([#221](https://github.com/stevearc/oil.nvim/issues/221)) ([e045ee3](https://github.com/stevearc/oil.nvim/commit/e045ee3b4e06cafd7a6a2acac10f2558e611eaf8))
+* window options sometimes not set in oil buffer ([#287](https://github.com/stevearc/oil.nvim/issues/287)) ([17d71eb](https://github.com/stevearc/oil.nvim/commit/17d71eb3d88a79dbc87c6245f8490853a5c38092))
+* **windows:** can delete non-ascii filenames to trash ([#323](https://github.com/stevearc/oil.nvim/issues/323)) ([18dfd24](https://github.com/stevearc/oil.nvim/commit/18dfd2458dc741fea683357a17aaa95870b25a3c))
+
 ## [2.6.1](https://github.com/stevearc/oil.nvim/compare/v2.6.0...v2.6.1) (2024-01-16)
 
 
