@@ -1110,7 +1110,7 @@ M.setup = function(opts)
     callback = function()
       -- If we have entered a "preview" buffer in a non-preview window, reset bufhidden
       if vim.b.oil_preview_buffer and not vim.wo.previewwindow then
-        vim.bo.bufhidden = vim.o.bufhidden
+        vim.bo.bufhidden = vim.api.nvim_get_option_value("bufhidden", { scope = "global" })
         vim.b.oil_preview_buffer = nil
       end
     end,
