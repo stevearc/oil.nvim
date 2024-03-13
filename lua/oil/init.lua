@@ -1166,13 +1166,6 @@ M.setup = function(opts)
       vim.w.oil_original_buffer = vim.w[parent_win].oil_original_buffer
       vim.w.oil_original_view = vim.w[parent_win].oil_original_view
       vim.w.oil_original_alternate = vim.w[parent_win].oil_original_alternate
-      for k in pairs(config.win_options) do
-        local varname = "_oil_" .. k
-        local has_opt, opt = pcall(vim.api.nvim_win_get_var, parent_win, varname)
-        if has_opt then
-          vim.api.nvim_win_set_var(0, varname, opt)
-        end
-      end
     end,
   })
   vim.api.nvim_create_autocmd("BufAdd", {
