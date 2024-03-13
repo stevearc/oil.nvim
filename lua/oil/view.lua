@@ -519,7 +519,14 @@ end
 ---@return fun(a: oil.InternalEntry, b: oil.InternalEntry): boolean
 local function get_sort_function(adapter)
   local idx_funs = {}
-  for _, sort_pair in ipairs(config.view_options.sort) do
+  local sort_config = config.view_options.sort
+
+  -- If empty, default to type + name sorting
+  if vim.tbl_isempty(sort_config) then
+    sort_config = { { "type", "asc" }, { "name", "asc" } }
+  end
+
+  for _, sort_pair in ipairs(sort_config) do
     local col_name, order = unpack(sort_pair)
     if order ~= "asc" and order ~= "desc" then
       vim.notify_once(
