@@ -926,9 +926,11 @@ local function close_preview_window_if_not_in_oil()
   pcall(vim.api.nvim_win_close, preview_win_id, true)
 end
 
+local _on_key_ns = 0
 ---Initialize oil
 ---@param opts nil|table
 M.setup = function(opts)
+  local Ringbuf = require("oil.ringbuf")
   local config = require("oil.config")
 
   config.setup(opts)
@@ -999,6 +1001,12 @@ M.setup = function(opts)
     pattern = filetype_patterns,
   })
 
+  local keybuf = Ringbuf.new(7)
+  if _on_key_ns == 0 then
+    _on_key_ns = vim.on_key(function(char)
+      keybuf:push(char)
+    end, _on_key_ns)
+  end
   vim.api.nvim_create_autocmd("ColorScheme", {
     desc = "Set default oil highlights",
     group = aug,
@@ -1018,12 +1026,15 @@ M.setup = function(opts)
     pattern = scheme_pattern,
     nested = true,
     callback = function(params)
+      local last_keys = keybuf:as_str()
       local winid = vim.api.nvim_get_current_win()
-      local last_cmd = vim.fn.histget("cmd", -1)
-      local last_expr = vim.fn.histget("expr", -1)
       -- If the user issued a :wq or similar, we should quit after saving
-      local quit_after_save = last_cmd == "wq" or last_cmd == "x" or last_expr == "ZZ"
-      local quit_all = last_cmd:match("^wqal*$")
+      local quit_after_save = vim.endswith(last_keys, ":wq\r")
+        or vim.endswith(last_keys, ":x\r")
+        or vim.endswith(last_keys, "ZZ")
+      local quit_all = vim.endswith(last_keys, ":wqa\r")
+        or vim.endswith(last_keys, ":wqal\r")
+        or vim.endswith(last_keys, ":wqall\r")
       local bufname = vim.api.nvim_buf_get_name(params.buf)
       if vim.endswith(bufname, "/") then
         vim.cmd.doautocmd({ args = { "BufWritePre", params.file }, mods = { silent = true } })
@@ -1071,17 +1082,16 @@ M.setup = function(opts)
       local bufname = vim.api.nvim_buf_get_name(0)
       local scheme = util.parse_url(bufname)
       if scheme and config.adapters[scheme] then
-        require("oil.view").maybe_set_cursor()
+        local view = require("oil.view")
+        view.maybe_set_cursor()
         -- While we are in an oil buffer, set the alternate file to the buffer we were in prior to
         -- opening oil
         local has_orig, orig_buffer = pcall(vim.api.nvim_win_get_var, 0, "oil_original_buffer")
         if has_orig and vim.api.nvim_buf_is_valid(orig_buffer) then
           vim.fn.setreg("#", orig_buffer)
         end
-        if not vim.w.oil_did_enter then
-          require("oil.view").set_win_options()
-          vim.w.oil_did_enter = true
-        end
+        view.set_win_options()
+        vim.w.oil_did_enter = true
       elseif vim.fn.isdirectory(bufname) == 0 then
         -- Only run this logic if we are *not* in an oil buffer (and it's not a directory, which
         -- will be replaced by an oil:// url)
@@ -1100,7 +1110,7 @@ M.setup = function(opts)
     callback = function()
       -- If we have entered a "preview" buffer in a non-preview window, reset bufhidden
       if vim.b.oil_preview_buffer and not vim.wo.previewwindow then
-        vim.bo.bufhidden = vim.o.bufhidden
+        vim.bo.bufhidden = vim.api.nvim_get_option_value("bufhidden", { scope = "global" })
         vim.b.oil_preview_buffer = nil
       end
     end,
@@ -1155,13 +1165,6 @@ M.setup = function(opts)
       vim.w.oil_original_buffer = vim.w[parent_win].oil_original_buffer
       vim.w.oil_original_view = vim.w[parent_win].oil_original_view
       vim.w.oil_original_alternate = vim.w[parent_win].oil_original_alternate
-      for k in pairs(config.win_options) do
-        local varname = "_oil_" .. k
-        local has_opt, opt = pcall(vim.api.nvim_win_get_var, parent_win, varname)
-        if has_opt then
-          vim.api.nvim_win_set_var(0, varname, opt)
-        end
-      end
     end,
   })
   vim.api.nvim_create_autocmd("BufAdd", {

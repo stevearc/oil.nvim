@@ -380,6 +380,10 @@ end
 ---@param actions oil.Action[]
 ---@param cb fun(err: nil|string)
 M.process_actions = function(actions, cb)
+  vim.api.nvim_exec_autocmds(
+    "User",
+    { pattern = "OilActionsPre", modeline = false, data = { actions = actions } }
+  )
   local did_complete = lsp_helpers.will_perform_file_operations(actions)
 
   -- Convert some cross-adapter moves to a copy + delete
@@ -400,11 +404,15 @@ M.process_actions = function(actions, cb)
 
   local finished = false
   local progress = Progress.new()
-  local function finish(...)
+  local function finish(err)
     if not finished then
       finished = true
       progress:close()
-      cb(...)
+      vim.api.nvim_exec_autocmds(
+        "User",
+        { pattern = "OilActionsPost", modeline = false, data = { err = err, actions = actions } }
+      )
+      cb(err)
     end
   end
 

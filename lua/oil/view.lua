@@ -324,7 +324,7 @@ M.initialize = function(bufnr)
   vim.bo[bufnr].syntax = "oil"
   vim.bo[bufnr].filetype = "oil"
   vim.b[bufnr].EditorConfig_disable = 1
-  session[bufnr] = {}
+  session[bufnr] = session[bufnr] or {}
   for k, v in pairs(config.buf_options) do
     vim.api.nvim_buf_set_option(bufnr, k, v)
   end
@@ -437,7 +437,12 @@ M.initialize = function(bufnr)
   local adapter = util.get_adapter(bufnr)
 
   -- Set up a watcher that will refresh the directory
-  if adapter and adapter.name == "files" and config.experimental_watch_for_changes then
+  if
+    adapter
+    and adapter.name == "files"
+    and config.experimental_watch_for_changes
+    and not session[bufnr].fs_event
+  then
     local fs_event = assert(uv.new_fs_event())
     local bufname = vim.api.nvim_buf_get_name(bufnr)
     local _, dir = util.parse_url(bufname)
@@ -514,7 +519,14 @@ end
 ---@return fun(a: oil.InternalEntry, b: oil.InternalEntry): boolean
 local function get_sort_function(adapter)
   local idx_funs = {}
-  for _, sort_pair in ipairs(config.view_options.sort) do
+  local sort_config = config.view_options.sort
+
+  -- If empty, default to type + name sorting
+  if vim.tbl_isempty(sort_config) then
+    sort_config = { { "type", "asc" }, { "name", "asc" } }
+  end
+
+  for _, sort_pair in ipairs(sort_config) do
     local col_name, order = unpack(sort_pair)
     if order ~= "asc" and order ~= "desc" then
       vim.notify_once(
