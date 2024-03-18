@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.8.0](https://github.com/stevearc/oil.nvim/compare/v2.7.0...v2.8.0) (2024-03-18)
+
+
+### Features
+
+* add user autocmds before and after performing actions ([#310](https://github.com/stevearc/oil.nvim/issues/310)) ([e462a34](https://github.com/stevearc/oil.nvim/commit/e462a3446505185adf063566f5007771b69027a1))
+
 ## [2.7.0](https://github.com/stevearc/oil.nvim/compare/v2.6.1...v2.7.0) (2024-03-13)
 
 
