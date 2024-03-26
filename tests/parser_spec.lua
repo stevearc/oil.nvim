@@ -170,6 +170,28 @@ describe("parser", function()
     }, errors)
   end)
 
+  it("errors on duplicate names for nested files", function()
+    local file = test_adapter.test_set("/foo/a.txt", "file")
+    local _ = test_adapter.test_set("/foo/bar", "directory")
+    local file2 = test_adapter.test_set("/foo/bar/a.txt", "file")
+    vim.cmd.edit({ args = { "oil-test:///foo/" } })
+    local bufnr = vim.api.nvim_get_current_buf()
+    set_lines(bufnr, {
+      "bar/",
+      string.format("/%d a.txt", file[FIELD_ID]),
+      string.format("/%d a.txt", file2[FIELD_ID]),
+    })
+    local _, errors = parser.parse(bufnr)
+    assert.are.same({
+      {
+        message = "Duplicate filename",
+        lnum = 2,
+        end_lnum = 3,
+        col = 0,
+      },
+    }, errors)
+  end)
+
   it("ignores new dirs with empty name", function()
     vim.cmd.edit({ args = { "oil-test:///foo/" } })
     local bufnr = vim.api.nvim_get_current_buf()
