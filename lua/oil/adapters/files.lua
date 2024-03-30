@@ -227,7 +227,14 @@ M.normalize_url = function(url, callback)
 
   local os_path = vim.fn.fnamemodify(fs.posix_to_os_path(path), ":p")
   uv.fs_realpath(os_path, function(err, new_os_path)
-    local realpath = new_os_path or os_path
+    local realpath
+
+    if fs.is_windows then
+      realpath = os_path or new_os_path
+    else
+      realpath = new_os_path or new_os_path
+    end
+
     uv.fs_stat(
       realpath,
       vim.schedule_wrap(function(stat_err, stat)
@@ -277,9 +284,7 @@ end
 local function list_windows_drives(url, column_defs, cb)
   local fetch_meta = columns.get_metadata_fetcher(M, column_defs)
   local stdout = ""
-  -- Hide network drives with "where drivetype!=4"
-  -- TODO: Though this can be fixed if we don't resolve from name and use the mapped drive letter
-  local jid = vim.fn.jobstart({ "wmic", "logicaldisk", "where", "drivetype!=4", "get", "name" }, {
+  local jid = vim.fn.jobstart({ "wmic", "logicaldisk", "get", "name" }, {
     stdout_buffered = true,
     on_stdout = function(_, data)
       stdout = table.concat(data, "\n")
