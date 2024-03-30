@@ -218,9 +218,9 @@ M.normalize_url = function(url, callback)
     if path == "/" then
       return callback(url)
     else
-      local last_letter = url:match("^oil:///(%a)$")
-      if last_letter then
-        return callback("oil:///" .. last_letter .. "/")
+      local drive = url:match("^oil:///(%a)$")
+      if drive then
+        return callback("oil:///" .. drive .. "/")
       end
     end
   end
