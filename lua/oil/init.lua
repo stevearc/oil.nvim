@@ -558,12 +558,12 @@ M.select = function(opts, callback)
     end
     local url = scheme .. dir .. entry.name
     local is_directory = entry.type == "directory"
-      or (
-        entry.type == "link"
-        and entry.meta
-        and entry.meta.link_stat
-        and entry.meta.link_stat.type == "directory"
-      )
+        or (
+          entry.type == "link"
+          and entry.meta
+          and entry.meta.link_stat
+          and entry.meta.link_stat.type == "directory"
+        )
     if is_directory then
       url = url .. "/"
       -- If this is a new directory BUT we think we already have an entry with this name, disallow
@@ -654,9 +654,9 @@ M.select = function(opts, callback)
       return finish(err)
     end
     if
-      opts.close
-      and vim.api.nvim_win_is_valid(prev_win)
-      and prev_win ~= vim.api.nvim_get_current_win()
+        opts.close
+        and vim.api.nvim_win_is_valid(prev_win)
+        and prev_win ~= vim.api.nvim_get_current_win()
     then
       vim.api.nvim_win_call(prev_win, function()
         M.close()
@@ -686,7 +686,7 @@ local function maybe_hijack_directory_buffer(bufnr)
   end
   local replaced = util.rename_buffer(
     bufnr,
-    util.addslash(config.adapter_to_scheme.files .. vim.fn.fnamemodify(bufname, ":p"))
+    config.adapter_to_scheme.files .. vim.fn.fnamemodify(bufname, ":p")
   )
   return not replaced
 end
@@ -827,7 +827,7 @@ local function restore_alt_buf()
         -- If we are editing the same buffer that we started oil from, set the alternate to be
         -- what it was before we opened oil
         local has_orig_alt, alt_buffer =
-          pcall(vim.api.nvim_win_get_var, 0, "oil_original_alternate")
+            pcall(vim.api.nvim_win_get_var, 0, "oil_original_alternate")
         if has_orig_alt and vim.api.nvim_buf_is_valid(alt_buffer) then
           vim.fn.setreg("#", alt_buffer)
         end
@@ -1030,11 +1030,11 @@ M.setup = function(opts)
       local winid = vim.api.nvim_get_current_win()
       -- If the user issued a :wq or similar, we should quit after saving
       local quit_after_save = vim.endswith(last_keys, ":wq\r")
-        or vim.endswith(last_keys, ":x\r")
-        or vim.endswith(last_keys, "ZZ")
+          or vim.endswith(last_keys, ":x\r")
+          or vim.endswith(last_keys, "ZZ")
       local quit_all = vim.endswith(last_keys, ":wqa\r")
-        or vim.endswith(last_keys, ":wqal\r")
-        or vim.endswith(last_keys, ":wqall\r")
+          or vim.endswith(last_keys, ":wqal\r")
+          or vim.endswith(last_keys, ":wqall\r")
       local bufname = vim.api.nvim_buf_get_name(params.buf)
       if vim.endswith(bufname, "/") then
         vim.cmd.doautocmd({ args = { "BufWritePre", params.file }, mods = { silent = true } })
