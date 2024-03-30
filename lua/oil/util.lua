@@ -341,8 +341,6 @@ end
 M.addslash = function(path)
   if not vim.endswith(path, "/") then
     return path .. "/"
-  elseif vim.endswith(path, "//") then
-    return path:sub(1, -2)
   else
     return path
   end
