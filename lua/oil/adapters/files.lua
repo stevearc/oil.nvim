@@ -213,9 +213,18 @@ end
 M.normalize_url = function(url, callback)
   local scheme, path = util.parse_url(url)
   assert(path)
-  if fs.is_windows and path == "/" then
-    return callback(url)
+
+  if fs.is_windows then
+    if path == "/" then
+      return callback(url)
+    else
+      local last_letter = url:match("^oil:///(%a)$")
+      if last_letter then
+        return callback("oil:///" .. last_letter .. "/")
+      end
+    end
   end
+
   local os_path = vim.fn.fnamemodify(fs.posix_to_os_path(path), ":p")
   uv.fs_realpath(os_path, function(err, new_os_path)
     local realpath = new_os_path or os_path
