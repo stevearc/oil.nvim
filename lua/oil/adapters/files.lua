@@ -278,6 +278,7 @@ local function list_windows_drives(url, column_defs, cb)
   local fetch_meta = columns.get_metadata_fetcher(M, column_defs)
   local stdout = ""
   -- Hide network drives as remote UNC paths are not supported
+  -- Though this can be fixed if we don't resolve from IP and use mapped drive name
   local jid = vim.fn.jobstart({ "wmic", "logicaldisk", "where", "drivetype!=4", "get", "name" }, {
     stdout_buffered = true,
     on_stdout = function(_, data)
