@@ -281,6 +281,23 @@ require("oil").setup({
       winblend = 0,
     },
   },
+  -- Confirmation window options
+  confirmation = {
+    confirm = {
+      label = "[O]k",
+      keymaps = {
+        "o",
+        "O",
+      },
+    },
+    cancel = {
+      label = "[C]ancel",
+      keymaps = {
+        "c",
+        "C",
+      },
+    },
+  },
   -- Configuration for the floating SSH window
   ssh = {
     border = "rounded",
