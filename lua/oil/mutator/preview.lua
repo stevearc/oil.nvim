@@ -177,7 +177,7 @@ M.show = vim.schedule_wrap(function(actions, should_confirm, cb)
     return result
   end
   for _, cancel_key in
-    ipairs(mergeTables({ "q", "N", "n", "<C-c>", "<Esc>" }, config.confirmation.cancel.keymaps))
+    ipairs(mergeTables({ "q", "<C-c>", "<Esc>" }, config.confirmation.cancel.keymaps))
   do
     vim.keymap.set("n", cancel_key, function()
       cancel()
