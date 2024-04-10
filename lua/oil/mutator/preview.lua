@@ -166,18 +166,8 @@ M.show = vim.schedule_wrap(function(actions, should_confirm, cb)
       end,
     })
   )
-  local function mergeTables(table1, table2)
-    local result = {}
-    for k, v in pairs(table1) do
-      result[k] = v
-    end
-    for k, v in pairs(table2) do
-      result[k] = v
-    end
-    return result
-  end
   for _, cancel_key in
-    ipairs(mergeTables({ "q", "<C-c>", "<Esc>" }, config.confirmation.cancel.keymaps))
+    ipairs(vim.list_extend({ "q", "<C-c>", "<Esc>" }, config.confirmation.cancel.keymaps))
   do
     vim.keymap.set("n", cancel_key, function()
       cancel()
@@ -186,7 +176,7 @@ M.show = vim.schedule_wrap(function(actions, should_confirm, cb)
   for _, confirm_key in ipairs(config.confirmation.confirm.keymaps) do
     vim.keymap.set("n", confirm_key, function()
       confirm()
-    end, { buffer = bufnr })
+    end, { buffer = bufnr, nowait = true })
   end
 end)
 
