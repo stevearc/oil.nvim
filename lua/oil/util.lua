@@ -423,7 +423,7 @@ M.add_title_to_win = function(winid, opts)
         end
         local new_title = get_title()
         local new_width =
-            math.min(vim.api.nvim_win_get_width(winid) - 4, 2 + vim.api.nvim_strwidth(new_title))
+          math.min(vim.api.nvim_win_get_width(winid) - 4, 2 + vim.api.nvim_strwidth(new_title))
         vim.api.nvim_buf_set_lines(bufnr, 0, -1, true, { " " .. new_title .. " " })
         vim.bo[bufnr].modified = false
         vim.api.nvim_win_set_width(title_winid, new_width)
@@ -478,13 +478,13 @@ M.get_adapter_for_action = function(action)
     local dest_adapter = assert(config.get_adapter_by_scheme(action.dest_url))
     if adapter ~= dest_adapter then
       if
-          adapter.supported_cross_adapter_actions
-          and adapter.supported_cross_adapter_actions[dest_adapter.name]
+        adapter.supported_cross_adapter_actions
+        and adapter.supported_cross_adapter_actions[dest_adapter.name]
       then
         return adapter, adapter.supported_cross_adapter_actions[dest_adapter.name]
       elseif
-          dest_adapter.supported_cross_adapter_actions
-          and dest_adapter.supported_cross_adapter_actions[adapter.name]
+        dest_adapter.supported_cross_adapter_actions
+        and dest_adapter.supported_cross_adapter_actions[adapter.name]
       then
         return dest_adapter, dest_adapter.supported_cross_adapter_actions[adapter.name]
       else
@@ -664,9 +664,9 @@ end
 ---@return nil|integer
 M.buf_get_win = function(bufnr, preferred_win)
   if
-      preferred_win
-      and vim.api.nvim_win_is_valid(preferred_win)
-      and vim.api.nvim_win_get_buf(preferred_win) == bufnr
+    preferred_win
+    and vim.api.nvim_win_is_valid(preferred_win)
+    and vim.api.nvim_win_get_buf(preferred_win) == bufnr
   then
     return preferred_win
   end
