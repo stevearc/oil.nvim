@@ -227,13 +227,7 @@ M.normalize_url = function(url, callback)
 
   local os_path = vim.fn.fnamemodify(fs.posix_to_os_path(path), ":p")
   uv.fs_realpath(os_path, function(err, new_os_path)
-    local realpath = ""
-
-    if fs.is_windows then
-      realpath = os_path or new_os_path
-    else
-      realpath = new_os_path or new_os_path
-    end
+    local realpath = fs.is_windows and (os_path or new_os_path) or (new_os_path or os_path)
 
     uv.fs_stat(
       realpath,
