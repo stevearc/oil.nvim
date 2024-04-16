@@ -61,6 +61,8 @@ local function parse_ls_line(line)
   return name, type, meta
 end
 
+local shellescape = vim.fn.shellescape
+
 ---@param url oil.sshUrl
 ---@return oil.sshFs
 function SSHFS.new(url)
@@ -80,7 +82,7 @@ end
 ---@param callback fun(err: nil|string)
 function SSHFS:chmod(value, path, callback)
   local octal = permissions.mode_to_octal_str(value)
-  self.conn:run(string.format("chmod %s '%s'", octal, path), callback)
+  self.conn:run(string.format("chmod %s %s", octal, shellescape(path)), callback)
 end
 
 function SSHFS:open_terminal()
@@ -105,7 +107,7 @@ function SSHFS:realpath(path, callback)
     if vim.endswith(abspath, ".") then
       abspath = abspath:sub(1, #abspath - 1)
     end
-    self.conn:run(string.format("ls -ald --color=never '%s'", abspath), function(ls_err, ls_lines)
+    self.conn:run(string.format("ls -ald --color=never %s", shellescape(abspath)), function(ls_err, ls_lines)
       local type
       if ls_err then
         -- If the file doesn't exist, treat it like a not-yet-existing directory
@@ -131,7 +133,7 @@ local dir_meta = {}
 function SSHFS:list_dir(url, path, callback)
   local path_postfix = ""
   if path ~= "" then
-    path_postfix = string.format(" '%s'", path)
+    path_postfix = string.format(" %s", shellescape(path))
   end
   self.conn:run("LANG=C ls -al --color=never" .. path_postfix, function(err, lines)
     if err then
@@ -197,40 +199,40 @@ end
 ---@param path string
 ---@param callback fun(err: nil|string)
 function SSHFS:mkdir(path, callback)
-  self.conn:run(string.format("mkdir -p '%s'", path), callback)
+  self.conn:run(string.format("mkdir -p %s", shellescape(path)), callback)
 end
 
 ---@param path string
 ---@param callback fun(err: nil|string)
 function SSHFS:touch(path, callback)
-  self.conn:run(string.format("touch '%s'", path), callback)
+  self.conn:run(string.format("touch %s", shellescape(path)), callback)
 end
 
 ---@param path string
 ---@param link string
 ---@param callback fun(err: nil|string)
 function SSHFS:mklink(path, link, callback)
-  self.conn:run(string.format("ln -s '%s' '%s'", link, path), callback)
+  self.conn:run(string.format("ln -s %s %s", shellescape(link), shellescape(path)), callback)
 end
 
 ---@param path string
 ---@param callback fun(err: nil|string)
 function SSHFS:rm(path, callback)
-  self.conn:run(string.format("rm -rf '%s'", path), callback)
+  self.conn:run(string.format("rm -rf %s", shellescape(path)), callback)
 end
 
 ---@param src string
 ---@param dest string
 ---@param callback fun(err: nil|string)
 function SSHFS:mv(src, dest, callback)
-  self.conn:run(string.format("mv '%s' '%s'", src, dest), callback)
+  self.conn:run(string.format("mv %s %s", shellescape(src), shellescape(dest)), callback)
 end
 
 ---@param src string
 ---@param dest string
 ---@param callback fun(err: nil|string)
 function SSHFS:cp(src, dest, callback)
-  self.conn:run(string.format("cp -r '%s' '%s'", src, dest), callback)
+  self.conn:run(string.format("cp -r %s %s", shellescape(src), shellescape(dest)), callback)
 end
 
 function SSHFS:get_dir_meta(url)
