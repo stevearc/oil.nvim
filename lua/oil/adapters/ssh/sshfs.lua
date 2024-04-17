@@ -61,7 +61,9 @@ local function parse_ls_line(line)
   return name, type, meta
 end
 
-local shellescape = vim.fn.shellescape
+local function shellescape(str)
+  return "'" .. str:gsub("'", "'\\''") .. "'"
+end
 
 ---@param url oil.sshUrl
 ---@return oil.sshFs
@@ -107,21 +109,24 @@ function SSHFS:realpath(path, callback)
     if vim.endswith(abspath, ".") then
       abspath = abspath:sub(1, #abspath - 1)
     end
-    self.conn:run(string.format("ls -ald --color=never %s", shellescape(abspath)), function(ls_err, ls_lines)
-      local type
-      if ls_err then
-        -- If the file doesn't exist, treat it like a not-yet-existing directory
-        type = "directory"
-      else
-        assert(ls_lines)
-        local _
-        _, type = parse_ls_line(ls_lines[1])
+    self.conn:run(
+      string.format("ls -ald --color=never %s", shellescape(abspath)),
+      function(ls_err, ls_lines)
+        local type
+        if ls_err then
+          -- If the file doesn't exist, treat it like a not-yet-existing directory
+          type = "directory"
+        else
+          assert(ls_lines)
+          local _
+          _, type = parse_ls_line(ls_lines[1])
+        end
+        if type == "directory" then
+          abspath = util.addslash(abspath)
+        end
+        callback(nil, abspath)
       end
-      if type == "directory" then
-        abspath = util.addslash(abspath)
-      end
-      callback(nil, abspath)
-    end)
+    )
   end)
 end
 
