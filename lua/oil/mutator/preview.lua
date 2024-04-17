@@ -49,7 +49,7 @@ local function render_lines(winid, bufnr, lines)
     v_align = "top",
     h_align = "left",
     winid = winid,
-    actions = { config.confirmation.confirm.label, config.confirmation.cancel.label },
+    actions = { config.preview.confirm.label, config.preview.cancel.label },
   })
 end
 
@@ -166,14 +166,12 @@ M.show = vim.schedule_wrap(function(actions, should_confirm, cb)
       end,
     })
   )
-  for _, cancel_key in
-    ipairs(vim.list_extend({ "q", "<C-c>", "<Esc>" }, config.confirmation.cancel.keymaps))
-  do
+  for _, cancel_key in ipairs(config.preview.cancel.keymaps) do
     vim.keymap.set("n", cancel_key, function()
       cancel()
     end, { buffer = bufnr, nowait = true })
   end
-  for _, confirm_key in ipairs(config.confirmation.confirm.keymaps) do
+  for _, confirm_key in ipairs(config.preview.confirm.keymaps) do
     vim.keymap.set("n", confirm_key, function()
       confirm()
     end, { buffer = bufnr, nowait = true })

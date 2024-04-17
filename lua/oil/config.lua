@@ -118,6 +118,14 @@ local default_config = {
   },
   -- Configuration for the actions floating preview window
   preview = {
+    confirm = {
+      label = "[Y]es",
+      keymaps = { "y", "Y", "o", "O" },
+    },
+    cancel = {
+      label = "[N]o",
+      keymaps = { "n", "N", "c", "C", "q", "<C-c>", "<Esc>" },
+    },
     -- Width dimensions can be integers or a float between 0 and 1 (e.g. 0.4 for 40%)
     -- min_width and max_width can be a single value or a list of mixed integer/float types.
     -- max_width = {100, 0.8} means "the lesser of 100 columns or 80% of total"
@@ -153,23 +161,6 @@ local default_config = {
     minimized_border = "none",
     win_options = {
       winblend = 0,
-    },
-  },
-  -- Confirmation window options
-  confirmation = {
-    confirm = {
-      label = "[O]k",
-      keymaps = {
-        "o",
-        "O",
-      },
-    },
-    cancel = {
-      label = "[C]ancel",
-      keymaps = {
-        "c",
-        "C",
-      },
     },
   },
   -- Configuration for the floating SSH window

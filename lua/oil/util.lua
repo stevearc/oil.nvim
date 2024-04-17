@@ -584,7 +584,10 @@ M.render_text = function(bufnr, text, opts)
     local last_line, padding = M.h_align(table.concat(opts.actions, "    "), "center", width)
     local col = padding
     for _, action in ipairs(opts.actions) do
-      table.insert(highlights, { "Special", #lines, col, col + 3 })
+      local hl_end = action:find("]")
+      if vim.startswith(action, "[") and hl_end then
+        table.insert(highlights, { "Special", #lines, col, col + hl_end })
+      end
       col = padding + action:len() + 4
     end
     table.insert(lines, last_line)
