@@ -49,7 +49,7 @@ local function render_lines(winid, bufnr, lines)
     v_align = "top",
     h_align = "left",
     winid = winid,
-    actions = { config.preview.confirm.label, config.preview.cancel.label },
+    actions = { "[Y]es", "[N]o" },
   })
 end
 
@@ -166,12 +166,18 @@ M.show = vim.schedule_wrap(function(actions, should_confirm, cb)
       end,
     })
   )
-  for _, cancel_key in ipairs(config.preview.cancel.keymaps) do
+
+  -- We used to use [C]ancel to cancel, so preserve the old keymap
+  local cancel_keys = { "n", "N", "c", "C", "q", "<C-c>", "<Esc>" }
+  for _, cancel_key in ipairs(cancel_keys) do
     vim.keymap.set("n", cancel_key, function()
       cancel()
     end, { buffer = bufnr, nowait = true })
   end
-  for _, confirm_key in ipairs(config.preview.confirm.keymaps) do
+
+  -- We used to use [O]k to confirm, so preserve the old keymap
+  local confirm_keys = { "y", "Y", "o", "O" }
+  for _, confirm_key in ipairs(confirm_keys) do
     vim.keymap.set("n", confirm_key, function()
       confirm()
     end, { buffer = bufnr, nowait = true })
