@@ -61,6 +61,8 @@ local function parse_ls_line(line)
   return name, type, meta
 end
 
+---@param str string
+---@return string
 local function shellescape(str)
   return "'" .. str:gsub("'", "'\\''") .. "'"
 end
