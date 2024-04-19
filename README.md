@@ -322,6 +322,7 @@ Note that at the moment the ssh adapter does not support Windows machines, and i
 - [toggle_float(dir)](doc/api.md#toggle_floatdir)
 - [open(dir)](doc/api.md#opendir)
 - [close()](doc/api.md#close)
+- [open_preview(opts)](doc/api.md#open_previewopts)
 - [select(opts, callback)](doc/api.md#selectopts-callback)
 - [save(opts, cb)](doc/api.md#saveopts-cb)
 - [setup(opts)](doc/api.md#setupopts)

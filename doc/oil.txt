@@ -282,6 +282,16 @@ close()                                                                *oil.clos
     Restore the buffer that was present when oil was opened
 
 
+open_preview({opts})                                            *oil.open_preview*
+    Preview the entry under the cursor in a split
+
+    Parameters:
+      {opts} `nil|table`
+          {vertical}   `boolean` Open the buffer in a vertical split
+          {horizontal} `boolean` Open the buffer in a horizontal split
+          {split}      `"aboveleft"|"belowright"|"topleft"|"botright"` Split
+                       modifier
+
 select({opts}, {callback})                                            *oil.select*
     Select the entry under the cursor
 
@@ -291,7 +301,6 @@ select({opts}, {callback})                                            *oil.selec
           {horizontal} `boolean` Open the buffer in a horizontal split
           {split}      `"aboveleft"|"belowright"|"topleft"|"botright"` Split
                        modifier
-          {preview}    `boolean` Open the buffer in a preview window
           {tab}        `boolean` Open the buffer in a new tab
           {close}      `boolean` Close the original oil buffer once selection is
                        made

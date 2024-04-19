@@ -389,7 +389,7 @@ M.initialize = function(bufnr)
       vim.schedule(constrain_cursor)
     end,
   })
-  vim.api.nvim_create_autocmd("CursorMoved", {
+  vim.api.nvim_create_autocmd({ "CursorMoved", "ModeChanged" }, {
     desc = "Update oil preview window",
     group = "Oil",
     buffer = bufnr,
@@ -420,11 +420,13 @@ M.initialize = function(bufnr)
               return
             end
             local entry = oil.get_cursor_entry()
-            if entry then
+            -- Don't update in visual mode. Visual mode implies editing not browsing,
+            -- and updating the preview can cause flicker and stutter.
+            if entry and not util.is_visual_mode() then
               local winid = util.get_preview_win()
               if winid then
                 if entry.id ~= vim.w[winid].oil_entry_id then
-                  oil.select({ preview = true })
+                  oil.open_preview()
                 end
               end
             end

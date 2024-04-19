@@ -14,6 +14,7 @@
 - [toggle_float(dir)](#toggle_floatdir)
 - [open(dir)](#opendir)
 - [close()](#close)
+- [open_preview(opts)](#open_previewopts)
 - [select(opts, callback)](#selectopts-callback)
 - [save(opts, cb)](#saveopts-cb)
 - [setup(opts)](#setupopts)
@@ -116,6 +117,18 @@ Open oil browser for a directory
 Restore the buffer that was present when oil was opened
 
 
+## open_preview(opts)
+
+`open_preview(opts)` \
+Preview the entry under the cursor in a split
+
+| Param | Type         | Desc                                               |                                       |
+| ----- | ------------ | -------------------------------------------------- | ------------------------------------- |
+| opts  | `nil\|table` |                                                    |                                       |
+|       | vertical     | `boolean`                                          | Open the buffer in a vertical split   |
+|       | horizontal   | `boolean`                                          | Open the buffer in a horizontal split |
+|       | split        | `"aboveleft"\|"belowright"\|"topleft"\|"botright"` | Split modifier                        |
+
 ## select(opts, callback)
 
 `select(opts, callback)` \
@@ -127,7 +140,6 @@ Select the entry under the cursor
 |          | vertical                     | `boolean`                                          | Open the buffer in a vertical split                  |
 |          | horizontal                   | `boolean`                                          | Open the buffer in a horizontal split                |
 |          | split                        | `"aboveleft"\|"belowright"\|"topleft"\|"botright"` | Split modifier                                       |
-|          | preview                      | `boolean`                                          | Open the buffer in a preview window                  |
 |          | tab                          | `boolean`                                          | Open the buffer in a new tab                         |
 |          | close                        | `boolean`                                          | Close the original oil buffer once selection is made |
 | callback | `nil\|fun(err: nil\|string)` | Called once all entries have been opened           |                                                      |
