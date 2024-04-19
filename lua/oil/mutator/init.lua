@@ -61,10 +61,25 @@ M.create_actions_from_diffs = function(all_diffs)
       return list
     end,
   })
+
+  -- To deduplicate create actions
+  -- This can happen when creating deep nested files e.g.
+  -- > foo/bar/a.txt
+  -- > foo/bar/b.txt
+  local seen_creates = {}
+
   ---@param action oil.Action
   local function add_action(action)
     local adapter = assert(config.get_adapter_by_scheme(action.dest_url or action.url))
     if not adapter.filter_action or adapter.filter_action(action) then
+      if action.type == "create" then
+        if seen_creates[action.url] then
+          return
+        else
+          seen_creates[action.url] = true
+        end
+      end
+
       table.insert(actions, action)
     end
   end
