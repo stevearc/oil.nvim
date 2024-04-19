@@ -632,13 +632,14 @@ M.select = function(opts, callback)
           cmd = "buffer"
         end
       end
+      ---@diagnostic disable-next-line: param-type-mismatch
       local ok, err = pcall(vim.cmd, {
         cmd = cmd,
         args = { filebufnr },
         mods = mods,
       })
       -- Ignore swapfile errors
-      if not ok and not err:match("^Vim:E325:") then
+      if not ok and err and not err:match("^Vim:E325:") then
         vim.api.nvim_echo({ { err, "Error" } }, true, {})
       end
 
