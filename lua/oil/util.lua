@@ -787,13 +787,12 @@ M.run_after_load = function(bufnr, callback)
   if vim.b[bufnr].oil_ready then
     callback()
   else
-    local autocmd_id
-    autocmd_id = vim.api.nvim_create_autocmd("User", {
+    vim.api.nvim_create_autocmd("User", {
       pattern = "OilEnter",
       callback = function(args)
         if args.data.buf == bufnr then
-          callback()
-          vim.api.nvim_del_autocmd(autocmd_id)
+          vim.api.nvim_buf_call(bufnr, callback)
+          return true
         end
       end,
     })
