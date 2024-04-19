@@ -601,7 +601,6 @@ M.select = function(opts, callback)
         horizontal = opts.horizontal,
         split = opts.split,
         keepalt = true,
-        emsg_silent = true,
       }
       local filebufnr = vim.fn.bufadd(normalized_url)
       local entry_is_file = not vim.endswith(normalized_url, "/")
@@ -633,11 +632,15 @@ M.select = function(opts, callback)
           cmd = "buffer"
         end
       end
-      vim.cmd({
+      local ok, err = pcall(vim.cmd, {
         cmd = cmd,
         args = { filebufnr },
         mods = mods,
       })
+      -- Ignore swapfile errors
+      if not ok and not err:match("^Vim:E325:") then
+        vim.api.nvim_echo({ { err, "Error" } }, true, {})
+      end
 
       if opts.preview then
         vim.api.nvim_set_option_value("previewwindow", true, { scope = "local", win = 0 })
