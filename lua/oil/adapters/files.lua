@@ -3,6 +3,7 @@ local columns = require("oil.columns")
 local config = require("oil.config")
 local constants = require("oil.constants")
 local fs = require("oil.fs")
+local git = require("oil.git")
 local permissions = require("oil.adapters.files.permissions")
 local trash = require("oil.adapters.files.trash")
 local util = require("oil.util")
@@ -476,6 +477,18 @@ M.perform_action = function(action, cb)
     local _, path = util.parse_url(action.url)
     assert(path)
     path = fs.posix_to_os_path(path)
+
+    if config.git.add(path) then
+      local old_cb = cb
+      cb = vim.schedule_wrap(function(err)
+        if not err then
+          git.add(path, old_cb)
+        else
+          old_cb(err)
+        end
+      end)
+    end
+
     if action.entry_type == "directory" then
       uv.fs_mkdir(path, 493, function(err)
         -- Ignore if the directory already exists
@@ -503,6 +516,18 @@ M.perform_action = function(action, cb)
     local _, path = util.parse_url(action.url)
     assert(path)
     path = fs.posix_to_os_path(path)
+
+    if config.git.rm(path) then
+      local old_cb = cb
+      cb = function(err)
+        if not err then
+          git.rm(path, old_cb)
+        else
+          old_cb(err)
+        end
+      end
+    end
+
     if config.delete_to_trash then
       if config.trash_command then
         vim.notify_once(
@@ -525,7 +550,11 @@ M.perform_action = function(action, cb)
       assert(dest_path)
       src_path = fs.posix_to_os_path(src_path)
       dest_path = fs.posix_to_os_path(dest_path)
-      fs.recursive_move(action.entry_type, src_path, dest_path, cb)
+      if config.git.mv(src_path, dest_path) then
+        git.mv(action.entry_type, src_path, dest_path, cb)
+      else
+        fs.recursive_move(action.entry_type, src_path, dest_path, cb)
+      end
     else
       -- We should never hit this because we don't implement supported_cross_adapter_actions
       cb("files adapter doesn't support cross-adapter move")
