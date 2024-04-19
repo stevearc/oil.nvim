@@ -955,6 +955,14 @@ M.setup = function(opts)
       elseif v == "--trash" then
         trash = true
         table.remove(args.fargs, i)
+      elseif v == "--progress" then
+        local mutator = require("oil.mutator")
+        if mutator.is_mutating() then
+          mutator.show_progress()
+        else
+          vim.notify("No mutation in progress", vim.log.levels.WARN)
+        end
+        return
       else
         i = i + 1
       end

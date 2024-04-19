@@ -364,6 +364,8 @@ M.enforce_action_order = function(actions)
   return ret
 end
 
+local progress
+
 ---@param actions oil.Action[]
 ---@param cb fun(err: nil|string)
 M.process_actions = function(actions, cb)
@@ -390,11 +392,12 @@ M.process_actions = function(actions, cb)
   end
 
   local finished = false
-  local progress = Progress.new()
+  progress = Progress.new()
   local function finish(err)
     if not finished then
       finished = true
       progress:close()
+      progress = nil
       vim.api.nvim_exec_autocmds(
         "User",
         { pattern = "OilActionsPost", modeline = false, data = { err = err, actions = actions } }
@@ -453,6 +456,12 @@ M.process_actions = function(actions, cb)
     end
   end
   next_action()
+end
+
+M.show_progress = function()
+  if progress then
+    progress:restore()
+  end
 end
 
 local mutation_in_progress = false
