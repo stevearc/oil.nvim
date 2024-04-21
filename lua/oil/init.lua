@@ -640,6 +640,7 @@ M.select = function(opts, callback)
   end
 
   local prev_win = vim.api.nvim_get_current_win()
+  local oil_bufnr = vim.api.nvim_get_current_buf()
 
   -- Async iter over entries so we can normalize the url before opening
   local i = 1
@@ -665,7 +666,7 @@ M.select = function(opts, callback)
 
     -- Normalize the url before opening to prevent needing to rename them inside the BufReadCmd
     -- Renaming buffers during opening can lead to missed autocmds
-    util.get_edit_path(0, entry, function(normalized_url)
+    util.get_edit_path(oil_bufnr, entry, function(normalized_url)
       local mods = {
         vertical = opts.vertical,
         horizontal = opts.horizontal,
