@@ -139,7 +139,6 @@ a.describe("regression tests", function()
     a.util.scheduler()
     oil.open_float(tmpdir.path)
     test_util.wait_for_autocmd({ "User", pattern = "OilEnter" })
-    local oil_bufnr = vim.api.nvim_get_current_buf()
     actions.select.callback()
     vim.wait(1000, function()
       return vim.fn.expand("%:t") == "a.txt"
