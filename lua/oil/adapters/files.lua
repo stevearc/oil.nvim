@@ -214,19 +214,36 @@ end
 M.normalize_url = function(url, callback)
   local scheme, path = util.parse_url(url)
   assert(path)
-  if fs.is_windows and path == "/" then
-    return callback(url)
+
+  if fs.is_windows then
+    if path == "/" then
+      return callback(url)
+    else
+      local is_root_drive = path:match("^/%u$")
+      if is_root_drive then
+        return callback(url .. "/")
+      end
+    end
   end
+
   local os_path = vim.fn.fnamemodify(fs.posix_to_os_path(path), ":p")
   uv.fs_realpath(os_path, function(err, new_os_path)
-    local realpath = new_os_path or os_path
+    local realpath
+    if fs.is_windows then
+      -- Ignore the fs_realpath on windows because it will resolve mapped network drives to the IP
+      -- address instead of using the drive letter
+      realpath = os_path
+    else
+      realpath = new_os_path or os_path
+    end
+
     uv.fs_stat(
       realpath,
       vim.schedule_wrap(function(stat_err, stat)
         local is_directory
         if stat then
           is_directory = stat.type == "directory"
-        elseif vim.endswith(realpath, "/") then
+        elseif vim.endswith(realpath, "/") or (fs.is_windows and vim.endswith(realpath, "\\")) then
           is_directory = true
         else
           local filetype = vim.filetype.match({ filename = vim.fs.basename(realpath) })
