@@ -337,10 +337,16 @@ M.set_highlights = function(bufnr, highlights)
 end
 
 ---@param path string
+---@param os_slash? boolean use os filesystem slash instead of posix slash
 ---@return string
-M.addslash = function(path)
-  if not vim.endswith(path, "/") then
-    return path .. "/"
+M.addslash = function(path, os_slash)
+  local slash = "/"
+  if os_slash and require("oil.fs").is_windows then
+    slash = "\\"
+  end
+
+  if not vim.endswith(path, slash) then
+    return path .. slash
   else
     return path
   end

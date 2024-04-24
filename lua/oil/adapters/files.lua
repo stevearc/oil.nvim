@@ -40,7 +40,7 @@ end
 M.to_short_os_path = function(path, entry_type)
   local shortpath = fs.shorten_path(fs.posix_to_os_path(path))
   if entry_type == "directory" then
-    shortpath = util.addslash(shortpath)
+    shortpath = util.addslash(shortpath, true)
   end
   return shortpath
 end
