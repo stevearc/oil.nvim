@@ -96,7 +96,10 @@ M.mv = function(entry_type, src_path, dest_path, cb)
     on_exit = function(_, code)
       if code ~= 0 then
         stderr = vim.trim(stderr)
-        if stderr:match("^fatal: not under version control") then
+        if
+          stderr:match("^fatal: not under version control")
+          or stderr:match("^fatal: source directory is empty")
+        then
           fs.recursive_move(entry_type, src_path, dest_path, cb)
         else
           cb("Error in git mv: " .. stderr)
