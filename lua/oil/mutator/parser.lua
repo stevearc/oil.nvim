@@ -37,7 +37,7 @@ local FIELD_META = constants.FIELD_META
 ---@return string
 ---@return boolean
 local function parsedir(name)
-  local isdir = vim.endswith(name, "/")
+  local isdir = vim.endswith(name, "/") or (fs.is_windows and vim.endswith(name, "\\"))
   if isdir then
     name = name:sub(1, name:len() - 1)
   end
