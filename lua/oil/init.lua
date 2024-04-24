@@ -673,6 +673,7 @@ end
 ---@return boolean
 local function maybe_hijack_directory_buffer(bufnr)
   local config = require("oil.config")
+  local fs = require("oil.fs")
   local util = require("oil.util")
   if not config.default_file_explorer then
     return false
@@ -684,10 +685,10 @@ local function maybe_hijack_directory_buffer(bufnr)
   if util.parse_url(bufname) or vim.fn.isdirectory(bufname) == 0 then
     return false
   end
-  local replaced = util.rename_buffer(
-    bufnr,
-    util.addslash(config.adapter_to_scheme.files .. vim.fn.fnamemodify(bufname, ":p"))
+  local new_name = util.addslash(
+    config.adapter_to_scheme.files .. fs.os_to_posix_path(vim.fn.fnamemodify(bufname, ":p"))
   )
+  local replaced = util.rename_buffer(bufnr, new_name)
   return not replaced
 end
 

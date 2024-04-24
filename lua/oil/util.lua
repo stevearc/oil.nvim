@@ -339,7 +339,7 @@ end
 ---@param path string
 ---@return string
 M.addslash = function(path)
-  if not vim.endswith(path, "/") and not vim.endswith(path, "\\") then
+  if not vim.endswith(path, "/") then
     return path .. "/"
   else
     return path
