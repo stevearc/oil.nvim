@@ -4,6 +4,7 @@ local cache = require("oil.cache")
 local columns = require("oil.columns")
 local config = require("oil.config")
 local constants = require("oil.constants")
+local fs = require("oil.fs")
 local lsp_helpers = require("oil.lsp.helpers")
 local oil = require("oil")
 local parser = require("oil.mutator.parser")
@@ -99,7 +100,8 @@ M.create_actions_from_diffs = function(all_diffs)
           table.insert(by_id, diff)
         else
           -- Parse nested files like foo/bar/baz
-          local pieces = vim.split(diff.name, "/")
+          local path_sep = fs.is_windows and "[/\\]" or "/"
+          local pieces = vim.split(diff.name, path_sep)
           local url = parent_url:gsub("/$", "")
           for i, v in ipairs(pieces) do
             local is_last = i == #pieces
