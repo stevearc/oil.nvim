@@ -720,7 +720,7 @@ end
 
 ---Send files from the current oil directory to quickfix
 ---based on the provided options.
----@param opts {target?: "qflist"|"loclist", mode?: "r"|"a"}
+---@param opts {target?: "qflist"|"loclist", mode?: "r"|"a", open?: boolean}
 M.send_to_quickfix = function(opts)
   if type(opts) ~= "table" then
     opts = {}
@@ -760,6 +760,9 @@ M.send_to_quickfix = function(opts)
     vim.fn.setqflist({}, mode, { title = qf_title, items = qf_entries })
   end
   vim.api.nvim_exec_autocmds("QuickFixCmdPost", {})
+  if opts.open then
+    vim.cmd("copen")
+  end
 end
 
 ---@return boolean

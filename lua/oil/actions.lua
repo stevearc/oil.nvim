@@ -347,12 +347,34 @@ M.send_to_qflist = {
   end,
 }
 
+M.send_to_qflist_and_open = {
+  desc = "Sends files in the current oil directory to the quickfix list, replacing the previous entries, and open quickfix window",
+  callback = function()
+    util.send_to_quickfix({
+      target = "qflist",
+      mode = "r",
+      open = true,
+    })
+  end,
+}
+
 M.add_to_qflist = {
   desc = "Adds files in the current oil directory to the quickfix list, keeping the previous entries.",
   callback = function()
     util.send_to_quickfix({
       target = "qflist",
       mode = "a",
+    })
+  end,
+}
+
+M.add_to_qflist_and_open = {
+  desc = "Adds files in the current oil directory to the quickfix list, keeping the previous entries, and open quickfix window",
+  callback = function()
+    util.send_to_quickfix({
+      target = "qflist",
+      mode = "a",
+      open = true,
     })
   end,
 }
