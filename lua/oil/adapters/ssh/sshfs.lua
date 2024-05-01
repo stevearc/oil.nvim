@@ -175,28 +175,31 @@ function SSHFS:list_dir(url, path, callback)
     if any_links then
       -- If there were any soft links, then we need to run another ls command with -L so that we can
       -- resolve the type of the link target
-      self.conn:run("ls -aLl --color=never" .. path_postfix, function(link_err, link_lines)
-        -- Ignore exit code 1. That just means one of the links could not be resolved.
-        if link_err and not link_err:match("^1:") then
-          return callback(link_err)
-        end
-        assert(link_lines)
-        for _, line in ipairs(link_lines) do
-          if line ~= "" and not line:match("^total") then
-            local ok, name, type, meta = pcall(parse_ls_line, line)
-            if ok and name ~= "." and name ~= ".." then
-              local cache_entry = entries[name]
-              if cache_entry[FIELD_TYPE] == "link" then
-                cache_entry[FIELD_META].link_stat = {
-                  type = type,
-                  size = meta.size,
-                }
+      self.conn:run(
+        "ls -aLl --color=never" .. path_postfix .. " 2> /dev/null",
+        function(link_err, link_lines)
+          -- Ignore exit code 1. That just means one of the links could not be resolved.
+          if link_err and not link_err:match("^1:") then
+            return callback(link_err)
+          end
+          assert(link_lines)
+          for _, line in ipairs(link_lines) do
+            if line ~= "" and not line:match("^total") then
+              local ok, name, type, meta = pcall(parse_ls_line, line)
+              if ok and name ~= "." and name ~= ".." then
+                local cache_entry = entries[name]
+                if cache_entry[FIELD_TYPE] == "link" then
+                  cache_entry[FIELD_META].link_stat = {
+                    type = type,
+                    size = meta.size,
+                  }
+                end
               end
             end
           end
+          callback(nil, cache_entries)
         end
-        callback(nil, cache_entries)
-      end)
+      )
     else
       callback(nil, cache_entries)
     end
