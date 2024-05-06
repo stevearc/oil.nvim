@@ -585,6 +585,14 @@ M.select = function(opts, callback)
   if not adapter then
     return finish("Not an oil buffer")
   end
+  print(
+    "0 buf name:",
+    vim.api.nvim_buf_get_name(0),
+    "current bufnr:",
+    vim.api.nvim_get_current_buf(),
+    "current buffer name:",
+    vim.api.nvim_buf_get_name(vim.api.nvim_get_current_buf())
+  )
 
   local visual_range = util.get_visual_range()
 
@@ -641,6 +649,14 @@ M.select = function(opts, callback)
 
   local prev_win = vim.api.nvim_get_current_win()
   local oil_bufnr = vim.api.nvim_get_current_buf()
+  print(
+    "oil_bufnr:",
+    oil_bufnr,
+    "name:",
+    vim.api.nvim_buf_get_name(oil_bufnr),
+    "0 buf name:",
+    vim.api.nvim_buf_get_name(0)
+  )
 
   -- Async iter over entries so we can normalize the url before opening
   local i = 1
