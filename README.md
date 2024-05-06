@@ -199,10 +199,6 @@ require("oil").setup({
     ["g."] = "actions.toggle_hidden",
     ["g\\"] = "actions.toggle_trash",
   },
-  -- Configuration for the floating keymaps help window
-  keymaps_help = {
-    border = "rounded",
-  },
   -- Set to false to disable all of the above keymaps
   use_default_keymaps = true,
   view_options = {
@@ -226,6 +222,8 @@ require("oil").setup({
       { "name", "asc" },
     },
   },
+  -- Extra arguments to pass to SCP when moving/copying files over SSH
+  extra_scp_args = {},
   -- Configuration for the floating window in oil.open_float
   float = {
     -- Padding around the floating window
@@ -283,6 +281,10 @@ require("oil").setup({
   },
   -- Configuration for the floating SSH window
   ssh = {
+    border = "rounded",
+  },
+  -- Configuration for the floating keymaps help window
+  keymaps_help = {
     border = "rounded",
   },
 })

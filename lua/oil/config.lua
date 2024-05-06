@@ -26,10 +26,6 @@ local default_config = {
     conceallevel = 3,
     concealcursor = "nvic",
   },
-  -- Extra options to send in with SCP command line (i.e. -O for openSSH 9 to older boxes)
-  -- If you are seeing errors related to sftp servers, this will be your friend
-  -- For more information: https://www.openssh.com/txt/release-9.0
-  extra_scp_options = {},
   -- Send deleted files to the trash instead of permanently deleting them (:help oil-trash)
   delete_to_trash = false,
   -- Skip the confirmation popup for simple operations (:help oil.skip_confirm_for_simple_edits)
@@ -77,10 +73,6 @@ local default_config = {
     ["g."] = "actions.toggle_hidden",
     ["g\\"] = "actions.toggle_trash",
   },
-  -- Configuration for the floating keymaps help window
-  keymaps_help = {
-    border = "rounded",
-  },
   -- Set to false to disable all of the above keymaps
   use_default_keymaps = true,
   view_options = {
@@ -104,6 +96,8 @@ local default_config = {
       { "name", "asc" },
     },
   },
+  -- Extra arguments to pass to SCP when moving/copying files over SSH
+  extra_scp_args = {},
   -- Configuration for the floating window in oil.open_float
   float = {
     -- Padding around the floating window
@@ -161,6 +155,10 @@ local default_config = {
   },
   -- Configuration for the floating SSH window
   ssh = {
+    border = "rounded",
+  },
+  -- Configuration for the floating keymaps help window
+  keymaps_help = {
     border = "rounded",
   },
 }
