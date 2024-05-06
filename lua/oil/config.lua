@@ -29,7 +29,7 @@ local default_config = {
   -- Extra options to send in with SCP command line (i.e. -O for openSSH 9 to older boxes)
   -- If you are seeing errors related to sftp servers, this will be your friend
   -- For more information: https://www.openssh.com/txt/release-9.0
-  extra_scp_options = { },
+  extra_scp_options = {},
   -- Send deleted files to the trash instead of permanently deleting them (:help oil-trash)
   delete_to_trash = false,
   -- Skip the confirmation popup for simple operations (:help oil.skip_confirm_for_simple_edits)

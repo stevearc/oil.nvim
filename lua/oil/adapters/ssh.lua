@@ -303,12 +303,22 @@ M.perform_action = function(action, cb)
       local src_conn = get_connection(action.src_url)
       local dest_conn = get_connection(action.dest_url)
       if src_conn ~= dest_conn then
-        shell.run({ "scp", unpack(config.extra_scp_options), "-C", "-r", url_to_scp(src_res), url_to_scp(dest_res) }, function(err)
-          if err then
-            return cb(err)
+        shell.run(
+          {
+            "scp",
+            unpack(config.extra_scp_options),
+            "-C",
+            "-r",
+            url_to_scp(src_res),
+            url_to_scp(dest_res),
+          },
+          function(err)
+            if err then
+              return cb(err)
+            end
+            src_conn:rm(src_res.path, cb)
           end
-          src_conn:rm(src_res.path, cb)
-        end)
+        )
       else
         src_conn:mv(src_res.path, dest_res.path, cb)
       end
@@ -322,7 +332,17 @@ M.perform_action = function(action, cb)
       local src_res = M.parse_url(action.src_url)
       local dest_res = M.parse_url(action.dest_url)
       if not url_hosts_equal(src_res, dest_res) then
-        shell.run({ "scp", unpack(config.extra_scp_options), "-C", "-r", url_to_scp(src_res), url_to_scp(dest_res) }, cb)
+        shell.run(
+          {
+            "scp",
+            unpack(config.extra_scp_options),
+            "-C",
+            "-r",
+            url_to_scp(src_res),
+            url_to_scp(dest_res),
+          },
+          cb
+        )
       else
         local src_conn = get_connection(action.src_url)
         src_conn:cp(src_res.path, dest_res.path, cb)
