@@ -199,10 +199,6 @@ require("oil").setup({
     ["g."] = "actions.toggle_hidden",
     ["g\\"] = "actions.toggle_trash",
   },
-  -- Configuration for the floating keymaps help window
-  keymaps_help = {
-    border = "rounded",
-  },
   -- Set to false to disable all of the above keymaps
   use_default_keymaps = true,
   view_options = {
@@ -226,6 +222,8 @@ require("oil").setup({
       { "name", "asc" },
     },
   },
+  -- Extra arguments to pass to SCP when moving/copying files over SSH
+  extra_scp_args = {},
   -- EXPERIMENTAL support for performing file operations with git
   git = {
     -- Return true to automatically git add/mv/rm files
@@ -296,6 +294,10 @@ require("oil").setup({
   },
   -- Configuration for the floating SSH window
   ssh = {
+    border = "rounded",
+  },
+  -- Configuration for the floating keymaps help window
+  keymaps_help = {
     border = "rounded",
   },
 })
