@@ -205,19 +205,19 @@ end
 if has_devicons then
   M.register("icon", {
     render = function(entry, conf)
-      local type = entry[FIELD_TYPE]
+      local field_type = entry[FIELD_TYPE]
       local name = entry[FIELD_NAME]
       local meta = entry[FIELD_META]
-      if type == "link" and meta then
+      if field_type == "link" and meta then
         if meta.link then
           name = meta.link
         end
         if meta.link_stat then
-          type = meta.link_stat.type
+          field_type = meta.link_stat.type
         end
       end
       local icon, hl
-      if type == "directory" then
+      if field_type == "directory" then
         icon = conf and conf.directory or ""
         hl = "OilDirIcon"
       else
@@ -229,6 +229,13 @@ if has_devicons then
       end
       if not conf or conf.add_padding ~= false then
         icon = icon .. " "
+      end
+      if conf and conf.highlight then
+        if type(conf.highlight) == "function" then
+          hl = conf.highlight(icon)
+        else
+          hl = conf.highlight
+        end
       end
       return { icon, hl }
     end,
