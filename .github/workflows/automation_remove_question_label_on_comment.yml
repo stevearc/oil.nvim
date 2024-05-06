@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event.sender.login != 'stevearc'
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - uses: actions-ecosystem/action-remove-labels@v1
         with:
           labels: question

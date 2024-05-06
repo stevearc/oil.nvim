@@ -5,6 +5,7 @@ local M = {}
 ---@field type oil.EntryType
 ---@field id nil|integer Will be nil if it hasn't been persisted to disk yet
 ---@field parsed_name nil|string
+---@field meta nil|table
 
 ---@alias oil.EntryType "file"|"directory"|"socket"|"link"|"fifo"
 ---@alias oil.HlRange { [1]: string, [2]: integer, [3]: integer } A tuple of highlight group name, col_start, col_end
@@ -372,13 +373,13 @@ local function update_preview_window(oil_bufnr)
   local util = require("oil.util")
   util.run_after_load(oil_bufnr, function()
     local cursor_entry = M.get_cursor_entry()
-    if cursor_entry then
-      local preview_win_id = util.get_preview_win()
-      if preview_win_id then
-        if cursor_entry.id ~= vim.w[preview_win_id].oil_entry_id then
-          M.select({ preview = true })
-        end
-      end
+    local preview_win_id = util.get_preview_win()
+    if
+      cursor_entry
+      and preview_win_id
+      and cursor_entry.id ~= vim.w[preview_win_id].oil_entry_id
+    then
+      M.open_preview()
     end
   end)
 end
@@ -437,22 +438,15 @@ M.close = function()
   vim.api.nvim_buf_delete(oilbuf, { force = true })
 end
 
----Select the entry under the cursor
+---Preview the entry under the cursor in a split
 ---@param opts nil|table
 ---    vertical boolean Open the buffer in a vertical split
 ---    horizontal boolean Open the buffer in a horizontal split
 ---    split "aboveleft"|"belowright"|"topleft"|"botright" Split modifier
----    preview boolean Open the buffer in a preview window
----    tab boolean Open the buffer in a new tab
----    close boolean Close the original oil buffer once selection is made
----@param callback nil|fun(err: nil|string) Called once all entries have been opened
-M.select = function(opts, callback)
-  local cache = require("oil.cache")
-  local config = require("oil.config")
-  local constants = require("oil.constants")
-  local pathutil = require("oil.pathutil")
-  local FIELD_META = constants.FIELD_META
-  opts = vim.tbl_extend("keep", opts or {}, {})
+M.open_preview = function(opts, callback)
+  opts = opts or {}
+  local util = require("oil.util")
+
   local function finish(err)
     if err then
       vim.notify(err, vim.log.levels.ERROR)
@@ -461,29 +455,135 @@ M.select = function(opts, callback)
       callback(err)
     end
   end
-  if opts.preview and not opts.horizontal and opts.vertical == nil then
+
+  if not opts.horizontal and opts.vertical == nil then
     opts.vertical = true
   end
-  if not opts.split and (opts.horizontal or opts.vertical or opts.preview) then
+  if not opts.split then
     if opts.horizontal then
       opts.split = vim.o.splitbelow and "belowright" or "aboveleft"
     else
       opts.split = vim.o.splitright and "belowright" or "aboveleft"
     end
   end
-  if opts.tab and (opts.preview or opts.split) then
-    return finish("Cannot set preview or split when tab = true")
-  end
-  if opts.close and opts.preview then
-    return finish("Cannot use close=true with preview=true")
-  end
-  local util = require("oil.util")
-  if util.is_floating_win() and opts.preview then
+  if util.is_floating_win() then
     return finish("oil preview doesn't work in a floating window")
+  end
+
+  local entry = M.get_cursor_entry()
+  if not entry then
+    return finish("Could not find entry under cursor")
+  end
+
+  local preview_win = util.get_preview_win()
+  local prev_win = vim.api.nvim_get_current_win()
+  local bufnr = vim.api.nvim_get_current_buf()
+
+  local cmd = preview_win and "buffer" or "sbuffer"
+  local mods = {
+    vertical = opts.vertical,
+    horizontal = opts.horizontal,
+    split = opts.split,
+  }
+
+  local is_visual_mode = util.is_visual_mode()
+  -- HACK Switching windows takes us out of visual mode.
+  -- Switching with nvim_set_current_win causes the previous visual selection (as used by `gv`) to
+  -- not get set properly. So we have to switch windows this way instead.
+  local hack_set_win = function(winid)
+    local winnr = vim.api.nvim_win_get_number(winid)
+    vim.cmd.wincmd({ args = { "w" }, count = winnr })
+  end
+
+  if preview_win then
+    if is_visual_mode then
+      hack_set_win(preview_win)
+    else
+      vim.api.nvim_set_current_win(preview_win)
+    end
+  end
+
+  util.get_edit_path(bufnr, entry, function(normalized_url)
+    local filebufnr = vim.fn.bufadd(normalized_url)
+    local entry_is_file = not vim.endswith(normalized_url, "/")
+
+    -- If we're previewing a file that hasn't been opened yet, make sure it gets deleted after
+    -- we close the window
+    if entry_is_file and vim.fn.bufloaded(filebufnr) == 0 then
+      vim.bo[filebufnr].bufhidden = "wipe"
+      vim.b[filebufnr].oil_preview_buffer = true
+    end
+
+    ---@diagnostic disable-next-line: param-type-mismatch
+    local ok, err = pcall(vim.cmd, {
+      cmd = cmd,
+      args = { filebufnr },
+      mods = mods,
+    })
+    -- Ignore swapfile errors
+    if not ok and err and not err:match("^Vim:E325:") then
+      vim.api.nvim_echo({ { err, "Error" } }, true, {})
+    end
+
+    vim.api.nvim_set_option_value("previewwindow", true, { scope = "local", win = 0 })
+    vim.w.oil_entry_id = entry.id
+    vim.w.oil_source_win = prev_win
+    if is_visual_mode then
+      hack_set_win(prev_win)
+      -- Restore the visual selection
+      vim.cmd.normal({ args = { "gv" }, bang = true })
+    else
+      vim.api.nvim_set_current_win(prev_win)
+    end
+    finish()
+  end)
+end
+
+---Select the entry under the cursor
+---@param opts nil|table
+---    vertical boolean Open the buffer in a vertical split
+---    horizontal boolean Open the buffer in a horizontal split
+---    split "aboveleft"|"belowright"|"topleft"|"botright" Split modifier
+---    tab boolean Open the buffer in a new tab
+---    close boolean Close the original oil buffer once selection is made
+---@param callback nil|fun(err: nil|string) Called once all entries have been opened
+M.select = function(opts, callback)
+  local cache = require("oil.cache")
+  local config = require("oil.config")
+  local constants = require("oil.constants")
+  local util = require("oil.util")
+  local FIELD_META = constants.FIELD_META
+  opts = vim.tbl_extend("keep", opts or {}, {})
+
+  if opts.preview then
+    vim.notify_once(
+      "Deprecated: do not call oil.select with preview=true. Use oil.open_preview instead.\nThis shim will be removed on 2025-01-01"
+    )
+    M.open_preview(opts, callback)
+    return
+  end
+
+  local function finish(err)
+    if err then
+      vim.notify(err, vim.log.levels.ERROR)
+    end
+    if callback then
+      callback(err)
+    end
+  end
+  if not opts.split and (opts.horizontal or opts.vertical) then
+    if opts.horizontal then
+      opts.split = vim.o.splitbelow and "belowright" or "aboveleft"
+    else
+      opts.split = vim.o.splitright and "belowright" or "aboveleft"
+    end
+  end
+  if opts.tab and opts.split then
+    return finish("Cannot use split=true when tab = true")
   end
   local adapter = util.get_adapter(0)
   if not adapter then
-    return finish("Could not find adapter for current buffer")
+    return finish("Not an oil buffer")
   end
 
   local visual_range = util.get_visual_range()
@@ -505,10 +605,6 @@ M.select = function(opts, callback)
   end
   if vim.tbl_isempty(entries) then
     return finish("Could not find entry under cursor")
-  end
-  if #entries > 1 and opts.preview then
-    vim.notify("Cannot preview multiple entries", vim.log.levels.WARN)
-    entries = { entries[1] }
   end
 
   -- Check if any of these entries are moved from their original location
@@ -533,7 +629,7 @@ M.select = function(opts, callback)
       end
     end
   end
-  if any_moved and not opts.preview and config.prompt_save_on_select_new_entry then
+  if any_moved and config.prompt_save_on_select_new_entry then
     local ok, choice = pcall(vim.fn.confirm, "Save changes?", "Yes\nNo", 1)
     if not ok then
       return finish()
@@ -543,11 +639,9 @@ M.select = function(opts, callback)
     end
   end
 
-  local preview_win = util.get_preview_win()
   local prev_win = vim.api.nvim_get_current_win()
+  local oil_bufnr = vim.api.nvim_get_current_buf()
 
-  local scheme, dir = util.parse_url(bufname)
-  assert(scheme and dir)
   -- Async iter over entries so we can normalize the url before opening
   local i = 1
   local function open_next_entry(cb)
@@ -556,16 +650,7 @@ M.select = function(opts, callback)
     if not entry then
       return cb()
     end
-    local url = scheme .. dir .. entry.name
-    local is_directory = entry.type == "directory"
-      or (
-        entry.type == "link"
-        and entry.meta
-        and entry.meta.link_stat
-        and entry.meta.link_stat.type == "directory"
-      )
-    if is_directory then
-      url = url .. "/"
+    if util.is_directory(entry) then
       -- If this is a new directory BUT we think we already have an entry with this name, disallow
       -- entry. This prevents the case of MOVE /foo -> /bar + CREATE /foo.
       -- If you enter the new /foo, it will show the contents of the old /foo.
@@ -573,78 +658,47 @@ M.select = function(opts, callback)
         return cb("Please save changes before entering new directory")
       end
     else
+      -- Close floating window before opening a file
       if vim.w.is_oil_win then
         vim.api.nvim_win_close(0, false)
       end
     end
 
-    local get_edit_path
-    if entry.name == ".." then
-      get_edit_path = function(edit_cb)
-        edit_cb(scheme .. pathutil.parent(dir))
-      end
-    elseif adapter.get_entry_path then
-      get_edit_path = function(edit_cb)
-        adapter.get_entry_path(url, entry, edit_cb)
-      end
-    else
-      get_edit_path = function(edit_cb)
-        adapter.normalize_url(url, edit_cb)
-      end
-    end
-
     -- Normalize the url before opening to prevent needing to rename them inside the BufReadCmd
     -- Renaming buffers during opening can lead to missed autocmds
-    get_edit_path(function(normalized_url)
+    util.get_edit_path(oil_bufnr, entry, function(normalized_url)
       local mods = {
         vertical = opts.vertical,
         horizontal = opts.horizontal,
         split = opts.split,
         keepalt = true,
-        emsg_silent = true,
       }
       local filebufnr = vim.fn.bufadd(normalized_url)
       local entry_is_file = not vim.endswith(normalized_url, "/")
 
-      if opts.preview then
-        -- If we're previewing a file that hasn't been opened yet, make sure it gets deleted after
-        -- we close the window
-        if entry_is_file and vim.fn.bufloaded(filebufnr) == 0 then
-          vim.bo[filebufnr].bufhidden = "wipe"
-          vim.b[filebufnr].oil_preview_buffer = true
-        end
-      elseif entry_is_file then
-        -- The :buffer command doesn't set buflisted=true
-        -- So do that for non-diretory-buffers
+      -- The :buffer command doesn't set buflisted=true
+      -- So do that for normal files or for oil dirs if config set buflisted=true
+      if entry_is_file or config.buf_options.buflisted then
         vim.bo[filebufnr].buflisted = true
       end
 
-      local cmd
-      if opts.preview and preview_win then
-        vim.api.nvim_set_current_win(preview_win)
-        cmd = "buffer"
-      else
-        if opts.tab then
-          vim.cmd.tabnew({ mods = mods })
-          cmd = "buffer"
-        elseif opts.split then
-          cmd = "sbuffer"
-        else
-          cmd = "buffer"
-        end
+      local cmd = "buffer"
+      if opts.tab then
+        vim.cmd.tabnew({ mods = mods })
+      elseif opts.split then
+        cmd = "sbuffer"
       end
-      vim.cmd({
+      ---@diagnostic disable-next-line: param-type-mismatch
+      local ok, err = pcall(vim.cmd, {
         cmd = cmd,
         args = { filebufnr },
         mods = mods,
       })
-
-      if opts.preview then
-        vim.api.nvim_set_option_value("previewwindow", true, { scope = "local", win = 0 })
-        vim.w.oil_entry_id = entry.id
-        vim.w.oil_source_win = prev_win
-        vim.api.nvim_set_current_win(prev_win)
+      -- Ignore swapfile errors
+      if not ok and err and not err:match("^Vim:E325:") then
+        vim.api.nvim_echo({ { err, "Error" } }, true, {})
       end
+
       open_next_entry(cb)
     end)
   end
@@ -673,6 +727,7 @@ end
 ---@return boolean
 local function maybe_hijack_directory_buffer(bufnr)
   local config = require("oil.config")
+  local fs = require("oil.fs")
   local util = require("oil.util")
   if not config.default_file_explorer then
     return false
@@ -684,10 +739,10 @@ local function maybe_hijack_directory_buffer(bufnr)
   if util.parse_url(bufname) or vim.fn.isdirectory(bufname) == 0 then
     return false
   end
-  local replaced = util.rename_buffer(
-    bufnr,
-    util.addslash(config.adapter_to_scheme.files .. vim.fn.fnamemodify(bufname, ":p"))
+  local new_name = util.addslash(
+    config.adapter_to_scheme.files .. fs.os_to_posix_path(vim.fn.fnamemodify(bufname, ":p"))
   )
+  local replaced = util.rename_buffer(bufnr, new_name)
   return not replaced
 end
 
@@ -951,6 +1006,14 @@ M.setup = function(opts)
       elseif v == "--trash" then
         trash = true
         table.remove(args.fargs, i)
+      elseif v == "--progress" then
+        local mutator = require("oil.mutator")
+        if mutator.is_mutating() then
+          mutator.show_progress()
+        else
+          vim.notify("No mutation in progress", vim.log.levels.WARN)
+        end
+        return
       else
         i = i + 1
       end

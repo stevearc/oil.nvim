@@ -1,5 +1,6 @@
 require("plenary.async").tests.add_to_env()
 local TmpDir = require("tests.tmpdir")
+local actions = require("oil.actions")
 local oil = require("oil")
 local test_util = require("tests.test_util")
 local view = require("oil.view")
@@ -130,5 +131,18 @@ a.describe("regression tests", function()
       ["bar.txt"] = "",
       ["baz.txt"] = "",
     })
+  end)
+
+  -- https://github.com/stevearc/oil.nvim/issues/355
+  a.it("can open files from floating window", function()
+    tmpdir:create({ "a.txt" })
+    a.util.scheduler()
+    oil.open_float(tmpdir.path)
+    test_util.wait_for_autocmd({ "User", pattern = "OilEnter" })
+    actions.select.callback()
+    vim.wait(1000, function()
+      return vim.fn.expand("%:t") == "a.txt"
+    end, 10)
+    assert.equals("a.txt", vim.fn.expand("%:t"))
   end)
 end)

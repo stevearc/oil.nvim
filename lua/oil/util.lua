@@ -337,10 +337,16 @@ M.set_highlights = function(bufnr, highlights)
 end
 
 ---@param path string
+---@param os_slash? boolean use os filesystem slash instead of posix slash
 ---@return string
-M.addslash = function(path)
-  if not vim.endswith(path, "/") then
-    return path .. "/"
+M.addslash = function(path, os_slash)
+  local slash = "/"
+  if os_slash and require("oil.fs").is_windows then
+    slash = "\\"
+  end
+
+  if not vim.endswith(path, slash) then
+    return path .. slash
   else
     return path
   end
@@ -756,12 +762,16 @@ M.send_to_quickfix = function(opts)
   vim.api.nvim_exec_autocmds("QuickFixCmdPost", {})
 end
 
+---@return boolean
+M.is_visual_mode = function()
+  local mode = vim.api.nvim_get_mode().mode
+  return mode:match("^[vV]") ~= nil
+end
+
 ---Get the current visual selection range. If not in visual mode, return nil.
 ---@return {start_lnum: integer, end_lnum: integer}?
 M.get_visual_range = function()
-  local mode = vim.api.nvim_get_mode().mode
-  local is_visual = mode:match("^[vV]")
-  if not is_visual then
+  if not M.is_visual_mode() then
     return
   end
   -- This is the best way to get the visual selection at the moment
@@ -783,16 +793,54 @@ M.run_after_load = function(bufnr, callback)
   if vim.b[bufnr].oil_ready then
     callback()
   else
-    local autocmd_id
-    autocmd_id = vim.api.nvim_create_autocmd("User", {
+    vim.api.nvim_create_autocmd("User", {
       pattern = "OilEnter",
       callback = function(args)
         if args.data.buf == bufnr then
-          callback()
-          vim.api.nvim_del_autocmd(autocmd_id)
+          vim.api.nvim_buf_call(bufnr, callback)
+          return true
         end
       end,
     })
+  end
+end
+
+---@param entry oil.Entry
+---@return boolean
+M.is_directory = function(entry)
+  local is_directory = entry.type == "directory"
+    or (
+      entry.type == "link"
+      and entry.meta
+      and entry.meta.link_stat
+      and entry.meta.link_stat.type == "directory"
+    )
+  return is_directory == true
+end
+
+---Get the :edit path for an entry
+---@param bufnr integer The oil buffer that contains the entry
+---@param entry oil.Entry
+---@param callback fun(normalized_url: string)
+M.get_edit_path = function(bufnr, entry, callback)
+  local pathutil = require("oil.pathutil")
+
+  local bufname = vim.api.nvim_buf_get_name(bufnr)
+  local scheme, dir = M.parse_url(bufname)
+  local adapter = M.get_adapter(bufnr)
+  assert(scheme and dir and adapter)
+
+  local url = scheme .. dir .. entry.name
+  if M.is_directory(entry) then
+    url = url .. "/"
+  end
+
+  if entry.name == ".." then
+    callback(scheme .. pathutil.parent(dir))
+  elseif adapter.get_entry_path then
+    adapter.get_entry_path(url, entry, callback)
+  else
+    adapter.normalize_url(url, callback)
   end
 end
 

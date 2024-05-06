@@ -3,6 +3,7 @@ local columns = require("oil.columns")
 local config = require("oil.config")
 local constants = require("oil.constants")
 local fs = require("oil.fs")
+local git = require("oil.git")
 local permissions = require("oil.adapters.files.permissions")
 local trash = require("oil.adapters.files.trash")
 local util = require("oil.util")
@@ -39,7 +40,7 @@ end
 M.to_short_os_path = function(path, entry_type)
   local shortpath = fs.shorten_path(fs.posix_to_os_path(path))
   if entry_type == "directory" then
-    shortpath = util.addslash(shortpath)
+    shortpath = util.addslash(shortpath, true)
   end
   return shortpath
 end
@@ -213,19 +214,36 @@ end
 M.normalize_url = function(url, callback)
   local scheme, path = util.parse_url(url)
   assert(path)
-  if fs.is_windows and path == "/" then
-    return callback(url)
+
+  if fs.is_windows then
+    if path == "/" then
+      return callback(url)
+    else
+      local is_root_drive = path:match("^/%u$")
+      if is_root_drive then
+        return callback(url .. "/")
+      end
+    end
   end
+
   local os_path = vim.fn.fnamemodify(fs.posix_to_os_path(path), ":p")
   uv.fs_realpath(os_path, function(err, new_os_path)
-    local realpath = new_os_path or os_path
+    local realpath
+    if fs.is_windows then
+      -- Ignore the fs_realpath on windows because it will resolve mapped network drives to the IP
+      -- address instead of using the drive letter
+      realpath = os_path
+    else
+      realpath = new_os_path or os_path
+    end
+
     uv.fs_stat(
       realpath,
       vim.schedule_wrap(function(stat_err, stat)
         local is_directory
         if stat then
           is_directory = stat.type == "directory"
-        elseif vim.endswith(realpath, "/") then
+        elseif vim.endswith(realpath, "/") or (fs.is_windows and vim.endswith(realpath, "\\")) then
           is_directory = true
         else
           local filetype = vim.filetype.match({ filename = vim.fs.basename(realpath) })
@@ -476,6 +494,18 @@ M.perform_action = function(action, cb)
     local _, path = util.parse_url(action.url)
     assert(path)
     path = fs.posix_to_os_path(path)
+
+    if config.git.add(path) then
+      local old_cb = cb
+      cb = vim.schedule_wrap(function(err)
+        if not err then
+          git.add(path, old_cb)
+        else
+          old_cb(err)
+        end
+      end)
+    end
+
     if action.entry_type == "directory" then
       uv.fs_mkdir(path, 493, function(err)
         -- Ignore if the directory already exists
@@ -503,6 +533,18 @@ M.perform_action = function(action, cb)
     local _, path = util.parse_url(action.url)
     assert(path)
     path = fs.posix_to_os_path(path)
+
+    if config.git.rm(path) then
+      local old_cb = cb
+      cb = function(err)
+        if not err then
+          git.rm(path, old_cb)
+        else
+          old_cb(err)
+        end
+      end
+    end
+
     if config.delete_to_trash then
       if config.trash_command then
         vim.notify_once(
@@ -525,7 +567,11 @@ M.perform_action = function(action, cb)
       assert(dest_path)
       src_path = fs.posix_to_os_path(src_path)
       dest_path = fs.posix_to_os_path(dest_path)
-      fs.recursive_move(action.entry_type, src_path, dest_path, cb)
+      if config.git.mv(src_path, dest_path) then
+        git.mv(action.entry_type, src_path, dest_path, cb)
+      else
+        fs.recursive_move(action.entry_type, src_path, dest_path, cb)
+      end
     else
       -- We should never hit this because we don't implement supported_cross_adapter_actions
       cb("files adapter doesn't support cross-adapter move")

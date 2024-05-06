@@ -98,6 +98,19 @@ local default_config = {
   },
   -- Extra arguments to pass to SCP when moving/copying files over SSH
   extra_scp_args = {},
+  -- EXPERIMENTAL support for performing file operations with git
+  git = {
+    -- Return true to automatically git add/mv/rm files
+    add = function(path)
+      return false
+    end,
+    mv = function(src_path, dest_path)
+      return false
+    end,
+    rm = function(path)
+      return false
+    end,
+  },
   -- Configuration for the floating window in oil.open_float
   float = {
     -- Padding around the floating window

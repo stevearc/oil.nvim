@@ -8,13 +8,11 @@ local Progress = {}
 local FPS = 20
 
 function Progress.new()
-  local bufnr = vim.api.nvim_create_buf(false, true)
-  vim.bo[bufnr].bufhidden = "wipe"
   return setmetatable({
     lines = { "", "" },
     count = "",
     spinner = "",
-    bufnr = bufnr,
+    bufnr = nil,
     winid = nil,
     min_bufnr = nil,
     min_winid = nil,
@@ -25,6 +23,15 @@ function Progress.new()
   })
 end
 
+---@private
+---@return boolean
+function Progress:is_minimized()
+  return not self.closing
+    and not self.bufnr
+    and self.min_bufnr
+    and vim.api.nvim_buf_is_valid(self.min_bufnr)
+end
+
 ---@param opts nil|table
 ---    cancel fun()
 function Progress:show(opts)
@@ -32,20 +39,24 @@ function Progress:show(opts)
   if self.winid and vim.api.nvim_win_is_valid(self.winid) then
     return
   end
-  self.closing = false
-  self.cancel = opts.cancel
+  local bufnr = vim.api.nvim_create_buf(false, true)
+  vim.bo[bufnr].bufhidden = "wipe"
+  self.bufnr = bufnr
+  self.cancel = opts.cancel or self.cancel
   local loading_iter = loading.get_bar_iter()
   local spinner = loading.get_iter("dots")
-  self.timer = vim.loop.new_timer()
-  self.timer:start(
-    0,
-    math.floor(1000 / FPS),
-    vim.schedule_wrap(function()
-      self.lines[2] = string.format("%s %s", self.count, loading_iter())
-      self.spinner = spinner()
-      self:_render()
-    end)
-  )
+  if not self.timer then
+    self.timer = vim.loop.new_timer()
+    self.timer:start(
+      0,
+      math.floor(1000 / FPS),
+      vim.schedule_wrap(function()
+        self.lines[2] = string.format("%s %s", self.count, loading_iter())
+        self.spinner = spinner()
+        self:_render()
+      end)
+    )
+  end
   local width, height = layout.calculate_dims(120, 10, config.progress)
   self.winid = vim.api.nvim_open_win(self.bufnr, true, {
     relative = "editor",
@@ -87,6 +98,16 @@ function Progress:show(opts)
   vim.keymap.set("n", "C", cancel, { buffer = self.bufnr, nowait = true })
   vim.keymap.set("n", "m", minimize, { buffer = self.bufnr, nowait = true })
   vim.keymap.set("n", "M", minimize, { buffer = self.bufnr, nowait = true })
+end
+
+function Progress:restore()
+  if self.closing then
+    return
+  elseif not self:is_minimized() then
+    error("Cannot restore progress window: not minimized")
+  end
+  self:_cleanup_minimized_win()
+  self:show()
 end
 
 function Progress:_render()
@@ -139,6 +160,14 @@ function Progress:_cleanup_main_win()
   self.bufnr = nil
 end
 
+function Progress:_cleanup_minimized_win()
+  if self.min_winid and vim.api.nvim_win_is_valid(self.min_winid) then
+    vim.api.nvim_win_close(self.min_winid, true)
+  end
+  self.min_winid = nil
+  self.min_bufnr = nil
+end
+
 function Progress:minimize()
   if self.closing then
     return
@@ -160,6 +189,7 @@ function Progress:minimize()
   self.min_bufnr = bufnr
   self.min_winid = winid
   self:_render()
+  vim.notify_once("Restore progress window with :Oil --progress")
 end
 
 ---@param action oil.Action
@@ -187,11 +217,7 @@ function Progress:close()
     self.timer = nil
   end
   self:_cleanup_main_win()
-  if self.min_winid and vim.api.nvim_win_is_valid(self.min_winid) then
-    vim.api.nvim_win_close(self.min_winid, true)
-  end
-  self.min_winid = nil
-  self.min_bufnr = nil
+  self:_cleanup_minimized_win()
 end
 
 return Progress

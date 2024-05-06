@@ -56,7 +56,7 @@ M.preview = {
         return
       end
     end
-    oil.select({ preview = true })
+    oil.open_preview()
   end,
 }
 
