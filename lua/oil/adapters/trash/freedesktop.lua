@@ -242,7 +242,7 @@ M.list = function(url, column_defs, cb)
     end
 
     local info_dir = fs.join(trash_dir, "info")
-    ---@diagnostic disable-next-line: param-type-mismatch
+    ---@diagnostic disable-next-line: param-type-mismatch, discard-returns
     uv.fs_opendir(info_dir, function(open_err, fd)
       if open_err then
         if open_err:match("^ENOENT: no such file or directory") then

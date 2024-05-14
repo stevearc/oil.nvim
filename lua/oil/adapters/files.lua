@@ -343,7 +343,7 @@ M.list = function(url, column_defs, cb)
   local dir = fs.posix_to_os_path(path)
   local fetch_meta = columns.get_metadata_fetcher(M, column_defs)
 
-  ---@diagnostic disable-next-line: param-type-mismatch
+  ---@diagnostic disable-next-line: param-type-mismatch, discard-returns
   uv.fs_opendir(dir, function(open_err, fd)
     if open_err then
       if open_err:match("^ENOENT: no such file or directory") then

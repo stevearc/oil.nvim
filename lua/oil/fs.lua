@@ -163,7 +163,7 @@ end
 ---@param dir string
 ---@param cb fun(err: nil|string, entries: nil|{type: oil.EntryType, name: string})
 M.listdir = function(dir, cb)
-  ---@diagnostic disable-next-line: param-type-mismatch
+  ---@diagnostic disable-next-line: param-type-mismatch, discard-returns
   uv.fs_opendir(dir, function(open_err, fd)
     if open_err then
       return cb(open_err)
@@ -203,7 +203,7 @@ M.recursive_delete = function(entry_type, path, cb)
   if entry_type ~= "directory" then
     return uv.fs_unlink(path, cb)
   end
-  ---@diagnostic disable-next-line: param-type-mismatch
+  ---@diagnostic disable-next-line: param-type-mismatch, discard-returns
   uv.fs_opendir(path, function(open_err, fd)
     if open_err then
       return cb(open_err)
@@ -273,7 +273,7 @@ M.recursive_copy = function(entry_type, src_path, dest_path, cb)
       if mkdir_err then
         return cb(mkdir_err)
       end
-      ---@diagnostic disable-next-line: param-type-mismatch
+      ---@diagnostic disable-next-line: param-type-mismatch, discard-returns
       uv.fs_opendir(src_path, function(open_err, fd)
         if open_err then
           return cb(open_err)

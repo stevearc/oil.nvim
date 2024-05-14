@@ -48,7 +48,7 @@ M.list = function(url, column_defs, cb)
   local _, path = util.parse_url(url)
   assert(path)
   local trash_dir = get_trash_dir()
-  ---@diagnostic disable-next-line: param-type-mismatch
+  ---@diagnostic disable-next-line: param-type-mismatch, discard-returns
   uv.fs_opendir(trash_dir, function(open_err, fd)
     if open_err then
       if open_err:match("^ENOENT: no such file or directory") then
