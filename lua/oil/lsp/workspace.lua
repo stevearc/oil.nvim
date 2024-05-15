@@ -65,6 +65,12 @@ local function get_matching_paths(client, filters, paths)
       if ignore_case then
         glob = glob:lower()
       end
+
+      -- Some language servers use forward slashes as path separators on Windows (LuaLS)
+      if fs.is_windows then
+        glob = glob:gsub("/", "\\")
+      end
+
       ---@type nil|vim.lpeg.Pattern
       local glob_pattern = vim.glob and vim.glob.to_lpeg and vim.glob.to_lpeg(glob)
       local matches = pattern.matches

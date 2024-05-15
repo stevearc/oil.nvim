@@ -1,4 +1,5 @@
 local config = require("oil.config")
+local fs = require("oil.fs")
 local util = require("oil.util")
 local workspace = require("oil.lsp.workspace")
 
@@ -17,23 +18,32 @@ M.will_perform_file_operations = function(actions)
       local src_adapter = assert(config.get_adapter_by_scheme(src_scheme))
       local dest_scheme, dest_path = util.parse_url(action.dest_url)
       local dest_adapter = assert(config.get_adapter_by_scheme(dest_scheme))
+      src_path = fs.posix_to_os_path(src_path)
+      dest_path = fs.posix_to_os_path(assert(dest_path))
       if src_adapter.name == "files" and dest_adapter.name == "files" then
         moves[src_path] = dest_path
+      elseif src_adapter.name == "files" then
+        table.insert(deletes, src_path)
+      elseif dest_adapter.name == "files" then
+        table.insert(creates, src_path)
       end
     elseif action.type == "create" then
       local scheme, path = util.parse_url(action.url)
+      path = fs.posix_to_os_path(assert(path))
       local adapter = assert(config.get_adapter_by_scheme(scheme))
       if adapter.name == "files" then
         table.insert(creates, path)
       end
     elseif action.type == "delete" then
       local scheme, path = util.parse_url(action.url)
+      path = fs.posix_to_os_path(assert(path))
       local adapter = assert(config.get_adapter_by_scheme(scheme))
       if adapter.name == "files" then
         table.insert(deletes, path)
       end
     elseif action.type == "copy" then
       local scheme, path = util.parse_url(action.dest_url)
+      path = fs.posix_to_os_path(assert(path))
       local adapter = assert(config.get_adapter_by_scheme(scheme))
       if adapter.name == "files" then
         table.insert(creates, path)
