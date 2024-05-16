@@ -114,7 +114,6 @@ jobs:
         id: release
         with:
           release-type: simple
-          package-name: oil.nvim
       - uses: actions/checkout@v4
       - uses: rickstaa/action-create-tag@v1
         if: ${{ steps.release.outputs.release_created }}
