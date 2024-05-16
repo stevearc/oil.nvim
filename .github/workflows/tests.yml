@@ -31,10 +31,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Stylua
-        uses: JohnnyMorganz/stylua-action@v3
+        uses: JohnnyMorganz/stylua-action@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          version: v0.18.2
+          version: v0.20.0
           args: --check lua tests
 
   typecheck:
