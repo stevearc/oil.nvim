@@ -551,6 +551,7 @@ M.select = function(opts, callback)
   local cache = require("oil.cache")
   local config = require("oil.config")
   local constants = require("oil.constants")
+  local log = require("oil.log")
   local util = require("oil.util")
   local FIELD_META = constants.FIELD_META
   opts = vim.tbl_extend("keep", opts or {}, {})
@@ -585,12 +586,10 @@ M.select = function(opts, callback)
   if not adapter then
     return finish("Not an oil buffer")
   end
-  print(
-    "0 buf name:",
+  log.info(
+    "0 buf name: %s  current bufnr: %d  current buffer name: %s",
     vim.api.nvim_buf_get_name(0),
-    "current bufnr:",
     vim.api.nvim_get_current_buf(),
-    "current buffer name:",
     vim.api.nvim_buf_get_name(vim.api.nvim_get_current_buf())
   )
 
@@ -649,12 +648,10 @@ M.select = function(opts, callback)
 
   local prev_win = vim.api.nvim_get_current_win()
   local oil_bufnr = vim.api.nvim_get_current_buf()
-  print(
-    "oil_bufnr:",
+  log.info(
+    "oil_bufnr: %d  name: %s  0 buf name: %s",
     oil_bufnr,
-    "name:",
     vim.api.nvim_buf_get_name(oil_bufnr),
-    "0 buf name:",
     vim.api.nvim_buf_get_name(0)
   )
 
