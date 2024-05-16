@@ -14,11 +14,12 @@ end
 local M = {}
 
 ---@param method string
----@return lsp.Client[]
+---@return vim.lsp.Client[]
 local function get_clients(method)
   if vim.fn.has("nvim-0.10") == 1 then
     return vim.lsp.get_clients({ method = method })
   else
+    ---@diagnostic disable-next-line: deprecated
     local clients = vim.lsp.get_active_clients()
     return vim.tbl_filter(function(client)
       return client.supports_method(method)
@@ -47,7 +48,7 @@ local function match_glob(glob, path)
   return match >= 0
 end
 
----@param client lsp.Client
+---@param client vim.lsp.Client
 ---@param filters nil|lsp.FileOperationFilter[]
 ---@param paths string[]
 ---@return nil|string[]

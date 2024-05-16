@@ -349,7 +349,7 @@ M.open_float = function(dir)
   vim.cmd.edit({ args = { util.escape_filename(parent_url) }, mods = { keepalt = true } })
   -- :edit will set buflisted = true, but we may not want that
   if config.buf_options.buflisted ~= nil then
-    vim.api.nvim_buf_set_option(0, "buflisted", config.buf_options.buflisted)
+    vim.api.nvim_set_option_value("buflisted", config.buf_options.buflisted, { buf = 0 })
   end
 
   if vim.fn.has("nvim-0.9") == 0 then
@@ -400,7 +400,7 @@ M.open = function(dir)
   vim.cmd.edit({ args = { util.escape_filename(parent_url) }, mods = { keepalt = true } })
   -- :edit will set buflisted = true, but we may not want that
   if config.buf_options.buflisted ~= nil then
-    vim.api.nvim_buf_set_option(0, "buflisted", config.buf_options.buflisted)
+    vim.api.nvim_set_option_value("buflisted", config.buf_options.buflisted, { buf = 0 })
   end
 
   -- If preview window exists, update its content
@@ -835,8 +835,11 @@ local function set_colors()
   end
   -- TODO can remove this call once we drop support for Neovim 0.8. FloatTitle was introduced as a
   -- built-in highlight group in 0.9, and we can start to rely on colorschemes setting it.
-  if not pcall(vim.api.nvim_get_hl_by_name, "FloatTitle", true) then
+  ---@diagnostic disable-next-line: deprecated
+  if vim.fn.has("nvim-0.9") == 0 and not pcall(vim.api.nvim_get_hl_by_name, "FloatTitle", true) then
+    ---@diagnostic disable-next-line: deprecated
     local border = vim.api.nvim_get_hl_by_name("FloatBorder", true)
+    ---@diagnostic disable-next-line: deprecated
     local normal = vim.api.nvim_get_hl_by_name("Normal", true)
     vim.api.nvim_set_hl(
       0,
