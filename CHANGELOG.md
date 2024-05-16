@@ -1,5 +1,31 @@
 # Changelog
 
+## [2.9.0](https://github.com/stevearc/oil.nvim/compare/v2.8.0...v2.9.0) (2024-05-16)
+
+
+### Features
+
+* can restore Oil progress window when minimized ([fa3820e](https://github.com/stevearc/oil.nvim/commit/fa3820ebf1e8ccf5c7c0f3626d499b2c1aa8bc50))
+* experimental support for git operations ([#290](https://github.com/stevearc/oil.nvim/issues/290)) ([1f05774](https://github.com/stevearc/oil.nvim/commit/1f05774e1c2dbc1940104b5c950d5c7b65ec6e0b))
+
+
+### Bug Fixes
+
+* duplicate create actions ([#334](https://github.com/stevearc/oil.nvim/issues/334)) ([354c530](https://github.com/stevearc/oil.nvim/commit/354c53080a6d7f4f0b2f0cc12e53bede2480b9e5))
+* error when opening files from floating oil window ([#355](https://github.com/stevearc/oil.nvim/issues/355)) ([2bc56ad](https://github.com/stevearc/oil.nvim/commit/2bc56ad68afd092af1b2e77dd5d61e156938564c))
+* git mv errors when moving empty directory ([#358](https://github.com/stevearc/oil.nvim/issues/358)) ([6a7a10b](https://github.com/stevearc/oil.nvim/commit/6a7a10b6117aface6a25b54906140ad4f7fdabfc))
+* gracefully handle new dirs with trailing backslash on windows ([#336](https://github.com/stevearc/oil.nvim/issues/336)) ([be0a1ec](https://github.com/stevearc/oil.nvim/commit/be0a1ecbf0541692a1b9b6e8ea15f5f57db8747a))
+* icon column highlight parameter ([#366](https://github.com/stevearc/oil.nvim/issues/366)) ([752563c](https://github.com/stevearc/oil.nvim/commit/752563c59d64a5764cc0743d4fa0aac9ae4a2640))
+* race condition when entering oil buffer ([#321](https://github.com/stevearc/oil.nvim/issues/321)) ([c86e484](https://github.com/stevearc/oil.nvim/commit/c86e48407b8a45f9aa8acb2b4512b384ea1eec84))
+* **ssh:** bad argument when editing files over ssh ([#370](https://github.com/stevearc/oil.nvim/issues/370)) ([aa0c00c](https://github.com/stevearc/oil.nvim/commit/aa0c00c7fd51982ac476d165cd021f348cf5ea71))
+* **ssh:** config option to pass extra args to SCP ([#340](https://github.com/stevearc/oil.nvim/issues/340)) ([3abb607](https://github.com/stevearc/oil.nvim/commit/3abb6077d7d6b09f5eb794b8764223b3027f6807))
+* **ssh:** garbled output when directory has broken symlinks ([bcfc0a2](https://github.com/stevearc/oil.nvim/commit/bcfc0a2e01def5019aa14fac2fc6de20dedb6d3d))
+* support visual mode when preview window is open ([#315](https://github.com/stevearc/oil.nvim/issues/315)) ([f41d7e7](https://github.com/stevearc/oil.nvim/commit/f41d7e7cd8e4028b03c35d847b4396790ac8bb2d))
+* **windows:** convert posix paths before matching LSP watch globs ([#374](https://github.com/stevearc/oil.nvim/issues/374)) ([f630887](https://github.com/stevearc/oil.nvim/commit/f630887cd845a7341bc16488fe8aaecffe3aaa8a))
+* **windows:** file operation preview uses only backslash path separator ([#336](https://github.com/stevearc/oil.nvim/issues/336)) ([96f0983](https://github.com/stevearc/oil.nvim/commit/96f0983e754694e592d4313f583cd31eaebfa80d))
+* **windows:** navigating into drive letter root directories ([#341](https://github.com/stevearc/oil.nvim/issues/341)) ([f3a31eb](https://github.com/stevearc/oil.nvim/commit/f3a31eba24587bc038592103d8f7e64648292115))
+* **windows:** treat both backslash and frontslash as path separators ([#336](https://github.com/stevearc/oil.nvim/issues/336)) ([3b3a6b2](https://github.com/stevearc/oil.nvim/commit/3b3a6b23a120e69ddc980c9d32840ecd521fbff9))
+
 ## [2.8.0](https://github.com/stevearc/oil.nvim/compare/v2.7.0...v2.8.0) (2024-04-19)
 
 
