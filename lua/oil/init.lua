@@ -295,7 +295,7 @@ M.open_float = function(dir)
       desc = "Close floating oil window",
       group = "Oil",
       callback = vim.schedule_wrap(function()
-        if util.is_floating_win() then
+        if util.is_floating_win() or vim.fn.win_gettype() == "command" then
           return
         end
         if vim.api.nvim_win_is_valid(winid) then
