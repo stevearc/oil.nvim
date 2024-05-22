@@ -136,7 +136,7 @@ Select the entry under the cursor
 
 | Param    | Type                         | Desc                                               |                                                      |
 | -------- | ---------------------------- | -------------------------------------------------- | ---------------------------------------------------- |
-| opts     | `nil\|table`                 |                                                    |                                                      |
+| opts     | `nil\|oil.SelectOpts`        |                                                    |                                                      |
 |          | vertical                     | `boolean`                                          | Open the buffer in a vertical split                  |
 |          | horizontal                   | `boolean`                                          | Open the buffer in a horizontal split                |
 |          | split                        | `"aboveleft"\|"belowright"\|"topleft"\|"botright"` | Split modifier                                       |

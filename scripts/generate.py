@@ -6,16 +6,18 @@ from typing import List
 
 from nvim_doc_tools import (
     LuaParam,
+    LuaTypes,
     Vimdoc,
     VimdocSection,
     generate_md_toc,
     indent,
     leftright,
+    parse_directory,
     parse_functions,
     read_nvim_json,
     read_section,
-    render_md_api,
-    render_vimdoc_api,
+    render_md_api2,
+    render_vimdoc_api2,
     replace_section,
     wrap,
 )
@@ -37,8 +39,9 @@ def add_md_link_path(path: str, lines: List[str]) -> List[str]:
 
 def update_md_api():
     api_doc = os.path.join(DOC, "api.md")
-    funcs = parse_functions(os.path.join(ROOT, "lua", "oil", "init.lua"))
-    lines = ["\n"] + render_md_api(funcs, 2) + ["\n"]
+    types = parse_directory(os.path.join(ROOT, "lua"))
+    funcs = types.files["oil/init.lua"].functions
+    lines = ["\n"] + render_md_api2(funcs, types, 2) + ["\n"]
     replace_section(
         api_doc,
         r"^<!-- API -->$",
@@ -264,7 +267,7 @@ def get_columns_vimdoc() -> "VimdocSection":
         section.body.extend(wrap(col.summary, 4))
         section.body.append("\n")
         section.body.append("    Parameters:\n")
-        section.body.extend(format_vimdoc_params(col.params, 6))
+        section.body.extend(format_vimdoc_params(col.params, LuaTypes(), 6))
         section.body.append("\n")
     return section
 
@@ -302,12 +305,13 @@ Windows:
 
 def generate_vimdoc():
     doc = Vimdoc("oil.txt", "oil")
-    funcs = parse_functions(os.path.join(ROOT, "lua", "oil", "init.lua"))
+    types = parse_directory(os.path.join(ROOT, "lua"))
+    funcs = types.files["oil/init.lua"].functions
     doc.sections.extend(
         [
             get_options_vimdoc(),
             get_options_detail_vimdoc(),
-            VimdocSection("API", "oil-api", render_vimdoc_api("oil", funcs)),
+            VimdocSection("API", "oil-api", render_vimdoc_api2("oil", funcs, types)),
             get_columns_vimdoc(),
             get_actions_vimdoc(),
             get_highlights_vimdoc(),

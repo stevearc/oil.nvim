@@ -539,13 +539,15 @@ M.open_preview = function(opts, callback)
   end)
 end
 
+---@class (exact) oil.SelectOpts
+---@field vertical boolean Open the buffer in a vertical split
+---@field horizontal boolean Open the buffer in a horizontal split
+---@field split "aboveleft"|"belowright"|"topleft"|"botright" Split modifier
+---@field tab boolean Open the buffer in a new tab
+---@field close boolean Close the original oil buffer once selection is made
+
 ---Select the entry under the cursor
----@param opts nil|table
----    vertical boolean Open the buffer in a vertical split
----    horizontal boolean Open the buffer in a horizontal split
----    split "aboveleft"|"belowright"|"topleft"|"botright" Split modifier
----    tab boolean Open the buffer in a new tab
----    close boolean Close the original oil buffer once selection is made
+---@param opts nil|oil.SelectOpts
 ---@param callback nil|fun(err: nil|string) Called once all entries have been opened
 M.select = function(opts, callback)
   local cache = require("oil.cache")
