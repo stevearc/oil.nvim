@@ -338,7 +338,7 @@ setup({opts})                                                          *oil.setu
     Initialize oil
 
     Parameters:
-      {opts} `nil|table`
+      {opts} `oil.setupOpts|nil`
 
 --------------------------------------------------------------------------------
 COLUMNS                                                              *oil-columns*

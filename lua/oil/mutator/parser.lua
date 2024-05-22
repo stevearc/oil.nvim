@@ -25,7 +25,7 @@ local FIELD_META = constants.FIELD_META
 ---@field type "delete"
 ---@field name string
 ---@field id integer
----
+
 ---@class (exact) oil.DiffChange
 ---@field type "change"
 ---@field entry_type oil.EntryType

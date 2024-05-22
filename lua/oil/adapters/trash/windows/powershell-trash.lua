@@ -33,7 +33,7 @@ ConvertTo-Json $data -Compress
 ---@type nil|oil.PowershellConnection
 local list_entries_powershell
 
----@param cb fun(err?: string, raw_entries: oil.WindowsRawEntry[]?)
+---@param cb fun(err?: string, raw_entries?: oil.WindowsRawEntry[])
 M.list_raw_entries = function(cb)
   if not list_entries_powershell then
     list_entries_powershell = Powershell.new(list_entries_init)

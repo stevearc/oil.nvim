@@ -165,9 +165,9 @@ If you provide your own callback function, there will be no notification for err
 `setup(opts)` \
 Initialize oil
 
-| Param | Type         | Desc |
-| ----- | ------------ | ---- |
-| opts  | `nil\|table` |      |
+| Param | Type                 | Desc |
+| ----- | -------------------- | ---- |
+| opts  | `oil.setupOpts\|nil` |      |
 
 
 <!-- /API -->

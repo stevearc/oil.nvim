@@ -988,7 +988,7 @@ end
 
 local _on_key_ns = 0
 ---Initialize oil
----@param opts nil|table
+---@param opts oil.setupOpts|nil
 M.setup = function(opts)
   local Ringbuf = require("oil.ringbuf")
   local config = require("oil.config")
