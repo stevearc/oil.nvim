@@ -451,6 +451,9 @@ change_sort                                                  *actions.change_sor
 close                                                              *actions.close*
     Close oil and restore original buffer
 
+copy_entry_filename                                  *actions.copy_entry_filename*
+    Yank the filename of the entry under the cursor to a register
+
 copy_entry_path                                          *actions.copy_entry_path*
     Yank the filepath of the entry under the cursor to a register
 
