@@ -337,7 +337,7 @@ M.open_float = function(dir)
             relative = "editor",
             row = win_opts.row,
             col = win_opts.col,
-            width = win_opts.width,
+            width = vim.api.nvim_win_get_width(winid),
             height = win_opts.height,
             title = get_title(),
           })
@@ -466,8 +466,34 @@ M.open_preview = function(opts, callback)
       opts.split = vim.o.splitright and "belowright" or "aboveleft"
     end
   end
+
+  local preview_win = util.get_preview_win()
+  local prev_win = vim.api.nvim_get_current_win()
+  local bufnr = vim.api.nvim_get_current_buf()
+
+  local padding = 2
+
   if util.is_floating_win() then
-    return finish("oil preview doesn't work in a floating window")
+    if preview_win == nil then
+      local oilconfig = require("oil.config")
+      local config = vim.api.nvim_win_get_config(0)
+      local newWidth = math.floor(config.width / 2) - (padding / 2)
+
+      vim.api.nvim_win_set_width(0, newWidth)
+      local win_opts = {
+        relative = "editor",
+        width = newWidth,
+        height = config.height,
+        row = config.row,
+        col = newWidth + config.col + padding,
+        border = oilconfig.float.border,
+        zindex = 152,
+        title = 'Preview'
+      }
+      -- local test = vim.b.oil_preview_buffer
+      preview_win = vim.api.nvim_open_win(bufnr, false, win_opts)
+      vim.wo[preview_win].previewwindow = true
+    end
   end
 
   local entry = M.get_cursor_entry()
@@ -475,9 +501,6 @@ M.open_preview = function(opts, callback)
     return finish("Could not find entry under cursor")
   end
 
-  local preview_win = util.get_preview_win()
-  local prev_win = vim.api.nvim_get_current_win()
-  local bufnr = vim.api.nvim_get_current_buf()
 
   local cmd = preview_win and "buffer" or "sbuffer"
   local mods = {
@@ -502,6 +525,7 @@ M.open_preview = function(opts, callback)
       vim.api.nvim_set_current_win(preview_win)
     end
   end
+
 
   util.get_edit_path(bufnr, entry, function(normalized_url)
     local filebufnr = vim.fn.bufadd(normalized_url)
