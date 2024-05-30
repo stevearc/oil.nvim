@@ -121,6 +121,8 @@ local default_config = {
     win_options = {
       winblend = 0,
     },
+    -- gap between oil window and preview window
+    preview_gap = 2,
     -- This is the config that will be passed to nvim_open_win.
     -- Change values here to customize the layout
     override = function(conf)

@@ -471,13 +471,11 @@ M.open_preview = function(opts, callback)
   local prev_win = vim.api.nvim_get_current_win()
   local bufnr = vim.api.nvim_get_current_buf()
 
-  local padding = 2
-
   if util.is_floating_win() then
     if preview_win == nil then
       local oilconfig = require("oil.config")
       local config = vim.api.nvim_win_get_config(0)
-      local newWidth = math.floor(config.width / 2) - (padding / 2)
+      local newWidth = math.floor(config.width / 2) - (oilconfig.float.preview_gap / 2)
 
       vim.api.nvim_win_set_width(0, newWidth)
       local win_opts = {
@@ -485,7 +483,7 @@ M.open_preview = function(opts, callback)
         width = newWidth,
         height = config.height,
         row = config.row,
-        col = newWidth + config.col + padding,
+        col = newWidth + config.col + oilconfig.float.preview_gap,
         border = oilconfig.float.border,
         zindex = 152,
         title = 'Preview'
