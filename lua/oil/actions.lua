@@ -53,6 +53,18 @@ M.preview = {
       local cur_id = vim.w[winid].oil_entry_id
       if entry.id == cur_id then
         vim.api.nvim_win_close(winid, true)
+        if util.is_floating_win() then
+          local config = require("oil.config")
+          local total_width = vim.o.columns
+          local width = total_width - 2 * config.float.padding
+          if config.float.border ~= "none" then
+            width = width - 2 -- The border consumes 1 col on each side
+          end
+          if config.float.max_width > 0 then
+            width = math.min(width, config.float.max_width)
+          end
+          vim.api.nvim_win_set_width(0, width)
+        end
         return
       end
     end
