@@ -270,6 +270,7 @@ M.open_float = function(dir)
   end
   local row = math.floor((total_height - height) / 2)
   local col = math.floor((total_width - width) / 2) - 1 -- adjust for border width
+
   local win_opts = {
     relative = "editor",
     width = width,
@@ -333,12 +334,13 @@ M.open_float = function(dir)
           if not vim.api.nvim_win_is_valid(winid) or vim.api.nvim_win_get_buf(winid) ~= winbuf then
             return
           end
+          local cur_win_opts = vim.api.nvim_win_get_config(winid)
           vim.api.nvim_win_set_config(winid, {
             relative = "editor",
-            row = win_opts.row,
-            col = win_opts.col,
-            width = vim.api.nvim_win_get_width(winid),
-            height = win_opts.height,
+            row = cur_win_opts.row,
+            col = cur_win_opts.col,
+            width = cur_win_opts.width,
+            height = cur_win_opts.height,
             title = get_title(),
           })
         end,
@@ -473,22 +475,72 @@ M.open_preview = function(opts, callback)
 
   if util.is_floating_win() then
     if preview_win == nil then
-      local oilconfig = require("oil.config")
-      local config = vim.api.nvim_win_get_config(0)
-      local newWidth = math.floor(config.width / 2) - (oilconfig.float.preview_gap / 2)
+      local config = require("oil.config")
+      -- local default_dims = util.get_floating_win_default_dimensions()
+      local float_config = vim.api.nvim_win_get_config(0)
 
-      vim.api.nvim_win_set_width(0, newWidth)
+      local dimesions_preview = {
+        width = float_config.width,
+        height = float_config.height,
+        col = float_config.col,
+        row = float_config.row,
+      }
+
+      local dimesions_oil_window = {
+        width = float_config.width,
+        height = float_config.height,
+        col = float_config.col,
+        row = float_config.row,
+      }
+
+      if config.float.preview_split == 'left' or config.float.preview_split == 'right' then
+        dimesions_preview.width = math.floor(float_config.width / 2) - config.float.preview_gap
+        dimesions_oil_window.width = dimesions_preview.width
+      end
+
+      if config.float.preview_split == 'above' or config.float.preview_split == 'below' then
+        dimesions_preview.height = math.floor(float_config.height / 2) - config.float.preview_gap
+        dimesions_oil_window.height = dimesions_preview.height
+      end
+
+      if config.float.preview_split == 'left' then
+        dimesions_oil_window.col = dimesions_oil_window.col + dimesions_oil_window.width + config.float.preview_gap
+      end
+      if config.float.preview_split == 'right' then
+        dimesions_preview.col = dimesions_preview.col + dimesions_preview.width + config.float.preview_gap
+      end
+
+      if config.float.preview_split == 'above' then
+        dimesions_oil_window.row = dimesions_oil_window.row + dimesions_oil_window.height +
+            config.float.preview_gap
+      end
+      if config.float.preview_split == 'below' then
+        dimesions_preview.row = dimesions_preview.row + dimesions_preview.height +
+            config.float.preview_gap
+      end
+
+      local win_opts_oil = {
+        relative = "editor",
+        width = dimesions_oil_window.width,
+        height = dimesions_oil_window.height,
+        row = dimesions_oil_window.row,
+        col = dimesions_oil_window.col,
+        border = config.float.border,
+        zindex = 45,
+      }
+      vim.api.nvim_win_set_config(0, win_opts_oil)
       local win_opts = {
         relative = "editor",
-        width = newWidth,
-        height = config.height,
-        row = config.row,
-        col = newWidth + config.col + oilconfig.float.preview_gap,
-        border = oilconfig.float.border,
-        zindex = 45,
+        width = dimesions_preview.width,
+        height = dimesions_preview.height,
+        row = dimesions_preview.row,
+        col = dimesions_preview.col,
+        border = config.float.border,
+        zindex = 153,
         title = 'Preview',
         style = 'minimal'
       }
+
       preview_win = vim.api.nvim_open_win(bufnr, false, win_opts)
       vim.wo[preview_win].previewwindow = true
     end

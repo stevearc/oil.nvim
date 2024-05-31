@@ -54,16 +54,27 @@ M.preview = {
       if entry.id == cur_id then
         vim.api.nvim_win_close(winid, true)
         if util.is_floating_win() then
-          local config = require("oil.config")
-          local total_width = vim.o.columns
-          local width = total_width - 2 * config.float.padding
-          if config.float.border ~= "none" then
-            width = width - 2 -- The border consumes 1 col on each side
+          local config = require('oil.config')
+
+          local window_conf = vim.api.nvim_win_get_config(0)
+
+          if config.float.preview_split == 'left' then
+            window_conf.col = window_conf.col - window_conf.width - config.float.preview_gap
           end
-          if config.float.max_width > 0 then
-            width = math.min(width, config.float.max_width)
+
+          if config.float.preview_split == 'above' then
+            window_conf.row = window_conf.row - window_conf.height - config.float.preview_gap
           end
-          vim.api.nvim_win_set_width(0, width)
+
+          if config.float.preview_split == 'left' or config.float.preview_split == 'right' then
+            window_conf.width = window_conf.width * 2 + config.float.preview_gap
+          end
+
+          if config.float.preview_split == 'above' or config.float.preview_split == 'below' then
+            window_conf.height = window_conf.height * 2 + config.float.preview_gap
+          end
+
+          vim.api.nvim_win_set_config(0, window_conf)
         end
         return
       end
