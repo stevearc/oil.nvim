@@ -486,9 +486,9 @@ M.open_preview = function(opts, callback)
         col = newWidth + config.col + oilconfig.float.preview_gap,
         border = oilconfig.float.border,
         zindex = 152,
-        title = 'Preview'
+        title = 'Preview',
+        style = 'minimal'
       }
-      -- local test = vim.b.oil_preview_buffer
       preview_win = vim.api.nvim_open_win(bufnr, false, win_opts)
       vim.wo[preview_win].previewwindow = true
     end
