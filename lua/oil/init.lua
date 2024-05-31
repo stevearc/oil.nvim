@@ -485,7 +485,7 @@ M.open_preview = function(opts, callback)
         row = config.row,
         col = newWidth + config.col + oilconfig.float.preview_gap,
         border = oilconfig.float.border,
-        zindex = 152,
+        zindex = 45,
         title = 'Preview',
         style = 'minimal'
       }
