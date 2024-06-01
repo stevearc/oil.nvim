@@ -212,8 +212,12 @@ end
 ---Delete unmodified, hidden oil buffers and if none remain, clear the cache
 M.delete_hidden_buffers = function()
   local visible_buffers, hidden_buffers = get_visible_hidden_buffers()
-  if not visible_buffers or not hidden_buffers or not vim.tbl_isempty(visible_buffers)
-      or vim.fn.win_gettype() == "command" then
+  if
+    not visible_buffers
+    or not hidden_buffers
+    or not vim.tbl_isempty(visible_buffers)
+    or vim.fn.win_gettype() == "command"
+  then
     return
   end
   for _, bufnr in ipairs(hidden_buffers) do
