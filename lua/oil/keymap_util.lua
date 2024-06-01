@@ -99,8 +99,8 @@ M.show_help = function(keymaps)
   end
   vim.keymap.set("n", "q", "<cmd>close<CR>", { buffer = bufnr })
   vim.keymap.set("n", "<c-c>", "<cmd>close<CR>", { buffer = bufnr })
-  vim.api.nvim_buf_set_option(bufnr, "modifiable", false)
-  vim.api.nvim_buf_set_option(bufnr, "bufhidden", "wipe")
+  vim.bo[bufnr].modifiable = false
+  vim.bo[bufnr].bufhidden = "wipe"
 
   local editor_width = vim.o.columns
   local editor_height = layout.get_editor_height()

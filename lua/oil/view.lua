@@ -331,7 +331,7 @@ M.initialize = function(bufnr)
   vim.b[bufnr].EditorConfig_disable = 1
   session[bufnr] = session[bufnr] or {}
   for k, v in pairs(config.buf_options) do
-    vim.api.nvim_buf_set_option(bufnr, k, v)
+    vim.bo[bufnr][k] = v
   end
   M.set_win_options()
   vim.api.nvim_create_autocmd("BufHidden", {

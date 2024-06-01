@@ -1,9 +1,6 @@
 local oil = require("oil")
 local util = require("oil.util")
 
--- TODO remove after https://github.com/folke/neodev.nvim/pull/163 lands
----@diagnostic disable: inject-field
-
 local M = {}
 
 M.show_help = {

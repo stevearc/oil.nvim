@@ -124,6 +124,7 @@ end
 ---@return nil|oil.InternalEntry
 M.get_entry_by_url = function(url)
   local scheme, path = util.parse_url(url)
+  assert(path)
   local parent_url = scheme .. vim.fn.fnamemodify(path, ":h")
   local basename = vim.fn.fnamemodify(path, ":t")
   return M.list_url(parent_url)[basename]
@@ -150,11 +151,13 @@ end
 M.perform_action = function(action)
   if action.type == "create" then
     local scheme, path = util.parse_url(action.url)
+    assert(path)
     local parent_url = util.addslash(scheme .. vim.fn.fnamemodify(path, ":h"))
     local name = vim.fn.fnamemodify(path, ":t")
     M.create_and_store_entry(parent_url, name, action.entry_type)
   elseif action.type == "delete" then
     local scheme, path = util.parse_url(action.url)
+    assert(path)
     local parent_url = util.addslash(scheme .. vim.fn.fnamemodify(path, ":h"))
     local name = vim.fn.fnamemodify(path, ":t")
     local entry = url_directory[parent_url][name]
@@ -163,11 +166,13 @@ M.perform_action = function(action)
     parent_url_by_id[entry[FIELD_ID]] = nil
   elseif action.type == "move" then
     local src_scheme, src_path = util.parse_url(action.src_url)
+    assert(src_path)
     local src_parent_url = util.addslash(src_scheme .. vim.fn.fnamemodify(src_path, ":h"))
     local src_name = vim.fn.fnamemodify(src_path, ":t")
     local entry = url_directory[src_parent_url][src_name]
 
     local dest_scheme, dest_path = util.parse_url(action.dest_url)
+    assert(dest_path)
     local dest_parent_url = util.addslash(dest_scheme .. vim.fn.fnamemodify(dest_path, ":h"))
     local dest_name = vim.fn.fnamemodify(dest_path, ":t")
 
@@ -185,6 +190,7 @@ M.perform_action = function(action)
     util.update_moved_buffers(action.entry_type, action.src_url, action.dest_url)
   elseif action.type == "copy" then
     local scheme, path = util.parse_url(action.dest_url)
+    assert(path)
     local parent_url = util.addslash(scheme .. vim.fn.fnamemodify(path, ":h"))
     local name = vim.fn.fnamemodify(path, ":t")
     M.create_and_store_entry(parent_url, name, action.entry_type)
