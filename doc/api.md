@@ -56,15 +56,12 @@ Change the display columns for oil
 
 ## set_sort(sort)
 
-`set_sort(sort)`\
+`set_sort(sort)` \
 Change the sort order for oil
 
-| Param | Type         | Desc |
-| ----- | ------------ | ---- |
-| sort  | `string[][]` |      |
-
-- See `:help oil-columns` to see which fields are sortable
-- Use `"type"` to sort alphabetically
+| Param | Type         | Desc                                                     |
+| ----- | ------------ | -------------------------------------------------------- |
+| sort  | `string[][]` | See `:help oil-columns` to see which fields are sortable |
 
 Example: `require("oil").set_sort({ { "size", "desc"} })`
 
