@@ -216,8 +216,6 @@ M.parse = function(bufnr)
         err_message = "No filename found"
       elseif not entry then
         err_message = "Could not find existing entry (was the ID changed?)"
-      elseif parsed_entry.name:match("/") or parsed_entry.name:match(fs.sep) then
-        err_message = "Filename cannot contain path separator"
       end
       if err_message then
         table.insert(errors, {
