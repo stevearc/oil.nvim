@@ -124,7 +124,7 @@ local default_config = {
     -- gap between oil window and preview window
     preview_gap = 2,
     -- preview_split: Split direction: "left", "right", "above", "below".
-    preview_split = 'below',
+    preview_split = 'left',
     -- This is the config that will be passed to nvim_open_win.
     -- Change values here to customize the layout
     override = function(conf)

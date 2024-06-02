@@ -493,13 +493,20 @@ M.open_preview = function(opts, callback)
         row = float_config.row,
       }
 
+      if vim.fn.has('nvim-0.10') == 0 then
+        -- read https://github.com/neovim/neovim/issues/24430 for more infos.
+        dimesions_preview.col = float_config.col[vim.val_idx]
+        dimesions_preview.row = float_config.row[vim.val_idx]
+        dimesions_oil_window.col = float_config.col[vim.val_idx]
+        dimesions_oil_window.row = float_config.row[vim.val_idx]
+      end
       if config.float.preview_split == 'left' or config.float.preview_split == 'right' then
-        dimesions_preview.width = math.floor(float_config.width / 2) - config.float.preview_gap
+        dimesions_preview.width = math.floor(float_config.width / 2) - (config.float.preview_gap / 2)
         dimesions_oil_window.width = dimesions_preview.width
       end
 
       if config.float.preview_split == 'above' or config.float.preview_split == 'below' then
-        dimesions_preview.height = math.floor(float_config.height / 2) - config.float.preview_gap
+        dimesions_preview.height = math.floor(float_config.height / 2) - (config.float.preview_gap / 2)
         dimesions_oil_window.height = dimesions_preview.height
       end
 

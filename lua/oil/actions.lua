@@ -58,6 +58,11 @@ M.preview = {
 
           local window_conf = vim.api.nvim_win_get_config(0)
 
+          if vim.fn.has('nvim-0.10') == 0 then
+            -- read https://github.com/neovim/neovim/issues/24430 for more infos.
+            window_conf.col = window_conf.col[vim.val_idx]
+            window_conf.row = window_conf.row[vim.val_idx]
+          end
           if config.float.preview_split == 'left' then
             window_conf.col = window_conf.col - window_conf.width - config.float.preview_gap
           end
