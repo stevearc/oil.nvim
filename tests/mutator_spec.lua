@@ -42,6 +42,34 @@ a.describe("mutator", function()
       }, actions)
     end)
 
+    it("constructs CREATE actions to non-existing directories", function()
+      vim.cmd.edit({ args = { "oil-test:///foo/" } })
+      local bufnr = vim.api.nvim_get_current_buf()
+      local diffs = {
+        { type = "new", name = "bar/baz/a.txt", entry_type = "file" },
+      }
+      local actions = mutator.create_actions_from_diffs({
+        [bufnr] = diffs,
+      })
+      assert.are.same({
+        {
+          type = "create",
+          entry_type = "directory",
+          url = "oil-test:///foo/bar",
+        },
+        {
+          type = "create",
+          entry_type = "directory",
+          url = "oil-test:///foo/bar/baz",
+        },
+        {
+          type = "create",
+          entry_type = "file",
+          url = "oil-test:///foo/bar/baz/a.txt",
+        },
+      }, actions)
+    end)
+
     it("constructs DELETE actions", function()
       local file = test_adapter.test_set("/foo/a.txt", "file")
       vim.cmd.edit({ args = { "oil-test:///foo/" } })
