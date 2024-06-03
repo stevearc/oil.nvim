@@ -589,7 +589,6 @@ M.open_preview = function(opts, callback)
     end
   end
 
-
   util.get_edit_path(bufnr, entry, function(normalized_url)
     local filebufnr = vim.fn.bufadd(normalized_url)
     local entry_is_file = not vim.endswith(normalized_url, "/")
