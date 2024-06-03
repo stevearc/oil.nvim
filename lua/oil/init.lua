@@ -549,7 +549,7 @@ M.open_preview = function(opts, callback)
         row = dimesions_preview.row,
         col = dimesions_preview.col,
         border = config.float.border,
-        zindex = 153,
+        zindex = 45,
         title = 'Preview',
         style = 'minimal'
       }
