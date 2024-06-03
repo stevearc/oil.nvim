@@ -383,9 +383,9 @@ local function update_preview_window(oil_bufnr)
     local cursor_entry = M.get_cursor_entry()
     local preview_win_id = util.get_preview_win()
     if
-        cursor_entry
-        and preview_win_id
-        and cursor_entry.id ~= vim.w[preview_win_id].oil_entry_id
+      cursor_entry
+      and preview_win_id
+      and cursor_entry.id ~= vim.w[preview_win_id].oil_entry_id
     then
       M.open_preview()
     end
@@ -797,9 +797,9 @@ M.select = function(opts, callback)
       return finish(err)
     end
     if
-        opts.close
-        and vim.api.nvim_win_is_valid(prev_win)
-        and prev_win ~= vim.api.nvim_get_current_win()
+      opts.close
+      and vim.api.nvim_win_is_valid(prev_win)
+      and prev_win ~= vim.api.nvim_get_current_win()
     then
       vim.api.nvim_win_call(prev_win, function()
         M.close()
@@ -974,7 +974,7 @@ local function restore_alt_buf()
         -- If we are editing the same buffer that we started oil from, set the alternate to be
         -- what it was before we opened oil
         local has_orig_alt, alt_buffer =
-            pcall(vim.api.nvim_win_get_var, 0, "oil_original_alternate")
+          pcall(vim.api.nvim_win_get_var, 0, "oil_original_alternate")
         if has_orig_alt and vim.api.nvim_buf_is_valid(alt_buffer) then
           vim.fn.setreg("#", alt_buffer)
         end
@@ -1185,11 +1185,11 @@ M.setup = function(opts)
       local winid = vim.api.nvim_get_current_win()
       -- If the user issued a :wq or similar, we should quit after saving
       local quit_after_save = vim.endswith(last_keys, ":wq\r")
-          or vim.endswith(last_keys, ":x\r")
-          or vim.endswith(last_keys, "ZZ")
+        or vim.endswith(last_keys, ":x\r")
+        or vim.endswith(last_keys, "ZZ")
       local quit_all = vim.endswith(last_keys, ":wqa\r")
-          or vim.endswith(last_keys, ":wqal\r")
-          or vim.endswith(last_keys, ":wqall\r")
+        or vim.endswith(last_keys, ":wqal\r")
+        or vim.endswith(last_keys, ":wqall\r")
       local bufname = vim.api.nvim_buf_get_name(params.buf)
       if vim.endswith(bufname, "/") then
         vim.cmd.doautocmd({ args = { "BufWritePre", params.file }, mods = { silent = true } })
