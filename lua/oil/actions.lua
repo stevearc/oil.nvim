@@ -268,6 +268,17 @@ M.copy_entry_path = {
   end,
 }
 
+M.copy_entry_filename = {
+  desc = "Yank the filename of the entry under the cursor to a register",
+  callback = function()
+    local entry = oil.get_cursor_entry()
+    if not entry then
+      return
+    end
+    vim.fn.setreg(vim.v.register, entry.name)
+  end,
+}
+
 M.open_cmdline_dir = {
   desc = "Open vim cmdline with current directory as an argument",
   callback = function()
