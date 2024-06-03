@@ -59,9 +59,14 @@ Change the display columns for oil
 `set_sort(sort)` \
 Change the sort order for oil
 
-| Param | Type       | Desc |
-| ----- | ---------- | ---- |
-| sort  | `string[]` | []   |
+| Param | Type             | Desc                                                                                  |
+| ----- | ---------------- | ------------------------------------------------------------------------------------- |
+| sort  | `oil.SortSpec[]` | List of columns plus direction. See :help oil-columns to see which ones are sortable. |
+
+**Examples:**
+```lua
+require("oil").set_sort({ { "type", "asc" }, { "size", "desc" } })
+```
 
 ## set_is_hidden_file(is_hidden_file)
 

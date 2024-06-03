@@ -121,7 +121,9 @@ M.set_columns = function(cols)
 end
 
 ---Change the sort order for oil
----@param sort string[][]
+---@param sort oil.SortSpec[] List of columns plus direction. See :help oil-columns to see which ones are sortable.
+---@example
+--- require("oil").set_sort({ { "type", "asc" }, { "size", "desc" } })
 M.set_sort = function(sort)
   require("oil.view").set_sort(sort)
 end
