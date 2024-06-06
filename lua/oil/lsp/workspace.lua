@@ -72,8 +72,21 @@ local function get_matching_paths(client, filters, paths)
         glob = glob:gsub("/", "\\")
       end
 
-      ---@type nil|vim.lpeg.Pattern
-      local glob_pattern = vim.glob and vim.glob.to_lpeg and vim.glob.to_lpeg(glob)
+      ---@type string|vim.lpeg.Pattern
+      local glob_to_match = glob
+      if vim.glob and vim.glob.to_lpeg then
+        -- HACK around https://github.com/neovim/neovim/issues/28931
+        -- find alternations and sort them by length to try to match the longest first
+        glob = glob:gsub("{(.*)}", function(s)
+          local pieces = vim.split(s, ",")
+          table.sort(pieces, function(a, b)
+            return a:len() > b:len()
+          end)
+          return "{" .. table.concat(pieces, ",") .. "}"
+        end)
+
+        glob_to_match = vim.glob.to_lpeg(glob)
+      end
       local matches = pattern.matches
       table.insert(match_fns, function(path)
         local is_dir = vim.fn.isdirectory(path) == 1
@@ -84,7 +97,7 @@ local function get_matching_paths(client, filters, paths)
         if ignore_case then
           path = path:lower()
         end
-        return match_glob(glob_pattern or glob, path)
+        return match_glob(glob_to_match, path)
       end)
     end
   end
