@@ -54,28 +54,28 @@ M.preview = {
       if entry.id == cur_id then
         vim.api.nvim_win_close(winid, true)
         if util.is_floating_win() then
-          local config = require('oil.config')
+          local config = require("oil.config")
 
           local window_conf = vim.api.nvim_win_get_config(0)
 
-          if vim.fn.has('nvim-0.10') == 0 then
+          if vim.fn.has("nvim-0.10") == 0 then
             -- read https://github.com/neovim/neovim/issues/24430 for more infos.
             window_conf.col = window_conf.col[vim.val_idx]
             window_conf.row = window_conf.row[vim.val_idx]
           end
-          if config.float.preview_split == 'left' then
+          if config.float.preview_split == "left" then
             window_conf.col = window_conf.col - window_conf.width - config.float.preview_gap
           end
 
-          if config.float.preview_split == 'above' then
+          if config.float.preview_split == "above" then
             window_conf.row = window_conf.row - window_conf.height - config.float.preview_gap
           end
 
-          if config.float.preview_split == 'left' or config.float.preview_split == 'right' then
+          if config.float.preview_split == "left" or config.float.preview_split == "right" then
             window_conf.width = window_conf.width * 2 + config.float.preview_gap
           end
 
-          if config.float.preview_split == 'above' or config.float.preview_split == 'below' then
+          if config.float.preview_split == "above" or config.float.preview_split == "below" then
             window_conf.height = window_conf.height * 2 + config.float.preview_gap
           end
 

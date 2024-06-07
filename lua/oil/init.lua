@@ -246,11 +246,6 @@ M.open_float = function(dir)
   local util = require("oil.util")
   local view = require("oil.view")
 
-  local preview_win = util.get_preview_win()
-  if preview_win ~= nil then
-    vim.api.nvim_win_close(preview_win, true)
-  end
-
   local parent_url, basename = M.get_url_for_path(dir)
   if not parent_url then
     return
@@ -499,37 +494,45 @@ M.open_preview = function(opts, callback)
         row = float_config.row,
       }
 
-      if vim.fn.has('nvim-0.10') == 0 then
+      if vim.fn.has("nvim-0.10") == 0 then
         -- read https://github.com/neovim/neovim/issues/24430 for more infos.
         dimesions_preview.col = float_config.col[vim.val_idx]
         dimesions_preview.row = float_config.row[vim.val_idx]
         dimesions_oil_window.col = float_config.col[vim.val_idx]
         dimesions_oil_window.row = float_config.row[vim.val_idx]
       end
-      if config.float.preview_split == 'left' or config.float.preview_split == 'right' then
-        dimesions_preview.width = math.floor(float_config.width / 2) - (config.float.preview_gap / 2)
+      if config.float.preview_split == "left" or config.float.preview_split == "right" then
+        dimesions_preview.width = math.floor(float_config.width / 2)
+          - (config.float.preview_gap / 2)
         dimesions_oil_window.width = dimesions_preview.width
       end
 
-      if config.float.preview_split == 'above' or config.float.preview_split == 'below' then
-        dimesions_preview.height = math.floor(float_config.height / 2) - (config.float.preview_gap / 2)
+      if config.float.preview_split == "above" or config.float.preview_split == "below" then
+        dimesions_preview.height = math.floor(float_config.height / 2)
+          - (config.float.preview_gap / 2)
         dimesions_oil_window.height = dimesions_preview.height
       end
 
-      if config.float.preview_split == 'left' then
-        dimesions_oil_window.col = dimesions_oil_window.col + dimesions_oil_window.width + config.float.preview_gap
+      if config.float.preview_split == "left" then
+        dimesions_oil_window.col = dimesions_oil_window.col
+          + dimesions_oil_window.width
+          + config.float.preview_gap
       end
-      if config.float.preview_split == 'right' then
-        dimesions_preview.col = dimesions_preview.col + dimesions_preview.width + config.float.preview_gap
+      if config.float.preview_split == "right" then
+        dimesions_preview.col = dimesions_preview.col
+          + dimesions_preview.width
+          + config.float.preview_gap
       end
 
-      if config.float.preview_split == 'above' then
-        dimesions_oil_window.row = dimesions_oil_window.row + dimesions_oil_window.height +
-            config.float.preview_gap
+      if config.float.preview_split == "above" then
+        dimesions_oil_window.row = dimesions_oil_window.row
+          + dimesions_oil_window.height
+          + config.float.preview_gap
       end
-      if config.float.preview_split == 'below' then
-        dimesions_preview.row = dimesions_preview.row + dimesions_preview.height +
-            config.float.preview_gap
+      if config.float.preview_split == "below" then
+        dimesions_preview.row = dimesions_preview.row
+          + dimesions_preview.height
+          + config.float.preview_gap
       end
 
       local win_opts_oil = {
@@ -550,8 +553,8 @@ M.open_preview = function(opts, callback)
         col = dimesions_preview.col,
         border = config.float.border,
         zindex = 45,
-        title = 'Preview',
-        style = 'minimal'
+        title = "Preview",
+        style = "minimal",
       }
 
       preview_win = vim.api.nvim_open_win(bufnr, false, win_opts)
@@ -563,7 +566,6 @@ M.open_preview = function(opts, callback)
   if not entry then
     return finish("Could not find entry under cursor")
   end
-
 
   local cmd = preview_win and "buffer" or "sbuffer"
   local mods = {
