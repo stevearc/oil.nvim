@@ -63,7 +63,10 @@ M.preview = {
             window_conf.col = window_conf.col[vim.val_idx]
             window_conf.row = window_conf.row[vim.val_idx]
           end
-          if config.float.preview_split == "left" then
+          if
+            config.float.preview_split == "left"
+            or (config.float.preview_split == "auto" and not vim.o.splitright)
+          then
             window_conf.col = window_conf.col - window_conf.width - config.float.preview_gap
           end
 
@@ -71,7 +74,11 @@ M.preview = {
             window_conf.row = window_conf.row - window_conf.height - config.float.preview_gap
           end
 
-          if config.float.preview_split == "left" or config.float.preview_split == "right" then
+          if
+            config.float.preview_split == "left"
+            or config.float.preview_split == "right"
+            or config.float.preview_split == "auto"
+          then
             window_conf.width = window_conf.width * 2 + config.float.preview_gap
           end
 

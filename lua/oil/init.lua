@@ -501,7 +501,11 @@ M.open_preview = function(opts, callback)
         dimesions_oil_window.col = float_config.col[vim.val_idx]
         dimesions_oil_window.row = float_config.row[vim.val_idx]
       end
-      if config.float.preview_split == "left" or config.float.preview_split == "right" then
+      if
+        config.float.preview_split == "left"
+        or config.float.preview_split == "right"
+        or config.float.preview_split == "auto"
+      then
         dimesions_preview.width = math.floor(float_config.width / 2)
           - (config.float.preview_gap / 2)
         dimesions_oil_window.width = dimesions_preview.width
@@ -513,12 +517,18 @@ M.open_preview = function(opts, callback)
         dimesions_oil_window.height = dimesions_preview.height
       end
 
-      if config.float.preview_split == "left" then
+      if
+        config.float.preview_split == "left"
+        or (config.float.preview_split == "auto" and not vim.o.splitright)
+      then
         dimesions_oil_window.col = dimesions_oil_window.col
           + dimesions_oil_window.width
           + config.float.preview_gap
       end
-      if config.float.preview_split == "right" then
+      if
+        config.float.preview_split == "right"
+        or (config.float.preview_split == "auto" and vim.o.splitright)
+      then
         dimesions_preview.col = dimesions_preview.col
           + dimesions_preview.width
           + config.float.preview_gap
@@ -553,12 +563,15 @@ M.open_preview = function(opts, callback)
         col = dimesions_preview.col,
         border = config.float.border,
         zindex = 45,
+        focusable = false,
+        noautocmd = true,
         title = "Preview",
         style = "minimal",
       }
 
-      preview_win = vim.api.nvim_open_win(bufnr, false, win_opts)
-      vim.wo[preview_win].previewwindow = true
+      preview_win = vim.api.nvim_open_win(bufnr, true, win_opts)
+      vim.api.nvim_set_option_value("previewwindow", true, { scope = "local", win = preview_win })
+      vim.api.nvim_set_current_win(prev_win)
     end
   end
 
