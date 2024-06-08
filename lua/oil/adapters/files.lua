@@ -433,14 +433,21 @@ M.is_modifiable = function(bufnr)
   end
 
   local uid = uv.getuid()
-  local gid = uv.getgid()
+  local gids = vim.fn.split(vim.fn.system("id -G"))
   local rwx
   if uid == stat.uid then
     rwx = bit.rshift(stat.mode, 6)
-  elseif gid == stat.gid then
-    rwx = bit.rshift(stat.mode, 3)
   else
-    rwx = stat.mode
+    local in_group = false
+    for _, gid in ipairs(gids) do
+      if tonumber(gid) == stat.gid then
+        rwx = bit.rshift(stat.mode, 3)
+        in_group = true
+      end
+    end
+    if not in_group then
+      rwx = stat.mode
+    end
   end
   return bit.band(rwx, 2) ~= 0
 end
