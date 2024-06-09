@@ -102,7 +102,7 @@ local function cd(cmd)
   local dir = oil.get_current_dir()
   if dir then
     vim.cmd({ cmd = cmd, args = { dir } })
-    vim.notify(string.format("Change directory: %s", dir), vim.log.levels.INFO)
+    vim.notify(string.format("CWD: %s", dir), vim.log.levels.INFO)
   else
     vim.notify("Cannot :cd; not in a directory", vim.log.levels.WARN)
   end
