@@ -77,13 +77,15 @@ local function get_matching_paths(client, filters, paths)
       if vim.glob and vim.glob.to_lpeg then
         -- HACK around https://github.com/neovim/neovim/issues/28931
         -- find alternations and sort them by length to try to match the longest first
-        glob = glob:gsub("{(.*)}", function(s)
-          local pieces = vim.split(s, ",")
-          table.sort(pieces, function(a, b)
-            return a:len() > b:len()
+        if vim.has("nvim-0.11") == 0 then
+          glob = glob:gsub("{(.*)}", function(s)
+            local pieces = vim.split(s, ",")
+            table.sort(pieces, function(a, b)
+              return a:len() > b:len()
+            end)
+            return "{" .. table.concat(pieces, ",") .. "}"
           end)
-          return "{" .. table.concat(pieces, ",") .. "}"
-        end)
+        end
 
         glob_to_match = vim.glob.to_lpeg(glob)
       end
