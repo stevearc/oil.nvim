@@ -10,10 +10,14 @@ local M = {}
 ---@return string|nil mode
 local function resolve(rhs)
   if type(rhs) == "string" and vim.startswith(rhs, "actions.") then
-    return resolve(actions[vim.split(rhs, ".", { plain = true })[2]])
+    local action_name = vim.split(rhs, ".", { plain = true })[2]
+    local action = actions[action_name]
+    assert(action, "Unknown action name: " .. action_name)
+    return resolve(action)
   elseif type(rhs) == "table" then
     local opts = vim.deepcopy(rhs)
-    local callback = opts.callback
+    -- We support passing in a `callback` key, or using the 1 index as the rhs of the keymap
+    local callback = resolve(opts.callback or opts[1])
     local mode = opts.mode
     if type(rhs.callback) == "string" then
       local action_opts, action_mode
@@ -21,8 +25,24 @@ local function resolve(rhs)
       opts = vim.tbl_extend("keep", opts, action_opts)
       mode = mode or action_mode
     end
+
+    -- remove all the keys that we can't pass as options to `vim.keymap.set`
     opts.callback = nil
     opts.mode = nil
+    opts[1] = nil
+    opts.deprecated = nil
+    opts.parameters = nil
+
+    if opts.opts and type(callback) == "function" then
+      local callback_args = opts.opts
+      opts.opts = nil
+      local orig_callback = callback
+      callback = function()
+        ---@diagnostic disable-next-line: redundant-parameter
+        orig_callback(callback_args)
+      end
+    end
+
     return callback, opts, mode
   else
     return rhs, {}

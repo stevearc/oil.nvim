@@ -4,20 +4,48 @@ local util = require("oil.util")
 local M = {}
 
 M.show_help = {
-  desc = "Show default keymaps",
   callback = function()
     local config = require("oil.config")
     require("oil.keymap_util").show_help(config.keymaps)
   end,
+  desc = "Show default keymaps",
 }
 
 M.select = {
   desc = "Open the entry under the cursor",
-  callback = oil.select,
+  callback = function(opts)
+    opts = opts or {}
+    local callback = opts.callback
+    opts.callback = nil
+    oil.select(opts, callback)
+  end,
+  parameters = {
+    vertical = {
+      type = "boolean",
+      desc = "Open the buffer in a vertical split",
+    },
+    horizontal = {
+      type = "boolean",
+      desc = "Open the buffer in a horizontal split",
+    },
+    split = {
+      type = '"aboveleft"|"belowright"|"topleft"|"botright"',
+      desc = "Split modifier",
+    },
+    tab = {
+      type = "boolean",
+      desc = "Open the buffer in a new tab",
+    },
+    close = {
+      type = "boolean",
+      desc = "Close the original oil buffer once selection is made",
+    },
+  },
 }
 
 M.select_vsplit = {
   desc = "Open the entry under the cursor in a vertical split",
+  deprecated = true,
   callback = function()
     oil.select({ vertical = true })
   end,
@@ -25,6 +53,7 @@ M.select_vsplit = {
 
 M.select_split = {
   desc = "Open the entry under the cursor in a horizontal split",
+  deprecated = true,
   callback = function()
     oil.select({ horizontal = true })
   end,
@@ -32,6 +61,7 @@ M.select_split = {
 
 M.select_tab = {
   desc = "Open the entry under the cursor in a new tab",
+  deprecated = true,
   callback = function()
     oil.select({ tab = true })
   end,
@@ -98,11 +128,14 @@ M.close = {
 }
 
 ---@param cmd string
-local function cd(cmd)
+---@param silent? boolean
+local function cd(cmd, silent)
   local dir = oil.get_current_dir()
   if dir then
     vim.cmd({ cmd = cmd, args = { dir } })
-    vim.notify(string.format("CWD: %s", dir), vim.log.levels.INFO)
+    if not silent then
+      vim.notify(string.format("CWD: %s", dir), vim.log.levels.INFO)
+    end
   else
     vim.notify("Cannot :cd; not in a directory", vim.log.levels.WARN)
   end
@@ -110,13 +143,31 @@ end
 
 M.cd = {
   desc = ":cd to the current oil directory",
-  callback = function()
-    cd("cd")
+  callback = function(opts)
+    opts = opts or {}
+    local cmd = "cd"
+    if opts.scope == "tab" then
+      cmd = "tcd"
+    elseif opts.scope == "win" then
+      cmd = "lcd"
+    end
+    cd(cmd, opts.silent)
   end,
+  parameters = {
+    scope = {
+      type = 'nil|"tab"|"win"',
+      desc = "Scope of the directory change (e.g. use |:tcd| or |:lcd|)",
+    },
+    silent = {
+      type = "boolean",
+      desc = "Do not show a message when changing directories",
+    },
+  },
 }
 
 M.tcd = {
   desc = ":tcd to the current oil directory",
+  deprecated = true,
   callback = function()
     cd("tcd")
   end,
@@ -200,8 +251,12 @@ M.open_external = {
       return
     end
     local path = dir .. entry.name
-    -- TODO use vim.ui.open once this is resolved
-    -- https://github.com/neovim/neovim/issues/24567
+
+    if vim.ui.open then
+      vim.ui.open(path)
+      return
+    end
+
     local cmd, err = get_open_cmd(path)
     if not cmd then
       vim.notify(string.format("Could not open %s: %s", path, err), vim.log.levels.ERROR)
@@ -214,8 +269,9 @@ M.open_external = {
 
 M.refresh = {
   desc = "Refresh current directory list",
-  callback = function()
-    if vim.bo.modified then
+  callback = function(opts)
+    opts = opts or {}
+    if vim.bo.modified and not opts.force then
       local ok, choice = pcall(vim.fn.confirm, "Discard changes?", "No\nYes")
       if not ok or choice ~= 2 then
         return
@@ -226,6 +282,12 @@ M.refresh = {
     -- :h CTRL-L-default
     vim.cmd.nohlsearch()
   end,
+  parameters = {
+    force = {
+      desc = "When true, do not prompt user if they will be discarding changes",
+      type = "boolean",
+    },
+  },
 }
 
 local function open_cmdline_with_path(path)
@@ -236,7 +298,10 @@ end
 
 M.open_cmdline = {
   desc = "Open vim cmdline with current entry as an argument",
-  callback = function()
+  callback = function(opts)
+    opts = vim.tbl_deep_extend("keep", opts or {}, {
+      shorten_path = true,
+    })
     local config = require("oil.config")
     local fs = require("oil.fs")
     local entry = oil.get_cursor_entry()
@@ -252,13 +317,53 @@ M.open_cmdline = {
     if not adapter or not path or adapter.name ~= "files" then
       return
     end
-    local fullpath = fs.shorten_path(fs.posix_to_os_path(path) .. entry.name)
+    local fullpath = fs.posix_to_os_path(path) .. entry.name
+    if opts.modify then
+      fullpath = vim.fn.fnamemodify(fullpath, opts.modify)
+    end
+    if opts.shorten_path then
+      fullpath = fs.shorten_path(fullpath)
+    end
     open_cmdline_with_path(fullpath)
   end,
+  parameters = {
+    modify = {
+      desc = "Modify the path with |fnamemodify()| using this as the mods argument",
+      type = "string",
+    },
+    shorten_path = {
+      desc = "Use relative paths when possible",
+      type = "boolean",
+    },
+  },
+}
+
+M.yank_entry = {
+  desc = "Yank the filepath of the entry under the cursor to a register",
+  callback = function(opts)
+    opts = opts or {}
+    local entry = oil.get_cursor_entry()
+    local dir = oil.get_current_dir()
+    if not entry or not dir then
+      return
+    end
+    local path = dir .. entry.name
+    if opts.modify then
+      path = vim.fn.fnamemodify(path, opts.modify)
+    end
+    vim.fn.setreg(vim.v.register, path)
+  end,
+  parameters = {
+    modify = {
+      desc = "Modify the path with |fnamemodify()| using this as the mods argument",
+      type = "string",
+    },
+  },
 }
 
 M.copy_entry_path = {
   desc = "Yank the filepath of the entry under the cursor to a register",
+  deprecated = true,
   callback = function()
     local entry = oil.get_cursor_entry()
     local dir = oil.get_current_dir()
@@ -271,6 +376,7 @@ M.copy_entry_path = {
 
 M.copy_entry_filename = {
   desc = "Yank the filename of the entry under the cursor to a register",
+  deprecated = true,
   callback = function()
     local entry = oil.get_cursor_entry()
     if not entry then
@@ -282,6 +388,7 @@ M.copy_entry_filename = {
 
 M.open_cmdline_dir = {
   desc = "Open vim cmdline with current directory as an argument",
+  deprecated = true,
   callback = function()
     local fs = require("oil.fs")
     local dir = oil.get_current_dir()
@@ -293,7 +400,14 @@ M.open_cmdline_dir = {
 
 M.change_sort = {
   desc = "Change the sort order",
-  callback = function()
+  callback = function(opts)
+    opts = opts or {}
+
+    if opts.sort then
+      oil.set_sort(opts.sort)
+      return
+    end
+
     local sort_cols = { "name", "size", "atime", "mtime", "ctime", "birthtime" }
     vim.ui.select(sort_cols, { prompt = "Sort by", kind = "oil_sort_col" }, function(col)
       if not col then
@@ -315,6 +429,12 @@ M.change_sort = {
       )
     end)
   end,
+  parameters = {
+    sort = {
+      type = "oil.SortSpec[]",
+      desc = "List of columns plus direction (see |oil.set_sort|) instead of interactive selection",
+    },
+  },
 }
 
 M.toggle_trash = {
@@ -348,16 +468,31 @@ M.toggle_trash = {
 
 M.send_to_qflist = {
   desc = "Sends files in the current oil directory to the quickfix list, replacing the previous entries.",
-  callback = function()
-    util.send_to_quickfix({
+  callback = function(opts)
+    opts = vim.tbl_deep_extend("keep", opts or {}, {
       target = "qflist",
-      mode = "r",
+      action = "r",
+    })
+    util.send_to_quickfix({
+      target = opts.target,
+      action = opts.action,
     })
   end,
+  parameters = {
+    target = {
+      type = '"qflist"|"loclist"',
+      desc = "The target list to send files to",
+    },
+    action = {
+      type = '"r"|"a"',
+      desc = "Replace or add to current quickfix list (see |setqflist-action|)",
+    },
+  },
 }
 
 M.add_to_qflist = {
   desc = "Adds files in the current oil directory to the quickfix list, keeping the previous entries.",
+  deprecated = true,
   callback = function()
     util.send_to_quickfix({
       target = "qflist",
@@ -368,6 +503,7 @@ M.add_to_qflist = {
 
 M.send_to_loclist = {
   desc = "Sends files in the current oil directory to the location list, replacing the previous entries.",
+  deprecated = true,
   callback = function()
     util.send_to_quickfix({
       target = "loclist",
@@ -378,6 +514,7 @@ M.send_to_loclist = {
 
 M.add_to_loclist = {
   desc = "Adds files in the current oil directory to the location list, keeping the previous entries.",
+  deprecated = true,
   callback = function()
     util.send_to_quickfix({
       target = "loclist",
@@ -395,6 +532,8 @@ M._get_actions = function()
       table.insert(ret, {
         name = name,
         desc = action.desc,
+        deprecated = action.deprecated,
+        parameters = action.parameters,
       })
     end
   end

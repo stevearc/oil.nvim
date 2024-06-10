@@ -2,7 +2,7 @@ import os
 import os.path
 import re
 from dataclasses import dataclass, field
-from typing import List
+from typing import Any, Dict, List
 
 from nvim_doc_tools import (
     LuaParam,
@@ -13,7 +13,6 @@ from nvim_doc_tools import (
     indent,
     leftright,
     parse_directory,
-    parse_functions,
     read_nvim_json,
     read_section,
     render_md_api2,
@@ -228,21 +227,76 @@ def get_highlights_vimdoc() -> "VimdocSection":
     return section
 
 
+def load_params(params: Dict[str, Any]) -> List[LuaParam]:
+    ret = []
+    for name, data in sorted(params.items()):
+        ret.append(LuaParam(name, data["type"], data["desc"]))
+    return ret
+
+
 def get_actions_vimdoc() -> "VimdocSection":
     section = VimdocSection("Actions", "oil-actions", ["\n"])
+    section.body.append(
+        """The `keymaps` option in `oil.setup` allow you to create mappings using all the same parameters as |vim.keymap.set|.
+>lua
+    keymaps = {
+        -- Mappings can be a string
+        ["~"] = "<cmd>edit $HOME<CR>",
+        -- Mappings can be a function
+        ["gd"] = function()
+            require("oil").set_columns({ "icon", "permissions", "size", "mtime" })
+        end,
+        -- You can pass additional opts to vim.keymap.set by using
+        -- a table with the mapping as the first element.
+        ["<leader>ff"] = {
+            function()
+                require("telescope.builtin").find_files({
+                    cwd = require("oil").get_current_dir()
+                })
+            end,
+            mode = "n",
+            nowait = true,
+            desc = "Find files in the current directory"
+        },
+        -- Mappings that are a string starting with "actions." will be
+        -- one of the built-in actions, documented below.
+        ["`"] = "actions.tcd",
+        -- Some actions have parameters. These are passed in via the `opts` key.
+        ["<leader>:"] = {
+            "actions.open_cmdline",
+            opts = {
+                shorten_path = true,
+                modify = ":h",
+            },
+            desc = "Open the command line with the current directory as an argument",
+        },
+    }
+"""
+    )
+    section.body.append("\n")
     section.body.extend(
         wrap(
-            """These are actions that can be used in the `keymaps` section of config options. You can also call them directly with `require("oil.actions").action_name.callback()`"""
+            """Below are the actions that can be used in the `keymaps` section of config options. You can refer to them as strings (e.g. "actions.<action_name>") or you can use the functions directly with `require("oil.actions").action_name.callback()`"""
         )
     )
     section.body.append("\n")
     actions = read_nvim_json('require("oil.actions")._get_actions()')
     actions.sort(key=lambda a: a["name"])
     for action in actions:
+        if action.get("deprecated"):
+            continue
         name = action["name"]
         desc = action["desc"]
         section.body.append(leftright(name, f"*actions.{name}*"))
         section.body.extend(wrap(desc, 4))
+        params = action.get("parameters")
+        if params:
+            section.body.append("\n")
+            section.body.append("    Parameters:\n")
+            section.body.extend(
+                format_vimdoc_params(load_params(params), LuaTypes(), 6)
+            )
+
         section.body.append("\n")
     return section
 

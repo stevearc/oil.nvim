@@ -75,16 +75,16 @@ CONFIG                                                                *oil-confi
       keymaps = {
         ["g?"] = "actions.show_help",
         ["<CR>"] = "actions.select",
-        ["<C-s>"] = "actions.select_vsplit",
-        ["<C-h>"] = "actions.select_split",
-        ["<C-t>"] = "actions.select_tab",
+        ["<C-s>"] = { "actions.select_split", opts = { vertical = true } },
+        ["<C-h>"] = { "actions.select_split", opts = { horizontal = true } },
+        ["<C-t>"] = { "actions.select_split", opts = { tab = true } },
         ["<C-p>"] = "actions.preview",
         ["<C-c>"] = "actions.close",
         ["<C-l>"] = "actions.refresh",
         ["-"] = "actions.parent",
         ["_"] = "actions.open_cwd",
         ["`"] = "actions.cd",
-        ["~"] = "actions.tcd",
+        ["~"] = { "actions.cd", opts = { scope = "tab" } },
         ["gs"] = "actions.change_sort",
         ["gx"] = "actions.open_external",
         ["g."] = "actions.toggle_hidden",
@@ -435,38 +435,71 @@ birthtime                                                       *column-birthtim
 --------------------------------------------------------------------------------
 ACTIONS                                                              *oil-actions*
 
-These are actions that can be used in the `keymaps` section of config options.
-You can also call them directly with
+The `keymaps` option in `oil.setup` allow you to create mappings using all the same parameters as |vim.keymap.set|.
+>lua
+    keymaps = {
+        -- Mappings can be a string
+        ["~"] = "<cmd>edit $HOME<CR>",
+        -- Mappings can be a function
+        ["gd"] = function()
+            require("oil").set_columns({ "icon", "permissions", "size", "mtime" })
+        end,
+        -- You can pass additional opts to vim.keymap.set by using
+        -- a table with the mapping as the first element.
+        ["<leader>ff"] = {
+            function()
+                require("telescope.builtin").find_files({
+                    cwd = require("oil").get_current_dir()
+                })
+            end,
+            mode = "n",
+            nowait = true,
+            desc = "Find files in the current directory"
+        },
+        -- Mappings that are a string starting with "actions." will be
+        -- one of the built-in actions, documented below.
+        ["`"] = "actions.tcd",
+        -- Some actions have parameters. These are passed in via the `opts` key.
+        ["<leader>:"] = {
+            "actions.open_cmdline",
+            opts = {
+                shorten_path = true,
+                modify = ":h",
+            },
+            desc = "Open the command line with the current directory as an argument",
+        },
+    }
+
+Below are the actions that can be used in the `keymaps` section of config
+options. You can refer to them as strings (e.g. "actions.<action_name>") or you
+can use the functions directly with
 `require("oil.actions").action_name.callback()`
-
-add_to_loclist                                            *actions.add_to_loclist*
-    Adds files in the current oil directory to the location list, keeping the
-    previous entries.
-
-add_to_qflist                                              *actions.add_to_qflist*
-    Adds files in the current oil directory to the quickfix list, keeping the
-    previous entries.
 
 cd                                                                    *actions.cd*
     :cd to the current oil directory
 
+    Parameters:
+      {scope}  `nil|"tab"|"win"` Scope of the directory change (e.g. use |:tcd|
+               or |:lcd|)
+      {silent} `boolean` Do not show a message when changing directories
+
 change_sort                                                  *actions.change_sort*
     Change the sort order
+
+    Parameters:
+      {sort} `oil.SortSpec[]` List of columns plus direction (see
+             |oil.set_sort|) instead of interactive selection
 
 close                                                              *actions.close*
     Close oil and restore original buffer
 
-copy_entry_filename                                  *actions.copy_entry_filename*
-    Yank the filename of the entry under the cursor to a register
-
-copy_entry_path                                          *actions.copy_entry_path*
-    Yank the filepath of the entry under the cursor to a register
-
 open_cmdline                                                *actions.open_cmdline*
     Open vim cmdline with current entry as an argument
 
-open_cmdline_dir                                        *actions.open_cmdline_dir*
-    Open vim cmdline with current directory as an argument
+    Parameters:
+      {modify}       `string` Modify the path with |fnamemodify()| using this as
+                     the mods argument
+      {shorten_path} `boolean` Use relative paths when possible
 
 open_cwd                                                        *actions.open_cwd*
     Open oil in Neovim's current working directory
@@ -493,37 +526,46 @@ preview_scroll_up                                      *actions.preview_scroll_u
 refresh                                                          *actions.refresh*
     Refresh current directory list
 
+    Parameters:
+      {force} `boolean` When true, do not prompt user if they will be discarding
+              changes
+
 select                                                            *actions.select*
     Open the entry under the cursor
 
-select_split                                                *actions.select_split*
-    Open the entry under the cursor in a horizontal split
-
-select_tab                                                    *actions.select_tab*
-    Open the entry under the cursor in a new tab
-
-select_vsplit                                              *actions.select_vsplit*
-    Open the entry under the cursor in a vertical split
-
-send_to_loclist                                          *actions.send_to_loclist*
-    Sends files in the current oil directory to the location list, replacing the
-    previous entries.
+    Parameters:
+      {close}      `boolean` Close the original oil buffer once selection is
+                   made
+      {horizontal} `boolean` Open the buffer in a horizontal split
+      {split}      `"aboveleft"|"belowright"|"topleft"|"botright"` Split
+                   modifier
+      {tab}        `boolean` Open the buffer in a new tab
+      {vertical}   `boolean` Open the buffer in a vertical split
 
 send_to_qflist                                            *actions.send_to_qflist*
     Sends files in the current oil directory to the quickfix list, replacing the
     previous entries.
 
+    Parameters:
+      {action} `"r"|"a"` Replace or add to current quickfix list (see
+               |setqflist-action|)
+      {target} `"qflist"|"loclist"` The target list to send files to
+
 show_help                                                      *actions.show_help*
     Show default keymaps
-
-tcd                                                                  *actions.tcd*
-    :tcd to the current oil directory
 
 toggle_hidden                                              *actions.toggle_hidden*
     Toggle hidden files and directories
 
 toggle_trash                                                *actions.toggle_trash*
     Jump to and from the trash for the current directory
+
+yank_entry                                                    *actions.yank_entry*
+    Yank the filepath of the entry under the cursor to a register
+
+    Parameters:
+      {modify} `string` Modify the path with |fnamemodify()| using this as the
+               mods argument
 
 --------------------------------------------------------------------------------
 HIGHLIGHTS                                                        *oil-highlights*
