@@ -12,7 +12,9 @@ local function resolve(rhs)
   if type(rhs) == "string" and vim.startswith(rhs, "actions.") then
     local action_name = vim.split(rhs, ".", { plain = true })[2]
     local action = actions[action_name]
-    vim.notify(action, "[oil.nvim] Unknown action name: " .. action_name, vim.log.levels.ERROR)
+    if not action then
+      vim.notify("[oil.nvim] Unknown action name: " .. action_name, vim.log.levels.ERROR)
+    end
     return resolve(action)
   elseif type(rhs) == "table" then
     local opts = vim.deepcopy(rhs)
