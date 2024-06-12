@@ -184,9 +184,9 @@ require("oil").setup({
   keymaps = {
     ["g?"] = "actions.show_help",
     ["<CR>"] = "actions.select",
-    ["<C-s>"] = { "actions.select_split", opts = { vertical = true } },
-    ["<C-h>"] = { "actions.select_split", opts = { horizontal = true } },
-    ["<C-t>"] = { "actions.select_split", opts = { tab = true } },
+    ["<C-s>"] = { "actions.select", opts = { vertical = true } },
+    ["<C-h>"] = { "actions.select", opts = { horizontal = true } },
+    ["<C-t>"] = { "actions.select", opts = { tab = true } },
     ["<C-p>"] = "actions.preview",
     ["<C-c>"] = "actions.close",
     ["<C-l>"] = "actions.refresh",
