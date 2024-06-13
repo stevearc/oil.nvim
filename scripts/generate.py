@@ -63,10 +63,25 @@ def update_md_api():
     )
 
 
-def update_readme_toc():
-    toc = ["\n"] + generate_md_toc(README, max_level=1) + ["\n"]
+def update_readme():
+    def get_toc(filename: str) -> List[str]:
+        subtoc = generate_md_toc(os.path.join(DOC, filename))
+        return add_md_link_path("doc/" + filename, subtoc)
+
+    recipes_toc = get_toc("recipes.md")
+
     replace_section(
         README,
+        r"^## Recipes$",
+        r"^#",
+        ["\n"] + recipes_toc + ["\n"],
+    )
+
+
+def update_md_toc(filename: str, max_level: int = 99):
+    toc = ["\n"] + generate_md_toc(filename, max_level) + ["\n"]
+    replace_section(
+        filename,
         r"^<!-- TOC -->$",
         r"^<!-- /TOC -->$",
         toc,
@@ -381,5 +396,7 @@ def main() -> None:
     """Update the README"""
     update_config_options()
     update_md_api()
-    update_readme_toc()
+    update_md_toc(README, max_level=1)
+    update_md_toc(os.path.join(DOC, "recipes.md"))
+    update_readme()
     generate_vimdoc()
