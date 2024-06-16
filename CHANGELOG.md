@@ -1,5 +1,24 @@
 # Changelog
 
+## [2.10.0](https://github.com/stevearc/oil.nvim/compare/v2.9.0...v2.10.0) (2024-06-16)
+
+
+### Features
+
+* add copy filename action ([#391](https://github.com/stevearc/oil.nvim/issues/391)) ([bbc0e67](https://github.com/stevearc/oil.nvim/commit/bbc0e67eebc15342e73b146a50d9b52e6148161b))
+* keymap actions can be parameterized ([96368e1](https://github.com/stevearc/oil.nvim/commit/96368e13e9b1aaacc570e4825b8787307f0d05e1))
+
+
+### Bug Fixes
+
+* change unknown action name from error to notification ([e5eb20e](https://github.com/stevearc/oil.nvim/commit/e5eb20e88fc03bf89f371032de77f176158b41d3))
+* error opening command window from oil float ([#378](https://github.com/stevearc/oil.nvim/issues/378)) ([06a19f7](https://github.com/stevearc/oil.nvim/commit/06a19f77f1a1da37b675635e6f9c5b5d50bcaacd))
+* hack around glob issues in LSP rename operations ([#386](https://github.com/stevearc/oil.nvim/issues/386)) ([e5312c3](https://github.com/stevearc/oil.nvim/commit/e5312c3a801e7274fa14e6a56aa10a618fed80c3))
+* incorrect default config actions ([#414](https://github.com/stevearc/oil.nvim/issues/414)) ([c82b26e](https://github.com/stevearc/oil.nvim/commit/c82b26eb4ba35c0eb7ec38d88dd400597fb34883))
+* notify when changing the current directory ([#406](https://github.com/stevearc/oil.nvim/issues/406)) ([18272ab](https://github.com/stevearc/oil.nvim/commit/18272aba9d00a3176a5443d50dbb4464acc167bd))
+* throw error on vim.has call within the lsp/workspace.lua ([#411](https://github.com/stevearc/oil.nvim/issues/411)) ([61f1967](https://github.com/stevearc/oil.nvim/commit/61f1967222365474c6cf7953c569cc94dbcc7acd))
+* vim.notify call error ([76bfc25](https://github.com/stevearc/oil.nvim/commit/76bfc25520e4edc98d089d023b4ed06013639849))
+
 ## [2.9.0](https://github.com/stevearc/oil.nvim/compare/v2.8.0...v2.9.0) (2024-05-16)
 
 
