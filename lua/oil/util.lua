@@ -658,13 +658,6 @@ end
 
 ---@return nil|integer
 M.get_preview_win = function()
-  if M.is_floating_win() then
-    for _, winid in ipairs(vim.api.nvim_list_wins()) do
-      if vim.api.nvim_win_is_valid(winid) and vim.wo[winid].previewwindow then
-        return winid
-      end
-    end
-  end
   for _, winid in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
     if vim.api.nvim_win_is_valid(winid) and vim.wo[winid].previewwindow then
       return winid
