@@ -9,6 +9,7 @@
 ---@field cleanup_delay_ms? integer Oil will automatically delete hidden buffers after this delay. You can set the delay to false to disable cleanup entirely. Note that the cleanup process only starts when none of the oil buffers are currently displayed.
 ---@field lsp_file_methods? oil.LspFileMethods Configure LSP file operation integration.
 ---@field constrain_cursor? false|"name"|"editable" Constrain the cursor to the editable parts of the oil buffer. Set to `false` to disable, or "name" to keep it on the file names.
+---@field loading_message_delay? integer set the delay for the loading screen just a bit to avoid flicker
 ---@field experimental_watch_for_changes? boolean Set to true to watch the filesystem for changes and reload oil.
 ---@field keymaps? table<string, any>
 ---@field use_default_keymaps? boolean Set to false to disable all of the above keymaps

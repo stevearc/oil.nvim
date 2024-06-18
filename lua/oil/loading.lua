@@ -1,3 +1,4 @@
+local config = require("oil.config")
 local util = require("oil.util")
 local M = {}
 
@@ -67,7 +68,8 @@ M.set_loading = function(bufnr, is_loading)
       timers[bufnr] = vim.loop.new_timer()
       local bar_iter = M.get_bar_iter({ width = width })
       timers[bufnr]:start(
-        100, -- Delay the loading screen just a bit to avoid flicker
+        -- Delay the loading screen just a bit to avoid flicker
+        config.loading_message_delay,
         math.floor(1000 / FPS),
         vim.schedule_wrap(function()
           if not vim.api.nvim_buf_is_valid(bufnr) or not timers[bufnr] then

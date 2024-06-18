@@ -46,6 +46,8 @@ local default_config = {
     -- Set to "unmodified" to only save unmodified buffers
     autosave_changes = false,
   },
+  -- Delay the loading screen just a bit to avoid flicker
+  loading_message_delay = 100,
   -- Constrain the cursor to the editable parts of the oil buffer
   -- Set to `false` to disable, or "name" to keep it on the file names
   constrain_cursor = "editable",
