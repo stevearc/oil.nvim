@@ -451,6 +451,15 @@ M.open_preview = function(opts, callback)
   local prev_win = vim.api.nvim_get_current_win()
   local bufnr = vim.api.nvim_get_current_buf()
 
+  local entry = M.get_cursor_entry()
+  if not entry then
+    return finish("Could not find entry under cursor")
+  end
+  local entry_title = entry.name
+  if entry.type == "directory" then
+    entry_title = entry_title .. "/"
+  end
+
   if util.is_floating_win() then
     if preview_win == nil then
       local root_win_opts, preview_win_opts =
@@ -476,19 +485,19 @@ M.open_preview = function(opts, callback)
         zindex = 45,
         focusable = false,
         noautocmd = true,
-        title = "Preview",
         style = "minimal",
       }
+
+      if vim.fn.has("nvim-0.9") == 1 then
+        win_opts.title = entry_title
+      end
 
       preview_win = vim.api.nvim_open_win(bufnr, true, win_opts)
       vim.api.nvim_set_option_value("previewwindow", true, { scope = "local", win = preview_win })
       vim.api.nvim_set_current_win(prev_win)
+    elseif vim.fn.has("nvim-0.9") == 1 then
+      vim.api.nvim_win_set_config(preview_win, { title = entry_title })
     end
-  end
-
-  local entry = M.get_cursor_entry()
-  if not entry then
-    return finish("Could not find entry under cursor")
   end
 
   local cmd = preview_win and "buffer" or "sbuffer"
