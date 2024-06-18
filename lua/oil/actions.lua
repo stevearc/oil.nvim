@@ -54,39 +54,9 @@ M.preview = {
       if entry.id == cur_id then
         vim.api.nvim_win_close(winid, true)
         if util.is_floating_win() then
-          local config = require("oil.config")
-
-          local window_conf = vim.api.nvim_win_get_config(0)
-
-          if vim.fn.has("nvim-0.10") == 0 then
-            -- read https://github.com/neovim/neovim/issues/24430 for more infos.
-            window_conf.col = window_conf.col[vim.val_idx]
-            window_conf.row = window_conf.row[vim.val_idx]
-          end
-          if
-            config.float.preview_split == "left"
-            or (config.float.preview_split == "auto" and not vim.o.splitright)
-          then
-            window_conf.col = window_conf.col - window_conf.width - config.float.preview_gap
-          end
-
-          if config.float.preview_split == "above" then
-            window_conf.row = window_conf.row - window_conf.height - config.float.preview_gap
-          end
-
-          if
-            config.float.preview_split == "left"
-            or config.float.preview_split == "right"
-            or config.float.preview_split == "auto"
-          then
-            window_conf.width = window_conf.width * 2 + config.float.preview_gap
-          end
-
-          if config.float.preview_split == "above" or config.float.preview_split == "below" then
-            window_conf.height = window_conf.height * 2 + config.float.preview_gap
-          end
-
-          vim.api.nvim_win_set_config(0, window_conf)
+          local layout = require("oil.layout")
+          local win_opts = layout.get_fullscreen_win_opts()
+          vim.api.nvim_win_set_config(0, win_opts)
         end
         return
       end

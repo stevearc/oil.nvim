@@ -126,7 +126,7 @@ You can open a directory with `:edit <path>` or `:Oil <path>`. To open oil in a 
 ```lua
 require("oil").setup({
   -- Oil will take over directory buffers (e.g. `vim .` or `:e src/`)
-  -- Set to false if you still want to use netrw.
+  -- Set to false if you still want to use netrw
   default_file_explorer = true,
   -- Id is automatically added at the beginning, and name at the end
   -- See :help oil-columns
@@ -247,6 +247,10 @@ require("oil").setup({
     win_options = {
       winblend = 0,
     },
+    -- gap between oil window and preview window
+    preview_gap = 2,
+    -- preview_split: Split direction: "auto", "left", "right", "above", "below".
+    preview_split = "auto",
     -- This is the config that will be passed to nvim_open_win.
     -- Change values here to customize the layout
     override = function(conf)

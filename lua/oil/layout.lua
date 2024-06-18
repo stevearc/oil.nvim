@@ -93,6 +93,89 @@ M.calculate_height = function(desired_height, opts)
   )
 end
 
+---@class (exact) conform.WinLayout
+---@field width integer
+---@field height integer
+---@field row integer
+---@field col integer
+
+---@return vim.api.keyset.win_config
+M.get_fullscreen_win_opts = function()
+  local config = require("oil.config")
+
+  local total_width = M.get_editor_width()
+  local total_height = M.get_editor_height()
+  local width = total_width - 2 * config.float.padding
+  if config.float.border ~= "none" then
+    width = width - 2 -- The border consumes 1 col on each side
+  end
+  if config.float.max_width > 0 then
+    width = math.min(width, config.float.max_width)
+  end
+  local height = total_height - 2 * config.float.padding
+  if config.float.max_height > 0 then
+    height = math.min(height, config.float.max_height)
+  end
+  local row = math.floor((total_height - height) / 2)
+  local col = math.floor((total_width - width) / 2) - 1 -- adjust for border width
+
+  local win_opts = {
+    relative = "editor",
+    width = width,
+    height = height,
+    row = row,
+    col = col,
+    border = config.float.border,
+    zindex = 45,
+  }
+  return config.float.override(win_opts) or win_opts
+end
+
+---@param winid integer
+---@param direction "above"|"below"|"left"|"right"|"auto"
+---@param gap integer
+---@return conform.WinLayout root_dim New dimensions of the original window
+---@return conform.WinLayout new_dim New dimensions of the new window
+M.split_window = function(winid, direction, gap)
+  if direction == "auto" then
+    direction = vim.o.splitright and "right" or "left"
+  end
+
+  local float_config = vim.api.nvim_win_get_config(winid)
+  local dim_root = {
+    width = float_config.width,
+    height = float_config.height,
+    col = float_config.col,
+    row = float_config.row,
+  }
+  if vim.fn.has("nvim-0.10") == 0 then
+    -- read https://github.com/neovim/neovim/issues/24430 for more infos.
+    dim_root.col = float_config.col[vim.val_idx]
+    dim_root.row = float_config.row[vim.val_idx]
+  end
+  local dim_new = vim.deepcopy(dim_root)
+
+  if direction == "left" or direction == "right" then
+    dim_new.width = math.floor(float_config.width / 2) - math.ceil(gap / 2)
+    dim_root.width = dim_new.width
+  else
+    dim_new.height = math.floor(float_config.height / 2) - math.ceil(gap / 2)
+    dim_root.height = dim_new.height
+  end
+
+  if direction == "left" then
+    dim_root.col = dim_root.col + dim_root.width + gap
+  elseif direction == "right" then
+    dim_new.col = dim_new.col + dim_new.width + gap
+  elseif direction == "above" then
+    dim_root.row = dim_root.row + dim_root.height + gap
+  elseif direction == "below" then
+    dim_new.row = dim_new.row + dim_new.height + gap
+  end
+
+  return dim_root, dim_new
+end
+
 M.calculate_dims = function(desired_width, desired_height, opts)
   local width = M.calculate_width(desired_width, opts)
   local height = M.calculate_height(desired_height, opts)
