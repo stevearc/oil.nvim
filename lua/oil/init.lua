@@ -463,7 +463,7 @@ M.open_preview = function(opts, callback)
   if util.is_floating_win() then
     if preview_win == nil then
       local root_win_opts, preview_win_opts =
-        layout.split_window(0, config.float.preview_split, config.float.preview_gap)
+        layout.split_window(0, config.float.preview_split, config.float.padding)
 
       local win_opts_oil = {
         relative = "editor",
