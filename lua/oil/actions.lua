@@ -80,6 +80,11 @@ M.preview = {
       local cur_id = vim.w[winid].oil_entry_id
       if entry.id == cur_id then
         vim.api.nvim_win_close(winid, true)
+        if util.is_floating_win() then
+          local layout = require("oil.layout")
+          local win_opts = layout.get_fullscreen_win_opts()
+          vim.api.nvim_win_set_config(0, win_opts)
+        end
         return
       end
     end

@@ -2,7 +2,7 @@
 
 local default_config = {
   -- Oil will take over directory buffers (e.g. `vim .` or `:e src/`)
-  -- Set to false if you still want to use netrw.
+  -- Set to false if you want some other plugin (e.g. netrw) to open when you edit directories.
   default_file_explorer = true,
   -- Id is automatically added at the beginning, and name at the end
   -- See :help oil-columns
@@ -123,6 +123,8 @@ local default_config = {
     win_options = {
       winblend = 0,
     },
+    -- preview_split: Split direction: "auto", "left", "right", "above", "below".
+    preview_split = "auto",
     -- This is the config that will be passed to nvim_open_win.
     -- Change values here to customize the layout
     override = function(conf)

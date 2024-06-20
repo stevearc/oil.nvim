@@ -244,6 +244,7 @@ M.open_float = function(dir)
   local layout = require("oil.layout")
   local util = require("oil.util")
   local view = require("oil.view")
+
   local parent_url, basename = M.get_url_for_path(dir)
   if not parent_url then
     return
@@ -254,31 +255,7 @@ M.open_float = function(dir)
 
   local bufnr = vim.api.nvim_create_buf(false, true)
   vim.bo[bufnr].bufhidden = "wipe"
-  local total_width = vim.o.columns
-  local total_height = layout.get_editor_height()
-  local width = total_width - 2 * config.float.padding
-  if config.float.border ~= "none" then
-    width = width - 2 -- The border consumes 1 col on each side
-  end
-  if config.float.max_width > 0 then
-    width = math.min(width, config.float.max_width)
-  end
-  local height = total_height - 2 * config.float.padding
-  if config.float.max_height > 0 then
-    height = math.min(height, config.float.max_height)
-  end
-  local row = math.floor((total_height - height) / 2)
-  local col = math.floor((total_width - width) / 2) - 1 -- adjust for border width
-  local win_opts = {
-    relative = "editor",
-    width = width,
-    height = height,
-    row = row,
-    col = col,
-    border = config.float.border,
-    zindex = 45,
-  }
-  win_opts = config.float.override(win_opts) or win_opts
+  local win_opts = layout.get_fullscreen_win_opts()
 
   local original_winid = vim.api.nvim_get_current_win()
   local winid = vim.api.nvim_open_win(bufnr, true, win_opts)
@@ -332,12 +309,13 @@ M.open_float = function(dir)
           if not vim.api.nvim_win_is_valid(winid) or vim.api.nvim_win_get_buf(winid) ~= winbuf then
             return
           end
+          local cur_win_opts = vim.api.nvim_win_get_config(winid)
           vim.api.nvim_win_set_config(winid, {
             relative = "editor",
-            row = win_opts.row,
-            col = win_opts.col,
-            width = win_opts.width,
-            height = win_opts.height,
+            row = cur_win_opts.row,
+            col = cur_win_opts.col,
+            width = cur_win_opts.width,
+            height = cur_win_opts.height,
             title = get_title(),
           })
         end,
@@ -444,6 +422,8 @@ end
 ---    split "aboveleft"|"belowright"|"topleft"|"botright" Split modifier
 M.open_preview = function(opts, callback)
   opts = opts or {}
+  local config = require("oil.config")
+  local layout = require("oil.layout")
   local util = require("oil.util")
 
   local function finish(err)
@@ -465,18 +445,59 @@ M.open_preview = function(opts, callback)
       opts.split = vim.o.splitright and "belowright" or "aboveleft"
     end
   end
-  if util.is_floating_win() then
-    return finish("oil preview doesn't work in a floating window")
-  end
+
+  local preview_win = util.get_preview_win()
+  local prev_win = vim.api.nvim_get_current_win()
+  local bufnr = vim.api.nvim_get_current_buf()
 
   local entry = M.get_cursor_entry()
   if not entry then
     return finish("Could not find entry under cursor")
   end
+  local entry_title = entry.name
+  if entry.type == "directory" then
+    entry_title = entry_title .. "/"
+  end
 
-  local preview_win = util.get_preview_win()
-  local prev_win = vim.api.nvim_get_current_win()
-  local bufnr = vim.api.nvim_get_current_buf()
+  if util.is_floating_win() then
+    if preview_win == nil then
+      local root_win_opts, preview_win_opts =
+        layout.split_window(0, config.float.preview_split, config.float.padding)
+
+      local win_opts_oil = {
+        relative = "editor",
+        width = root_win_opts.width,
+        height = root_win_opts.height,
+        row = root_win_opts.row,
+        col = root_win_opts.col,
+        border = config.float.border,
+        zindex = 45,
+      }
+      vim.api.nvim_win_set_config(0, win_opts_oil)
+      local win_opts = {
+        relative = "editor",
+        width = preview_win_opts.width,
+        height = preview_win_opts.height,
+        row = preview_win_opts.row,
+        col = preview_win_opts.col,
+        border = config.float.border,
+        zindex = 45,
+        focusable = false,
+        noautocmd = true,
+        style = "minimal",
+      }
+
+      if vim.fn.has("nvim-0.9") == 1 then
+        win_opts.title = entry_title
+      end
+
+      preview_win = vim.api.nvim_open_win(bufnr, true, win_opts)
+      vim.api.nvim_set_option_value("previewwindow", true, { scope = "local", win = preview_win })
+      vim.api.nvim_set_current_win(prev_win)
+    elseif vim.fn.has("nvim-0.9") == 1 then
+      vim.api.nvim_win_set_config(preview_win, { title = entry_title })
+    end
+  end
 
   local cmd = preview_win and "buffer" or "sbuffer"
   local mods = {
@@ -485,7 +506,6 @@ M.open_preview = function(opts, callback)
     split = opts.split,
   }
 
-  local is_visual_mode = util.is_visual_mode()
   -- HACK Switching windows takes us out of visual mode.
   -- Switching with nvim_set_current_win causes the previous visual selection (as used by `gv`) to
   -- not get set properly. So we have to switch windows this way instead.
@@ -494,15 +514,16 @@ M.open_preview = function(opts, callback)
     vim.cmd.wincmd({ args = { "w" }, count = winnr })
   end
 
-  if preview_win then
-    if is_visual_mode then
-      hack_set_win(preview_win)
-    else
-      vim.api.nvim_set_current_win(preview_win)
-    end
-  end
-
   util.get_edit_path(bufnr, entry, function(normalized_url)
+    local is_visual_mode = util.is_visual_mode()
+    if preview_win then
+      if is_visual_mode then
+        hack_set_win(preview_win)
+      else
+        vim.api.nvim_set_current_win(preview_win)
+      end
+    end
+
     local filebufnr = vim.fn.bufadd(normalized_url)
     local entry_is_file = not vim.endswith(normalized_url, "/")
 
