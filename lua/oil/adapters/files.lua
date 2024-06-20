@@ -412,6 +412,26 @@ M.list = function(url, column_defs, cb)
   end, 10000)
 end
 
+---@type nil|integer[]
+local _group_ids
+---@return integer[]
+local function get_group_ids()
+  if not _group_ids then
+    local output = vim.fn.system({ "id", "-G" })
+    if vim.v.shell_error == 0 then
+      _group_ids = vim.tbl_map(tonumber, vim.split(output, "%s+", { trimempty = true }))
+    else
+      -- If the id command fails, fall back to just using the process group
+      _group_ids = { uv.getgid() }
+      vim.notify(
+        "[oil] missing the `id` command. Some directories may not be modifiable even if you have group access.",
+        vim.log.levels.WARN
+      )
+    end
+  end
+  return _group_ids
+end
+
 ---@param bufnr integer
 ---@return boolean
 M.is_modifiable = function(bufnr)
@@ -432,34 +452,13 @@ M.is_modifiable = function(bufnr)
     return true
   end
 
-  local proc_uid = uv.getuid()
-  local proc_gid = uv.getgid()
-  local user_gids = cache.get_user_gids()
-  if user_gids == nil then
-    user_gids = vim.fn.split(vim.fn.system("id -G"))
-    if vim.api.nvim_get_vvar("shell_error") == 0 then
-      cache.set_user_gids(user_gids)
-    else
-      user_gids = nil
-    end
-  end
+  local uid = uv.getuid()
   local rwx = stat.mode
-  if proc_uid == stat.uid then
+  if uid == stat.uid then
     rwx = bit.bor(rwx, bit.rshift(stat.mode, 6))
   end
-  if user_gids ~= nil then
-    if vim.tbl_contains(user_gids, tostring(stat.gid)) then
-      rwx = bit.bor(rwx, bit.rshift(stat.mode, 3))
-    end
-  else
-    -- Fallback to previous behavior if the command fails
-    vim.notify(
-      "[oil] missing the `id` command, some directories may not be modifiable even if you have group access.",
-      vim.log.levels.WARN
-    )
-    if proc_gid == stat.gid then
-      rwx = bit.bor(rwx, bit.rshift(stat.mode, 3))
-    end
+  if vim.tbl_contains(get_group_ids(), stat.gid) then
+    rwx = bit.bor(rwx, bit.rshift(stat.mode, 3))
   end
   return bit.band(rwx, 2) ~= 0
 end
