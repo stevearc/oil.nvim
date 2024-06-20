@@ -432,21 +432,32 @@ M.is_modifiable = function(bufnr)
     return true
   end
 
-  local uid = uv.getuid()
-  local gids = vim.fn.split(vim.fn.system("id -G"))
-  local rwx
-  if uid == stat.uid then
-    rwx = bit.rshift(stat.mode, 6)
-  else
-    local in_group = false
-    for _, gid in ipairs(gids) do
-      if tonumber(gid) == stat.gid then
-        rwx = bit.rshift(stat.mode, 3)
-        in_group = true
-      end
+  local proc_uid = uv.getuid()
+  local proc_gid = uv.getgid()
+  local user_gids = cache.get_user_gids()
+  if user_gids == nil then
+    user_gids = vim.fn.split(vim.fn.system("id -G"))
+    if vim.api.nvim_get_vvar("shell_error") == 0 then
+      cache.set_user_gids(user_gids)
+    else
+      user_gids = nil
     end
-    if not in_group then
-      rwx = stat.mode
+  end
+  local rwx = stat.mode
+  if proc_uid == stat.uid then
+    rwx = bit.bor(rwx, bit.rshift(stat.mode, 6))
+  elseif user_gids ~= nil then
+    if vim.tbl_contains(user_gids, tostring(stat.gid)) then
+      rwx = bit.bor(rwx, bit.rshift(stat.mode, 3))
+    end
+  else
+    -- Fallback to previous behavior if the command fails
+    vim.notify(
+      "[oil] missing the `id` command, some directories may not be modifiable even if you have group access.",
+      vim.log.levels.WARN
+    )
+    if proc_gid == stat.gid then
+      rwx = bit.bor(rwx, bit.rshift(stat.mode, 3))
     end
   end
   return bit.band(rwx, 2) ~= 0

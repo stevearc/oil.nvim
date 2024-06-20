@@ -18,6 +18,9 @@ local entries_by_id = {}
 ---@type table<integer, string>
 local parent_url_by_id = {}
 
+---@type table<integer, string>
+local user_gids = {}
+
 -- Temporary map while a directory is being updated
 local tmp_url_directory = {}
 
@@ -38,6 +41,7 @@ M.clear_everything = function()
   url_directory = {}
   entries_by_id = {}
   parent_url_by_id = {}
+  user_gids = {}
 end
 
 ---@param parent_url string
@@ -199,6 +203,19 @@ M.perform_action = function(action)
   else
     error(string.format("Bad action type: '%s'", action.type))
   end
+end
+
+---@return nil|table<integer, string>
+M.get_user_gids = function()
+  if not vim.tbl_isempty(user_gids) then
+    return user_gids
+  end
+  return nil
+end
+
+---@param gids table<integer, string>
+M.set_user_gids = function(gids)
+  user_gids = gids
 end
 
 return M
