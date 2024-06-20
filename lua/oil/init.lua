@@ -1020,7 +1020,7 @@ M.setup = function(opts)
     if args.smods.tab == 1 then
       vim.cmd.tabnew()
     end
-    local float = false
+    local float = config.default_floating_win or false
     local trash = false
     local i = 1
     while i <= #args.fargs do
