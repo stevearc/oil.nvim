@@ -446,7 +446,8 @@ M.is_modifiable = function(bufnr)
   local rwx = stat.mode
   if proc_uid == stat.uid then
     rwx = bit.bor(rwx, bit.rshift(stat.mode, 6))
-  elseif user_gids ~= nil then
+  end
+  if user_gids ~= nil then
     if vim.tbl_contains(user_gids, tostring(stat.gid)) then
       rwx = bit.bor(rwx, bit.rshift(stat.mode, 3))
     end
