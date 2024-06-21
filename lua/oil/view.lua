@@ -737,6 +737,7 @@ local function get_used_columns()
   return cols
 end
 
+---@type table<integer, fun(message: string)[]>
 local pending_renders = {}
 
 ---@param bufnr integer
@@ -772,7 +773,7 @@ M.render_buffer_async = function(bufnr, opts, callback)
     vim.bo[bufnr].undolevels = vim.api.nvim_get_option_value("undolevels", { scope = "global" })
     util.render_text(bufnr, { "Error: " .. message })
     if pending_renders[bufnr] then
-      for _, cb in ipairs(pending_renders) do
+      for _, cb in ipairs(pending_renders[bufnr]) do
         cb(message)
       end
       pending_renders[bufnr] = nil
