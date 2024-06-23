@@ -306,7 +306,7 @@ M.register("name", {
       sort_value = sort_value:gsub("%d+", pad_number)
     end
 
-    if vim.g.netrw_sort_options == 'i' then
+    if config.view_options.sort_case_insensitive then
       sort_value = sort_value:lower()
     end
 
