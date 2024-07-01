@@ -50,7 +50,7 @@ local default_config = {
   -- Set to `false` to disable, or "name" to keep it on the file names
   constrain_cursor = "editable",
   -- Set to true to watch the filesystem for changes and reload oil
-  experimental_watch_for_changes = false,
+  watch_for_changes = false,
   -- Keymaps in oil buffer. Can be any value that `vim.keymap.set` accepts OR a table of keymap
   -- options with a `callback` (e.g. { callback = function() ... end, desc = "", mode = "n" })
   -- Additionally, if it is a string that matches "actions.<name>",
@@ -205,6 +205,11 @@ M.setup = function(opts)
       "oil config value lsp_rename_autosave has moved to lsp_file_methods.autosave_changes.\nCompatibility will be removed on 2024-09-01.",
       vim.log.levels.WARN
     )
+  end
+
+  -- This option was renamed because it is no longer experimental
+  if new_conf.experimental_watch_for_changes then
+    new_conf.watch_for_changes = true
   end
 
   for k, v in pairs(new_conf) do

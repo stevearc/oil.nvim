@@ -447,7 +447,7 @@ M.initialize = function(bufnr)
   if
     adapter
     and adapter.name == "files"
-    and config.experimental_watch_for_changes
+    and config.watch_for_changes
     and not session[bufnr].fs_event
   then
     local fs_event = assert(uv.new_fs_event())
