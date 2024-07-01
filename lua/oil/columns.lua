@@ -300,11 +300,17 @@ M.register("name", {
   end,
 
   get_sort_value = function(entry)
+    local sort_value = entry[FIELD_NAME]
+
     if config.view_options.natural_order then
-      return entry[FIELD_NAME]:gsub("%d+", pad_number)
-    else
-      return entry[FIELD_NAME]
+      sort_value = sort_value:gsub("%d+", pad_number)
     end
+
+    if config.view_options.case_insensitive then
+      sort_value = sort_value:lower()
+    end
+
+    return sort_value
   end,
 })
 
