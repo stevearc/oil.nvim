@@ -1,5 +1,21 @@
 # Changelog
 
+## [2.11.0](https://github.com/stevearc/oil.nvim/compare/v2.10.0...v2.11.0) (2024-07-01)
+
+
+### Features
+
+* case insensitive sorting ([#429](https://github.com/stevearc/oil.nvim/issues/429)) ([2077cc3](https://github.com/stevearc/oil.nvim/commit/2077cc3358f327aca16c376cdde6ea0b07f14449))
+* rename experimental_watch_for_changes -&gt; watch_for_changes ([c7c7ce5](https://github.com/stevearc/oil.nvim/commit/c7c7ce5bd47030ee9c60a859f25695647610b8bd))
+* support preview from floating window ([#403](https://github.com/stevearc/oil.nvim/issues/403)) ([59b3dab](https://github.com/stevearc/oil.nvim/commit/59b3dab6f79e147a0d694ee72c26ae883d323340))
+
+
+### Bug Fixes
+
+* bug in buffer rendering race condition handling ([f6df58a](https://github.com/stevearc/oil.nvim/commit/f6df58ad370f45dbc18c42ffbaefbcf27df14036))
+* correctly check group permissions in unix ([#428](https://github.com/stevearc/oil.nvim/issues/428)) ([65c53db](https://github.com/stevearc/oil.nvim/commit/65c53dbe4f2140236590a7568a5f22a77d16be39))
+* increase loading display delay to avoid flicker ([#424](https://github.com/stevearc/oil.nvim/issues/424)) ([4c574cf](https://github.com/stevearc/oil.nvim/commit/4c574cf4a2de736d2662d52ce086d8bdf87c49df))
+
 ## [2.10.0](https://github.com/stevearc/oil.nvim/compare/v2.9.0...v2.10.0) (2024-06-16)
 
 
