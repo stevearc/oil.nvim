@@ -92,7 +92,7 @@ local default_config = {
     -- so you may want to set to false if you work with large directories.
     natural_order = true,
     -- Sort file and directory names case insensitive
-    sort_case_insensitive = false,
+    case_insensitive = false,
     sort = {
       -- sort order can be "asc" or "desc"
       -- see :help oil-columns to see which columns are sortable

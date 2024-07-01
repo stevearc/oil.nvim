@@ -306,7 +306,7 @@ M.register("name", {
       sort_value = sort_value:gsub("%d+", pad_number)
     end
 
-    if config.view_options.sort_case_insensitive then
+    if config.view_options.case_insensitive then
       sort_value = sort_value:lower()
     end
 
