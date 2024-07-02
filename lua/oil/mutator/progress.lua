@@ -69,7 +69,7 @@ function Progress:show(opts)
     border = config.progress.border,
   })
   vim.bo[self.bufnr].filetype = "oil_progress"
-  for k, v in pairs(config.preview.win_options) do
+  for k, v in pairs(config.progress.win_options) do
     vim.api.nvim_set_option_value(k, v, { scope = "local", win = self.winid })
   end
   table.insert(
