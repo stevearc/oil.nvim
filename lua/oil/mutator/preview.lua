@@ -114,6 +114,11 @@ M.show = vim.schedule_wrap(function(actions, should_confirm, cb)
 
   render_lines(winid, bufnr, lines)
 
+  -- Disable cursor
+  -- We are in the preview window now, so no need to use autocmd with WinEnter
+  vim.api.nvim_set_hl(0, "OilPreviewCursor", { nocombine = true, blend = 100 })
+  vim.opt.guicursor:append("a:OilPreviewCursor/OilPreviewCursor")
+
   -- Attach autocmds and keymaps
   local cancel
   local confirm
@@ -127,6 +132,9 @@ M.show = vim.schedule_wrap(function(actions, should_confirm, cb)
       end
       autocmds = {}
       vim.api.nvim_win_close(winid, true)
+      -- restore cursor
+      vim.api.nvim_set_hl(0, "OilPreviewCursor", {})
+      vim.opt.guicursor:remove("a:OilPreviewCursor/OilPreviewCursor")
       cb(value)
     end
   end
