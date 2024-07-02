@@ -318,6 +318,9 @@ M.open_float = function(dir)
             height = cur_win_opts.height,
             title = get_title(),
           })
+          for k, v in pairs(config.float.win_options) do
+            vim.api.nvim_set_option_value(k, v, { scope = "local", win = winid })
+          end
         end,
       })
     )
