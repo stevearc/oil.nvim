@@ -286,29 +286,35 @@ M.open_float = function(dir)
     })
   )
 
-  -- Update the window title when we switch buffers
-  if vim.fn.has("nvim-0.9") == 1 and config.float.border ~= "none" then
-    local function get_title()
-      local src_buf = vim.api.nvim_win_get_buf(winid)
-      local title = vim.api.nvim_buf_get_name(src_buf)
-      local scheme, path = util.parse_url(title)
-      if config.adapters[scheme] == "files" then
-        assert(path)
-        local fs = require("oil.fs")
-        title = vim.fn.fnamemodify(fs.posix_to_os_path(path), ":~")
-      end
-      return title
+  ---Recalculate the window title for the current buffer
+  local function get_title()
+    local src_buf = vim.api.nvim_win_get_buf(winid)
+    local title = vim.api.nvim_buf_get_name(src_buf)
+    local scheme, path = util.parse_url(title)
+    if config.adapters[scheme] == "files" then
+      assert(path)
+      local fs = require("oil.fs")
+      title = vim.fn.fnamemodify(fs.posix_to_os_path(path), ":~")
     end
-    table.insert(
-      autocmds,
-      vim.api.nvim_create_autocmd("BufWinEnter", {
-        desc = "Update oil floating window title when buffer changes",
-        pattern = "*",
-        callback = function(params)
-          local winbuf = params.buf
-          if not vim.api.nvim_win_is_valid(winid) or vim.api.nvim_win_get_buf(winid) ~= winbuf then
-            return
-          end
+    return title
+  end
+
+  table.insert(
+    autocmds,
+    vim.api.nvim_create_autocmd("BufWinEnter", {
+      desc = "Reset local oil window options when buffer changes",
+      pattern = "*",
+      callback = function(params)
+        local winbuf = params.buf
+        if not vim.api.nvim_win_is_valid(winid) or vim.api.nvim_win_get_buf(winid) ~= winbuf then
+          return
+        end
+        for k, v in pairs(config.float.win_options) do
+          vim.api.nvim_set_option_value(k, v, { scope = "local", win = winid })
+        end
+
+        -- Update the floating window title
+        if vim.fn.has("nvim-0.9") == 1 and config.float.border ~= "none" then
           local cur_win_opts = vim.api.nvim_win_get_config(winid)
           vim.api.nvim_win_set_config(winid, {
             relative = "editor",
@@ -318,13 +324,10 @@ M.open_float = function(dir)
             height = cur_win_opts.height,
             title = get_title(),
           })
-          for k, v in pairs(config.float.win_options) do
-            vim.api.nvim_set_option_value(k, v, { scope = "local", win = winid })
-          end
-        end,
-      })
-    )
-  end
+        end
+      end,
+    })
+  )
 
   vim.cmd.edit({ args = { util.escape_filename(parent_url) }, mods = { keepalt = true } })
   -- :edit will set buflisted = true, but we may not want that
