@@ -665,6 +665,20 @@ M.get_preview_win = function()
   end
 end
 
+---@return fun() restore Function that restores the cursor
+M.hide_cursor = function()
+  vim.api.nvim_set_hl(0, "OilPreviewCursor", { nocombine = true, blend = 100 })
+  local original_guicursor = vim.go.guicursor
+  vim.go.guicursor = "a:OilPreviewCursor/OilPreviewCursor"
+
+  return function()
+    -- HACK: see https://github.com/neovim/neovim/issues/21018
+    vim.go.guicursor = "a:"
+    vim.cmd.redrawstatus()
+    vim.go.guicursor = original_guicursor
+  end
+end
+
 ---@param bufnr integer
 ---@param preferred_win nil|integer
 ---@return nil|integer
