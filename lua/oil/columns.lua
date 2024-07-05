@@ -1,7 +1,6 @@
 local config = require("oil.config")
 local constants = require("oil.constants")
 local util = require("oil.util")
-local has_devicons, devicons = pcall(require, "nvim-web-devicons")
 local M = {}
 
 local FIELD_NAME = constants.FIELD_NAME
@@ -202,7 +201,8 @@ M.perform_change_action = function(adapter, action, callback)
   column.perform_action(action, callback)
 end
 
-if has_devicons then
+local icon_provider = util.get_icon_provider()
+if icon_provider then
   M.register("icon", {
     render = function(entry, conf)
       local field_type = entry[FIELD_TYPE]
@@ -216,17 +216,10 @@ if has_devicons then
           field_type = meta.link_stat.type
         end
       end
-      local icon, hl
-      if field_type == "directory" then
-        icon = conf and conf.directory or ""
-        hl = "OilDirIcon"
-      else
-        if meta and meta.display_name then
-          name = meta.display_name
-        end
-        icon, hl = devicons.get_icon(name)
-        icon = icon or (conf and conf.default_file or "")
+      if meta and meta.display_name then
+        name = meta.display_name
       end
+      local icon, hl = icon_provider(field_type, name, conf)
       if not conf or conf.add_padding ~= false then
         icon = icon .. " "
       end

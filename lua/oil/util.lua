@@ -8,6 +8,8 @@ local FIELD_NAME = constants.FIELD_NAME
 local FIELD_TYPE = constants.FIELD_TYPE
 local FIELD_META = constants.FIELD_META
 
+---@alias oil.IconProvider fun(type: string, name: string, conf: table?): (icon: string, hl: string)
+
 ---@param url string
 ---@return nil|string
 ---@return nil|string
@@ -855,6 +857,32 @@ M.get_edit_path = function(bufnr, entry, callback)
     adapter.get_entry_path(url, entry, callback)
   else
     adapter.normalize_url(url, callback)
+  end
+end
+
+--- Check for an icon provider and return a common icon provider API
+---@return (oil.IconProvider)?
+M.get_icon_provider = function()
+  -- prefer mini.icons
+  local has_mini_icons, mini_icons = pcall(require, "mini.icons")
+  if has_mini_icons then
+    return function(type, name)
+      return mini_icons.get(type == "directory" and "directory" or "file", name)
+    end
+  end
+
+  -- fallback to `nvim-web-devicons`
+  local has_devicons, devicons = pcall(require, "nvim-web-devicons")
+  if has_devicons then
+    return function(type, name, conf)
+      if type == "directory" then
+        return conf and conf.directory or "", "OilDirIcon"
+      else
+        local icon, hl = devicons.get_icon(name)
+        icon = icon or (conf and conf.default_file or "")
+        return icon, hl
+      end
+    end
   end
 end
 
