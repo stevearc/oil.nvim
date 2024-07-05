@@ -20,7 +20,9 @@ https://user-images.githubusercontent.com/506791/209727111-6b4a11f4-634a-4efa-94
 ## Requirements
 
 - Neovim 0.8+
-- (optional) [nvim-web-devicons](https://github.com/nvim-tree/nvim-web-devicons) for file icons
+- Icon provider plugin (optional)
+  - [mini.icons](https://github.com/echasnovski/mini.nvim/blob/main/readmes/mini-icons.md) for file and folder icons
+  - [nvim-web-devicons](https://github.com/nvim-tree/nvim-web-devicons) for file icons
 
 ## Installation
 
@@ -34,7 +36,8 @@ oil.nvim supports all the usual plugin managers
   'stevearc/oil.nvim',
   opts = {},
   -- Optional dependencies
-  dependencies = { "nvim-tree/nvim-web-devicons" },
+  dependencies = { "echasnovski/mini.icons" },
+  -- dependencies = { "nvim-tree/nvim-web-devicons" }, -- use if prefer nvim-web-devicons
 }
 ```
 
