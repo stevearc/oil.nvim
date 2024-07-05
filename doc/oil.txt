@@ -277,9 +277,11 @@ toggle_hidden()                                                *oil.toggle_hidde
     Toggle hidden files and directories
 
 
-get_current_dir(): nil|string                                *oil.get_current_dir*
+get_current_dir({bufnr}): nil|string                         *oil.get_current_dir*
     Get the current directory
 
+    Parameters:
+      {bufnr} `integer` When nil, get directory of the current buffer
 
 open_float({dir})                                                 *oil.open_float*
     Open oil browser in a floating window

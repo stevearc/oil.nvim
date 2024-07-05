@@ -140,12 +140,14 @@ M.toggle_hidden = function()
 end
 
 ---Get the current directory
+---@param bufnr? integer
 ---@return nil|string
-M.get_current_dir = function()
+M.get_current_dir = function(bufnr)
   local config = require("oil.config")
   local fs = require("oil.fs")
   local util = require("oil.util")
-  local scheme, path = util.parse_url(vim.api.nvim_buf_get_name(0))
+  local buf_name = vim.api.nvim_buf_get_name(bufnr or 0)
+  local scheme, path = util.parse_url(buf_name)
   if config.adapters[scheme] == "files" then
     assert(path)
     return fs.posix_to_os_path(path)

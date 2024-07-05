@@ -83,10 +83,14 @@ Change how oil determines if the file is hidden
 Toggle hidden files and directories
 
 
-## get_current_dir()
+## get_current_dir(bufnr)
 
-`get_current_dir(): nil|string` \
+`get_current_dir(bufnr): nil|string` \
 Get the current directory
+
+| Param | Type           | Desc                                          |
+| ----- | -------------- | --------------------------------------------- |
+| bufnr | `nil\|integer` | When nil, get directory of the current buffer |
 
 
 ## open_float(dir)
