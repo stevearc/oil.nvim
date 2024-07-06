@@ -864,8 +864,9 @@ end
 ---@return (oil.IconProvider)?
 M.get_icon_provider = function()
   -- prefer mini.icons
-  local has_mini_icons, mini_icons = pcall(require, "mini.icons")
-  if has_mini_icons then
+  local _, mini_icons = pcall(require, "mini.icons")
+  ---@diagnostic disable-next-line: undefined-field
+  if _G.MiniIcons then -- `_G.MiniIcons` is a better check to see if the module is setup
     return function(type, name)
       return mini_icons.get(type == "directory" and "directory" or "file", name)
     end
