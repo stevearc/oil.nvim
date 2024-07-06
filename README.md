@@ -345,7 +345,7 @@ Note that at the moment the ssh adapter does not support Windows machines, and i
 - [set_sort(sort)](doc/api.md#set_sortsort)
 - [set_is_hidden_file(is_hidden_file)](doc/api.md#set_is_hidden_fileis_hidden_file)
 - [toggle_hidden()](doc/api.md#toggle_hidden)
-- [get_current_dir()](doc/api.md#get_current_dir)
+- [get_current_dir(bufnr)](doc/api.md#get_current_dirbufnr)
 - [open_float(dir)](doc/api.md#open_floatdir)
 - [toggle_float(dir)](doc/api.md#toggle_floatdir)
 - [open(dir)](doc/api.md#opendir)

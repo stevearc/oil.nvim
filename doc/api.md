@@ -9,7 +9,7 @@
 - [set_sort(sort)](#set_sortsort)
 - [set_is_hidden_file(is_hidden_file)](#set_is_hidden_fileis_hidden_file)
 - [toggle_hidden()](#toggle_hidden)
-- [get_current_dir()](#get_current_dir)
+- [get_current_dir(bufnr)](#get_current_dirbufnr)
 - [open_float(dir)](#open_floatdir)
 - [toggle_float(dir)](#toggle_floatdir)
 - [open(dir)](#opendir)
@@ -88,10 +88,9 @@ Toggle hidden files and directories
 `get_current_dir(bufnr): nil|string` \
 Get the current directory
 
-| Param | Type           | Desc                                          |
-| ----- | -------------- | --------------------------------------------- |
-| bufnr | `nil\|integer` | When nil, get directory of the current buffer |
-
+| Param | Type           | Desc |
+| ----- | -------------- | ---- |
+| bufnr | `nil\|integer` |      |
 
 ## open_float(dir)
 

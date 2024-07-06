@@ -281,7 +281,7 @@ get_current_dir({bufnr}): nil|string                         *oil.get_current_di
     Get the current directory
 
     Parameters:
-      {bufnr} `integer` When nil, get directory of the current buffer
+      {bufnr} `nil|integer`
 
 open_float({dir})                                                 *oil.open_float*
     Open oil browser in a floating window
