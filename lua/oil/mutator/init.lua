@@ -93,6 +93,25 @@ M.create_actions_from_diffs = function(all_diffs)
     for _, diff in ipairs(diffs) do
       if diff.type == "new" then
         if diff.id then
+          -- Parse nested files like foo/bar/baz
+          -- Create the parent directories if they don't exist
+          local path_sep = fs.is_windows and "[/\\]" or "/"
+          local pieces = vim.split(diff.name, path_sep)
+          local url = parent_url:gsub("/$", "")
+          for i, v in ipairs(pieces) do
+            if i == #pieces then
+              break
+            end
+
+            url = url .. "/" .. v
+            add_action({
+              type = "create",
+              url = url,
+              entry_type = "directory",
+              link = diff.link,
+            })
+          end
+
           local by_id = diff_by_id[diff.id]
           ---HACK: set the destination on this diff for use later
           ---@diagnostic disable-next-line: inject-field
