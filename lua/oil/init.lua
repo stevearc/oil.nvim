@@ -17,6 +17,7 @@ local M = {}
 ---@class (exact) oil.Adapter
 ---@field name string The unique name of the adapter (this will be set automatically)
 ---@field list fun(path: string, column_defs: string[], cb: fun(err?: string, entries?: oil.InternalEntry[], fetch_more?: fun())) Async function to list a directory.
+---@field file_exists fun(path: string) Returns true if the file at path exists
 ---@field is_modifiable fun(bufnr: integer): boolean Return true if this directory is modifiable (allows for directories with read-only permissions).
 ---@field get_column fun(name: string): nil|oil.ColumnDefinition If the adapter has any adapter-specific columns, return them when fetched by name.
 ---@field get_parent? fun(bufname: string): string Get the parent url of the given buffer

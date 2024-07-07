@@ -332,6 +332,15 @@ local function list_windows_drives(url, column_defs, cb)
 end
 
 ---@param url string
+M.file_exists = function(url)
+  local _, path = util.parse_url(url)
+  assert(path)
+  local dir = fs.posix_to_os_path(path)
+
+  return fs.file_exists(dir)
+end
+
+---@param url string
 ---@param column_defs string[]
 ---@param cb fun(err?: string, entries?: oil.InternalEntry[], fetch_more?: fun())
 M.list = function(url, column_defs, cb)
