@@ -34,6 +34,8 @@ local function read_link_data(path, cb)
   )
 end
 
+M.supports_subdir_rename = true
+
 ---@param path string
 ---@param entry_type nil|oil.EntryType
 ---@return string

@@ -240,7 +240,7 @@ M.parse = function(bufnr)
       elseif not entry then
         err_message = "Could not find existing entry (was the ID changed?)"
       elseif
-        adapter.name ~= "files"
+        not adapter.supports_subdir_rename
         and (parsed_entry.name:match("/") or parsed_entry.name:match(fs.sep))
       then
         err_message = "Filename cannot contain path separator"

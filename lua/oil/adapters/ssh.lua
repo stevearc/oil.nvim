@@ -27,6 +27,8 @@ local function scp(args, ...)
   shell.run(cmd, ...)
 end
 
+M.supports_subdir_rename = false
+
 ---@param oil_url string
 ---@return oil.sshUrl
 M.parse_url = function(oil_url)

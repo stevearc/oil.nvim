@@ -8,6 +8,8 @@ local uv = vim.uv or vim.loop
 
 local M = {}
 
+M.supports_subdir_rename = false
+
 local function touch_dir(path)
   uv.fs_mkdir(path, 448) -- 0700
 end
