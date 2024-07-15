@@ -36,7 +36,7 @@ oil.nvim supports all the usual plugin managers
   'stevearc/oil.nvim',
   opts = {},
   -- Optional dependencies
-  dependencies = { "echasnovski/mini.icons" },
+  dependencies = { { "echasnovski/mini.icons", opts = {} } },
   -- dependencies = { "nvim-tree/nvim-web-devicons" }, -- use if prefer nvim-web-devicons
 }
 ```
