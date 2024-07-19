@@ -27,6 +27,7 @@
 
 ---@class (exact) oil.ViewOptions
 ---@field show_hidden? boolean Show files and directories that start with "."
+---@field show_ignored? boolean Show files and directories specified in ".gitignore" if present
 ---@field is_hidden_file? fun(name: string, bufnr: integer): boolean This function defines what is considered a "hidden" file
 ---@field is_always_hidden? fun(name: string, bufnr: integer): boolean This function defines what will never be shown, even when `show_hidden` is set
 ---@field natural_order? boolean Sort file names in a more intuitive order for humans. Is less performant, so you may want to set to false if you work with large directories.

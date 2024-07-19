@@ -201,6 +201,7 @@ require("oil").setup({
     ["gs"] = "actions.change_sort",
     ["gx"] = "actions.open_external",
     ["g."] = "actions.toggle_hidden",
+    ["gI"] = "actions.toggle_ignored",
     ["g\\"] = "actions.toggle_trash",
   },
   -- Set to false to disable all of the above keymaps
@@ -208,6 +209,8 @@ require("oil").setup({
   view_options = {
     -- Show files and directories that start with "."
     show_hidden = false,
+    -- Show files and directories specified in ".gitignore" if present
+    show_ignored = true,
     -- This function defines what is considered a "hidden" file
     is_hidden_file = function(name, bufnr)
       return vim.startswith(name, ".")
@@ -332,7 +335,6 @@ Note that at the moment the ssh adapter does not support Windows machines, and i
 ## Recipes
 
 - [Toggle file detail view](doc/recipes.md#toggle-file-detail-view)
-- [Hide gitignored files](doc/recipes.md#hide-gitignored-files)
 
 ## API
 
@@ -345,6 +347,7 @@ Note that at the moment the ssh adapter does not support Windows machines, and i
 - [set_sort(sort)](doc/api.md#set_sortsort)
 - [set_is_hidden_file(is_hidden_file)](doc/api.md#set_is_hidden_fileis_hidden_file)
 - [toggle_hidden()](doc/api.md#toggle_hidden)
+- [toggle_ignored()](doc/api.md#toggle_ignored)
 - [get_current_dir(bufnr)](doc/api.md#get_current_dirbufnr)
 - [open_float(dir)](doc/api.md#open_floatdir)
 - [toggle_float(dir)](doc/api.md#toggle_floatdir)

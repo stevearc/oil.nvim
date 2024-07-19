@@ -9,6 +9,7 @@
 - [set_sort(sort)](#set_sortsort)
 - [set_is_hidden_file(is_hidden_file)](#set_is_hidden_fileis_hidden_file)
 - [toggle_hidden()](#toggle_hidden)
+- [toggle_ignored()](#toggle_ignored)
 - [get_current_dir(bufnr)](#get_current_dirbufnr)
 - [open_float(dir)](#open_floatdir)
 - [toggle_float(dir)](#toggle_floatdir)
@@ -81,6 +82,11 @@ Change how oil determines if the file is hidden
 
 `toggle_hidden()` \
 Toggle hidden files and directories
+
+## toggle_ignored()
+
+`toggle_ignored()` \
+Toggle gitignored files and directories
 
 
 ## get_current_dir(bufnr)

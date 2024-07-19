@@ -139,6 +139,11 @@ M.toggle_hidden = function()
   require("oil.view").toggle_hidden()
 end
 
+---Toggle hidden files and directories
+M.toggle_ignored = function()
+  require("oil.view").toggle_ignored()
+end
+
 ---Get the current directory
 ---@param bufnr? integer
 ---@return nil|string

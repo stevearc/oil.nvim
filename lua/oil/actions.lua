@@ -192,6 +192,13 @@ M.toggle_hidden = {
   end,
 }
 
+M.toggle_ignored = {
+  desc = "Toggle gitignored files and directories",
+  callback = function()
+    require("oil.view").toggle_ignored()
+  end,
+}
+
 M.open_terminal = {
   desc = "Open a terminal in the current directory",
   callback = function()

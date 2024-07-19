@@ -88,6 +88,7 @@ CONFIG                                                                *oil-confi
         ["gs"] = "actions.change_sort",
         ["gx"] = "actions.open_external",
         ["g."] = "actions.toggle_hidden",
+        ["gI"] = "actions.toggle_ignored",
         ["g\\"] = "actions.toggle_trash",
       },
       -- Set to false to disable all of the above keymaps
@@ -95,6 +96,8 @@ CONFIG                                                                *oil-confi
       view_options = {
         -- Show files and directories that start with "."
         show_hidden = false,
+        -- Show files and directories specified in ".gitignore" if present
+        show_ignored = true,
         -- This function defines what is considered a "hidden" file
         is_hidden_file = function(name, bufnr)
           return vim.startswith(name, ".")
@@ -275,6 +278,9 @@ set_is_hidden_file({is_hidden_file})                      *oil.set_is_hidden_fil
 
 toggle_hidden()                                                *oil.toggle_hidden*
     Toggle hidden files and directories
+
+toggle_ignored()                                              *oil.toggle_ignored*
+    Toggle gitignored files and directories
 
 
 get_current_dir({bufnr}): nil|string                         *oil.get_current_dir*
@@ -562,6 +568,9 @@ show_help                                                      *actions.show_hel
 
 toggle_hidden                                              *actions.toggle_hidden*
     Toggle hidden files and directories
+
+toggle_ignored                                            *actions.toggle_ignored*
+    Toggle gitignored files and directories
 
 toggle_trash                                                *actions.toggle_trash*
     Jump to and from the trash for the current directory

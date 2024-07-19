@@ -22,7 +22,8 @@ local last_cursor_entry = {}
 ---@return boolean
 M.should_display = function(name, bufnr)
   return not config.view_options.is_always_hidden(name, bufnr)
-    and (not config.view_options.is_hidden_file(name, bufnr) or config.view_options.show_hidden)
+    and (config.view_options.show_hidden or not config.view_options.is_hidden_file(name, bufnr))
+    and (config.view_options.show_ignored or not util.is_ignored_file(name))
 end
 
 ---@param bufname string
@@ -75,6 +76,16 @@ M.toggle_hidden = function()
     vim.notify("Cannot toggle hidden files when you have unsaved changes", vim.log.levels.WARN)
   else
     config.view_options.show_hidden = not config.view_options.show_hidden
+    M.rerender_all_oil_buffers({ refetch = false })
+  end
+end
+
+M.toggle_ignored = function()
+  local any_modified = are_any_modified()
+  if any_modified then
+    vim.notify("Cannot toggle gitignored files when you have unsaved changes", vim.log.levels.WARN)
+  else
+    config.view_options.show_ignored = not config.view_options.show_ignored
     M.rerender_all_oil_buffers({ refetch = false })
   end
 end

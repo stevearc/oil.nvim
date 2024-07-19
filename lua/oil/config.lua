@@ -73,6 +73,7 @@ local default_config = {
     ["gs"] = "actions.change_sort",
     ["gx"] = "actions.open_external",
     ["g."] = "actions.toggle_hidden",
+    ["gI"] = "actions.toggle_ignored",
     ["g\\"] = "actions.toggle_trash",
   },
   -- Set to false to disable all of the above keymaps
@@ -80,6 +81,8 @@ local default_config = {
   view_options = {
     -- Show files and directories that start with "."
     show_hidden = false,
+    -- Show files and directories specified in ".gitignore" if present
+    show_ignored = true,
     -- This function defines what is considered a "hidden" file
     is_hidden_file = function(name, bufnr)
       return vim.startswith(name, ".")

@@ -887,4 +887,37 @@ M.get_icon_provider = function()
   end
 end
 
+local gitignored = setmetatable({}, {
+  __index = function(self, key)
+    local proc = vim.system(
+      { "git", "ls-files", "--ignored", "--exclude-standard", "--others", "--directory" },
+      { cwd = key, text = true }
+    )
+    local result = proc:wait()
+    local ret = {}
+    if result.code == 0 then
+      for line in vim.gsplit(result.stdout, "\n", { plain = true, trimempty = true }) do
+        -- Remove trailing slash
+        line = line:gsub("/$", "")
+        table.insert(ret, line)
+      end
+    end
+
+    rawset(self, key, ret)
+    return ret
+  end,
+})
+
+---Check if file is ignored by git
+---@param path string
+---@return boolean
+M.is_ignored_file = function(path)
+  local oil = require("oil")
+  local dir = oil.get_current_dir()
+  if not dir then
+    return false
+  end
+  return vim.list_contains(gitignored[dir], path)
+end
+
 return M
