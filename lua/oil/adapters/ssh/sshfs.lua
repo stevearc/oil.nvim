@@ -27,7 +27,7 @@ local typechar_map = {
 ---@return table Metadata for entry
 local function parse_ls_line(line)
   local typechar, perms, refcount, user, group, rem =
-    line:match("^(.)(%S+)%s+(%d+)%s+(%S+)%s+(%S+)%s+(.*)$")
+    line:match("^(.)(%S+)%s+(%d+)%s+(%d+)%s+(%d+)%s+(.*)$")
   if not typechar then
     error(string.format("Could not parse '%s'", line))
   end
@@ -112,7 +112,7 @@ function SSHFS:realpath(path, callback)
       abspath = abspath:sub(1, #abspath - 1)
     end
     self.conn:run(
-      string.format("ls -ald --color=never %s", shellescape(abspath)),
+      string.format("ls -land --color=never %s", shellescape(abspath)),
       function(ls_err, ls_lines)
         local type
         if ls_err then
@@ -142,7 +142,7 @@ function SSHFS:list_dir(url, path, callback)
   if path ~= "" then
     path_postfix = string.format(" %s", shellescape(path))
   end
-  self.conn:run("LANG=C ls -al --color=never" .. path_postfix, function(err, lines)
+  self.conn:run("LANG=C ls -lan --color=never" .. path_postfix, function(err, lines)
     if err then
       if err:match("No such file or directory%s*$") then
         -- If the directory doesn't exist, treat the list as a success. We will be able to traverse
@@ -176,7 +176,7 @@ function SSHFS:list_dir(url, path, callback)
       -- If there were any soft links, then we need to run another ls command with -L so that we can
       -- resolve the type of the link target
       self.conn:run(
-        "ls -aLl --color=never" .. path_postfix .. " 2> /dev/null",
+        "ls -naLl --color=never" .. path_postfix .. " 2> /dev/null",
         function(link_err, link_lines)
           -- Ignore exit code 1. That just means one of the links could not be resolved.
           if link_err and not link_err:match("^1:") then
