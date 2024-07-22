@@ -6,6 +6,7 @@ Have a cool recipe to share? Open a pull request and add it to this doc!
 
 - [Toggle file detail view](#toggle-file-detail-view)
 - [Hide gitignored files](#hide-gitignored-files)
+- [Enable compact directories](#enable-compact-directories)
 
 <!-- /TOC -->
 
@@ -73,5 +74,40 @@ require("oil").setup({
       return vim.list_contains(git_ignored[dir], name)
     end,
   },
+})
+```
+
+## Enable compact directories
+
+```lua
+require("oil").setup({
+    keymaps = {
+        ["oo"] = {
+            desc = "Recursively Open directores",
+            callback = function()
+
+                local oil = require("oil")
+                local dir = oil.get_current_dir()
+                local cursor = oil.get_cursor_entry()
+
+                local function o()
+                    oil.open(dir .. cursor.name)
+                    vim.wait(50)
+
+                    dir = oil.get_current_dir()
+                    cursor = oil.get_cursor_entry()
+
+                    local bn = vim.fn.bufnr()
+                    local lines = vim.api.nvim_buf_line_count(bn)
+
+                    if lines == 1 and cursor ~= nil and cursor.type == "directory" then
+                        o()
+                    end
+                end
+
+                o()
+            end,
+        },
+    },
 })
 ```
