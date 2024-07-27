@@ -785,6 +785,11 @@ M._get_highlights = function()
       desc = "Directory names in an oil buffer",
     },
     {
+      name = "OilDirHidden",
+      link = "Comment",
+      desc = "Hidden directory names in an oil buffer",
+    },
+    {
       name = "OilDirIcon",
       link = "OilDir",
       desc = "Icon for directories",
@@ -795,9 +800,19 @@ M._get_highlights = function()
       desc = "Socket files in an oil buffer",
     },
     {
+      name = "OilSocketHidden",
+      link = "Comment",
+      desc = "Hidden socket files in an oil buffer",
+    },
+    {
       name = "OilLink",
       link = nil,
       desc = "Soft links in an oil buffer",
+    },
+    {
+      name = "OilLinkHidden",
+      link = "Comment",
+      desc = "Hidden soft links in an oil buffer",
     },
     {
       name = "OilLinkTarget",
@@ -805,9 +820,19 @@ M._get_highlights = function()
       desc = "The target of a soft link",
     },
     {
+      name = "OilLinkTargetHidden",
+      link = "Comment",
+      desc = "The target of a hidden soft link",
+    },
+    {
       name = "OilFile",
       link = nil,
       desc = "Normal files in an oil buffer",
+    },
+    {
+      name = "OilFileHidden",
+      link = "Comment",
+      desc = "Hidden normal files in an oil buffer",
     },
     {
       name = "OilCreate",
