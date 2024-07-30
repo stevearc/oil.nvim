@@ -457,6 +457,14 @@ M.initialize = function(bufnr)
       assert(dir),
       {},
       vim.schedule_wrap(function(err, filename, events)
+        if not vim.api.nvim_buf_is_valid(bufnr) then
+          local sess = session[bufnr]
+          if sess then
+            sess.fs_event = nil
+          end
+          fs_event:stop()
+          return
+        end
         local mutator = require("oil.mutator")
         if err or vim.bo[bufnr].modified or vim.b[bufnr].oil_dirty or mutator.is_mutating() then
           return
