@@ -194,6 +194,20 @@ describe("parser", function()
     }, diffs)
   end)
 
+  it("parses a rename with new subdirectory", function()
+    local file = test_adapter.test_set("/foo/a.txt", "file")
+    vim.cmd.edit({ args = { "oil-test:///foo/" } })
+    local bufnr = vim.api.nvim_get_current_buf()
+    set_lines(bufnr, {
+      string.format("/%d bar/a.txt", file[FIELD_ID]),
+    })
+    local diffs = parser.parse(bufnr)
+    assert.are.same({
+      { type = "new", id = file[FIELD_ID], name = "bar/a.txt", entry_type = "file" },
+      { type = "delete", id = file[FIELD_ID], name = "a.txt" },
+    }, diffs)
+  end)
+
   it("detects a new trailing slash as a delete + create", function()
     local file = test_adapter.test_set("/foo", "file")
     vim.cmd.edit({ args = { "oil-test:///" } })

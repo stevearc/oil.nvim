@@ -102,6 +102,32 @@ a.describe("mutator", function()
       }, actions)
     end)
 
+    it("constructs MOVE actions with a new subdirectory", function()
+      local file = test_adapter.test_set("/foo/a.txt", "file")
+      vim.cmd.edit({ args = { "oil-test:///foo/" } })
+      local bufnr = vim.api.nvim_get_current_buf()
+      local diffs = {
+        { type = "delete", name = "a.txt", id = file[FIELD_ID] },
+        { type = "new", name = "bar/a.txt", entry_type = "file", id = file[FIELD_ID] },
+      }
+      local actions = mutator.create_actions_from_diffs({
+        [bufnr] = diffs,
+      })
+      assert.are.same({
+        {
+          type = "create",
+          entry_type = "directory",
+          url = "oil-test:///foo/bar",
+        },
+        {
+          type = "move",
+          entry_type = "file",
+          src_url = "oil-test:///foo/a.txt",
+          dest_url = "oil-test:///foo/bar/a.txt",
+        },
+      }, actions)
+    end)
+
     it("correctly orders MOVE + CREATE", function()
       local file = test_adapter.test_set("/a.txt", "file")
       vim.cmd.edit({ args = { "oil-test:///" } })

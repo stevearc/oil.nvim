@@ -12,6 +12,8 @@ local FIELD_META = constants.FIELD_META
 
 local M = {}
 
+M.supports_subdir_rename = false
+
 local function ensure_trash_dir(path)
   local mode = 448 -- 0700
   fs.mkdirp(fs.join(path, "info"), mode)

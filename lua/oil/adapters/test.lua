@@ -2,6 +2,8 @@ local cache = require("oil.cache")
 local util = require("oil.util")
 local M = {}
 
+M.supports_subdir_rename = true
+
 ---@param url string
 ---@param callback fun(url: string)
 M.normalize_url = function(url, callback)
@@ -86,6 +88,12 @@ end
 ---@param bufnr integer
 M.read_file = function(bufnr)
   -- pass
+end
+
+---@param path string
+---@return boolean
+M.file_exists = function(path)
+  return false
 end
 
 ---@param bufnr integer

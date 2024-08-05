@@ -160,6 +160,12 @@ M.mkdirp = function(dir, mode)
   end
 end
 
+--- @param path string
+--- @return boolean
+M.file_exists = function(path)
+  return uv.fs_stat(path) ~= nil
+end
+
 ---@param dir string
 ---@param cb fun(err: nil|string, entries: nil|{type: oil.EntryType, name: string})
 M.listdir = function(dir, cb)

@@ -34,6 +34,8 @@ local function read_link_data(path, cb)
   )
 end
 
+M.supports_subdir_rename = true
+
 ---@param path string
 ---@param entry_type nil|oil.EntryType
 ---@return string
@@ -329,6 +331,15 @@ local function list_windows_drives(url, column_defs, cb)
   if jid <= 0 then
     cb("Could not list windows devices")
   end
+end
+
+---@param url string
+M.file_exists = function(url)
+  local _, path = util.parse_url(url)
+  assert(path)
+  local dir = fs.posix_to_os_path(path)
+
+  return fs.file_exists(dir)
 end
 
 ---@param url string

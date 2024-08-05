@@ -12,6 +12,8 @@ local FIELD_TYPE = constants.FIELD_TYPE
 
 local M = {}
 
+M.supports_subdir_rename = false
+
 ---@return string
 local function get_trash_dir()
   local cwd = assert(vim.fn.getcwd())

@@ -186,8 +186,31 @@ M.parse = function(bufnr)
       -- mac and windows use case-insensitive filesystems
       name = name:lower()
     end
+    local has_subdir = string.find(name, fs.sep)
+    local subdir_name = has_subdir
+        and string.match(name, string.format("([^%s]+)%s", fs.sep, fs.sep))
+      or nil
     if seen_names[name] then
       table.insert(errors, { message = "Duplicate filename", lnum = i - 1, end_lnum = i, col = 0 })
+    elseif has_subdir and adapter.file_exists(parent_url .. name) then
+      table.insert(
+        errors,
+        { message = "Duplicate file in nested path", lnum = i - 1, end_lnum = i, col = 0 }
+      )
+    elseif
+      has_subdir
+      and seen_names[subdir_name]
+      and not adapter.file_exists(parent_url .. subdir_name)
+    then
+      table.insert(errors, {
+        message = "Cannot move a file to a directory which has been renamed in the same action",
+        lnum = i - 1,
+        end_lnum = i,
+        col = 0,
+      })
+    elseif has_subdir then
+      seen_names[subdir_name] = true
+      seen_names[name] = true
     else
       seen_names[name] = true
     end
@@ -216,7 +239,10 @@ M.parse = function(bufnr)
         err_message = "No filename found"
       elseif not entry then
         err_message = "Could not find existing entry (was the ID changed?)"
-      elseif parsed_entry.name:match("/") or parsed_entry.name:match(fs.sep) then
+      elseif
+        not adapter.supports_subdir_rename
+        and (parsed_entry.name:match("/") or parsed_entry.name:match(fs.sep))
+      then
         err_message = "Filename cannot contain path separator"
       end
       if err_message then
