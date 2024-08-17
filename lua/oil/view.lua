@@ -626,19 +626,17 @@ local function render_buffer(bufnr, opts)
   end
 
   for _, entry in ipairs(entry_list) do
-    if not M.should_display(entry[FIELD_NAME], bufnr) then
-      goto continue
-    end
-    local cols = M.format_entry_cols(entry, column_defs, col_width, adapter)
-    table.insert(line_table, cols)
+    if M.should_display(entry[FIELD_NAME], bufnr) then
+      local cols = M.format_entry_cols(entry, column_defs, col_width, adapter)
+      table.insert(line_table, cols)
 
-    local name = entry[FIELD_NAME]
-    if seek_after_render == name then
-      seek_after_render_found = true
-      jump_idx = #line_table
-      M.set_last_cursor(bufname, nil)
+      local name = entry[FIELD_NAME]
+      if seek_after_render == name then
+        seek_after_render_found = true
+        jump_idx = #line_table
+        M.set_last_cursor(bufname, nil)
+      end
     end
-    ::continue::
   end
 
   local lines, highlights = util.render_table(line_table, col_width)
