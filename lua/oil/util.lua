@@ -919,20 +919,25 @@ M.read_file_to_scratch_buffer = function(path, opts)
         assert(not err_read, err_read)
         vim.loop.fs_close(fd, function(err_close)
           assert(not err_close, err_close)
-          local processed_data = vim.split(data or "", "[\r]?\n", opts)
-          if processed_data then
-            local ok = pcall(vim.api.nvim_buf_set_lines, bufnr, 0, -1, false, processed_data)
-            if not ok then
+          vim.schedule(function()
+            if not vim.api.nvim_buf_is_valid(bufnr) then
               return
             end
-          end
-          local ft = vim.filetype.match({ filename = path })
-          if ft and ft ~= "" then
-            local lang = vim.treesitter.language.get_lang(ft)
-            if not pcall(vim.treesitter.start, bufnr, lang) then
-              vim.bo[bufnr].syntax = ft
+            local processed_data = vim.split(data or "", "[\r]?\n", opts)
+            if processed_data then
+              local ok = pcall(vim.api.nvim_buf_set_lines, bufnr, 0, -1, false, processed_data)
+              if not ok then
+                return
+              end
             end
-          end
+            local ft = vim.filetype.match({ filename = path })
+            if ft and ft ~= "" then
+              local lang = vim.treesitter.language.get_lang(ft)
+              if not pcall(vim.treesitter.start, bufnr, lang) then
+                vim.bo[bufnr].syntax = ft
+              end
+            end
+          end)
         end)
       end)
     end)
