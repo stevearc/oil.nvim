@@ -919,9 +919,6 @@ M.read_file_to_scratch_buffer = function(path, opts)
         assert(not err_read, err_read)
         vim.loop.fs_close(fd, function(err_close)
           assert(not err_close, err_close)
-          if not vim.api.nvim_buf_is_valid(bufnr) then
-            return
-          end
           local processed_data = vim.split(data or "", "[\r]?\n", opts)
           if processed_data then
             local ok = pcall(vim.api.nvim_buf_set_lines, bufnr, 0, -1, false, processed_data)
