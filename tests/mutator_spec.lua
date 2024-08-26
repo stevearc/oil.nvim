@@ -216,6 +216,26 @@ a.describe("mutator", function()
       assert.are.same({ move1, move2 }, ordered_actions)
     end)
 
+    it("Handles a delete inside a moved folder", function()
+      -- delete in directory and move directory
+      --     DELETE /a/b.txt
+      --     MOVE /a/ -> /b/
+      local del = {
+        type = "delete",
+        url = "oil-test:///a/b.txt",
+        entry_type = "file",
+      }
+      local move = {
+        type = "move",
+        src_url = "oil-test:///a",
+        dest_url = "oil-test:///b",
+        entry_type = "directory",
+      }
+      local actions = { move, del }
+      local ordered_actions = mutator.enforce_action_order(actions)
+      assert.are.same({ del, move }, ordered_actions)
+    end)
+
     it("Detects move directory loops", function()
       local move = {
         type = "move",
