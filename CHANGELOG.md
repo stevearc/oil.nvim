@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.12.1](https://github.com/stevearc/oil.nvim/compare/v2.12.0...v2.12.1) (2024-08-26)
+
+
+### Bug Fixes
+
+* gracefully handle trashing file that does not exist ([70337eb](https://github.com/stevearc/oil.nvim/commit/70337eb77f53cbff0b7f54f403d5b2b0a9430935))
+* process deletes in dir before moving dir ([349bca8](https://github.com/stevearc/oil.nvim/commit/349bca8c3eae4ab78629ed63ee55cc3458a367c0))
+
 ## [2.12.0](https://github.com/stevearc/oil.nvim/compare/v2.11.0...v2.12.0) (2024-08-17)
 
 
