@@ -75,8 +75,13 @@ end
 ---@param path string
 ---@return string
 local function get_write_trash_dir(path)
-  local dev = uv.fs_lstat(path).dev
+  local lstat = uv.fs_lstat(path)
   local home_trash = get_home_trash_dir()
+  if not lstat then
+    -- If the source file doesn't exist default to home trash dir
+    return home_trash
+  end
+  local dev = lstat.dev
   if uv.fs_lstat(home_trash).dev == dev then
     return home_trash
   end

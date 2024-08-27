@@ -252,11 +252,10 @@ M.enforce_action_order = function(actions)
       -- Process children before moving
       -- e.g. NEW /a/b BEFORE MOVE /a -> /b
       dest_trie:accum_children_of(action.src_url, ret)
-      -- Copy children before moving parent dir
+      -- Process children before moving parent dir
       -- e.g. COPY /a/b -> /b BEFORE MOVE /a -> /d
-      src_trie:accum_children_of(action.src_url, ret, function(a)
-        return a.type == "copy"
-      end)
+      -- e.g. CHANGE /a/b BEFORE MOVE /a -> /d
+      src_trie:accum_children_of(action.src_url, ret)
       -- Process remove path before moving to new path
       -- e.g. MOVE /a -> /b BEFORE MOVE /c -> /a
       src_trie:accum_actions_at(action.dest_url, ret, function(a)
