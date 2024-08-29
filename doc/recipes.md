@@ -5,7 +5,7 @@ Have a cool recipe to share? Open a pull request and add it to this doc!
 <!-- TOC -->
 
 - [Toggle file detail view](#toggle-file-detail-view)
-- [Hide gitignored files](#hide-gitignored-files)
+- [Hide gitignored files and show git tracked hidden files](#hide-gitignored-files-and-show-git-tracked-hidden-files)
 
 <!-- /TOC -->
 
