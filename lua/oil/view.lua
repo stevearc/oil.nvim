@@ -333,7 +333,8 @@ M.initialize = function(bufnr)
   for k, v in pairs(config.buf_options) do
     vim.bo[bufnr][k] = v
   end
-  M.set_win_options()
+  vim.api.nvim_buf_call(bufnr, M.set_win_options)
+
   vim.api.nvim_create_autocmd("BufHidden", {
     desc = "Delete oil buffers when no longer in use",
     group = "Oil",
