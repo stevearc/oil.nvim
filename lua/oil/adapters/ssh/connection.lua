@@ -176,6 +176,7 @@ function SSHConnection.new(url)
     end
   end)
 
+  ---@cast self oil.sshConnection
   return self
 end
 

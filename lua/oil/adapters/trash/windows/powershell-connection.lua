@@ -22,6 +22,7 @@ function PowershellConnection.new(init_command)
 
   self:_init(init_command)
 
+  ---@type oil.PowershellConnection
   return self
 end
 

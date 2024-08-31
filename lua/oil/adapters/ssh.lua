@@ -50,6 +50,7 @@ M.parse_url = function(oil_url)
     error(string.format("Malformed SSH url: %s", oil_url))
   end
 
+  ---@cast ret oil.sshUrl
   return ret
 end
 
@@ -440,6 +441,7 @@ M.goto_file = function()
   url.path = vim.fs.dirname(fullpath)
   local parurl = url_to_str(url)
 
+  ---@cast M oil.Adapter
   util.adapter_list_all(M, parurl, {}, function(err, entries)
     if err then
       vim.notify(string.format("Error finding file '%s': %s", fname, err), vim.log.levels.ERROR)

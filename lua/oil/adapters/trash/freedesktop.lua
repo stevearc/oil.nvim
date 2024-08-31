@@ -210,6 +210,7 @@ local function read_trash_info(info_file, cb)
               cb(".trashinfo file points to non-existant file")
             else
               trash_info.stat = trash_stat
+              ---@cast trash_info oil.TrashInfo
               cb(nil, trash_info)
             end
           end)

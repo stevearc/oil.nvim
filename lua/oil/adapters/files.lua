@@ -34,6 +34,9 @@ local function read_link_data(path, cb)
   )
 end
 
+---@class (exact) oil.FilesAdapter: oil.Adapter
+---@field to_short_os_path fun(path: string, entry_type: nil|oil.EntryType): string
+
 ---@param path string
 ---@param entry_type nil|oil.EntryType
 ---@return string
@@ -284,6 +287,7 @@ end
 ---@param column_defs string[]
 ---@param cb fun(err?: string, entries?: oil.InternalEntry[], fetch_more?: fun())
 local function list_windows_drives(url, column_defs, cb)
+  ---@cast M oil.FilesAdapter
   local fetch_meta = columns.get_metadata_fetcher(M, column_defs)
   local stdout = ""
   local jid = vim.fn.jobstart({ "wmic", "logicaldisk", "get", "name" }, {
@@ -341,6 +345,7 @@ M.list = function(url, column_defs, cb)
     return list_windows_drives(url, column_defs, cb)
   end
   local dir = fs.posix_to_os_path(path)
+  ---@cast M oil.Adapter
   local fetch_meta = columns.get_metadata_fetcher(M, column_defs)
 
   ---@diagnostic disable-next-line: param-type-mismatch, discard-returns

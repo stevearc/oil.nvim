@@ -70,6 +70,7 @@ end
 ---@param url oil.sshUrl
 ---@return oil.sshFs
 function SSHFS.new(url)
+  ---@type oil.sshFs
   return setmetatable({
     conn = SSHConnection.new(url),
   }, {

@@ -7,6 +7,7 @@ local Trie = {}
 
 ---@return oil.Trie
 Trie.new = function()
+  ---@type oil.Trie
   return setmetatable({
     root = { values = {}, children = {} },
   }, {
