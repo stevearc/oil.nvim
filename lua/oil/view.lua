@@ -79,7 +79,7 @@ M.toggle_hidden = function()
   end
 end
 
----@param is_hidden_file fun(filename: string, bufnr: nil|integer): boolean
+---@param is_hidden_file fun(filename: string, bufnr: integer): boolean
 M.set_is_hidden_file = function(is_hidden_file)
   local any_modified = are_any_modified()
   if any_modified then

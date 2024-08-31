@@ -34,6 +34,8 @@ oil.nvim supports all the usual plugin managers
 ```lua
 {
   'stevearc/oil.nvim',
+  ---@module 'oil'
+  ---@type oil.SetupOpts
   opts = {},
   -- Optional dependencies
   dependencies = { { "echasnovski/mini.icons", opts = {} } },

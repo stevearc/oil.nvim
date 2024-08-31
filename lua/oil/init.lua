@@ -129,7 +129,7 @@ M.set_sort = function(sort)
 end
 
 ---Change how oil determines if the file is hidden
----@param is_hidden_file fun(filename: string, bufnr: nil|integer): boolean Return true if the file/dir should be hidden
+---@param is_hidden_file fun(filename: string, bufnr: integer): boolean Return true if the file/dir should be hidden
 M.set_is_hidden_file = function(is_hidden_file)
   require("oil.view").set_is_hidden_file(is_hidden_file)
 end

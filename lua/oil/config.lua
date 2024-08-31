@@ -192,7 +192,159 @@ default_config.adapters = {
 }
 default_config.adapter_aliases = {}
 
+---@class oil.Config
+---@field adapters table<string, string> Hidden from SetupOpts
+---@field adapter_aliases table<string, string> Hidden from SetupOpts
+---@field trash_command? string Deprecated option that we should clean up soon
+---@field silence_scp_warning? boolean Undocumented option
+---@field default_file_explorer boolean
+---@field columns oil.ColumnSpec[]
+---@field buf_options table<string, any>
+---@field win_options table<string, any>
+---@field delete_to_trash boolean
+---@field skip_confirm_for_simple_edits boolean
+---@field prompt_save_on_select_new_entry boolean
+---@field cleanup_delay_ms integer
+---@field lsp_file_methods oil.LspFileMethods
+---@field constrain_cursor false|"name"|"editable"
+---@field watch_for_changes boolean
+---@field keymaps table<string, any>
+---@field use_default_keymaps boolean
+---@field view_options oil.ViewOptions
+---@field extra_scp_args string[]
+---@field git oil.GitOptions
+---@field float oil.FloatWindowConfig
+---@field preview oil.PreviewWindowConfig
+---@field progress oil.ProgressWindowConfig
+---@field ssh oil.SimpleWindowConfig
+---@field keymaps_help oil.SimpleWindowConfig
 local M = {}
+
+-- For backwards compatibility
+---@alias oil.setupOpts oil.SetupOpts
+
+---@class (exact) oil.SetupOpts
+---@field default_file_explorer? boolean Oil will take over directory buffers (e.g. `vim .` or `:e src/`). Set to false if you still want to use netrw.
+---@field columns? oil.ColumnSpec[] The columns to display. See :help oil-columns.
+---@field buf_options? table<string, any> Buffer-local options to use for oil buffers
+---@field win_options? table<string, any> Window-local options to use for oil buffers
+---@field delete_to_trash? boolean Send deleted files to the trash instead of permanently deleting them (:help oil-trash).
+---@field skip_confirm_for_simple_edits? boolean Skip the confirmation popup for simple operations (:help oil.skip_confirm_for_simple_edits).
+---@field prompt_save_on_select_new_entry? boolean Selecting a new/moved/renamed file or directory will prompt you to save changes first (:help prompt_save_on_select_new_entry).
+---@field cleanup_delay_ms? integer Oil will automatically delete hidden buffers after this delay. You can set the delay to false to disable cleanup entirely. Note that the cleanup process only starts when none of the oil buffers are currently displayed.
+---@field lsp_file_methods? oil.SetupLspFileMethods Configure LSP file operation integration.
+---@field constrain_cursor? false|"name"|"editable" Constrain the cursor to the editable parts of the oil buffer. Set to `false` to disable, or "name" to keep it on the file names.
+---@field watch_for_changes? boolean Set to true to watch the filesystem for changes and reload oil.
+---@field keymaps? table<string, any>
+---@field use_default_keymaps? boolean Set to false to disable all of the above keymaps
+---@field view_options? oil.SetupViewOptions Configure which files are shown and how they are shown.
+---@field extra_scp_args? string[] Extra arguments to pass to SCP when moving/copying files over SSH
+---@field git? oil.SetupGitOptions EXPERIMENTAL support for performing file operations with git
+---@field float? oil.SetupFloatWindowConfig Configuration for the floating window in oil.open_float
+---@field preview? oil.SetupPreviewWindowConfig Configuration for the actions floating preview window
+---@field progress? oil.SetupProgressWindowConfig Configuration for the floating progress window
+---@field ssh? oil.SetupSimpleWindowConfig Configuration for the floating SSH window
+---@field keymaps_help? oil.SetupSimpleWindowConfig Configuration for the floating keymaps help window
+
+---@class (exact) oil.LspFileMethods
+---@field timeout_ms integer
+---@field autosave_changes boolean|"unmodified" Set to true to autosave buffers that are updated with LSP willRenameFiles. Set to "unmodified" to only save unmodified buffers.
+
+---@class (exact) oil.SetupLspFileMethods
+---@field timeout_ms? integer Time to wait for LSP file operations to complete before skipping.
+---@field autosave_changes? boolean|"unmodified" Set to true to autosave buffers that are updated with LSP willRenameFiles. Set to "unmodified" to only save unmodified buffers.
+
+---@class (exact) oil.ViewOptions
+---@field show_hidden boolean
+---@field is_hidden_file fun(name: string, bufnr: integer): boolean
+---@field is_always_hidden fun(name: string, bufnr: integer): boolean
+---@field natural_order boolean
+---@field case_insensitive boolean
+---@field sort oil.SortSpec[]
+
+---@class (exact) oil.SetupViewOptions
+---@field show_hidden? boolean Show files and directories that start with "."
+---@field is_hidden_file? fun(name: string, bufnr: integer): boolean This function defines what is considered a "hidden" file
+---@field is_always_hidden? fun(name: string, bufnr: integer): boolean This function defines what will never be shown, even when `show_hidden` is set
+---@field natural_order? boolean Sort file names in a more intuitive order for humans. Is less performant, so you may want to set to false if you work with large directories.
+---@field case_insensitive? boolean Sort file and directory names case insensitive
+---@field sort? oil.SortSpec[] Sort order for the file list
+
+---@class (exact) oil.SortSpec
+---@field [1] string
+---@field [2] "asc"|"desc"
+
+---@class (exact) oil.GitOptions
+---@field add fun(path: string): boolean
+---@field mv fun(src_path: string, dest_path: string): boolean
+---@field rm fun(path: string): boolean
+
+---@class (exact) oil.SetupGitOptions
+---@field add? fun(path: string): boolean Return true to automatically git add a new file
+---@field mv? fun(src_path: string, dest_path: string): boolean Return true to automatically git mv a moved file
+---@field rm? fun(path: string): boolean Return true to automatically git rm a deleted file
+
+---@class (exact) oil.WindowDimensionDualConstraint
+---@field [1] number
+---@field [2] number
+
+---@alias oil.WindowDimension number|oil.WindowDimensionDualConstraint
+
+---@class (exact) oil.WindowConfig
+---@field max_width oil.WindowDimension
+---@field min_width oil.WindowDimension
+---@field width? number
+---@field max_height oil.WindowDimension
+---@field min_height oil.WindowDimension
+---@field height? number
+---@field border string|string[]
+---@field win_options table<string, any>
+
+---@class (exact) oil.SetupWindowConfig
+---@field max_width? oil.WindowDimension Width dimensions can be integers or a float between 0 and 1 (e.g. 0.4 for 40%). Can be a single value or a list of mixed integer/float types. max_width = {100, 0.8} means "the lesser of 100 columns or 80% of total"
+---@field min_width? oil.WindowDimension Width dimensions can be integers or a float between 0 and 1 (e.g. 0.4 for 40%). Can be a single value or a list of mixed integer/float types. min_width = {40, 0.4} means "the greater of 40 columns or 40% of total"
+---@field width? number Define an integer/float for the exact width of the preview window
+---@field max_height? oil.WindowDimension Height dimensions can be integers or a float between 0 and 1 (e.g. 0.4 for 40%). Can be a single value or a list of mixed integer/float types. max_height = {80, 0.9} means "the lesser of 80 columns or 90% of total"
+---@field min_height? oil.WindowDimension Height dimensions can be integers or a float between 0 and 1 (e.g. 0.4 for 40%). Can be a single value or a list of mixed integer/float types. min_height = {5, 0.1} means "the greater of 5 columns or 10% of total"
+---@field height? number Define an integer/float for the exact height of the preview window
+---@field border? string|string[] Window border
+---@field win_options? table<string, any>
+
+---@class (exact) oil.PreviewWindowConfig : oil.WindowConfig
+---@field update_on_cursor_moved boolean
+
+---@class (exact) oil.SetupPreviewWindowConfig : oil.SetupWindowConfig
+---@field update_on_cursor_moved? boolean Whether the preview window is automatically updated when the cursor is moved
+
+---@class (exact) oil.ProgressWindowConfig : oil.WindowConfig
+---@field minimized_border string|string[]
+
+---@class (exact) oil.SetupProgressWindowConfig : oil.SetupWindowConfig
+---@field minimized_border? string|string[] The border for the minimized progress window
+
+---@class (exact) oil.FloatWindowConfig
+---@field padding integer
+---@field max_width integer
+---@field max_height integer
+---@field border string|string[]
+---@field win_options table<string, any>
+---@field preview_split "auto"|"left"|"right"|"above"|"below"
+---@field override fun(conf: table): table
+
+---@class (exact) oil.SetupFloatWindowConfig
+---@field padding? integer
+---@field max_width? integer
+---@field max_height? integer
+---@field border? string|string[] Window border
+---@field win_options? table<string, any>
+---@field preview_split? "auto"|"left"|"right"|"above"|"below" Direction that the preview command will split the window
+---@field override? fun(conf: table): table
+
+---@class (exact) oil.SimpleWindowConfig
+---@field border string|string[]
+
+---@class (exact) oil.SetupSimpleWindowConfig
+---@field border? string|string[] Window border
 
 M.setup = function(opts)
   local new_conf = vim.tbl_deep_extend("keep", opts or {}, default_config)

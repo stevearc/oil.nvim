@@ -1,10 +1,15 @@
 local M = {}
 
+---@param value number
+---@return boolean
 local function is_float(value)
   local _, p = math.modf(value)
   return p ~= 0
 end
 
+---@param value number
+---@param max_value number
+---@return number
 local function calc_float(value, max_value)
   if value and is_float(value) then
     return math.min(max_value, value * max_value)

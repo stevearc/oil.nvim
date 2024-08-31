@@ -73,9 +73,9 @@ require("oil").set_sort({ { "type", "asc" }, { "size", "desc" } })
 `set_is_hidden_file(is_hidden_file)` \
 Change how oil determines if the file is hidden
 
-| Param          | Type                                                  | Desc                                         |
-| -------------- | ----------------------------------------------------- | -------------------------------------------- |
-| is_hidden_file | `fun(filename: string, bufnr: nil\|integer): boolean` | Return true if the file/dir should be hidden |
+| Param          | Type                                             | Desc                                         |
+| -------------- | ------------------------------------------------ | -------------------------------------------- |
+| is_hidden_file | `fun(filename: string, bufnr: integer): boolean` | Return true if the file/dir should be hidden |
 
 ## toggle_hidden()
 

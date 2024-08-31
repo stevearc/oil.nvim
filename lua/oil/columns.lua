@@ -9,7 +9,7 @@ local FIELD_META = constants.FIELD_META
 
 local all_columns = {}
 
----@alias oil.ColumnSpec string|table
+---@alias oil.ColumnSpec string|{[1]: string, [string]: any}
 
 ---@class (exact) oil.ColumnDefinition
 ---@field render fun(entry: oil.InternalEntry, conf: nil|table): nil|oil.TextChunk
