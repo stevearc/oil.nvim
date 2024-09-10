@@ -554,13 +554,13 @@ M.perform_action = function(action, cb)
 
     if config.git.rm(path) then
       local old_cb = cb
-      cb = function(err)
+      cb = vim.schedule_wrap(function(err)
         if not err then
           git.rm(path, old_cb)
         else
           old_cb(err)
         end
-      end
+      end)
     end
 
     if config.delete_to_trash then
