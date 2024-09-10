@@ -1,5 +1,18 @@
 # Changelog
 
+## [2.12.2](https://github.com/stevearc/oil.nvim/compare/v2.12.1...v2.12.2) (2024-09-10)
+
+
+### Bug Fixes
+
+* ensure win_options are being set on correct window ([#469](https://github.com/stevearc/oil.nvim/issues/469)) ([30e0438](https://github.com/stevearc/oil.nvim/commit/30e0438ff08f197d7ce4a417445ab97ee72efe2d))
+* wrap git rm callback in schedule_wrap ([#475](https://github.com/stevearc/oil.nvim/issues/475)) ([b053744](https://github.com/stevearc/oil.nvim/commit/b05374428e5136d9b6c8e1e8e62a75f82283b1f8))
+
+
+### Performance Improvements
+
+* **view:** avoid running `is_hidden_file` when `show_hidden` is set ([#471](https://github.com/stevearc/oil.nvim/issues/471)) ([0fcd126](https://github.com/stevearc/oil.nvim/commit/0fcd1263a2e8b6200e2b9fd4ab83d40ed8899c54))
+
 ## [2.12.1](https://github.com/stevearc/oil.nvim/compare/v2.12.0...v2.12.1) (2024-08-26)
 
 
