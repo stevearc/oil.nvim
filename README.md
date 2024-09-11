@@ -170,6 +170,8 @@ require("oil").setup({
   -- Note that the cleanup process only starts when none of the oil buffers are currently displayed
   cleanup_delay_ms = 2000,
   lsp_file_methods = {
+    -- Enable or disable LSP file operations
+    enable = true,
     -- Time to wait for LSP file operations to complete before skipping
     timeout_ms = 1000,
     -- Set to true to autosave buffers that are updated with LSP willRenameFiles

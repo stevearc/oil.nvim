@@ -40,6 +40,8 @@ local default_config = {
   -- Note that the cleanup process only starts when none of the oil buffers are currently displayed
   cleanup_delay_ms = 2000,
   lsp_file_methods = {
+    -- Enable or disable LSP file operations
+    enable = true,
     -- Time to wait for LSP file operations to complete before skipping
     timeout_ms = 1000,
     -- Set to true to autosave buffers that are updated with LSP willRenameFiles
@@ -247,10 +249,12 @@ local M = {}
 ---@field keymaps_help? oil.SetupSimpleWindowConfig Configuration for the floating keymaps help window
 
 ---@class (exact) oil.LspFileMethods
+---@field enable boolean
 ---@field timeout_ms integer
 ---@field autosave_changes boolean|"unmodified" Set to true to autosave buffers that are updated with LSP willRenameFiles. Set to "unmodified" to only save unmodified buffers.
 
 ---@class (exact) oil.SetupLspFileMethods
+---@field enable? boolean Enable or disable LSP file operations
 ---@field timeout_ms? integer Time to wait for LSP file operations to complete before skipping.
 ---@field autosave_changes? boolean|"unmodified" Set to true to autosave buffers that are updated with LSP willRenameFiles. Set to "unmodified" to only save unmodified buffers.
 
