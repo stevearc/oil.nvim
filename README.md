@@ -336,6 +336,7 @@ Note that at the moment the ssh adapter does not support Windows machines, and i
 ## Recipes
 
 - [Toggle file detail view](doc/recipes.md#toggle-file-detail-view)
+- [Show CWD in the winbar](doc/recipes.md#show-cwd-in-the-winbar)
 - [Hide gitignored files and show git tracked hidden files](doc/recipes.md#hide-gitignored-files-and-show-git-tracked-hidden-files)
 
 ## API
