@@ -56,7 +56,7 @@ CONFIG                                                                *oil-confi
       cleanup_delay_ms = 2000,
       lsp_file_methods = {
         -- Enable or disable LSP file operations
-        enable = true,
+        enabled = true,
         -- Time to wait for LSP file operations to complete before skipping
         timeout_ms = 1000,
         -- Set to true to autosave buffers that are updated with LSP willRenameFiles
