@@ -389,7 +389,11 @@ M.process_actions = function(actions, cb)
     "User",
     { pattern = "OilActionsPre", modeline = false, data = { actions = actions } }
   )
-  local did_complete = lsp_helpers.will_perform_file_operations(actions)
+
+  local did_complete = nil
+  if config.lsp_file_methods.enabled then
+    did_complete = lsp_helpers.will_perform_file_operations(actions)
+  end
 
   -- Convert some cross-adapter moves to a copy + delete
   for _, action in ipairs(actions) do
@@ -442,7 +446,9 @@ M.process_actions = function(actions, cb)
       return
     end
     if idx > #actions then
-      did_complete()
+      if did_complete then
+        did_complete()
+      end
       finish()
       return
     end
