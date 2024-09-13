@@ -41,7 +41,7 @@ vim.keymap.set("n", "<leader>op", function()
 
 	oil.open()
 	util.run_after_load(0, function()
-		oil.select({ preview = true })
+		oil.open_preview()
 	end)
 end, { desc = "Open oil with preview" })
 ```
