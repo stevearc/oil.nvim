@@ -5,6 +5,7 @@ Have a cool recipe to share? Open a pull request and add it to this doc!
 <!-- TOC -->
 
 - [Toggle file detail view](#toggle-file-detail-view)
+- [Open with preview](#open-with-preview)
 - [Show CWD in the winbar](#show-cwd-in-the-winbar)
 - [Hide gitignored files and show git tracked hidden files](#hide-gitignored-files-and-show-git-tracked-hidden-files)
 
@@ -29,6 +30,20 @@ require("oil").setup({
     },
   },
 })
+```
+
+## Open with preview
+
+```lua
+vim.keymap.set("n", "<leader>op", function()
+	local oil = require("oil")
+	local util = require("oil.util")
+
+	oil.open()
+	util.run_after_load(0, function()
+		oil.select({ preview = true })
+	end)
+end, { desc = "Open oil with preview" })
 ```
 
 ## Show CWD in the winbar
