@@ -334,6 +334,7 @@ local M = {}
 ---@field max_height integer
 ---@field border string|string[]
 ---@field win_options table<string, any>
+---@field relative_win_title boolean
 ---@field preview_split "auto"|"left"|"right"|"above"|"below"
 ---@field override fun(conf: table): table
 
