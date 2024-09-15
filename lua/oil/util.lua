@@ -364,7 +364,7 @@ end
 ---@param winid nil|integer
 ---@return string
 M.get_title = function(winid)
-  local src_buf = vim.api.nvim_win_get_buf(winid)
+  local src_buf = vim.api.nvim_win_get_buf(winid or 0)
   local title = vim.api.nvim_buf_get_name(src_buf)
   local scheme, path = M.parse_url(title)
   if config.adapters[scheme] == "files" then
