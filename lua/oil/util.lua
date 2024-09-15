@@ -360,6 +360,7 @@ M.is_floating_win = function(winid)
   return vim.api.nvim_win_get_config(winid or 0).relative ~= ""
 end
 
+---Recalculate the window title for the current buffer
 ---@param winid nil|integer
 ---@return string
 M.get_title = function(winid)
