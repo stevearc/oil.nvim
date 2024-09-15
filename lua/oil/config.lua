@@ -129,6 +129,8 @@ local default_config = {
     },
     -- preview_split: Split direction: "auto", "left", "right", "above", "below".
     preview_split = "auto",
+    -- display window title path relative to the current working directory.
+    relative_win_title = false,
     -- This is the config that will be passed to nvim_open_win.
     -- Change values here to customize the layout
     override = function(conf)
@@ -157,8 +159,6 @@ local default_config = {
     win_options = {
       winblend = 0,
     },
-    -- displaye window title path relative to the current working directory.
-    relative_title = true,
     -- Whether the preview window is automatically updated when the cursor is moved
     update_on_cursor_moved = true,
   },

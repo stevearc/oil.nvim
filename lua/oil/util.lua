@@ -368,7 +368,7 @@ M.get_title = function(winid)
     assert(path)
     local fs = require("oil.fs")
 
-    if config.preview.relative_title then
+    if config.float.relative_win_title then
       local cwd = vim.fn.getcwd()
       title = path:gsub(cwd, ".")
     else
