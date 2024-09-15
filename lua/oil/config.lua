@@ -157,6 +157,8 @@ local default_config = {
     win_options = {
       winblend = 0,
     },
+    -- displaye window title path relative to the current working directory.
+    relative_title = true,
     -- Whether the preview window is automatically updated when the cursor is moved
     update_on_cursor_moved = true,
   },

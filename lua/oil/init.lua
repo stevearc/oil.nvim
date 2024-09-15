@@ -288,6 +288,11 @@ M.open_float = function(dir)
     })
   )
 
+  local function get_path_relative_to_cwd(path)
+    local cwd = vim.fn.getcwd()
+    return path:gsub(cwd, ".")
+  end
+
   ---Recalculate the window title for the current buffer
   local function get_title()
     local src_buf = vim.api.nvim_win_get_buf(winid)
@@ -296,7 +301,12 @@ M.open_float = function(dir)
     if config.adapters[scheme] == "files" then
       assert(path)
       local fs = require("oil.fs")
-      title = vim.fn.fnamemodify(fs.posix_to_os_path(path), ":~")
+
+      if config.preview.relative_title then
+        title = get_path_relative_to_cwd(fs.posix_to_os_path(path))
+      else
+        title = vim.fn.fnamemodify(fs.posix_to_os_path(path), ":~")
+      end
     end
     return title
   end
