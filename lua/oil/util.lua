@@ -360,6 +360,8 @@ M.is_floating_win = function(winid)
   return vim.api.nvim_win_get_config(winid or 0).relative ~= ""
 end
 
+---@param winid nil|integer
+---@return string
 M.get_title = function(winid)
   local src_buf = vim.api.nvim_win_get_buf(winid)
   local title = vim.api.nvim_buf_get_name(src_buf)
