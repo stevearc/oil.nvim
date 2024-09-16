@@ -370,12 +370,17 @@ M.get_title = function(winid)
   if config.adapters[scheme] == "files" then
     assert(path)
     local fs = require("oil.fs")
+    path = fs.posix_to_os_path(path)
 
     if config.float.relative_win_title then
       local cwd = vim.fn.getcwd()
-      title = path:gsub(cwd, ".")
+      title = vim.fn.fnamemodify(path, ":p")
+
+      if title:sub(1, #cwd) == cwd then
+        title = title:gsub(cwd, ".", 1)
+      end
     else
-      title = vim.fn.fnamemodify(fs.posix_to_os_path(path), ":~")
+      title = vim.fn.fnamemodify(path, ":~")
     end
   end
   return title
