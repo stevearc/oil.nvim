@@ -373,12 +373,7 @@ M.get_title = function(winid)
     path = fs.posix_to_os_path(path)
 
     if config.float.relative_win_title then
-      local cwd = vim.fn.getcwd()
-      title = vim.fn.fnamemodify(path, ":p")
-
-      if title:sub(1, #cwd) == cwd then
-        title = title:gsub(cwd, ".", 1)
-      end
+      title = vim.fn.fnamemodify(path, ":p:~:.")
     else
       title = vim.fn.fnamemodify(path, ":~")
     end
