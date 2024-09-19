@@ -332,6 +332,9 @@ M.open_float = function(dir)
   )
 
   vim.cmd.edit({ args = { util.escape_filename(parent_url) }, mods = { keepalt = true } })
+
+  M._fix_window(true, winid)
+
   -- :edit will set buflisted = true, but we may not want that
   if config.buf_options.buflisted ~= nil then
     vim.api.nvim_set_option_value("buflisted", config.buf_options.buflisted, { buf = 0 })
@@ -382,7 +385,12 @@ M.open = function(dir)
   if basename then
     view.set_last_cursor(parent_url, basename)
   end
+
+  M._fix_window(false, 0)
+
   vim.cmd.edit({ args = { util.escape_filename(parent_url) }, mods = { keepalt = true } })
+
+  M._fix_window(true, 0)
   -- :edit will set buflisted = true, but we may not want that
   if config.buf_options.buflisted ~= nil then
     vim.api.nvim_set_option_value("buflisted", config.buf_options.buflisted, { buf = 0 })
@@ -718,12 +726,17 @@ M.select = function(opts, callback)
       elseif opts.split then
         cmd = "sbuffer"
       end
+
+      M._fix_window(false, prev_win)
+
       ---@diagnostic disable-next-line: param-type-mismatch
       local ok, err = pcall(vim.cmd, {
         cmd = cmd,
         args = { filebufnr },
         mods = mods,
       })
+
+      M._fix_window(true, prev_win)
       -- Ignore swapfile errors
       if not ok and err and not err:match("^Vim:E325:") then
         vim.api.nvim_echo({ { err, "Error" } }, true, {})
@@ -774,6 +787,15 @@ local function maybe_hijack_directory_buffer(bufnr)
   )
   local replaced = util.rename_buffer(bufnr, new_name)
   return not replaced
+end
+
+---@private
+---@param value boolean The new value for 'winfixbuf'
+---@param win integer The window to set the option for
+M._fix_window = function(value, win)
+  if vim.api.nvim_win_is_valid(win) and vim.w[win].is_oil_win and vim.fn.exists('&winfixbuf') == 1 then
+    vim.api.nvim_set_option_value("winfixbuf", value, { scope = "local", win = win })
+  end
 end
 
 ---@private
