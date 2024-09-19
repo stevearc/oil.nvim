@@ -127,10 +127,10 @@ local default_config = {
     win_options = {
       winblend = 0,
     },
+    -- optionally override the oil buffers window title with custom function: fun(path: string): string
+    get_win_title = nil,
     -- preview_split: Split direction: "auto", "left", "right", "above", "below".
     preview_split = "auto",
-    -- display window title path relative to the current working directory.
-    relative_win_title = false,
     -- This is the config that will be passed to nvim_open_win.
     -- Change values here to customize the layout
     override = function(conf)
@@ -334,7 +334,7 @@ local M = {}
 ---@field max_height integer
 ---@field border string|string[]
 ---@field win_options table<string, any>
----@field relative_win_title boolean
+---@field get_win_title fun(path: string): string
 ---@field preview_split "auto"|"left"|"right"|"above"|"below"
 ---@field override fun(conf: table): table
 

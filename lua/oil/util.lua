@@ -367,15 +367,15 @@ M.get_title = function(winid)
   local src_buf = vim.api.nvim_win_get_buf(winid or 0)
   local title = vim.api.nvim_buf_get_name(src_buf)
   local scheme, path = M.parse_url(title)
+
   if config.adapters[scheme] == "files" then
     assert(path)
-    local fs = require("oil.fs")
-
-    if config.float.relative_win_title then
-      title = vim.fn.fnamemodify(fs.posix_to_os_path(path), ":p:~:.")
-    else
-      title = vim.fn.fnamemodify(fs.posix_to_os_path(path), ":~")
+    if config.float.get_win_title then
+      return config.float.get_win_title(title)
     end
+
+    local fs = require("oil.fs")
+    title = vim.fn.fnamemodify(fs.posix_to_os_path(path), ":~")
   end
   return title
 end
