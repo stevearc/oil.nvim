@@ -667,6 +667,18 @@ M.get_preview_win = function()
   end
 end
 
+---@return nil|integer
+M.get_parent_dir_win = function()
+  for _, winid in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
+    if vim.api.nvim_win_is_valid(winid) then
+      local success, value = pcall(vim.api.nvim_win_get_var, winid, "parentdirwindow")
+      if success and value then
+        return winid
+      end
+    end
+  end
+end
+
 ---@return fun() restore Function that restores the cursor
 M.hide_cursor = function()
   vim.api.nvim_set_hl(0, "OilPreviewCursor", { nocombine = true, blend = 100 })

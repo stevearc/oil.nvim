@@ -369,6 +369,18 @@ local function update_preview_window(oil_bufnr)
   end)
 end
 
+---@param oil_bufnr? integer
+local function update_parent_dir_window(oil_bufnr)
+  oil_bufnr = oil_bufnr or 0
+  local util = require("oil.util")
+  util.run_after_load(oil_bufnr, function()
+    local parent_dir_win_id = util.get_parent_dir_win()
+    if parent_dir_win_id then
+      M.open_parent_dir()
+    end
+  end)
+end
+
 ---Open oil browser for a directory
 ---@param dir nil|string When nil, open the parent of the current buffer, or the cwd if current buffer is not a file
 M.open = function(dir)
@@ -390,6 +402,7 @@ M.open = function(dir)
 
   -- If preview window exists, update its content
   update_preview_window()
+  update_parent_dir_window()
 end
 
 ---Restore the buffer that was present when oil was opened
@@ -500,6 +513,7 @@ M.open_preview = function(opts, callback)
       end
 
       preview_win = vim.api.nvim_open_win(bufnr, true, win_opts)
+
       vim.api.nvim_set_option_value("previewwindow", true, { scope = "local", win = preview_win })
       vim.api.nvim_set_current_win(prev_win)
     elseif vim.fn.has("nvim-0.9") == 1 then
@@ -565,6 +579,113 @@ M.open_preview = function(opts, callback)
     end
     finish()
   end)
+end
+
+---View the parent directory of the current directory in a split
+---@param opts nil|table
+---    vertical boolean Open the buffer in a vertical split
+---    horizontal boolean Open the buffer in a horizontal split
+---    split "aboveleft"|"belowright"|"topleft"|"botright" Split modifier
+M.open_parent_dir = function(opts, callback)
+  opts = opts or {}
+  local config = require("oil.config")
+  local layout = require("oil.layout")
+  local util = require("oil.util")
+
+  local function finish(err)
+    if err then
+      vim.notify(err, vim.log.levels.ERROR)
+    end
+    if callback then
+      callback(err)
+    end
+  end
+
+  if not opts.horizontal and opts.vertical == nil then
+    opts.vertical = true
+  end
+  if not opts.split then
+    if opts.horizontal then
+      opts.split = vim.o.splitbelow and "belowright" or "aboveleft"
+    else
+      opts.split = vim.o.splitright and "belowright" or "aboveleft"
+    end
+  end
+
+  local parent_dir_win = util.get_parent_dir_win()
+  local prev_win = vim.api.nvim_get_current_win()
+  local bufnr = vim.api.nvim_get_current_buf()
+
+  local current_path = M.get_current_dir(bufnr)
+  local parent_path = vim.fn.fnamemodify(current_path, ":h:h")
+
+  if util.is_floating_win() then
+    if parent_dir_win == nil then
+      local root_win_opts, parent_dir_win_opts =
+        layout.split_window(0, config.float.parent_dir_split, config.float.padding)
+
+      local win_opts_oil = {
+        relative = "editor",
+        width = root_win_opts.width,
+        height = root_win_opts.height,
+        row = root_win_opts.row,
+        col = root_win_opts.col,
+        border = config.float.border,
+        zindex = 45,
+      }
+      vim.api.nvim_win_set_config(0, win_opts_oil)
+      local win_opts = {
+        relative = "editor",
+        width = parent_dir_win_opts.width,
+        height = parent_dir_win_opts.height,
+        row = parent_dir_win_opts.row,
+        col = parent_dir_win_opts.col,
+        border = config.float.border,
+        zindex = 45,
+        focusable = false,
+        noautocmd = true,
+        style = "minimal",
+      }
+
+      if vim.fn.has("nvim-0.9") == 1 then
+        win_opts.title = parent_path
+      end
+
+      parent_dir_win = vim.api.nvim_open_win(bufnr, true, win_opts)
+
+      vim.api.nvim_win_set_var(parent_dir_win, "parentdirwindow", true)
+      vim.w.oil_source_win = prev_win
+      vim.api.nvim_set_current_win(prev_win)
+    elseif vim.fn.has("nvim-0.9") == 1 then
+      vim.api.nvim_win_set_config(parent_dir_win, { title = parent_path })
+    end
+  end
+
+  local cmd = parent_dir_win and "buffer" or "sbuffer"
+  local mods = {
+    vertical = opts.vertical,
+    horizontal = opts.horizontal,
+    split = opts.split,
+  }
+  if parent_dir_win then
+    vim.api.nvim_set_current_win(parent_dir_win)
+  end
+
+  local parent_url = M.get_url_for_path(parent_path)
+  local filebufnr = vim.fn.bufadd(parent_url)
+
+  local ok, err = pcall(vim.cmd, {
+    cmd = cmd,
+    args = { filebufnr },
+    mods = mods,
+  })
+  -- Ignore swapfile errors
+  if not ok and err and not err:match("^Vim:E325:") then
+    vim.api.nvim_echo({ { err, "Error" } }, true, {})
+  end
+
+  vim.api.nvim_set_current_win(prev_win)
+  finish()
 end
 
 ---@class (exact) oil.SelectOpts
@@ -748,6 +869,7 @@ M.select = function(opts, callback)
     end
 
     update_preview_window()
+    update_parent_dir_window()
 
     finish()
   end)
@@ -1014,6 +1136,25 @@ local function close_preview_window_if_not_in_oil()
   pcall(vim.api.nvim_win_close, preview_win_id, true)
 end
 
+local function close_parent_dir_window_if_not_in_oil()
+  local util = require("oil.util")
+  local parent_dir_win_id = util.get_parent_dir_win()
+  if not parent_dir_win_id then
+    return
+  end
+
+  local oil_source_win = vim.w[parent_dir_win_id].oil_source_win
+  if oil_source_win and vim.api.nvim_win_is_valid(oil_source_win) then
+    local src_buf = vim.api.nvim_win_get_buf(oil_source_win)
+    if util.is_oil_bufnr(src_buf) then
+      return
+    end
+  end
+
+  -- This can fail if it's the last window open
+  pcall(vim.api.nvim_win_close, parent_dir_win_id, true)
+end
+
 local _on_key_ns = 0
 ---Initialize oil
 ---@param opts oil.setupOpts|nil
@@ -1196,6 +1337,7 @@ M.setup = function(opts)
       end
 
       close_preview_window_if_not_in_oil()
+      close_parent_dir_window_if_not_in_oil()
     end,
   })
 
