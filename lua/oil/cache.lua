@@ -197,6 +197,7 @@ M.perform_action = function(action)
   elseif action.type == "change" then
     -- Cache doesn't need to update
   else
+    ---@diagnostic disable-next-line: undefined-field
     error(string.format("Bad action type: '%s'", action.type))
   end
 end

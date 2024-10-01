@@ -140,6 +140,7 @@ M.create_actions_from_diffs = function(all_diffs)
       else
         local by_id = diff_by_id[diff.id]
         -- HACK: set has_delete field on a list-like table of diffs
+        ---@diagnostic disable-next-line: inject-field
         by_id.has_delete = true
         -- Don't insert the delete. We already know that there is a delete because of the presence
         -- in the diff_by_id map. The list will only include the 'new' diffs.
@@ -401,6 +402,7 @@ M.process_actions = function(actions, cb)
       local _, cross_action = util.get_adapter_for_action(action)
       -- Only do the conversion if the cross-adapter support is "copy"
       if cross_action == "copy" then
+        ---@diagnostic disable-next-line: assign-type-mismatch
         action.type = "copy"
         table.insert(actions, {
           type = "delete",
