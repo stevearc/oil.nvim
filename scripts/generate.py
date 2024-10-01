@@ -357,7 +357,7 @@ trash they will be permanently deleted (purged).
 
 Linux:
     Oil supports the FreeDesktop trash specification.
-    https://specifications.freedesktop.org/trash-spec/trashspec-1.0.html
+    https://specifications.freedesktop.org/trash-spec/1.0/
     All features should work.
 
 Mac:
