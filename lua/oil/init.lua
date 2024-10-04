@@ -288,19 +288,6 @@ M.open_float = function(dir)
     })
   )
 
-  ---Recalculate the window title for the current buffer
-  local function get_title()
-    local src_buf = vim.api.nvim_win_get_buf(winid)
-    local title = vim.api.nvim_buf_get_name(src_buf)
-    local scheme, path = util.parse_url(title)
-    if config.adapters[scheme] == "files" then
-      assert(path)
-      local fs = require("oil.fs")
-      title = vim.fn.fnamemodify(fs.posix_to_os_path(path), ":~")
-    end
-    return title
-  end
-
   table.insert(
     autocmds,
     vim.api.nvim_create_autocmd("BufWinEnter", {
@@ -324,7 +311,7 @@ M.open_float = function(dir)
             col = cur_win_opts.col,
             width = cur_win_opts.width,
             height = cur_win_opts.height,
-            title = get_title(),
+            title = util.get_title(winid),
           })
         end
       end,
