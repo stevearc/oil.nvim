@@ -259,6 +259,7 @@ require("oil").setup({
     },
     -- preview_split: Split direction: "auto", "left", "right", "above", "below".
     preview_split = "auto",
+    parent_dir_split = "left",
     -- This is the config that will be passed to nvim_open_win.
     -- Change values here to customize the layout
     override = function(conf)
@@ -356,6 +357,7 @@ Note that at the moment the ssh adapter does not support Windows machines, and i
 - [open(dir)](doc/api.md#opendir)
 - [close()](doc/api.md#close)
 - [open_preview(opts)](doc/api.md#open_previewopts)
+- [open_parent_dir(opts)](doc/api.md#open_parent_diropts)
 - [select(opts, callback)](doc/api.md#selectopts-callback)
 - [save(opts, cb)](doc/api.md#saveopts-cb)
 - [setup(opts)](doc/api.md#setupopts)
