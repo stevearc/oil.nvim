@@ -417,8 +417,14 @@ M.close = function()
   local oilbuf = vim.api.nvim_get_current_buf()
   ok = pcall(vim.cmd.bprev)
   if not ok then
-    -- If `bprev` failed, there are no buffers open so we should create a new one with enew
-    vim.cmd.enew()
+    local config = require("oil.config")
+    -- If `bprev` failed, there are no buffers open. then,
+    if config.auto_close_vim then
+      vim.cmd("quit")
+    else
+      -- we should create a new one with enew
+      vim.cmd.enew()
+    end
   end
   vim.api.nvim_buf_delete(oilbuf, { force = true })
 end
