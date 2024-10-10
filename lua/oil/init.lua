@@ -419,7 +419,7 @@ M.close = function()
   if not ok then
     local config = require("oil.config")
     -- If `bprev` failed, there are no buffers open. then,
-    if config.auto_close_vim then
+    if config.auto_close_last_buffer then
       vim.cmd("quit")
     else
       -- we should create a new one with enew
