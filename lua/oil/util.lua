@@ -375,7 +375,6 @@ M.get_title = function(winid)
   if config.adapters[scheme] == "files" then
     assert(path)
     local fs = require("oil.fs")
-
     title = vim.fn.fnamemodify(fs.posix_to_os_path(path), ":~")
   end
   return title
