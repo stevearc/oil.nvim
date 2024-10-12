@@ -334,7 +334,7 @@ local M = {}
 ---@field max_height integer
 ---@field border string|string[]
 ---@field win_options table<string, any>
----@field get_win_title fun(path: string): string
+---@field get_win_title fun(winid: integer): string
 ---@field preview_split "auto"|"left"|"right"|"above"|"below"
 ---@field override fun(conf: table): table
 
@@ -344,6 +344,7 @@ local M = {}
 ---@field max_height? integer
 ---@field border? string|string[] Window border
 ---@field win_options? table<string, any>
+---@field get_win_title? fun(winid: integer): string
 ---@field preview_split? "auto"|"left"|"right"|"above"|"below" Direction that the preview command will split the window
 ---@field override? fun(conf: table): table
 
