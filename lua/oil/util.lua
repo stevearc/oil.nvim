@@ -364,6 +364,10 @@ end
 ---@param winid nil|integer
 ---@return string
 M.get_title = function(winid)
+  if config.float.get_win_title ~= nil then
+    return config.float.get_win_title(winid or 0)
+  end
+
   local src_buf = vim.api.nvim_win_get_buf(winid or 0)
   local title = vim.api.nvim_buf_get_name(src_buf)
   local scheme, path = M.parse_url(title)
@@ -371,10 +375,6 @@ M.get_title = function(winid)
   if config.adapters[scheme] == "files" then
     assert(path)
     local fs = require("oil.fs")
-
-    if config.float.get_win_title ~= nil then
-      return config.float.get_win_title(fs.posix_to_os_path(path))
-    end
 
     title = vim.fn.fnamemodify(fs.posix_to_os_path(path), ":~")
   end
@@ -439,7 +439,7 @@ M.add_title_to_win = function(winid, opts)
         if vim.api.nvim_win_get_buf(winid) ~= winbuf then
           return
         end
-        local new_title = M.get_title()
+        local new_title = M.get_title(winid)
         local new_width =
           math.min(vim.api.nvim_win_get_width(winid) - 4, 2 + vim.api.nvim_strwidth(new_title))
         vim.api.nvim_buf_set_lines(bufnr, 0, -1, true, { " " .. new_title .. " " })
