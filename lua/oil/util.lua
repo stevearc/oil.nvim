@@ -360,6 +360,26 @@ M.is_floating_win = function(winid)
   return vim.api.nvim_win_get_config(winid or 0).relative ~= ""
 end
 
+---Recalculate the window title for the current buffer
+---@param winid nil|integer
+---@return string
+M.get_title = function(winid)
+  if config.float.get_win_title ~= nil then
+    return config.float.get_win_title(winid or 0)
+  end
+
+  local src_buf = vim.api.nvim_win_get_buf(winid or 0)
+  local title = vim.api.nvim_buf_get_name(src_buf)
+  local scheme, path = M.parse_url(title)
+
+  if config.adapters[scheme] == "files" then
+    assert(path)
+    local fs = require("oil.fs")
+    title = vim.fn.fnamemodify(fs.posix_to_os_path(path), ":~")
+  end
+  return title
+end
+
 local winid_map = {}
 M.add_title_to_win = function(winid, opts)
   opts = opts or {}
@@ -367,21 +387,10 @@ M.add_title_to_win = function(winid, opts)
   if not vim.api.nvim_win_is_valid(winid) then
     return
   end
-  local function get_title()
-    local src_buf = vim.api.nvim_win_get_buf(winid)
-    local title = vim.api.nvim_buf_get_name(src_buf)
-    local scheme, path = M.parse_url(title)
-    if config.adapters[scheme] == "files" then
-      assert(path)
-      local fs = require("oil.fs")
-      title = vim.fn.fnamemodify(fs.posix_to_os_path(path), ":~")
-    end
-    return title
-  end
   -- HACK to force the parent window to position itself
   -- See https://github.com/neovim/neovim/issues/13403
   vim.cmd.redraw()
-  local title = get_title()
+  local title = M.get_title(winid)
   local width = math.min(vim.api.nvim_win_get_width(winid) - 4, 2 + vim.api.nvim_strwidth(title))
   local title_winid = winid_map[winid]
   local bufnr
@@ -429,7 +438,7 @@ M.add_title_to_win = function(winid, opts)
         if vim.api.nvim_win_get_buf(winid) ~= winbuf then
           return
         end
-        local new_title = get_title()
+        local new_title = M.get_title(winid)
         local new_width =
           math.min(vim.api.nvim_win_get_width(winid) - 4, 2 + vim.api.nvim_strwidth(new_title))
         vim.api.nvim_buf_set_lines(bufnr, 0, -1, true, { " " .. new_title .. " " })
