@@ -257,6 +257,8 @@ require("oil").setup({
     win_options = {
       winblend = 0,
     },
+    -- optionally override the oil buffers window title with custom function: fun(winid: integer): string
+    get_win_title = nil,
     -- preview_split: Split direction: "auto", "left", "right", "above", "below".
     preview_split = "auto",
     -- This is the config that will be passed to nvim_open_win.
