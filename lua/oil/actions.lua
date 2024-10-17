@@ -131,7 +131,7 @@ M.close = {
   desc = "Close oil and restore original buffer",
   callback = function(opts)
     opts = opts or {}
-    oil.close(opts.exit_if_last_buf)
+    oil.close(opts)
   end,
   parameters = {
     exit_if_last_buf = {
