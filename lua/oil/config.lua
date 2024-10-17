@@ -53,8 +53,6 @@ local default_config = {
   constrain_cursor = "editable",
   -- Set to true to watch the filesystem for changes and reload oil
   watch_for_changes = false,
-  -- Automatically exit vim if Oil is closed and no other buffers are open
-  exit_if_last_buf = false,
   -- Keymaps in oil buffer. Can be any value that `vim.keymap.set` accepts OR a table of keymap
   -- options with a `callback` (e.g. { callback = function() ... end, desc = "", mode = "n" })
   -- Additionally, if it is a string that matches "actions.<name>",
@@ -68,7 +66,7 @@ local default_config = {
     ["<C-h>"] = { "actions.select", opts = { horizontal = true }, desc = "Open the entry in a horizontal split" },
     ["<C-t>"] = { "actions.select", opts = { tab = true }, desc = "Open the entry in new tab" },
     ["<C-p>"] = "actions.preview",
-    ["<C-c>"] = "actions.close",
+    ["<C-c>"] = { "actions.close", opts = { exit_if_last_buf = false }, desc = "Close oil, optionally exit vim if oil is closed as last buffer" },
     ["<C-l>"] = "actions.refresh",
     ["-"] = "actions.parent",
     ["_"] = "actions.open_cwd",
