@@ -183,8 +183,8 @@ require("oil").setup({
   constrain_cursor = "editable",
   -- Set to true to watch the filesystem for changes and reload oil
   watch_for_changes = false,
-  -- Automatically quit vim if Oil is closed and no other buffers are open
-  auto_close_last_buffer = false,
+  -- Automatically exit vim if Oil is closed and no other buffers are open
+  exit_if_last_buf = false,
   -- Keymaps in oil buffer. Can be any value that `vim.keymap.set` accepts OR a table of keymap
   -- options with a `callback` (e.g. { callback = function() ... end, desc = "", mode = "n" })
   -- Additionally, if it is a string that matches "actions.<name>",

@@ -393,7 +393,7 @@ M.open = function(dir)
 end
 
 ---Restore the buffer that was present when oil was opened
-M.close = function()
+M.close = function(exit_if_last_buf)
   -- If we're in a floating oil window, close it and try to restore focus to the original window
   if vim.w.is_oil_win then
     local original_winid = vim.w.oil_original_win
@@ -417,9 +417,8 @@ M.close = function()
   local oilbuf = vim.api.nvim_get_current_buf()
   ok = pcall(vim.cmd.bprev)
   if not ok then
-    local config = require("oil.config")
     -- If `bprev` failed, there are no buffers open. then,
-    if config.auto_close_last_buffer then
+    if exit_if_last_buf then
       vim.cmd("quit")
     else
       -- we should create a new one with enew

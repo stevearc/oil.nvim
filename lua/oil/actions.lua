@@ -129,7 +129,15 @@ M.parent = {
 
 M.close = {
   desc = "Close oil and restore original buffer",
-  callback = oil.close,
+  callback = function(opts)
+    oil.close(opts.exit_if_last_buf)
+  end,
+  parameters = {
+    exit_if_last_buf = {
+      type = "boolean",
+      desc = "Exit vim if oil is closed as the last buffer",
+    },
+  },
 }
 
 ---@param cmd string
