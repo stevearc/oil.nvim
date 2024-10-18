@@ -15,6 +15,7 @@
 - [open(dir)](#opendir)
 - [close()](#close)
 - [open_preview(opts)](#open_previewopts)
+- [open_parent_dir(opts)](#open_parent_diropts)
 - [select(opts, callback)](#selectopts-callback)
 - [save(opts, cb)](#saveopts-cb)
 - [setup(opts)](#setupopts)
@@ -129,6 +130,18 @@ Restore the buffer that was present when oil was opened
 
 `open_preview(opts)` \
 Preview the entry under the cursor in a split
+
+| Param | Type         | Desc                                               |                                       |
+| ----- | ------------ | -------------------------------------------------- | ------------------------------------- |
+| opts  | `nil\|table` |                                                    |                                       |
+|       | vertical     | `boolean`                                          | Open the buffer in a vertical split   |
+|       | horizontal   | `boolean`                                          | Open the buffer in a horizontal split |
+|       | split        | `"aboveleft"\|"belowright"\|"topleft"\|"botright"` | Split modifier                        |
+
+## open_parent_dir(opts)
+
+`open_parent_dir(opts)` \
+View the parent directory of the current directory in a split
 
 | Param | Type         | Desc                                               |                                       |
 | ----- | ------------ | -------------------------------------------------- | ------------------------------------- |

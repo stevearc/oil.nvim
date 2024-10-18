@@ -146,6 +146,7 @@ CONFIG                                                                *oil-confi
         get_win_title = nil,
         -- preview_split: Split direction: "auto", "left", "right", "above", "below".
         preview_split = "auto",
+        parent_dir_split = "left",
         -- This is the config that will be passed to nvim_open_win.
         -- Change values here to customize the layout
         override = function(conf)
@@ -314,6 +315,16 @@ close()                                                                *oil.clos
 
 open_preview({opts})                                            *oil.open_preview*
     Preview the entry under the cursor in a split
+
+    Parameters:
+      {opts} `nil|table`
+          {vertical}   `boolean` Open the buffer in a vertical split
+          {horizontal} `boolean` Open the buffer in a horizontal split
+          {split}      `"aboveleft"|"belowright"|"topleft"|"botright"` Split
+                       modifier
+
+open_parent_dir({opts})                                      *oil.open_parent_dir*
+    View the parent directory of the current directory in a split
 
     Parameters:
       {opts} `nil|table`
