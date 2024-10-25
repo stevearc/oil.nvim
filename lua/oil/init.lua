@@ -415,6 +415,7 @@ end
 ---    vertical boolean Open the buffer in a vertical split
 ---    horizontal boolean Open the buffer in a horizontal split
 ---    split "aboveleft"|"belowright"|"topleft"|"botright" Split modifier
+---    scratch boolean Open the buffer as a scratch buffer
 M.open_preview = function(opts, callback)
   opts = opts or {}
   local config = require("oil.config")
@@ -439,6 +440,9 @@ M.open_preview = function(opts, callback)
     else
       opts.split = vim.o.splitright and "belowright" or "aboveleft"
     end
+  end
+  if not opts.scratch then
+    opts.scratch = true
   end
 
   local preview_win = util.get_preview_win()
@@ -519,14 +523,19 @@ M.open_preview = function(opts, callback)
       end
     end
 
-    local filebufnr = vim.fn.bufadd(normalized_url)
+    local filebufnr = vim.fn.bufnr(normalized_url)
     local entry_is_file = not vim.endswith(normalized_url, "/")
 
-    -- If we're previewing a file that hasn't been opened yet, make sure it gets deleted after
-    -- we close the window
-    if entry_is_file and vim.fn.bufloaded(filebufnr) == 0 then
-      vim.bo[filebufnr].bufhidden = "wipe"
-      vim.b[filebufnr].oil_preview_buffer = true
+    if not (filebufnr and vim.api.nvim_buf_is_loaded(filebufnr)) then
+      if entry_is_file and opts.scratch then
+        filebufnr = util.read_file_to_scratch_buffer(normalized_url, opts)
+      else
+        filebufnr = filebufnr or vim.fn.bufadd(normalized_url)
+        if entry_is_file then
+          vim.bo[filebufnr].bufhidden = "wipe"
+          vim.b[filebufnr].oil_preview_buffer = true
+        end
+      end
     end
 
     ---@diagnostic disable-next-line: param-type-mismatch
