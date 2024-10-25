@@ -6,6 +6,9 @@ luac.out
 *.zip
 *.tar.gz
 
+# python bytecode
+__pycache__
+
 # Object files
 *.o
 *.os
