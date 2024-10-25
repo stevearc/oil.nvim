@@ -1,5 +1,19 @@
 # Changelog
 
+## [2.13.0](https://github.com/stevearc/oil.nvim/compare/v2.12.2...v2.13.0) (2024-10-25)
+
+
+### Features
+
+* config option to customize floating window title ([#482](https://github.com/stevearc/oil.nvim/issues/482)) ([5d2dfae](https://github.com/stevearc/oil.nvim/commit/5d2dfae655b9b689bd4017b3bdccd52cbee5b92f))
+* config option to disable lsp file methods ([#477](https://github.com/stevearc/oil.nvim/issues/477)) ([f60bb7f](https://github.com/stevearc/oil.nvim/commit/f60bb7f793477d99ef1acf39e920bf2ca4e644de))
+
+
+### Bug Fixes
+
+* actions.preview accepts options ([#497](https://github.com/stevearc/oil.nvim/issues/497)) ([cca1631](https://github.com/stevearc/oil.nvim/commit/cca1631d5ea450c09ba72f3951a9e28105a3632c))
+* only map ~ for normal mode ([#484](https://github.com/stevearc/oil.nvim/issues/484)) ([ccab9d5](https://github.com/stevearc/oil.nvim/commit/ccab9d5e09e2d0042fbbe5b6bd05e82426247067))
+
 ## [2.12.2](https://github.com/stevearc/oil.nvim/compare/v2.12.1...v2.12.2) (2024-09-10)
 
 
