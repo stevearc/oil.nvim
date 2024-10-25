@@ -69,6 +69,20 @@ M.select_tab = {
 
 M.preview = {
   desc = "Open the entry under the cursor in a preview window, or close the preview window if already open",
+  parameters = {
+    vertical = {
+      type = "boolean",
+      desc = "Open the buffer in a vertical split",
+    },
+    horizontal = {
+      type = "boolean",
+      desc = "Open the buffer in a horizontal split",
+    },
+    split = {
+      type = '"aboveleft"|"belowright"|"topleft"|"botright"',
+      desc = "Split modifier",
+    },
+  },
   callback = function(opts)
     local entry = oil.get_cursor_entry()
     if not entry then
