@@ -6,7 +6,7 @@ luac.out
 *.zip
 *.tar.gz
 
-# complied python bytecode
+# python bytecode
 __pycache__
 
 # Object files
