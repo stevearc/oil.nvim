@@ -527,6 +527,12 @@ preview                                                          *actions.previe
     Open the entry under the cursor in a preview window, or close the preview
     window if already open
 
+    Parameters:
+      {horizontal} `boolean` Open the buffer in a horizontal split
+      {split}      `"aboveleft"|"belowright"|"topleft"|"botright"` Split
+                   modifier
+      {vertical}   `boolean` Open the buffer in a vertical split
+
 preview_scroll_down                                  *actions.preview_scroll_down*
     Scroll down in the preview window
 
