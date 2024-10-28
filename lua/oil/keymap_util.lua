@@ -78,31 +78,30 @@ M.show_help = function(keymaps)
     end
   end
 
-  local col_left = {}
-  local col_desc = {}
   local max_lhs = 1
+  local keymap_entries = {}
   for k, rhs in pairs(keymaps) do
     local all_lhs = lhs_to_all_lhs[k]
     if all_lhs then
       local _, opts = resolve(rhs)
       local keystr = table.concat(all_lhs, "/")
       max_lhs = math.max(max_lhs, vim.api.nvim_strwidth(keystr))
-      table.insert(col_left, { str = keystr, all_lhs = all_lhs })
-      table.insert(col_desc, opts.desc or "")
+      table.insert(keymap_entries, { str = keystr, all_lhs = all_lhs, desc = opts.desc or "" })
     end
   end
+  table.sort(keymap_entries, function(a, b)
+    return a.desc < b.desc
+  end)
 
   local lines = {}
   local highlights = {}
   local max_line = 1
-  for i = 1, #col_left do
-    local left = col_left[i]
-    local desc = col_desc[i]
-    local line = string.format(" %s   %s", util.rpad(left.str, max_lhs), desc)
+  for _, entry in ipairs(keymap_entries) do
+    local line = string.format(" %s   %s", util.rpad(entry.str, max_lhs), entry.desc)
     max_line = math.max(max_line, vim.api.nvim_strwidth(line))
     table.insert(lines, line)
     local start = 1
-    for _, key in ipairs(left.all_lhs) do
+    for _, key in ipairs(entry.all_lhs) do
       local keywidth = vim.api.nvim_strwidth(key)
       table.insert(highlights, { "Special", #lines, start, start + keywidth })
       start = start + keywidth + 1
