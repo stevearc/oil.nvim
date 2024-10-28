@@ -366,7 +366,11 @@ M.yank_entry = {
     if not entry or not dir then
       return
     end
-    local path = dir .. entry.name
+    local name = entry.name
+    if entry.type == "directory" then
+      name = name .. "/"
+    end
+    local path = dir .. name
     if opts.modify then
       path = vim.fn.fnamemodify(path, opts.modify)
     end
