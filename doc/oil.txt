@@ -598,6 +598,9 @@ OilSocket                                                           *hl-OilSocke
 OilLink                                                               *hl-OilLink*
     Soft links in an oil buffer
 
+OilOrphanLink                                                   *hl-OilOrphanLink*
+    Orphan links in an oil buffer
+
 OilLinkTarget                                                   *hl-OilLinkTarget*
     The target of a soft link
 

@@ -787,6 +787,11 @@ M._get_highlights = function()
       desc = "Soft links in an oil buffer",
     },
     {
+      name = "OilOrphanLink",
+      link = nil,
+      desc = "Orphan links in an oil buffer",
+    },
+    {
       name = "OilLinkTarget",
       link = "Comment",
       desc = "The target of a soft link",

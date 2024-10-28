@@ -719,7 +719,11 @@ M.format_entry_cols = function(entry, column_defs, col_width, adapter)
       end
     end
 
-    table.insert(cols, { name, "OilLink" })
+    if meta and meta.link_stat then
+      table.insert(cols, { name, "OilLink" })
+    else
+      table.insert(cols, { name, "OilOrphanLink" })
+    end
     if link_text then
       table.insert(cols, { link_text, "OilLinkTarget" })
     end
