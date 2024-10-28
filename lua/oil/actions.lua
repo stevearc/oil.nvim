@@ -367,8 +367,8 @@ M.yank_entry = {
       return
     end
     local name = entry.name
-    if entry.type == 'directory' then
-      name = name .. '/'
+    if entry.type == "directory" then
+      name = name .. "/"
     end
     local path = dir .. name
     if opts.modify then
