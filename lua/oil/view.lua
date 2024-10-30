@@ -723,10 +723,18 @@ M.format_entry_cols = function(entry, column_defs, col_width, adapter, is_hidden
   end
   -- Always add the entry name at the end
   local entry_type = entry[FIELD_TYPE]
+  local external_entry = {
+    id = entry[FIELD_ID],
+    name = name,
+    parsed_name = name,
+    type = entry_type,
+    meta = meta,
+  }
+  local highlight = config.view_options.highlight
   if entry_type == "directory" then
-    table.insert(cols, { name .. "/", "OilDir" .. hl_suffix })
+    table.insert(cols, { name .. "/", highlight(external_entry, false) or ("OilDir" .. hl_suffix) })
   elseif entry_type == "socket" then
-    table.insert(cols, { name, "OilSocket" .. hl_suffix })
+    table.insert(cols, { name, highlight(external_entry, false) or ("OilSocket" .. hl_suffix) })
   elseif entry_type == "link" then
     local link_text
     if meta then
@@ -743,13 +751,17 @@ M.format_entry_cols = function(entry, column_defs, col_width, adapter, is_hidden
     end
     local is_orphan = not (meta and meta.link_stat)
 
-    table.insert(cols, { name, (is_orphan and "OilOrphanLink" or "OilLink") .. hl_suffix })
+    table.insert(cols, {
+      name,
+      highlight(external_entry, false) or (is_orphan and "OilOrphanLink" or "OilLink") .. hl_suffix,
+    })
     if link_text then
-      local target_hl = (is_orphan and "OilOrphanLinkTarget" or "OilLinkTarget") .. hl_suffix
+      local target_hl = highlight(external_entry, true)
+        or (is_orphan and "OilOrphanLinkTarget" or "OilLinkTarget") .. hl_suffix
       table.insert(cols, { link_text, target_hl })
     end
   else
-    table.insert(cols, { name, "OilFile" .. hl_suffix })
+    table.insert(cols, { name, highlight(external_entry, false) or ("OilFile" .. hl_suffix) })
   end
   return cols
 end
