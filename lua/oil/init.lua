@@ -452,6 +452,13 @@ M.open_preview = function(opts, callback)
   if not entry then
     return finish("Could not find entry under cursor")
   end
+  if entry.meta ~= nil and entry.meta.stat ~= nil then
+    if entry.meta.stat.size >= config.preview_win.max_file_size_mb * 1e6 then
+      return finish(
+        "File over " .. config.preview_win.max_file_size_mb .. "MB is too large to preview"
+      )
+    end
+  end
   local entry_title = entry.name
   if entry.type == "directory" then
     entry_title = entry_title .. "/"
