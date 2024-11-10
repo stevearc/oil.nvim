@@ -152,8 +152,13 @@ CONFIG                                                                *oil-confi
           return conf
         end,
       },
-      -- Configuration for the actions floating preview window
+      -- Configuration for the file preview window
       preview = {
+        -- Whether the preview window is automatically updated when the cursor is moved
+        update_on_cursor_moved = true,
+      },
+      -- Configuration for the floating action confirmation window
+      confirmation = {
         -- Width dimensions can be integers or a float between 0 and 1 (e.g. 0.4 for 40%)
         -- min_width and max_width can be a single value or a list of mixed integer/float types.
         -- max_width = {100, 0.8} means "the lesser of 100 columns or 80% of total"
@@ -174,8 +179,6 @@ CONFIG                                                                *oil-confi
         win_options = {
           winblend = 0,
         },
-        -- Whether the preview window is automatically updated when the cursor is moved
-        update_on_cursor_moved = true,
       },
       -- Configuration for the floating progress window
       progress = {

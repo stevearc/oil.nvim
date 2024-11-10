@@ -413,7 +413,7 @@ M.initialize = function(bufnr)
           timer:again()
           return
         end
-        timer = vim.loop.new_timer()
+        timer = uv.new_timer()
         if not timer then
           return
         end

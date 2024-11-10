@@ -137,8 +137,13 @@ local default_config = {
       return conf
     end,
   },
-  -- Configuration for the actions floating preview window
+  -- Configuration for the file preview window
   preview = {
+    -- Whether the preview window is automatically updated when the cursor is moved
+    update_on_cursor_moved = true,
+  },
+  -- Configuration for the floating action confirmation window
+  confirmation = {
     -- Width dimensions can be integers or a float between 0 and 1 (e.g. 0.4 for 40%)
     -- min_width and max_width can be a single value or a list of mixed integer/float types.
     -- max_width = {100, 0.8} means "the lesser of 100 columns or 80% of total"
@@ -159,8 +164,6 @@ local default_config = {
     win_options = {
       winblend = 0,
     },
-    -- Whether the preview window is automatically updated when the cursor is moved
-    update_on_cursor_moved = true,
   },
   -- Configuration for the floating progress window
   progress = {
@@ -219,6 +222,7 @@ default_config.adapter_aliases = {}
 ---@field git oil.GitOptions
 ---@field float oil.FloatWindowConfig
 ---@field preview oil.PreviewWindowConfig
+---@field confirmation oil.ConfirmationWindowConfig
 ---@field progress oil.ProgressWindowConfig
 ---@field ssh oil.SimpleWindowConfig
 ---@field keymaps_help oil.SimpleWindowConfig
@@ -245,7 +249,8 @@ local M = {}
 ---@field extra_scp_args? string[] Extra arguments to pass to SCP when moving/copying files over SSH
 ---@field git? oil.SetupGitOptions EXPERIMENTAL support for performing file operations with git
 ---@field float? oil.SetupFloatWindowConfig Configuration for the floating window in oil.open_float
----@field preview? oil.SetupPreviewWindowConfig Configuration for the actions floating preview window
+---@field preview? oil.SetupPreviewWindowConfig Configuration for the file preview window
+---@field confirmation? oil.SetupConfirmationWindowConfig Configuration for the floating action confirmation window
 ---@field progress? oil.SetupProgressWindowConfig Configuration for the floating progress window
 ---@field ssh? oil.SetupSimpleWindowConfig Configuration for the floating SSH window
 ---@field keymaps_help? oil.SetupSimpleWindowConfig Configuration for the floating keymaps help window
@@ -316,11 +321,15 @@ local M = {}
 ---@field border? string|string[] Window border
 ---@field win_options? table<string, any>
 
----@class (exact) oil.PreviewWindowConfig : oil.WindowConfig
+---@class (exact) oil.PreviewWindowConfig
 ---@field update_on_cursor_moved boolean
 
----@class (exact) oil.SetupPreviewWindowConfig : oil.SetupWindowConfig
+---@class (exact) oil.ConfirmationWindowConfig : oil.WindowConfig
+
+---@class (exact) oil.SetupPreviewWindowConfig
 ---@field update_on_cursor_moved? boolean Whether the preview window is automatically updated when the cursor is moved
+
+---@class (exact) oil.SetupConfirmationWindowConfig : oil.SetupWindowConfig
 
 ---@class (exact) oil.ProgressWindowConfig : oil.WindowConfig
 ---@field minimized_border string|string[]
@@ -356,6 +365,7 @@ local M = {}
 
 M.setup = function(opts)
   opts = opts or {}
+
   local new_conf = vim.tbl_deep_extend("keep", opts, default_config)
   if not new_conf.use_default_keymaps then
     new_conf.keymaps = opts.keymaps or {}
@@ -365,6 +375,11 @@ M.setup = function(opts)
     for k, v in pairs(opts.keymaps) do
       new_conf.keymaps[k] = v
     end
+  end
+
+  -- Backwards compatibility. We renamed the 'preview' window config to be called 'confirmation'.
+  if opts.preview and not opts.confirmation then
+    new_conf.confirmation = vim.tbl_deep_extend("keep", opts.preview, default_config.confirmation)
   end
 
   if new_conf.lsp_rename_autosave ~= nil then
