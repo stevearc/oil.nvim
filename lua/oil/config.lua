@@ -359,7 +359,7 @@ M.setup = function(opts)
   local new_conf = vim.tbl_deep_extend("keep", opts, default_config)
   if not new_conf.use_default_keymaps then
     new_conf.keymaps = opts.keymaps or {}
-  else
+  elseif opts.keymaps then
     -- We don't want to deep merge the keymaps, we want any keymap defined by the user to override
     -- everything about the default.
     for k, v in pairs(opts.keymaps) do
