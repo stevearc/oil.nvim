@@ -138,7 +138,7 @@ local default_config = {
     end,
   },
   -- Configuration for the file preview window
-  preview = {
+  preview_win = {
     -- Whether the preview window is automatically updated when the cursor is moved
     update_on_cursor_moved = true,
   },
@@ -221,7 +221,7 @@ default_config.adapter_aliases = {}
 ---@field extra_scp_args string[]
 ---@field git oil.GitOptions
 ---@field float oil.FloatWindowConfig
----@field preview oil.PreviewWindowConfig
+---@field preview_win oil.PreviewWindowConfig
 ---@field confirmation oil.ConfirmationWindowConfig
 ---@field progress oil.ProgressWindowConfig
 ---@field ssh oil.SimpleWindowConfig
@@ -249,7 +249,7 @@ local M = {}
 ---@field extra_scp_args? string[] Extra arguments to pass to SCP when moving/copying files over SSH
 ---@field git? oil.SetupGitOptions EXPERIMENTAL support for performing file operations with git
 ---@field float? oil.SetupFloatWindowConfig Configuration for the floating window in oil.open_float
----@field preview? oil.SetupPreviewWindowConfig Configuration for the file preview window
+---@field preview_win? oil.SetupPreviewWindowConfig Configuration for the file preview window
 ---@field confirmation? oil.SetupConfirmationWindowConfig Configuration for the floating action confirmation window
 ---@field progress? oil.SetupProgressWindowConfig Configuration for the floating progress window
 ---@field ssh? oil.SetupSimpleWindowConfig Configuration for the floating SSH window
@@ -380,6 +380,10 @@ M.setup = function(opts)
   -- Backwards compatibility. We renamed the 'preview' window config to be called 'confirmation'.
   if opts.preview and not opts.confirmation then
     new_conf.confirmation = vim.tbl_deep_extend("keep", opts.preview, default_config.confirmation)
+  end
+  -- Backwards compatibility. We renamed the 'preview' config to 'preview_win'
+  if opts.preview and opts.preview.update_on_cursor_moved ~= nil then
+    new_conf.preview_win.update_on_cursor_moved = opts.preview.update_on_cursor_moved
   end
 
   if new_conf.lsp_rename_autosave ~= nil then

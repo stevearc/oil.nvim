@@ -268,7 +268,7 @@ require("oil").setup({
     end,
   },
   -- Configuration for the file preview window
-  preview = {
+  preview_win = {
     -- Whether the preview window is automatically updated when the cursor is moved
     update_on_cursor_moved = true,
   },

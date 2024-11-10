@@ -407,7 +407,7 @@ M.initialize = function(bufnr)
 
       constrain_cursor()
 
-      if config.preview.update_on_cursor_moved then
+      if config.preview_win.update_on_cursor_moved then
         -- Debounce and update the preview window
         if timer then
           timer:again()
