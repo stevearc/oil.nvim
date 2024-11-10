@@ -355,9 +355,16 @@ local M = {}
 ---@field border? string|string[] Window border
 
 M.setup = function(opts)
-  local new_conf = vim.tbl_deep_extend("keep", opts or {}, default_config)
+  opts = opts or {}
+  local new_conf = vim.tbl_deep_extend("keep", opts, default_config)
   if not new_conf.use_default_keymaps then
     new_conf.keymaps = opts.keymaps or {}
+  else
+    -- We don't want to deep merge the keymaps, we want any keymap defined by the user to override
+    -- everything about the default.
+    for k, v in pairs(opts.keymaps) do
+      new_conf.keymaps[k] = v
+    end
   end
 
   if new_conf.lsp_rename_autosave ~= nil then
