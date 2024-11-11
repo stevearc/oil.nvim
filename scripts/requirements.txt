@@ -1,0 +1,4 @@
+pyparsing==3.0.9
+black
+isort
+mypy
