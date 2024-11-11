@@ -410,11 +410,14 @@ M.close = function()
   vim.api.nvim_buf_delete(oilbuf, { force = true })
 end
 
+---@class oil.OpenPreviewOpts
+---@field vertical? boolean Open the buffer in a vertical split
+---@field horizontal? boolean Open the buffer in a horizontal split
+---@field split? "aboveleft"|"belowright"|"topleft"|"botright" Split modifier
+
 ---Preview the entry under the cursor in a split
----@param opts nil|table
----    vertical boolean Open the buffer in a vertical split
----    horizontal boolean Open the buffer in a horizontal split
----    split "aboveleft"|"belowright"|"topleft"|"botright" Split modifier
+---@param opts? oil.OpenPreviewOpts
+---@param callback? fun(err: nil|string) Called once the preview window has been opened
 M.open_preview = function(opts, callback)
   opts = opts or {}
   local config = require("oil.config")

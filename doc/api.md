@@ -14,7 +14,7 @@
 - [toggle_float(dir)](#toggle_floatdir)
 - [open(dir)](#opendir)
 - [close()](#close)
-- [open_preview(opts)](#open_previewopts)
+- [open_preview(opts, callback)](#open_previewopts-callback)
 - [select(opts, callback)](#selectopts-callback)
 - [save(opts, cb)](#saveopts-cb)
 - [setup(opts)](#setupopts)
@@ -125,17 +125,18 @@ Open oil browser for a directory
 Restore the buffer that was present when oil was opened
 
 
-## open_preview(opts)
+## open_preview(opts, callback)
 
-`open_preview(opts)` \
+`open_preview(opts, callback)` \
 Preview the entry under the cursor in a split
 
-| Param | Type         | Desc                                               |                                       |
-| ----- | ------------ | -------------------------------------------------- | ------------------------------------- |
-| opts  | `nil\|table` |                                                    |                                       |
-|       | vertical     | `boolean`                                          | Open the buffer in a vertical split   |
-|       | horizontal   | `boolean`                                          | Open the buffer in a horizontal split |
-|       | split        | `"aboveleft"\|"belowright"\|"topleft"\|"botright"` | Split modifier                        |
+| Param    | Type                         | Desc                                                    |                                       |
+| -------- | ---------------------------- | ------------------------------------------------------- | ------------------------------------- |
+| opts     | `nil\|oil.OpenPreviewOpts`   |                                                         |                                       |
+|          | vertical                     | `nil\|boolean`                                          | Open the buffer in a vertical split   |
+|          | horizontal                   | `nil\|boolean`                                          | Open the buffer in a horizontal split |
+|          | split                        | `nil\|"aboveleft"\|"belowright"\|"topleft"\|"botright"` | Split modifier                        |
+| callback | `nil\|fun(err: nil\|string)` | Called once the preview window has been opened          |                                       |
 
 ## select(opts, callback)
 
