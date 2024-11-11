@@ -1,5 +1,23 @@
 # Changelog
 
+## [2.13.0](https://github.com/stevearc/oil.nvim/compare/v2.12.2...v2.13.0) (2024-11-11)
+
+
+### Features
+
+* config option to customize floating window title ([#482](https://github.com/stevearc/oil.nvim/issues/482)) ([5d2dfae](https://github.com/stevearc/oil.nvim/commit/5d2dfae655b9b689bd4017b3bdccd52cbee5b92f))
+* config option to disable lsp file methods ([#477](https://github.com/stevearc/oil.nvim/issues/477)) ([f60bb7f](https://github.com/stevearc/oil.nvim/commit/f60bb7f793477d99ef1acf39e920bf2ca4e644de))
+
+
+### Bug Fixes
+
+* actions.preview accepts options ([#497](https://github.com/stevearc/oil.nvim/issues/497)) ([cca1631](https://github.com/stevearc/oil.nvim/commit/cca1631d5ea450c09ba72f3951a9e28105a3632c))
+* add trailing slash to directories on yank_entry ([#504](https://github.com/stevearc/oil.nvim/issues/504)) ([42333bb](https://github.com/stevearc/oil.nvim/commit/42333bb46e34dd47e13927010b1dcd30e6e4ca96))
+* don't deep merge keymaps ([#510](https://github.com/stevearc/oil.nvim/issues/510)) ([709403c](https://github.com/stevearc/oil.nvim/commit/709403ccd6f22d859c2e42c780ab558ae89284d9))
+* guard against nil keymaps ([621f8ba](https://github.com/stevearc/oil.nvim/commit/621f8ba4fa821724e9b646732a26fb2e795fe008))
+* only map ~ for normal mode ([#484](https://github.com/stevearc/oil.nvim/issues/484)) ([ccab9d5](https://github.com/stevearc/oil.nvim/commit/ccab9d5e09e2d0042fbbe5b6bd05e82426247067))
+* sort keymap help entries by description ([#506](https://github.com/stevearc/oil.nvim/issues/506)) ([52cc8a1](https://github.com/stevearc/oil.nvim/commit/52cc8a1fb35ea6ce1df536143add7ce7215c63c0)), closes [#376](https://github.com/stevearc/oil.nvim/issues/376)
+
 ## [2.12.2](https://github.com/stevearc/oil.nvim/compare/v2.12.1...v2.12.2) (2024-09-10)
 
 
