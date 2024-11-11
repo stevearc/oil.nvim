@@ -130,39 +130,39 @@ Restore the buffer that was present when oil was opened
 `open_preview(opts, callback)` \
 Preview the entry under the cursor in a split
 
-| Param    | Type                         | Desc                                                    |                                       |
-| -------- | ---------------------------- | ------------------------------------------------------- | ------------------------------------- |
-| opts     | `nil\|oil.OpenPreviewOpts`   |                                                         |                                       |
-|          | vertical                     | `nil\|boolean`                                          | Open the buffer in a vertical split   |
-|          | horizontal                   | `nil\|boolean`                                          | Open the buffer in a horizontal split |
-|          | split                        | `nil\|"aboveleft"\|"belowright"\|"topleft"\|"botright"` | Split modifier                        |
-| callback | `nil\|fun(err: nil\|string)` | Called once the preview window has been opened          |                                       |
+| Param       | Type                                                    | Desc                                           |
+| ----------- | ------------------------------------------------------- | ---------------------------------------------- |
+| opts        | `nil\|oil.OpenPreviewOpts`                              |                                                |
+| >vertical   | `nil\|boolean`                                          | Open the buffer in a vertical split            |
+| >horizontal | `nil\|boolean`                                          | Open the buffer in a horizontal split          |
+| >split      | `nil\|"aboveleft"\|"belowright"\|"topleft"\|"botright"` | Split modifier                                 |
+| callback    | `nil\|fun(err: nil\|string)`                            | Called once the preview window has been opened |
 
 ## select(opts, callback)
 
 `select(opts, callback)` \
 Select the entry under the cursor
 
-| Param    | Type                         | Desc                                                    |                                                      |
-| -------- | ---------------------------- | ------------------------------------------------------- | ---------------------------------------------------- |
-| opts     | `nil\|oil.SelectOpts`        |                                                         |                                                      |
-|          | vertical                     | `nil\|boolean`                                          | Open the buffer in a vertical split                  |
-|          | horizontal                   | `nil\|boolean`                                          | Open the buffer in a horizontal split                |
-|          | split                        | `nil\|"aboveleft"\|"belowright"\|"topleft"\|"botright"` | Split modifier                                       |
-|          | tab                          | `nil\|boolean`                                          | Open the buffer in a new tab                         |
-|          | close                        | `nil\|boolean`                                          | Close the original oil buffer once selection is made |
-| callback | `nil\|fun(err: nil\|string)` | Called once all entries have been opened                |                                                      |
+| Param       | Type                                                    | Desc                                                 |
+| ----------- | ------------------------------------------------------- | ---------------------------------------------------- |
+| opts        | `nil\|oil.SelectOpts`                                   |                                                      |
+| >vertical   | `nil\|boolean`                                          | Open the buffer in a vertical split                  |
+| >horizontal | `nil\|boolean`                                          | Open the buffer in a horizontal split                |
+| >split      | `nil\|"aboveleft"\|"belowright"\|"topleft"\|"botright"` | Split modifier                                       |
+| >tab        | `nil\|boolean`                                          | Open the buffer in a new tab                         |
+| >close      | `nil\|boolean`                                          | Close the original oil buffer once selection is made |
+| callback    | `nil\|fun(err: nil\|string)`                            | Called once all entries have been opened             |
 
 ## save(opts, cb)
 
 `save(opts, cb)` \
 Save all changes
 
-| Param | Type                         | Desc                            |                                                                                             |
-| ----- | ---------------------------- | ------------------------------- | ------------------------------------------------------------------------------------------- |
-| opts  | `nil\|table`                 |                                 |                                                                                             |
-|       | confirm                      | `nil\|boolean`                  | Show confirmation when true, never when false, respect skip_confirm_for_simple_edits if nil |
-| cb    | `nil\|fun(err: nil\|string)` | Called when mutations complete. |                                                                                             |
+| Param    | Type                         | Desc                                                                                        |
+| -------- | ---------------------------- | ------------------------------------------------------------------------------------------- |
+| opts     | `nil\|table`                 |                                                                                             |
+| >confirm | `nil\|boolean`               | Show confirmation when true, never when false, respect skip_confirm_for_simple_edits if nil |
+| cb       | `nil\|fun(err: nil\|string)` | Called when mutations complete.                                                             |
 
 **Note:**
 <pre>
