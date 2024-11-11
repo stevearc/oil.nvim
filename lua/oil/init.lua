@@ -551,6 +551,9 @@ M.open_preview = function(opts, callback)
     end
 
     vim.api.nvim_set_option_value("previewwindow", true, { scope = "local", win = 0 })
+    for k, v in pairs(config.preview_win.win_options) do
+      vim.api.nvim_set_option_value(k, v, { scope = "local", win = preview_win })
+    end
     vim.w.oil_entry_id = entry.id
     vim.w.oil_source_win = prev_win
     if is_visual_mode then
