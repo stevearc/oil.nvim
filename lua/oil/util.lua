@@ -905,43 +905,25 @@ M.read_file_to_scratch_buffer = function(path, opts)
   vim.bo[bufnr].bufhidden = "wipe"
   vim.bo[bufnr].buftype = "nofile"
   vim.b[bufnr].oil_preview_buffer = true
-  vim.loop.fs_open(path, "r", 438, function(err_open, fd)
-    if err_open then
-      print("Opening the file failed with following error message: " .. err_open)
-      return
+
+  -- Next two lines lifted from mini.files
+  local has_lines, read_res = pcall(vim.fn.readfile, path, "", vim.o.lines)
+  local lines = has_lines and vim.split(table.concat(read_res, "\n"), "\n") or {}
+
+  if not vim.api.nvim_buf_is_valid(bufnr) then
+    return
+  end
+  local ok = pcall(vim.api.nvim_buf_set_lines, bufnr, 0, -1, false, lines)
+  if not ok then
+    return
+  end
+  local ft = vim.filetype.match({ filename = path })
+  if ft and ft ~= "" then
+    local lang = vim.treesitter.language.get_lang(ft)
+    if not pcall(vim.treesitter.start, bufnr, lang) then
+      vim.bo[bufnr].syntax = ft
     end
-    vim.loop.fs_fstat(fd, function(err_fstat, stat)
-      assert(not err_fstat, err_fstat)
-      if not stat or stat.type ~= "file" then
-        return
-      end
-      vim.loop.fs_read(fd, stat.size, 0, function(err_read, data)
-        assert(not err_read, err_read)
-        vim.loop.fs_close(fd, function(err_close)
-          assert(not err_close, err_close)
-          vim.schedule(function()
-            if not vim.api.nvim_buf_is_valid(bufnr) then
-              return
-            end
-            local processed_data = vim.split(data or "", "[\r]?\n", opts)
-            if processed_data then
-              local ok = pcall(vim.api.nvim_buf_set_lines, bufnr, 0, -1, false, processed_data)
-              if not ok then
-                return
-              end
-            end
-            local ft = vim.filetype.match({ filename = path })
-            if ft and ft ~= "" then
-              local lang = vim.treesitter.language.get_lang(ft)
-              if not pcall(vim.treesitter.start, bufnr, lang) then
-                vim.bo[bufnr].syntax = ft
-              end
-            end
-          end)
-        end)
-      end)
-    end)
-  end)
+  end
   return bufnr
 end
 
