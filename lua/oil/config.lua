@@ -325,7 +325,7 @@ local M = {}
 
 ---@class (exact) oil.PreviewWindowConfig
 ---@field update_on_cursor_moved boolean
----@field max_file_size_mb? number Maximum file size in megabytes to preview
+---@field max_file_size_mb number
 
 ---@class (exact) oil.ConfirmationWindowConfig : oil.WindowConfig
 
@@ -389,9 +389,6 @@ M.setup = function(opts)
   if opts.preview then
     if opts.preview.update_on_cursor_moved ~= nil then
       new_conf.preview_win.update_on_cursor_moved = opts.preview.update_on_cursor_moved
-    end
-    if opts.preview.max_file_size_mb ~= nil then
-      new_conf.preview_win.max_file_size_mb = opts.preview.max_file_size_mb
     end
   end
 
