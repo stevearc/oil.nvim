@@ -386,10 +386,8 @@ M.setup = function(opts)
     new_conf.confirmation = vim.tbl_deep_extend("keep", opts.preview, default_config.confirmation)
   end
   -- Backwards compatibility. We renamed the 'preview' config to 'preview_win'
-  if opts.preview then
-    if opts.preview.update_on_cursor_moved ~= nil then
-      new_conf.preview_win.update_on_cursor_moved = opts.preview.update_on_cursor_moved
-    end
+  if opts.preview and opts.preview.update_on_cursor_moved ~= nil then
+    new_conf.preview_win.update_on_cursor_moved = opts.preview.update_on_cursor_moved
   end
 
   if new_conf.lsp_rename_autosave ~= nil then
