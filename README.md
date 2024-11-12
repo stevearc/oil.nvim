@@ -271,6 +271,8 @@ require("oil").setup({
   preview_win = {
     -- Whether the preview window is automatically updated when the cursor is moved
     update_on_cursor_moved = true,
+    -- Maximum file size in megabytes to preview
+    max_file_size_mb = 100,
   },
   -- Configuration for the floating action confirmation window
   confirmation = {
