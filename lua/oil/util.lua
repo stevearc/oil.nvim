@@ -898,24 +898,28 @@ end
 
 ---Read a buffer into a scratch buffer and apply syntactic highlighting when possible
 ---@param path string The path to the file to read
----@param opts? table Options to pass to `vim.split`
+---@param limit_scratch boolean If true, limit the number of lines in the scratch buffer to window max lines
 ---@return (integer)
-M.read_file_to_scratch_buffer = function(path, opts)
+M.read_file_to_scratch_buffer = function(path, limit_scratch)
   local bufnr = vim.api.nvim_create_buf(false, true)
+  if bufnr == 0 then
+    return 0
+  end
+
   vim.bo[bufnr].bufhidden = "wipe"
   vim.bo[bufnr].buftype = "nofile"
   vim.b[bufnr].oil_preview_buffer = true
 
   -- Next two lines lifted from mini.files
-  local has_lines, read_res = pcall(vim.fn.readfile, path, "", vim.o.lines)
+  local has_lines, read_res = pcall(vim.fn.readfile, path, "", limit_scratch and vim.o.lines or -1)
   local lines = has_lines and vim.split(table.concat(read_res, "\n"), "\n") or {}
 
   if not vim.api.nvim_buf_is_valid(bufnr) then
-    return
+    return 0
   end
   local ok = pcall(vim.api.nvim_buf_set_lines, bufnr, 0, -1, false, lines)
   if not ok then
-    return
+    return 0
   end
   local ft = vim.filetype.match({ filename = path })
   if ft and ft ~= "" then
