@@ -182,6 +182,11 @@ M.set_win_options = function()
   for k, v in pairs(config.win_options) do
     vim.api.nvim_set_option_value(k, v, { scope = "local", win = winid })
   end
+  if vim.wo[winid].previewwindow then -- apply preview window options last
+    for k, v in pairs(config.preview_win.win_options) do
+      vim.api.nvim_set_option_value(k, v, { scope = "local", win = winid })
+    end
+  end
 end
 
 ---Get a list of visible oil buffers and a list of hidden oil buffers

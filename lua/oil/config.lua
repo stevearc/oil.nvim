@@ -143,6 +143,8 @@ local default_config = {
     update_on_cursor_moved = true,
     -- Maximum file size in megabytes to preview
     max_file_size_mb = 100,
+    -- Window-local options to use for preview window buffers
+    win_options = {},
   },
   -- Configuration for the floating action confirmation window
   confirmation = {
@@ -326,12 +328,14 @@ local M = {}
 ---@class (exact) oil.PreviewWindowConfig
 ---@field update_on_cursor_moved boolean
 ---@field max_file_size_mb number
+---@field win_options table<string, any>
 
 ---@class (exact) oil.ConfirmationWindowConfig : oil.WindowConfig
 
 ---@class (exact) oil.SetupPreviewWindowConfig
 ---@field update_on_cursor_moved? boolean Whether the preview window is automatically updated when the cursor is moved
 ---@field max_file_size_mb? number Maximum file size in megabytes to preview
+---@field win_options? table<string, any> Window-local options to use for preview window buffers
 
 ---@class (exact) oil.SetupConfirmationWindowConfig : oil.SetupWindowConfig
 
