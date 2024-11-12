@@ -273,6 +273,8 @@ require("oil").setup({
     update_on_cursor_moved = true,
     -- Maximum file size in megabytes to preview
     max_file_size_mb = 100,
+    -- Window-local options to use for preview window buffers
+    win_options = {},
   },
   -- Configuration for the floating action confirmation window
   confirmation = {
