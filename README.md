@@ -273,6 +273,10 @@ require("oil").setup({
     update_on_cursor_moved = true,
     -- Maximum file size in megabytes to preview
     max_file_size_mb = 100,
+    -- Open the preview in a scratch buffer
+    scratch_buffer = false,
+    -- Limit the number of lines read to the scratch buffer to the max window line number
+    limit_scratch_buffer = false,
     -- Window-local options to use for preview window buffers
     win_options = {},
   },

@@ -130,15 +130,13 @@ Restore the buffer that was present when oil was opened
 `open_preview(opts, callback)` \
 Preview the entry under the cursor in a split
 
-| Param                  | Type                                                    | Desc                                                                   |
-| ---------------------- | ------------------------------------------------------- | ---------------------------------------------------------------------- |
-| opts                   | `nil\|oil.OpenPreviewOpts`                              |                                                                        |
-| >vertical              | `nil\|boolean`                                          | Open the buffer in a vertical split                                    |
-| >horizontal            | `nil\|boolean`                                          | Open the buffer in a horizontal split                                  |
-| >split                 | `nil\|"aboveleft"\|"belowright"\|"topleft"\|"botright"` | Split modifier                                                         |
-| >scratch_buffer        | `nil\|boolean`                                          | Open the previewed file in a scratch buffer                            |
-| >limit_scratch_buffer  | `nil\|boolean`                                          | Limit the size of the scratch buffer to the window max numbew of lines |
-| callback               | `nil\|fun(err: nil\|string)`                            | Called once the preview window has been opened                         |
+| Param       | Type                                                    | Desc                                           |
+| ----------- | ------------------------------------------------------- | ---------------------------------------------- |
+| opts        | `nil\|oil.OpenPreviewOpts`                              |                                                |
+| >vertical   | `nil\|boolean`                                          | Open the buffer in a vertical split            |
+| >horizontal | `nil\|boolean`                                          | Open the buffer in a horizontal split          |
+| >split      | `nil\|"aboveleft"\|"belowright"\|"topleft"\|"botright"` | Split modifier                                 |
+| callback    | `nil\|fun(err: nil\|string)`                            | Called once the preview window has been opened |
 
 ## select(opts, callback)
 

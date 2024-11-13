@@ -414,8 +414,6 @@ end
 ---@field vertical? boolean Open the buffer in a vertical split
 ---@field horizontal? boolean Open the buffer in a horizontal split
 ---@field split? "aboveleft"|"belowright"|"topleft"|"botright" Split modifier
----@field scratch_buffer? boolean Open the buffer as a scratch buffer
----@field limit_scratch_buffer? boolean Limit the number of read lines in the preview to the max window lines
 
 ---Preview the entry under the cursor in a split
 ---@param opts? oil.OpenPreviewOpts
@@ -444,12 +442,6 @@ M.open_preview = function(opts, callback)
     else
       opts.split = vim.o.splitright and "belowright" or "aboveleft"
     end
-  end
-  if not opts.scratch_buffer then
-    opts.scratch_buffer = false
-  end
-  if not opts.limit_scratch_buffer then
-    opts.limit_scratch_buffer = false
   end
 
   local preview_win = util.get_preview_win()
@@ -539,8 +531,9 @@ M.open_preview = function(opts, callback)
 
     local entry_is_file = not vim.endswith(normalized_url, "/")
     local filebufnr = 0
-    if entry_is_file and opts.scratch_buffer then
-      filebufnr = util.read_file_to_scratch_buffer(normalized_url, opts.limit_scratch_buffer)
+    if entry_is_file and config.preview_win.scratch_buffer then
+      filebufnr =
+        util.read_file_to_scratch_buffer(normalized_url, config.preview_win.limit_scratch_buffer)
     end
 
     if filebufnr == 0 then

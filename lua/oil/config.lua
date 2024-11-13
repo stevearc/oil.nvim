@@ -143,6 +143,10 @@ local default_config = {
     update_on_cursor_moved = true,
     -- Maximum file size in megabytes to preview
     max_file_size_mb = 100,
+    -- Open the preview in a scratch buffer
+    scratch_buffer = false,
+    -- Limit the number of lines read to the scratch buffer to the max window line number
+    limit_scratch_buffer = false,
     -- Window-local options to use for preview window buffers
     win_options = {},
   },
@@ -328,6 +332,8 @@ local M = {}
 ---@class (exact) oil.PreviewWindowConfig
 ---@field update_on_cursor_moved boolean
 ---@field max_file_size_mb number
+---@field scratch_buffer boolean
+---@field limit_scratch_buffer boolean
 ---@field win_options table<string, any>
 
 ---@class (exact) oil.ConfirmationWindowConfig : oil.WindowConfig
@@ -335,6 +341,8 @@ local M = {}
 ---@class (exact) oil.SetupPreviewWindowConfig
 ---@field update_on_cursor_moved? boolean Whether the preview window is automatically updated when the cursor is moved
 ---@field max_file_size_mb? number Maximum file size in megabytes to preview
+---@field scratch_buffer? boolean Open the preview in a scratch buffer
+---@field limit_scratch_buffer? boolean Limit the number of lines read to the scratch buffer to the max window line number
 ---@field win_options? table<string, any> Window-local options to use for preview window buffers
 
 ---@class (exact) oil.SetupConfirmationWindowConfig : oil.SetupWindowConfig

@@ -158,6 +158,10 @@ CONFIG                                                                *oil-confi
         update_on_cursor_moved = true,
         -- Maximum file size in megabytes to preview
         max_file_size_mb = 100,
+        -- Open the preview in a scratch buffer
+        scratch_buffer = false,
+        -- Limit the number of lines read to the scratch buffer to the max window line number
+        limit_scratch_buffer = false,
         -- Window-local options to use for preview window buffers
         win_options = {},
       },
@@ -324,15 +328,10 @@ open_preview({opts}, {callback})                                *oil.open_previe
 
     Parameters:
       {opts}     `nil|oil.OpenPreviewOpts`
-          {vertical}             `nil|boolean` Open the buffer in a vertical split
-          {horizontal}           `nil|boolean` Open the buffer in a horizontal
-                                 split
-          {split}                `nil|"aboveleft"|"belowright"|"topleft"|"botright"`
-                                 Split modifier
-          {scratch_buffer}       `nil|boolean` Open the previwed file in a
-                                 scratch buffer
-          {limit_scratch_buffer} `nil|boolean` Limit the number lines read to
-                               the max window lines
+          {vertical}   `nil|boolean` Open the buffer in a vertical split
+          {horizontal} `nil|boolean` Open the buffer in a horizontal split
+          {split}      `nil|"aboveleft"|"belowright"|"topleft"|"botright"` Split
+                       modifier
       {callback} `nil|fun(err: nil|string)` Called once the preview window has
                  been opened
 
