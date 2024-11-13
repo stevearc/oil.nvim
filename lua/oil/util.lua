@@ -910,8 +910,12 @@ M.read_file_to_scratch_buffer = function(path, limit_read)
   vim.bo[bufnr].buftype = "nofile"
   vim.b[bufnr].oil_preview_buffer = true
 
-  -- Next two lines lifted from mini.files
-  local has_lines, read_res = pcall(vim.fn.readfile, path, "", limit_read and vim.o.lines or -1)
+  local has_lines, read_res
+  if limit_read then
+    has_lines, read_res = pcall(vim.fn.readfile, path, "", vim.o.lines)
+  else
+    has_lines, read_res = pcall(vim.fn.readfile, path, "")
+  end
   local lines = has_lines and vim.split(table.concat(read_res, "\n"), "\n") or {}
 
   if not vim.api.nvim_buf_is_valid(bufnr) then
