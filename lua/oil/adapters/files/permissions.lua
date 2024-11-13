@@ -1,6 +1,6 @@
 local M = {}
 
----@param exe_modifier nil|false|string
+---@param exe_modifier false|string
 ---@param num integer
 ---@return string
 local function perm_to_str(exe_modifier, num)
