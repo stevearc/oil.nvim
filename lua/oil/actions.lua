@@ -82,6 +82,14 @@ M.preview = {
       type = '"aboveleft"|"belowright"|"topleft"|"botright"',
       desc = "Split modifier",
     },
+    scratch_buffer = {
+      type = "boolean",
+      desc = "Use a scratch buffer for the preview window",
+    },
+    limit_scratch_buffers = {
+      type = "boolean",
+      desc = "Limit the number of read lines in the scratch buffer to the max window lines",
+    },
   },
   callback = function(opts)
     local entry = oil.get_cursor_entry()
