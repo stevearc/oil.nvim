@@ -19,6 +19,7 @@ local all_columns = {}
 ---@field render_action? fun(action: oil.ChangeAction): string
 ---@field perform_action? fun(action: oil.ChangeAction, callback: fun(err: nil|string))
 ---@field get_sort_value? fun(entry: oil.InternalEntry): number|string
+---@field create_sort_value_factory? fun(num_entries: integer): fun(entry: oil.InternalEntry): number|string
 
 ---@param name string
 ---@param column oil.ColumnDefinition
@@ -292,18 +293,31 @@ M.register("name", {
     error("Do not use the name column. It is for sorting only")
   end,
 
-  get_sort_value = function(entry)
-    local sort_value = entry[FIELD_NAME]
-
-    if config.view_options.natural_order then
-      sort_value = sort_value:gsub("%d+", pad_number)
+  create_sort_value_factory = function(num_entries)
+    if
+      config.view_options.natural_order == false
+      or (config.view_options.natural_order == "fast" and num_entries > 5000)
+    then
+      if config.view_options.case_insensitive then
+        return function(entry)
+          return entry[FIELD_NAME]:lower()
+        end
+      else
+        return function(entry)
+          return entry[FIELD_NAME]
+        end
+      end
+    else
+      if config.view_options.case_insensitive then
+        return function(entry)
+          return entry[FIELD_NAME]:gsub("%d+", pad_number):lower()
+        end
+      else
+        return function(entry)
+          return entry[FIELD_NAME]:gsub("%d+", pad_number)
+        end
+      end
     end
-
-    if config.view_options.case_insensitive then
-      sort_value = sort_value:lower()
-    end
-
-    return sort_value
   end,
 })
 

@@ -537,8 +537,9 @@ M.initialize = function(bufnr)
 end
 
 ---@param adapter oil.Adapter
+---@param num_entries integer
 ---@return fun(a: oil.InternalEntry, b: oil.InternalEntry): boolean
-local function get_sort_function(adapter)
+local function get_sort_function(adapter, num_entries)
   local idx_funs = {}
   local sort_config = config.view_options.sort
 
@@ -560,7 +561,9 @@ local function get_sort_function(adapter)
       )
     end
     local col = columns.get_column(adapter, col_name)
-    if col and col.get_sort_value then
+    if col and col.create_sort_value_factory then
+      table.insert(idx_funs, { col.create_sort_value_factory(num_entries), order })
+    elseif col and col.get_sort_value then
       table.insert(idx_funs, { col.get_sort_value, order })
     else
       vim.notify_once(
@@ -611,7 +614,7 @@ local function render_buffer(bufnr, opts)
   local entries = cache.list_url(bufname)
   local entry_list = vim.tbl_values(entries)
 
-  table.sort(entry_list, get_sort_function(adapter))
+  table.sort(entry_list, get_sort_function(adapter, #entry_list))
 
   local jump_idx
   if opts.jump_first then
