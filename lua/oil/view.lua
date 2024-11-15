@@ -614,7 +614,10 @@ local function render_buffer(bufnr, opts)
   local entries = cache.list_url(bufname)
   local entry_list = vim.tbl_values(entries)
 
-  table.sort(entry_list, get_sort_function(adapter, #entry_list))
+  -- Only sort the entries once we have them all
+  if not vim.b[bufnr].oil_rendering then
+    table.sort(entry_list, get_sort_function(adapter, #entry_list))
+  end
 
   local jump_idx
   if opts.jump_first then
