@@ -347,7 +347,8 @@ M.addslash = function(path, os_slash)
     slash = "\\"
   end
 
-  if not vim.endswith(path, slash) then
+  local endslash = path:match(slash .. "$")
+  if not endslash then
     return path .. slash
   else
     return path
