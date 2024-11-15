@@ -646,7 +646,6 @@ local function render_buffer(bufnr, opts)
       if seek_after_render == name then
         seek_after_render_found = true
         jump_idx = #line_table
-        M.set_last_cursor(bufname, nil)
       end
     end
   end
@@ -825,6 +824,7 @@ M.render_buffer_async = function(bufnr, opts, callback)
     vim.b[bufnr].oil_rendering = false
     loading.set_loading(bufnr, false)
     render_buffer(bufnr, { jump = true })
+    M.set_last_cursor(bufname, nil)
     vim.bo[bufnr].undolevels = vim.api.nvim_get_option_value("undolevels", { scope = "global" })
     vim.bo[bufnr].modifiable = not buffers_locked and adapter.is_modifiable(bufnr)
     if callback then
