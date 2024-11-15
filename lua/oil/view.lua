@@ -849,6 +849,7 @@ M.render_buffer_async = function(bufnr, opts, callback)
   end
 
   cache.begin_update_url(bufname)
+  local num_iterations = 0
   adapter.list(bufname, get_used_columns(), function(err, entries, fetch_more)
     loading.set_loading(bufnr, false)
     if err then
@@ -865,11 +866,13 @@ M.render_buffer_async = function(bufnr, opts, callback)
       local now = uv.hrtime() / 1e6
       local delta = now - start_ms
       -- If we've been chugging for more than 40ms, go ahead and render what we have
-      if delta > 40 then
+      if (delta > 25 and num_iterations < 1) or delta > 500 then
+        num_iterations = num_iterations + 1
         start_ms = now
         vim.schedule(function()
           seek_after_render_found =
             render_buffer(bufnr, { jump = not seek_after_render_found, jump_first = first })
+          start_ms = uv.hrtime() / 1e6
         end)
       end
       first = false
