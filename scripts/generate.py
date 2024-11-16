@@ -366,7 +366,7 @@ Mac:
     (instead of being able to see files that were trashed from a directory).
 
 Windows:
-    Oil does not yet support the Windows trash. PRs are welcome!
+    Oil supports the Windows Recycle Bin. All features should work.
 """
     )
     return section
