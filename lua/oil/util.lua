@@ -899,40 +899,56 @@ end
 
 ---Read a buffer into a scratch buffer and apply syntactic highlighting when possible
 ---@param path string The path to the file to read
----@param limit_read boolean If true, limit the number of lines in the scratch buffer to window max lines
----@return (integer)
-M.read_file_to_scratch_buffer = function(path, limit_read)
+---@param preview_method oil.PreviewMethod
+---@return nil|integer
+M.read_file_to_scratch_buffer = function(path, preview_method)
   local bufnr = vim.api.nvim_create_buf(false, true)
   if bufnr == 0 then
-    return 0
+    return
   end
 
   vim.bo[bufnr].bufhidden = "wipe"
   vim.bo[bufnr].buftype = "nofile"
-  vim.b[bufnr].oil_preview_buffer = true
 
-  local has_lines, read_res
-  if limit_read then
-    has_lines, read_res = pcall(vim.fn.readfile, path, "", vim.o.lines)
-  else
-    has_lines, read_res = pcall(vim.fn.readfile, path, "")
-  end
+  local max_lines = preview_method == "fast_scratch" and vim.o.lines or nil
+  local has_lines, read_res = pcall(vim.fn.readfile, path, "", max_lines)
   local lines = has_lines and vim.split(table.concat(read_res, "\n"), "\n") or {}
 
-  if not vim.api.nvim_buf_is_valid(bufnr) then
-    return 0
-  end
   local ok = pcall(vim.api.nvim_buf_set_lines, bufnr, 0, -1, false, lines)
   if not ok then
-    return 0
+    return
   end
-  local ft = vim.filetype.match({ filename = path })
+  local ft = vim.filetype.match({ filename = path, buf = bufnr })
   if ft and ft ~= "" then
     local lang = vim.treesitter.language.get_lang(ft)
     if not pcall(vim.treesitter.start, bufnr, lang) then
       vim.bo[bufnr].syntax = ft
+    else
     end
   end
+
+  -- Replace the scratch buffer with a real buffer if we enter it
+  vim.api.nvim_create_autocmd("BufEnter", {
+    desc = "oil.nvim replace scratch buffer with real buffer",
+    buffer = bufnr,
+    callback = function()
+      local winid = vim.api.nvim_get_current_win()
+      -- Have to schedule this so all the FileType, etc autocmds will fire
+      vim.schedule(function()
+        if vim.api.nvim_get_current_win() == winid then
+          vim.cmd.edit({ args = { path } })
+
+          -- If we're still in a preview window, make sure this buffer still gets treated as a
+          -- preview
+          if vim.wo.previewwindow then
+            vim.bo.bufhidden = "wipe"
+            vim.b.oil_preview_buffer = true
+          end
+        end
+      end)
+    end,
+  })
+
   return bufnr
 end
 
