@@ -452,13 +452,6 @@ M.open_preview = function(opts, callback)
   if not entry then
     return finish("Could not find entry under cursor")
   end
-  if entry.meta ~= nil and entry.meta.stat ~= nil then
-    if entry.meta.stat.size >= config.preview_win.max_file_size_mb * 1e6 then
-      return finish(
-        "File over " .. config.preview_win.max_file_size_mb .. "MB is too large to preview"
-      )
-    end
-  end
   local entry_title = entry.name
   if entry.type == "directory" then
     entry_title = entry_title .. "/"
@@ -529,14 +522,19 @@ M.open_preview = function(opts, callback)
       end
     end
 
-    local filebufnr = vim.fn.bufadd(normalized_url)
     local entry_is_file = not vim.endswith(normalized_url, "/")
+    local filebufnr
+    if entry_is_file and config.preview_win.preview_method ~= "load" then
+      filebufnr =
+        util.read_file_to_scratch_buffer(normalized_url, config.preview_win.preview_method)
+    end
 
-    -- If we're previewing a file that hasn't been opened yet, make sure it gets deleted after
-    -- we close the window
-    if entry_is_file and vim.fn.bufloaded(filebufnr) == 0 then
-      vim.bo[filebufnr].bufhidden = "wipe"
-      vim.b[filebufnr].oil_preview_buffer = true
+    if not filebufnr then
+      filebufnr = vim.fn.bufadd(normalized_url)
+      if entry_is_file and vim.fn.bufloaded(filebufnr) == 0 then
+        vim.bo[filebufnr].bufhidden = "wipe"
+        vim.b[filebufnr].oil_preview_buffer = true
+      end
     end
 
     ---@diagnostic disable-next-line: param-type-mismatch
