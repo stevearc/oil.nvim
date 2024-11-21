@@ -316,9 +316,13 @@ open({dir})                                                             *oil.ope
       {dir} `nil|string` When nil, open the parent of the current buffer, or the
             cwd if current buffer is not a file
 
-close()                                                                *oil.close*
+close({opts})                                                          *oil.close*
     Restore the buffer that was present when oil was opened
 
+    Parameters:
+      {opts} `nil|oil.CloseOpts`
+          {exit_if_last_buf} `nil|boolean` Exit vim if this oil buffer is the
+                             last open buffer
 
 open_preview({opts}, {callback})                                *oil.open_preview*
     Preview the entry under the cursor in a split
@@ -512,6 +516,9 @@ change_sort                                                  *actions.change_sor
 
 close                                                              *actions.close*
     Close oil and restore original buffer
+
+    Parameters:
+      {exit_if_last_buf} `boolean` Exit vim if oil is closed as the last buffer
 
 open_cmdline                                                *actions.open_cmdline*
     Open vim cmdline with current entry as an argument

@@ -13,7 +13,7 @@
 - [open_float(dir)](#open_floatdir)
 - [toggle_float(dir)](#toggle_floatdir)
 - [open(dir)](#opendir)
-- [close()](#close)
+- [close(opts)](#closeopts)
 - [open_preview(opts, callback)](#open_previewopts-callback)
 - [select(opts, callback)](#selectopts-callback)
 - [save(opts, cb)](#saveopts-cb)
@@ -119,11 +119,15 @@ Open oil browser for a directory
 | ----- | ------------- | ------------------------------------------------------------------------------------------- |
 | dir   | `nil\|string` | When nil, open the parent of the current buffer, or the cwd if current buffer is not a file |
 
-## close()
+## close(opts)
 
-`close()` \
+`close(opts)` \
 Restore the buffer that was present when oil was opened
 
+| Param             | Type                 | Desc                                                |
+| ----------------- | -------------------- | --------------------------------------------------- |
+| opts              | `nil\|oil.CloseOpts` |                                                     |
+| >exit_if_last_buf | `nil\|boolean`       | Exit vim if this oil buffer is the last open buffer |
 
 ## open_preview(opts, callback)
 
