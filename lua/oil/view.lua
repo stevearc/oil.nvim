@@ -782,12 +782,12 @@ M.format_entry_cols = function(entry, column_defs, col_width, adapter, is_hidden
     if not link_name_hl then
       link_name_hl = (is_orphan and "OilOrphanLink" or "OilLink") .. hl_suffix
     end
-    if link_target and not link_target_hl then
-      link_target_hl = (is_orphan and "OilOrphanLinkTarget" or "OilLinkTarget") .. hl_suffix
-    end
-
     table.insert(cols, { link_name, link_name_hl })
+
     if link_target then
+      if not link_target_hl then
+        link_target_hl = (is_orphan and "OilOrphanLinkTarget" or "OilLinkTarget") .. hl_suffix
+      end
       table.insert(cols, { link_target, link_target_hl })
     end
   else
