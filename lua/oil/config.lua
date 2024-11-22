@@ -102,8 +102,8 @@ local default_config = {
       { "type", "asc" },
       { "name", "asc" },
     },
-    -- Return a highlight group name for each entry
-    highlight = function(entry, is_link_target)
+    -- Customize the highlight group for the file name
+    highlight_filename = function(entry, is_hidden, is_link_target, is_link_orphan)
       return nil
     end,
   },
@@ -211,6 +211,9 @@ default_config.adapters = {
   ["oil-trash://"] = "trash",
 }
 default_config.adapter_aliases = {}
+-- We want the function in the default config for documentation generation, but if we nil it out
+-- here we can get some performance wins
+default_config.view_options.highlight_filename = nil
 
 ---@class oil.Config
 ---@field adapters table<string, string> Hidden from SetupOpts
@@ -285,7 +288,7 @@ local M = {}
 ---@field natural_order boolean|"fast"
 ---@field case_insensitive boolean
 ---@field sort oil.SortSpec[]
----@field highlight fun(entry: oil.Entry, is_link_target: boolean): string|nil
+---@field highlight_filename? fun(entry: oil.Entry, is_hidden: boolean, is_link_target: boolean, is_link_orphan: boolean): string|nil
 
 ---@class (exact) oil.SetupViewOptions
 ---@field show_hidden? boolean Show files and directories that start with "."
@@ -294,7 +297,7 @@ local M = {}
 ---@field natural_order? boolean|"fast" Sort file names with numbers in a more intuitive order for humans. Can be slow for large directories.
 ---@field case_insensitive? boolean Sort file and directory names case insensitive
 ---@field sort? oil.SortSpec[] Sort order for the file list
----@field highlight fun(entry: oil.Entry, is_link_target: boolean): string|nil Return a highlight group name for each entry
+---@field highlight_filename? fun(entry: oil.Entry, is_hidden: boolean, is_link_target: boolean, is_link_orphan: boolean): string|nil Customize the highlight group for the file name
 
 ---@class (exact) oil.SortSpec
 ---@field [1] string
