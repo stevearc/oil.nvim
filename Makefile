@@ -37,20 +37,19 @@ fastlint: scripts/nvim_doc_tools venv
 
 ## profile: use LuaJIT profiler to profile the plugin
 .PHONY: profile
-profile:
-	nvim --clean -u tests/perf_harness.lua -c 'lua jit_profile()'
+profile: scripts/benchmark.nvim
+	nvim --clean -u perf/bootstrap.lua -c 'lua jit_profile()'
 
 ## flame_profile: create a trace in the chrome profiler format
 .PHONY: flame_profile
-flame_profile:
-	nvim --clean -u tests/perf_harness.lua -c 'lua flame_profile()'
-	@echo "Visit https://ui.perfetto.dev/ and load the profile.json file"
+flame_profile: scripts/benchmark.nvim
+	nvim --clean -u perf/bootstrap.lua -c 'lua flame_profile()'
 
 ## benchmark: benchmark performance opening directory with many files
 .PHONY: benchmark
-benchmark:
-	nvim --clean -u tests/perf_harness.lua -c 'lua benchmark(10)'
-	@cat tests/perf/benchmark.txt
+benchmark: scripts/benchmark.nvim
+	nvim --clean -u perf/bootstrap.lua -c 'lua benchmark()'
+	@cat perf/tmp/benchmark.txt
 
 scripts/nvim_doc_tools:
 	git clone https://github.com/stevearc/nvim_doc_tools scripts/nvim_doc_tools
@@ -58,7 +57,10 @@ scripts/nvim_doc_tools:
 scripts/nvim-typecheck-action:
 	git clone https://github.com/stevearc/nvim-typecheck-action scripts/nvim-typecheck-action
 
+scripts/benchmark.nvim:
+	git clone https://github.com/stevearc/benchmark.nvim scripts/benchmark.nvim
+
 ## clean: reset the repository to a clean state
 .PHONY: clean
 clean:
-	rm -rf scripts/nvim_doc_tools scripts/nvim-typecheck-action venv .testenv tests/perf profile.json
+	rm -rf scripts/nvim_doc_tools scripts/nvim-typecheck-action venv .testenv perf/tmp profile.json

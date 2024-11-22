@@ -48,5 +48,6 @@ venv/
 doc/tags
 scripts/nvim_doc_tools
 scripts/nvim-typecheck-action
-tests/perf/
+scripts/benchmark.nvim
+perf/tmp/
 profile.json
