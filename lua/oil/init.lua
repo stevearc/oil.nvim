@@ -842,6 +842,11 @@ M._get_highlights = function()
       desc = "Hidden soft links in an oil buffer",
     },
     {
+      name = "OilOrphanLinkHidden",
+      link = nil,
+      desc = "Hidden orphaned soft links in an oil buffer",
+    },
+    {
       name = "OilLinkTarget",
       link = "Comment",
       desc = "The target of a soft link",
@@ -855,6 +860,11 @@ M._get_highlights = function()
       name = "OilLinkTargetHidden",
       link = "OilHidden",
       desc = "The target of a hidden soft link",
+    },
+    {
+      name = "OilOrphanLinkTargetHidden",
+      link = "DiagnosticError",
+      desc = "The target of an hidden orphaned soft link",
     },
     {
       name = "OilFile",

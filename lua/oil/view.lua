@@ -727,7 +727,7 @@ M.format_entry_cols = function(entry, column_defs, col_width, adapter)
       end
 
       if meta.link then
-        link_text = "->" .. " " .. meta.link
+        link_text = "-> " .. meta.link
         if meta.link_stat and meta.link_stat.type == "directory" then
           link_text = util.addslash(link_text)
         end
