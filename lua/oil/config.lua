@@ -144,6 +144,10 @@ local default_config = {
     update_on_cursor_moved = true,
     -- How to open the preview window "load"|"scratch"|"fast_scratch"
     preview_method = "fast_scratch",
+    -- A function that returns true to disable preview on a file e.g. to avoid lag
+    disable_preview = function(filename)
+      return false
+    end,
     -- Window-local options to use for preview window buffers
     win_options = {},
   },
@@ -334,12 +338,14 @@ local M = {}
 ---@class (exact) oil.PreviewWindowConfig
 ---@field update_on_cursor_moved boolean
 ---@field preview_method oil.PreviewMethod
+---@field disable_preview fun(filename: string): boolean
 ---@field win_options table<string, any>
 
 ---@class (exact) oil.ConfirmationWindowConfig : oil.WindowConfig
 
 ---@class (exact) oil.SetupPreviewWindowConfig
 ---@field update_on_cursor_moved? boolean Whether the preview window is automatically updated when the cursor is moved
+---@field disable_preview? fun(filename: string): boolean A function that returns true to disable preview on a file e.g. to avoid lag
 ---@field preview_method? oil.PreviewMethod How to open the preview window
 ---@field win_options? table<string, any> Window-local options to use for preview window buffers
 
