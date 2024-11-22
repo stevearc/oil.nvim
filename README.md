@@ -232,6 +232,10 @@ require("oil").setup({
       { "type", "asc" },
       { "name", "asc" },
     },
+    -- Customize the highlight group for the file name
+    highlight_filename = function(entry, is_hidden, is_link_target, is_link_orphan)
+      return nil
+    end,
   },
   -- Extra arguments to pass to SCP when moving/copying files over SSH
   extra_scp_args = {},

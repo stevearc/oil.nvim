@@ -691,6 +691,28 @@ local function render_buffer(bufnr, opts)
   return seek_after_render_found
 end
 
+---@param name string
+---@param meta? table
+---@return string filename
+---@return string|nil link_target
+local function get_link_text(name, meta)
+  local link_text
+  if meta then
+    if meta.link_stat and meta.link_stat.type == "directory" then
+      name = name .. "/"
+    end
+
+    if meta.link then
+      link_text = "-> " .. meta.link
+      if meta.link_stat and meta.link_stat.type == "directory" then
+        link_text = util.addslash(link_text)
+      end
+    end
+  end
+
+  return name, link_text
+end
+
 ---@private
 ---@param entry oil.InternalEntry
 ---@param column_defs table[]
@@ -723,34 +745,55 @@ M.format_entry_cols = function(entry, column_defs, col_width, adapter, is_hidden
   end
   -- Always add the entry name at the end
   local entry_type = entry[FIELD_TYPE]
+
+  local get_custom_hl = config.view_options.highlight_filename
+  local link_name, link_name_hl, link_target, link_target_hl
+  if get_custom_hl then
+    local external_entry = util.export_entry(entry)
+
+    if entry_type == "link" then
+      link_name, link_target = get_link_text(name, meta)
+      local is_orphan = not (meta and meta.link_stat)
+      link_name_hl = get_custom_hl(external_entry, is_hidden, false, is_orphan)
+
+      if link_target then
+        link_target_hl = get_custom_hl(external_entry, is_hidden, true, is_orphan)
+      end
+
+      -- intentional fallthrough
+    else
+      local hl = get_custom_hl(external_entry, is_hidden, false, false)
+      if hl then
+        table.insert(cols, { name, hl })
+        return cols
+      end
+    end
+  end
+
   if entry_type == "directory" then
     table.insert(cols, { name .. "/", "OilDir" .. hl_suffix })
   elseif entry_type == "socket" then
     table.insert(cols, { name, "OilSocket" .. hl_suffix })
   elseif entry_type == "link" then
-    local link_text
-    if meta then
-      if meta.link_stat and meta.link_stat.type == "directory" then
-        name = name .. "/"
-      end
-
-      if meta.link then
-        link_text = "-> " .. meta.link
-        if meta.link_stat and meta.link_stat.type == "directory" then
-          link_text = util.addslash(link_text)
-        end
-      end
+    if not link_name then
+      link_name, link_target = get_link_text(name, meta)
     end
     local is_orphan = not (meta and meta.link_stat)
+    if not link_name_hl then
+      link_name_hl = (is_orphan and "OilOrphanLink" or "OilLink") .. hl_suffix
+    end
+    table.insert(cols, { link_name, link_name_hl })
 
-    table.insert(cols, { name, (is_orphan and "OilOrphanLink" or "OilLink") .. hl_suffix })
-    if link_text then
-      local target_hl = (is_orphan and "OilOrphanLinkTarget" or "OilLinkTarget") .. hl_suffix
-      table.insert(cols, { link_text, target_hl })
+    if link_target then
+      if not link_target_hl then
+        link_target_hl = (is_orphan and "OilOrphanLinkTarget" or "OilLinkTarget") .. hl_suffix
+      end
+      table.insert(cols, { link_target, link_target_hl })
     end
   else
     table.insert(cols, { name, "OilFile" .. hl_suffix })
   end
+
   return cols
 end
 
