@@ -691,12 +691,11 @@ local function render_buffer(bufnr, opts)
   return seek_after_render_found
 end
 
----@param entry oil.InternalEntry
+---@param name string
+---@param meta? table
 ---@return string filename
 ---@return string|nil link_target
-local function get_link_text(entry)
-  local meta = entry[FIELD_META]
-  local name = entry[FIELD_NAME]
+local function get_link_text(name, meta)
   local link_text
   if meta then
     if meta.link_stat and meta.link_stat.type == "directory" then
@@ -704,7 +703,7 @@ local function get_link_text(entry)
     end
 
     if meta.link then
-      link_text = meta.link
+      link_text = "-> " .. meta.link
       if meta.link_stat and meta.link_stat.type == "directory" then
         link_text = util.addslash(link_text)
       end
@@ -753,7 +752,7 @@ M.format_entry_cols = function(entry, column_defs, col_width, adapter, is_hidden
     local external_entry = util.export_entry(entry)
 
     if entry_type == "link" then
-      link_name, link_target = get_link_text(entry)
+      link_name, link_target = get_link_text(name, meta)
       local is_orphan = not (meta and meta.link_stat)
       link_name_hl = get_custom_hl(external_entry, is_hidden, false, is_orphan)
 
@@ -777,7 +776,7 @@ M.format_entry_cols = function(entry, column_defs, col_width, adapter, is_hidden
     table.insert(cols, { name, "OilSocket" .. hl_suffix })
   elseif entry_type == "link" then
     if not link_name then
-      link_name, link_target = get_link_text(entry)
+      link_name, link_target = get_link_text(name, meta)
     end
     local is_orphan = not (meta and meta.link_stat)
     if not link_name_hl then
