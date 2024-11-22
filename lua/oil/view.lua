@@ -19,10 +19,16 @@ local last_cursor_entry = {}
 
 ---@param name string
 ---@param bufnr integer
----@return boolean
+---@return boolean display
+---@return boolean is_hidden Whether the file is classified as a hidden file
 M.should_display = function(name, bufnr)
-  return not config.view_options.is_always_hidden(name, bufnr)
-    and (config.view_options.show_hidden or not config.view_options.is_hidden_file(name, bufnr))
+  if config.view_options.is_always_hidden(name, bufnr) then
+    return false, true
+  else
+    local is_hidden = config.view_options.is_hidden_file(name, bufnr)
+    local display = config.view_options.show_hidden or not is_hidden
+    return display, is_hidden
+  end
 end
 
 ---@param bufname string
@@ -633,13 +639,15 @@ local function render_buffer(bufnr, opts)
   end
 
   if M.should_display("..", bufnr) then
-    local cols = M.format_entry_cols({ 0, "..", "directory" }, column_defs, col_width, adapter)
+    local cols =
+      M.format_entry_cols({ 0, "..", "directory" }, column_defs, col_width, adapter, true)
     table.insert(line_table, cols)
   end
 
   for _, entry in ipairs(entry_list) do
-    if M.should_display(entry[FIELD_NAME], bufnr) then
-      local cols = M.format_entry_cols(entry, column_defs, col_width, adapter)
+    local should_display, is_hidden = M.should_display(entry[FIELD_NAME], bufnr)
+    if should_display then
+      local cols = M.format_entry_cols(entry, column_defs, col_width, adapter, is_hidden)
       table.insert(line_table, cols)
 
       local name = entry[FIELD_NAME]
@@ -688,10 +696,15 @@ end
 ---@param column_defs table[]
 ---@param col_width integer[]
 ---@param adapter oil.Adapter
+---@param is_hidden boolean
 ---@return oil.TextChunk[]
-M.format_entry_cols = function(entry, column_defs, col_width, adapter)
+M.format_entry_cols = function(entry, column_defs, col_width, adapter, is_hidden)
   local name = entry[FIELD_NAME]
   local meta = entry[FIELD_META]
+  local hl_suffix = ""
+  if is_hidden then
+    hl_suffix = "Hidden"
+  end
   if meta and meta.display_name then
     name = meta.display_name
   end
@@ -711,9 +724,9 @@ M.format_entry_cols = function(entry, column_defs, col_width, adapter)
   -- Always add the entry name at the end
   local entry_type = entry[FIELD_TYPE]
   if entry_type == "directory" then
-    table.insert(cols, { name .. "/", "OilDir" })
+    table.insert(cols, { name .. "/", "OilDir" .. hl_suffix })
   elseif entry_type == "socket" then
-    table.insert(cols, { name, "OilSocket" })
+    table.insert(cols, { name, "OilSocket" .. hl_suffix })
   elseif entry_type == "link" then
     local link_text
     if meta then
@@ -722,7 +735,7 @@ M.format_entry_cols = function(entry, column_defs, col_width, adapter)
       end
 
       if meta.link then
-        link_text = "->" .. " " .. meta.link
+        link_text = "-> " .. meta.link
         if meta.link_stat and meta.link_stat.type == "directory" then
           link_text = util.addslash(link_text)
         end
@@ -730,12 +743,13 @@ M.format_entry_cols = function(entry, column_defs, col_width, adapter)
     end
     local is_orphan = not (meta and meta.link_stat)
 
-    table.insert(cols, { name, is_orphan and "OilOrphanLink" or "OilLink" })
+    table.insert(cols, { name, (is_orphan and "OilOrphanLink" or "OilLink") .. hl_suffix })
     if link_text then
-      table.insert(cols, { link_text, is_orphan and "OilOrphanLinkTarget" or "OilLinkTarget" })
+      local target_hl = (is_orphan and "OilOrphanLinkTarget" or "OilLinkTarget") .. hl_suffix
+      table.insert(cols, { link_text, target_hl })
     end
   else
-    table.insert(cols, { name, "OilFile" })
+    table.insert(cols, { name, "OilFile" .. hl_suffix })
   end
   return cols
 end

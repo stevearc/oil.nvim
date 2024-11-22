@@ -607,8 +607,14 @@ yank_entry                                                    *actions.yank_entr
 --------------------------------------------------------------------------------
 HIGHLIGHTS                                                        *oil-highlights*
 
+OilHidden                                                           *hl-OilHidden*
+    Hidden entry in an oil buffer
+
 OilDir                                                                 *hl-OilDir*
     Directory names in an oil buffer
+
+OilDirHidden                                                     *hl-OilDirHidden*
+    Hidden directory names in an oil buffer
 
 OilDirIcon                                                         *hl-OilDirIcon*
     Icon for directories
@@ -616,11 +622,20 @@ OilDirIcon                                                         *hl-OilDirIco
 OilSocket                                                           *hl-OilSocket*
     Socket files in an oil buffer
 
+OilSocketHidden                                               *hl-OilSocketHidden*
+    Hidden socket files in an oil buffer
+
 OilLink                                                               *hl-OilLink*
     Soft links in an oil buffer
 
 OilOrphanLink                                                   *hl-OilOrphanLink*
     Orphaned soft links in an oil buffer
+
+OilLinkHidden                                                   *hl-OilLinkHidden*
+    Hidden soft links in an oil buffer
+
+OilOrphanLinkHidden                                       *hl-OilOrphanLinkHidden*
+    Hidden orphaned soft links in an oil buffer
 
 OilLinkTarget                                                   *hl-OilLinkTarget*
     The target of a soft link
@@ -628,8 +643,17 @@ OilLinkTarget                                                   *hl-OilLinkTarge
 OilOrphanLinkTarget                                       *hl-OilOrphanLinkTarget*
     The target of an orphaned soft link
 
+OilLinkTargetHidden                                       *hl-OilLinkTargetHidden*
+    The target of a hidden soft link
+
+OilOrphanLinkTargetHidden                           *hl-OilOrphanLinkTargetHidden*
+    The target of an hidden orphaned soft link
+
 OilFile                                                               *hl-OilFile*
     Normal files in an oil buffer
+
+OilFileHidden                                                   *hl-OilFileHidden*
+    Hidden normal files in an oil buffer
 
 OilCreate                                                           *hl-OilCreate*
     Create action in the oil preview window
