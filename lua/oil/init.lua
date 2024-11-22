@@ -534,7 +534,11 @@ M.open_preview = function(opts, callback)
 
     local entry_is_file = not vim.endswith(normalized_url, "/")
     local filebufnr
-    if entry_is_file and config.preview_win.preview_method ~= "load" then
+    if
+      entry_is_file
+      and config.preview_win.preview_method ~= "load"
+      and not util.file_matches_bufreadcmd(normalized_url)
+    then
       filebufnr =
         util.read_file_to_scratch_buffer(normalized_url, config.preview_win.preview_method)
     end

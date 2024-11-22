@@ -952,4 +952,26 @@ M.read_file_to_scratch_buffer = function(path, preview_method)
   return bufnr
 end
 
+local _regcache = {}
+---Check if a file matches a BufReadCmd autocmd
+---@param filename string
+---@return boolean
+M.file_matches_bufreadcmd = function(filename)
+  local autocmds = vim.api.nvim_get_autocmds({
+    event = "BufReadCmd",
+  })
+  for _, au in ipairs(autocmds) do
+    local pat = _regcache[au.pattern]
+    if not pat then
+      pat = vim.fn.glob2regpat(au.pattern)
+      _regcache[au.pattern] = pat
+    end
+
+    if vim.fn.match(filename, pat) >= 0 then
+      return true
+    end
+  end
+  return false
+end
+
 return M
