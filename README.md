@@ -232,8 +232,8 @@ require("oil").setup({
       { "type", "asc" },
       { "name", "asc" },
     },
-    -- Return a highlight group name for each entry
-    highlight = function(entry, is_link_target)
+    -- Customize the highlight group for the file name
+    highlight_filename = function(entry, is_hidden, is_link_target, is_link_orphan)
       return nil
     end,
   },
