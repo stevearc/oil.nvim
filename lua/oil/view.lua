@@ -745,10 +745,8 @@ M.format_entry_cols = function(entry, column_defs, col_width, adapter, is_hidden
 
     table.insert(cols, { name, (is_orphan and "OilOrphanLink" or "OilLink") .. hl_suffix })
     if link_text then
-      table.insert(
-        cols,
-        { link_text, (is_orphan and "OilOrphanLinkTarget" or "OilLinkTarget") .. hl_suffix }
-      )
+      local target_hl = (is_orphan and "OilOrphanLinkTarget" or "OilLinkTarget") .. hl_suffix
+      table.insert(cols, { link_text, target_hl })
     end
   else
     table.insert(cols, { name, "OilFile" .. hl_suffix })
