@@ -728,10 +728,11 @@ M.format_entry_cols = function(entry, column_defs, col_width, adapter)
         end
       end
     end
+    local is_orphan = not (meta and meta.link_stat)
 
-    table.insert(cols, { name, "OilLink" })
+    table.insert(cols, { name, is_orphan and "OilOrphanLink" or "OilLink" })
     if link_text then
-      table.insert(cols, { link_text, "OilLinkTarget" })
+      table.insert(cols, { link_text, is_orphan and "OilOrphanLinkTarget" or "OilLinkTarget" })
     end
   else
     table.insert(cols, { name, "OilFile" })
