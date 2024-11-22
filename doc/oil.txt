@@ -599,10 +599,13 @@ OilLink                                                               *hl-OilLin
     Soft links in an oil buffer
 
 OilOrphanLink                                                   *hl-OilOrphanLink*
-    Orphan links in an oil buffer
+    Orphaned soft links in an oil buffer
 
 OilLinkTarget                                                   *hl-OilLinkTarget*
     The target of a soft link
+
+OilOrphanLinkTarget                                       *hl-OilOrphanLinkTarget*
+    The target of an orphaned soft link
 
 OilFile                                                               *hl-OilFile*
     Normal files in an oil buffer

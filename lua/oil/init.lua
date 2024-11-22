@@ -789,12 +789,17 @@ M._get_highlights = function()
     {
       name = "OilOrphanLink",
       link = nil,
-      desc = "Orphan links in an oil buffer",
+      desc = "Orphaned soft links in an oil buffer",
     },
     {
       name = "OilLinkTarget",
       link = "Comment",
       desc = "The target of a soft link",
+    },
+    {
+      name = "OilOrphanLinkTarget",
+      link = "DiagnosticError",
+      desc = "The target of an orphaned soft link",
     },
     {
       name = "OilFile",
