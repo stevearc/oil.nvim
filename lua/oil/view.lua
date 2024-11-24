@@ -185,6 +185,10 @@ end
 
 M.set_win_options = function()
   local winid = vim.api.nvim_get_current_win()
+
+  -- work around https://github.com/neovim/neovim/pull/27422
+  vim.api.nvim_set_option_value("foldmethod", "manual", { scope = "local", win = winid })
+
   for k, v in pairs(config.win_options) do
     vim.api.nvim_set_option_value(k, v, { scope = "local", win = winid })
   end
