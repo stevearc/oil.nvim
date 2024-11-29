@@ -379,8 +379,13 @@ M.open = function(dir)
   update_preview_window()
 end
 
+---@class oil.CloseOpts
+---@field exit_if_last_buf? boolean Exit vim if this oil buffer is the last open buffer
+
 ---Restore the buffer that was present when oil was opened
-M.close = function()
+---@param opts? oil.CloseOpts
+M.close = function(opts)
+  opts = opts or {}
   local mode = vim.api.nvim_get_mode().mode
   -- If we're in operator pending or visual modes, we should cancel that operation and return
   if mode == "no" or mode == "v" or mode == "V" then
@@ -388,7 +393,6 @@ M.close = function()
     vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<ESC>", true, true, true), "n", false)
     return
   end
-
   -- If we're in a floating oil window, close it and try to restore focus to the original window
   if vim.w.is_oil_win then
     local original_winid = vim.w.oil_original_win
@@ -411,18 +415,26 @@ M.close = function()
   -- buffer first
   local oilbuf = vim.api.nvim_get_current_buf()
   ok = pcall(vim.cmd.bprev)
+  -- If `bprev` failed, there are no buffers open
   if not ok then
-    -- If `bprev` failed, there are no buffers open so we should create a new one with enew
-    vim.cmd.enew()
+    -- either exit or create a new blank buffer
+    if opts.exit_if_last_buf then
+      vim.cmd.quit()
+    else
+      vim.cmd.enew()
+    end
   end
   vim.api.nvim_buf_delete(oilbuf, { force = true })
 end
 
+---@class oil.OpenPreviewOpts
+---@field vertical? boolean Open the buffer in a vertical split
+---@field horizontal? boolean Open the buffer in a horizontal split
+---@field split? "aboveleft"|"belowright"|"topleft"|"botright" Split modifier
+
 ---Preview the entry under the cursor in a split
----@param opts nil|table
----    vertical boolean Open the buffer in a vertical split
----    horizontal boolean Open the buffer in a horizontal split
----    split "aboveleft"|"belowright"|"topleft"|"botright" Split modifier
+---@param opts? oil.OpenPreviewOpts
+---@param callback? fun(err: nil|string) Called once the preview window has been opened
 M.open_preview = function(opts, callback)
   opts = opts or {}
   local config = require("oil.config")
@@ -527,14 +539,28 @@ M.open_preview = function(opts, callback)
       end
     end
 
-    local filebufnr = vim.fn.bufadd(normalized_url)
     local entry_is_file = not vim.endswith(normalized_url, "/")
-
-    -- If we're previewing a file that hasn't been opened yet, make sure it gets deleted after
-    -- we close the window
-    if entry_is_file and vim.fn.bufloaded(filebufnr) == 0 then
+    local filebufnr
+    if
+      entry_is_file
+      and config.preview_win.preview_method ~= "load"
+      and not util.file_matches_bufreadcmd(normalized_url)
+    then
+      filebufnr =
+        util.read_file_to_scratch_buffer(normalized_url, config.preview_win.preview_method)
+    elseif entry_is_file and config.preview_win.disable_preview(normalized_url) then
+      filebufnr = vim.api.nvim_create_buf(false, true)
       vim.bo[filebufnr].bufhidden = "wipe"
-      vim.b[filebufnr].oil_preview_buffer = true
+      vim.bo[filebufnr].buftype = "nofile"
+      util.render_text(filebufnr, "Preview disabled", { winid = preview_win })
+    end
+
+    if not filebufnr then
+      filebufnr = vim.fn.bufadd(normalized_url)
+      if entry_is_file and vim.fn.bufloaded(filebufnr) == 0 then
+        vim.bo[filebufnr].bufhidden = "wipe"
+        vim.b[filebufnr].oil_preview_buffer = true
+      end
     end
 
     ---@diagnostic disable-next-line: param-type-mismatch
@@ -549,6 +575,9 @@ M.open_preview = function(opts, callback)
     end
 
     vim.api.nvim_set_option_value("previewwindow", true, { scope = "local", win = 0 })
+    for k, v in pairs(config.preview_win.win_options) do
+      vim.api.nvim_set_option_value(k, v, { scope = "local", win = preview_win })
+    end
     vim.w.oil_entry_id = entry.id
     vim.w.oil_source_win = prev_win
     if is_visual_mode then
@@ -775,9 +804,19 @@ end
 M._get_highlights = function()
   return {
     {
+      name = "OilHidden",
+      link = "Comment",
+      desc = "Hidden entry in an oil buffer",
+    },
+    {
       name = "OilDir",
       link = "Directory",
       desc = "Directory names in an oil buffer",
+    },
+    {
+      name = "OilDirHidden",
+      link = "OilHidden",
+      desc = "Hidden directory names in an oil buffer",
     },
     {
       name = "OilDirIcon",
@@ -790,9 +829,29 @@ M._get_highlights = function()
       desc = "Socket files in an oil buffer",
     },
     {
+      name = "OilSocketHidden",
+      link = "OilHidden",
+      desc = "Hidden socket files in an oil buffer",
+    },
+    {
       name = "OilLink",
       link = nil,
       desc = "Soft links in an oil buffer",
+    },
+    {
+      name = "OilOrphanLink",
+      link = nil,
+      desc = "Orphaned soft links in an oil buffer",
+    },
+    {
+      name = "OilLinkHidden",
+      link = "OilHidden",
+      desc = "Hidden soft links in an oil buffer",
+    },
+    {
+      name = "OilOrphanLinkHidden",
+      link = "OilLinkHidden",
+      desc = "Hidden orphaned soft links in an oil buffer",
     },
     {
       name = "OilLinkTarget",
@@ -800,9 +859,29 @@ M._get_highlights = function()
       desc = "The target of a soft link",
     },
     {
+      name = "OilOrphanLinkTarget",
+      link = "DiagnosticError",
+      desc = "The target of an orphaned soft link",
+    },
+    {
+      name = "OilLinkTargetHidden",
+      link = "OilHidden",
+      desc = "The target of a hidden soft link",
+    },
+    {
+      name = "OilOrphanLinkTargetHidden",
+      link = "OilOrphanLinkTarget",
+      desc = "The target of an hidden orphaned soft link",
+    },
+    {
       name = "OilFile",
       link = nil,
       desc = "Normal files in an oil buffer",
+    },
+    {
+      name = "OilFileHidden",
+      link = "OilHidden",
+      desc = "Hidden normal files in an oil buffer",
     },
     {
       name = "OilCreate",

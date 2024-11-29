@@ -182,6 +182,11 @@ M.split_window = function(winid, direction, gap)
   return dim_root, dim_new
 end
 
+---@param desired_width integer
+---@param desired_height integer
+---@param opts table
+---@return integer width
+---@return integer height
 M.calculate_dims = function(desired_width, desired_height, opts)
   local width = M.calculate_width(desired_width, opts)
   local height = M.calculate_height(desired_height, opts)

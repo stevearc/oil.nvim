@@ -3,12 +3,12 @@ local Trie = require("oil.mutator.trie")
 local cache = require("oil.cache")
 local columns = require("oil.columns")
 local config = require("oil.config")
+local confirmation = require("oil.mutator.confirmation")
 local constants = require("oil.constants")
 local fs = require("oil.fs")
 local lsp_helpers = require("oil.lsp.helpers")
 local oil = require("oil")
 local parser = require("oil.mutator.parser")
-local preview = require("oil.mutator.preview")
 local util = require("oil.util")
 local view = require("oil.view")
 local M = {}
@@ -564,7 +564,7 @@ M.try_write_changes = function(confirm, cb)
   end
 
   local actions = M.create_actions_from_diffs(all_diffs)
-  preview.show(actions, confirm, function(proceed)
+  confirmation.show(actions, confirm, function(proceed)
     if not proceed then
       unlock()
       cb("Canceled")

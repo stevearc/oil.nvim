@@ -214,15 +214,16 @@ require("oil").setup({
     show_hidden = false,
     -- This function defines what is considered a "hidden" file
     is_hidden_file = function(name, bufnr)
-      return vim.startswith(name, ".")
+      local m = name:match("^%.")
+      return m ~= nil
     end,
     -- This function defines what will never be shown, even when `show_hidden` is set
     is_always_hidden = function(name, bufnr)
       return false
     end,
-    -- Sort file names in a more intuitive order for humans. Is less performant,
-    -- so you may want to set to false if you work with large directories.
-    natural_order = true,
+    -- Sort file names with numbers in a more intuitive order for humans.
+    -- Can be "fast", true, or false. "fast" will turn it off for large directories.
+    natural_order = "fast",
     -- Sort file and directory names case insensitive
     case_insensitive = false,
     sort = {
@@ -231,6 +232,10 @@ require("oil").setup({
       { "type", "asc" },
       { "name", "asc" },
     },
+    -- Customize the highlight group for the file name
+    highlight_filename = function(entry, is_hidden, is_link_target, is_link_orphan)
+      return nil
+    end,
   },
   -- Extra arguments to pass to SCP when moving/copying files over SSH
   extra_scp_args = {},
@@ -267,8 +272,21 @@ require("oil").setup({
       return conf
     end,
   },
-  -- Configuration for the actions floating preview window
-  preview = {
+  -- Configuration for the file preview window
+  preview_win = {
+    -- Whether the preview window is automatically updated when the cursor is moved
+    update_on_cursor_moved = true,
+    -- How to open the preview window "load"|"scratch"|"fast_scratch"
+    preview_method = "fast_scratch",
+    -- A function that returns true to disable preview on a file e.g. to avoid lag
+    disable_preview = function(filename)
+      return false
+    end,
+    -- Window-local options to use for preview window buffers
+    win_options = {},
+  },
+  -- Configuration for the floating action confirmation window
+  confirmation = {
     -- Width dimensions can be integers or a float between 0 and 1 (e.g. 0.4 for 40%)
     -- min_width and max_width can be a single value or a list of mixed integer/float types.
     -- max_width = {100, 0.8} means "the lesser of 100 columns or 80% of total"
@@ -289,8 +307,6 @@ require("oil").setup({
     win_options = {
       winblend = 0,
     },
-    -- Whether the preview window is automatically updated when the cursor is moved
-    update_on_cursor_moved = true,
   },
   -- Configuration for the floating progress window
   progress = {
@@ -356,8 +372,8 @@ Note that at the moment the ssh adapter does not support Windows machines, and i
 - [open_float(dir)](doc/api.md#open_floatdir)
 - [toggle_float(dir)](doc/api.md#toggle_floatdir)
 - [open(dir)](doc/api.md#opendir)
-- [close()](doc/api.md#close)
-- [open_preview(opts)](doc/api.md#open_previewopts)
+- [close(opts)](doc/api.md#closeopts)
+- [open_preview(opts, callback)](doc/api.md#open_previewopts-callback)
 - [select(opts, callback)](doc/api.md#selectopts-callback)
 - [save(opts, cb)](doc/api.md#saveopts-cb)
 - [setup(opts)](doc/api.md#setupopts)

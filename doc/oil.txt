@@ -99,15 +99,16 @@ CONFIG                                                                *oil-confi
         show_hidden = false,
         -- This function defines what is considered a "hidden" file
         is_hidden_file = function(name, bufnr)
-          return vim.startswith(name, ".")
+          local m = name:match("^%.")
+          return m ~= nil
         end,
         -- This function defines what will never be shown, even when `show_hidden` is set
         is_always_hidden = function(name, bufnr)
           return false
         end,
-        -- Sort file names in a more intuitive order for humans. Is less performant,
-        -- so you may want to set to false if you work with large directories.
-        natural_order = true,
+        -- Sort file names with numbers in a more intuitive order for humans.
+        -- Can be "fast", true, or false. "fast" will turn it off for large directories.
+        natural_order = "fast",
         -- Sort file and directory names case insensitive
         case_insensitive = false,
         sort = {
@@ -116,6 +117,10 @@ CONFIG                                                                *oil-confi
           { "type", "asc" },
           { "name", "asc" },
         },
+        -- Customize the highlight group for the file name
+        highlight_filename = function(entry, is_hidden, is_link_target, is_link_orphan)
+          return nil
+        end,
       },
       -- Extra arguments to pass to SCP when moving/copying files over SSH
       extra_scp_args = {},
@@ -152,8 +157,21 @@ CONFIG                                                                *oil-confi
           return conf
         end,
       },
-      -- Configuration for the actions floating preview window
-      preview = {
+      -- Configuration for the file preview window
+      preview_win = {
+        -- Whether the preview window is automatically updated when the cursor is moved
+        update_on_cursor_moved = true,
+        -- How to open the preview window "load"|"scratch"|"fast_scratch"
+        preview_method = "fast_scratch",
+        -- A function that returns true to disable preview on a file e.g. to avoid lag
+        disable_preview = function(filename)
+          return false
+        end,
+        -- Window-local options to use for preview window buffers
+        win_options = {},
+      },
+      -- Configuration for the floating action confirmation window
+      confirmation = {
         -- Width dimensions can be integers or a float between 0 and 1 (e.g. 0.4 for 40%)
         -- min_width and max_width can be a single value or a list of mixed integer/float types.
         -- max_width = {100, 0.8} means "the lesser of 100 columns or 80% of total"
@@ -174,8 +192,6 @@ CONFIG                                                                *oil-confi
         win_options = {
           winblend = 0,
         },
-        -- Whether the preview window is automatically updated when the cursor is moved
-        update_on_cursor_moved = true,
       },
       -- Configuration for the floating progress window
       progress = {
@@ -308,19 +324,25 @@ open({dir})                                                             *oil.ope
       {dir} `nil|string` When nil, open the parent of the current buffer, or the
             cwd if current buffer is not a file
 
-close()                                                                *oil.close*
+close({opts})                                                          *oil.close*
     Restore the buffer that was present when oil was opened
 
+    Parameters:
+      {opts} `nil|oil.CloseOpts`
+          {exit_if_last_buf} `nil|boolean` Exit vim if this oil buffer is the
+                             last open buffer
 
-open_preview({opts})                                            *oil.open_preview*
+open_preview({opts}, {callback})                                *oil.open_preview*
     Preview the entry under the cursor in a split
 
     Parameters:
-      {opts} `nil|table`
-          {vertical}   `boolean` Open the buffer in a vertical split
-          {horizontal} `boolean` Open the buffer in a horizontal split
-          {split}      `"aboveleft"|"belowright"|"topleft"|"botright"` Split
+      {opts}     `nil|oil.OpenPreviewOpts`
+          {vertical}   `nil|boolean` Open the buffer in a vertical split
+          {horizontal} `nil|boolean` Open the buffer in a horizontal split
+          {split}      `nil|"aboveleft"|"belowright"|"topleft"|"botright"` Split
                        modifier
+      {callback} `nil|fun(err: nil|string)` Called once the preview window has
+                 been opened
 
 select({opts}, {callback})                                            *oil.select*
     Select the entry under the cursor
@@ -503,6 +525,9 @@ change_sort                                                  *actions.change_sor
 close                                                              *actions.close*
     Close oil and restore original buffer
 
+    Parameters:
+      {exit_if_last_buf} `boolean` Exit vim if oil is closed as the last buffer
+
 open_cmdline                                                *actions.open_cmdline*
     Open vim cmdline with current entry as an argument
 
@@ -526,6 +551,12 @@ parent                                                            *actions.paren
 preview                                                          *actions.preview*
     Open the entry under the cursor in a preview window, or close the preview
     window if already open
+
+    Parameters:
+      {horizontal} `boolean` Open the buffer in a horizontal split
+      {split}      `"aboveleft"|"belowright"|"topleft"|"botright"` Split
+                   modifier
+      {vertical}   `boolean` Open the buffer in a vertical split
 
 preview_scroll_down                                  *actions.preview_scroll_down*
     Scroll down in the preview window
@@ -580,8 +611,14 @@ yank_entry                                                    *actions.yank_entr
 --------------------------------------------------------------------------------
 HIGHLIGHTS                                                        *oil-highlights*
 
+OilHidden                                                           *hl-OilHidden*
+    Hidden entry in an oil buffer
+
 OilDir                                                                 *hl-OilDir*
     Directory names in an oil buffer
+
+OilDirHidden                                                     *hl-OilDirHidden*
+    Hidden directory names in an oil buffer
 
 OilDirIcon                                                         *hl-OilDirIcon*
     Icon for directories
@@ -589,14 +626,38 @@ OilDirIcon                                                         *hl-OilDirIco
 OilSocket                                                           *hl-OilSocket*
     Socket files in an oil buffer
 
+OilSocketHidden                                               *hl-OilSocketHidden*
+    Hidden socket files in an oil buffer
+
 OilLink                                                               *hl-OilLink*
     Soft links in an oil buffer
+
+OilOrphanLink                                                   *hl-OilOrphanLink*
+    Orphaned soft links in an oil buffer
+
+OilLinkHidden                                                   *hl-OilLinkHidden*
+    Hidden soft links in an oil buffer
+
+OilOrphanLinkHidden                                       *hl-OilOrphanLinkHidden*
+    Hidden orphaned soft links in an oil buffer
 
 OilLinkTarget                                                   *hl-OilLinkTarget*
     The target of a soft link
 
+OilOrphanLinkTarget                                       *hl-OilOrphanLinkTarget*
+    The target of an orphaned soft link
+
+OilLinkTargetHidden                                       *hl-OilLinkTargetHidden*
+    The target of a hidden soft link
+
+OilOrphanLinkTargetHidden                           *hl-OilOrphanLinkTargetHidden*
+    The target of an hidden orphaned soft link
+
 OilFile                                                               *hl-OilFile*
     Normal files in an oil buffer
+
+OilFileHidden                                                   *hl-OilFileHidden*
+    Hidden normal files in an oil buffer
 
 OilCreate                                                           *hl-OilCreate*
     Create action in the oil preview window
@@ -651,7 +712,7 @@ Mac:
     (instead of being able to see files that were trashed from a directory).
 
 Windows:
-    Oil does not yet support the Windows trash. PRs are welcome!
+    Oil supports the Windows Recycle Bin. All features should work.
 
 ================================================================================
 vim:tw=80:ts=2:ft=help:norl:syntax=help:

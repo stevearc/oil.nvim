@@ -84,15 +84,16 @@ local default_config = {
     show_hidden = false,
     -- This function defines what is considered a "hidden" file
     is_hidden_file = function(name, bufnr)
-      return vim.startswith(name, ".")
+      local m = name:match("^%.")
+      return m ~= nil
     end,
     -- This function defines what will never be shown, even when `show_hidden` is set
     is_always_hidden = function(name, bufnr)
       return false
     end,
-    -- Sort file names in a more intuitive order for humans. Is less performant,
-    -- so you may want to set to false if you work with large directories.
-    natural_order = true,
+    -- Sort file names with numbers in a more intuitive order for humans.
+    -- Can be "fast", true, or false. "fast" will turn it off for large directories.
+    natural_order = "fast",
     -- Sort file and directory names case insensitive
     case_insensitive = false,
     sort = {
@@ -101,6 +102,10 @@ local default_config = {
       { "type", "asc" },
       { "name", "asc" },
     },
+    -- Customize the highlight group for the file name
+    highlight_filename = function(entry, is_hidden, is_link_target, is_link_orphan)
+      return nil
+    end,
   },
   -- Extra arguments to pass to SCP when moving/copying files over SSH
   extra_scp_args = {},
@@ -137,8 +142,21 @@ local default_config = {
       return conf
     end,
   },
-  -- Configuration for the actions floating preview window
-  preview = {
+  -- Configuration for the file preview window
+  preview_win = {
+    -- Whether the preview window is automatically updated when the cursor is moved
+    update_on_cursor_moved = true,
+    -- How to open the preview window "load"|"scratch"|"fast_scratch"
+    preview_method = "fast_scratch",
+    -- A function that returns true to disable preview on a file e.g. to avoid lag
+    disable_preview = function(filename)
+      return false
+    end,
+    -- Window-local options to use for preview window buffers
+    win_options = {},
+  },
+  -- Configuration for the floating action confirmation window
+  confirmation = {
     -- Width dimensions can be integers or a float between 0 and 1 (e.g. 0.4 for 40%)
     -- min_width and max_width can be a single value or a list of mixed integer/float types.
     -- max_width = {100, 0.8} means "the lesser of 100 columns or 80% of total"
@@ -159,8 +177,6 @@ local default_config = {
     win_options = {
       winblend = 0,
     },
-    -- Whether the preview window is automatically updated when the cursor is moved
-    update_on_cursor_moved = true,
   },
   -- Configuration for the floating progress window
   progress = {
@@ -195,6 +211,9 @@ default_config.adapters = {
   ["oil-trash://"] = "trash",
 }
 default_config.adapter_aliases = {}
+-- We want the function in the default config for documentation generation, but if we nil it out
+-- here we can get some performance wins
+default_config.view_options.highlight_filename = nil
 
 ---@class oil.Config
 ---@field adapters table<string, string> Hidden from SetupOpts
@@ -218,7 +237,8 @@ default_config.adapter_aliases = {}
 ---@field extra_scp_args string[]
 ---@field git oil.GitOptions
 ---@field float oil.FloatWindowConfig
----@field preview oil.PreviewWindowConfig
+---@field preview_win oil.PreviewWindowConfig
+---@field confirmation oil.ConfirmationWindowConfig
 ---@field progress oil.ProgressWindowConfig
 ---@field ssh oil.SimpleWindowConfig
 ---@field keymaps_help oil.SimpleWindowConfig
@@ -245,7 +265,8 @@ local M = {}
 ---@field extra_scp_args? string[] Extra arguments to pass to SCP when moving/copying files over SSH
 ---@field git? oil.SetupGitOptions EXPERIMENTAL support for performing file operations with git
 ---@field float? oil.SetupFloatWindowConfig Configuration for the floating window in oil.open_float
----@field preview? oil.SetupPreviewWindowConfig Configuration for the actions floating preview window
+---@field preview_win? oil.SetupPreviewWindowConfig Configuration for the file preview window
+---@field confirmation? oil.SetupConfirmationWindowConfig Configuration for the floating action confirmation window
 ---@field progress? oil.SetupProgressWindowConfig Configuration for the floating progress window
 ---@field ssh? oil.SetupSimpleWindowConfig Configuration for the floating SSH window
 ---@field keymaps_help? oil.SetupSimpleWindowConfig Configuration for the floating keymaps help window
@@ -264,17 +285,19 @@ local M = {}
 ---@field show_hidden boolean
 ---@field is_hidden_file fun(name: string, bufnr: integer): boolean
 ---@field is_always_hidden fun(name: string, bufnr: integer): boolean
----@field natural_order boolean
+---@field natural_order boolean|"fast"
 ---@field case_insensitive boolean
 ---@field sort oil.SortSpec[]
+---@field highlight_filename? fun(entry: oil.Entry, is_hidden: boolean, is_link_target: boolean, is_link_orphan: boolean): string|nil
 
 ---@class (exact) oil.SetupViewOptions
 ---@field show_hidden? boolean Show files and directories that start with "."
 ---@field is_hidden_file? fun(name: string, bufnr: integer): boolean This function defines what is considered a "hidden" file
 ---@field is_always_hidden? fun(name: string, bufnr: integer): boolean This function defines what will never be shown, even when `show_hidden` is set
----@field natural_order? boolean Sort file names in a more intuitive order for humans. Is less performant, so you may want to set to false if you work with large directories.
+---@field natural_order? boolean|"fast" Sort file names with numbers in a more intuitive order for humans. Can be slow for large directories.
 ---@field case_insensitive? boolean Sort file and directory names case insensitive
 ---@field sort? oil.SortSpec[] Sort order for the file list
+---@field highlight_filename? fun(entry: oil.Entry, is_hidden: boolean, is_link_target: boolean, is_link_orphan: boolean): string|nil Customize the highlight group for the file name
 
 ---@class (exact) oil.SortSpec
 ---@field [1] string
@@ -316,11 +339,26 @@ local M = {}
 ---@field border? string|string[] Window border
 ---@field win_options? table<string, any>
 
----@class (exact) oil.PreviewWindowConfig : oil.WindowConfig
----@field update_on_cursor_moved boolean
+---@alias oil.PreviewMethod
+---| '"load"' # Load the previewed file into a buffer
+---| '"scratch"' # Put the text into a scratch buffer to avoid LSP attaching
+---| '"fast_scratch"' # Put only the visible text into a scratch buffer
 
----@class (exact) oil.SetupPreviewWindowConfig : oil.SetupWindowConfig
+---@class (exact) oil.PreviewWindowConfig
+---@field update_on_cursor_moved boolean
+---@field preview_method oil.PreviewMethod
+---@field disable_preview fun(filename: string): boolean
+---@field win_options table<string, any>
+
+---@class (exact) oil.ConfirmationWindowConfig : oil.WindowConfig
+
+---@class (exact) oil.SetupPreviewWindowConfig
 ---@field update_on_cursor_moved? boolean Whether the preview window is automatically updated when the cursor is moved
+---@field disable_preview? fun(filename: string): boolean A function that returns true to disable preview on a file e.g. to avoid lag
+---@field preview_method? oil.PreviewMethod How to open the preview window
+---@field win_options? table<string, any> Window-local options to use for preview window buffers
+
+---@class (exact) oil.SetupConfirmationWindowConfig : oil.SetupWindowConfig
 
 ---@class (exact) oil.ProgressWindowConfig : oil.WindowConfig
 ---@field minimized_border string|string[]
@@ -355,9 +393,26 @@ local M = {}
 ---@field border? string|string[] Window border
 
 M.setup = function(opts)
-  local new_conf = vim.tbl_deep_extend("keep", opts or {}, default_config)
+  opts = opts or {}
+
+  local new_conf = vim.tbl_deep_extend("keep", opts, default_config)
   if not new_conf.use_default_keymaps then
     new_conf.keymaps = opts.keymaps or {}
+  elseif opts.keymaps then
+    -- We don't want to deep merge the keymaps, we want any keymap defined by the user to override
+    -- everything about the default.
+    for k, v in pairs(opts.keymaps) do
+      new_conf.keymaps[k] = v
+    end
+  end
+
+  -- Backwards compatibility. We renamed the 'preview' window config to be called 'confirmation'.
+  if opts.preview and not opts.confirmation then
+    new_conf.confirmation = vim.tbl_deep_extend("keep", opts.preview, default_config.confirmation)
+  end
+  -- Backwards compatibility. We renamed the 'preview' config to 'preview_win'
+  if opts.preview and opts.preview.update_on_cursor_moved ~= nil then
+    new_conf.preview_win.update_on_cursor_moved = opts.preview.update_on_cursor_moved
   end
 
   if new_conf.lsp_rename_autosave ~= nil then

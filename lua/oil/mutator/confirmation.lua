@@ -91,7 +91,7 @@ M.show = vim.schedule_wrap(function(actions, should_confirm, cb)
   table.insert(lines, "")
 
   -- Create the floating window
-  local width, height = layout.calculate_dims(max_line_width, #lines + 1, config.preview)
+  local width, height = layout.calculate_dims(max_line_width, #lines + 1, config.confirmation)
   local ok, winid = pcall(vim.api.nvim_open_win, bufnr, true, {
     relative = "editor",
     width = width,
@@ -100,7 +100,7 @@ M.show = vim.schedule_wrap(function(actions, should_confirm, cb)
     col = math.floor((layout.get_editor_width() - width) / 2),
     zindex = 152, -- render on top of the floating window title
     style = "minimal",
-    border = config.preview.border,
+    border = config.confirmation.border,
   })
   if not ok then
     vim.notify(string.format("Error showing oil preview window: %s", winid), vim.log.levels.ERROR)
@@ -108,7 +108,7 @@ M.show = vim.schedule_wrap(function(actions, should_confirm, cb)
   end
   vim.bo[bufnr].filetype = "oil_preview"
   vim.bo[bufnr].syntax = "oil_preview"
-  for k, v in pairs(config.preview.win_options) do
+  for k, v in pairs(config.confirmation.win_options) do
     vim.api.nvim_set_option_value(k, v, { scope = "local", win = winid })
   end
 
@@ -155,7 +155,7 @@ M.show = vim.schedule_wrap(function(actions, should_confirm, cb)
     vim.api.nvim_create_autocmd("VimResized", {
       callback = function()
         if vim.api.nvim_win_is_valid(winid) then
-          width, height = layout.calculate_dims(max_line_width, #lines, config.preview)
+          width, height = layout.calculate_dims(max_line_width, #lines, config.confirmation)
           vim.api.nvim_win_set_config(winid, {
             relative = "editor",
             width = width,

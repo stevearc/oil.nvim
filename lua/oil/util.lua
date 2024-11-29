@@ -347,7 +347,8 @@ M.addslash = function(path, os_slash)
     slash = "\\"
   end
 
-  if not vim.endswith(path, slash) then
+  local endslash = path:match(slash .. "$")
+  if not endslash then
     return path .. slash
   else
     return path
@@ -894,6 +895,83 @@ M.get_icon_provider = function()
       end
     end
   end
+end
+
+---Read a buffer into a scratch buffer and apply syntactic highlighting when possible
+---@param path string The path to the file to read
+---@param preview_method oil.PreviewMethod
+---@return nil|integer
+M.read_file_to_scratch_buffer = function(path, preview_method)
+  local bufnr = vim.api.nvim_create_buf(false, true)
+  if bufnr == 0 then
+    return
+  end
+
+  vim.bo[bufnr].bufhidden = "wipe"
+  vim.bo[bufnr].buftype = "nofile"
+
+  local max_lines = preview_method == "fast_scratch" and vim.o.lines or nil
+  local has_lines, read_res = pcall(vim.fn.readfile, path, "", max_lines)
+  local lines = has_lines and vim.split(table.concat(read_res, "\n"), "\n") or {}
+
+  local ok = pcall(vim.api.nvim_buf_set_lines, bufnr, 0, -1, false, lines)
+  if not ok then
+    return
+  end
+  local ft = vim.filetype.match({ filename = path, buf = bufnr })
+  if ft and ft ~= "" then
+    local lang = vim.treesitter.language.get_lang(ft)
+    if not pcall(vim.treesitter.start, bufnr, lang) then
+      vim.bo[bufnr].syntax = ft
+    else
+    end
+  end
+
+  -- Replace the scratch buffer with a real buffer if we enter it
+  vim.api.nvim_create_autocmd("BufEnter", {
+    desc = "oil.nvim replace scratch buffer with real buffer",
+    buffer = bufnr,
+    callback = function()
+      local winid = vim.api.nvim_get_current_win()
+      -- Have to schedule this so all the FileType, etc autocmds will fire
+      vim.schedule(function()
+        if vim.api.nvim_get_current_win() == winid then
+          vim.cmd.edit({ args = { path } })
+
+          -- If we're still in a preview window, make sure this buffer still gets treated as a
+          -- preview
+          if vim.wo.previewwindow then
+            vim.bo.bufhidden = "wipe"
+            vim.b.oil_preview_buffer = true
+          end
+        end
+      end)
+    end,
+  })
+
+  return bufnr
+end
+
+local _regcache = {}
+---Check if a file matches a BufReadCmd autocmd
+---@param filename string
+---@return boolean
+M.file_matches_bufreadcmd = function(filename)
+  local autocmds = vim.api.nvim_get_autocmds({
+    event = "BufReadCmd",
+  })
+  for _, au in ipairs(autocmds) do
+    local pat = _regcache[au.pattern]
+    if not pat then
+      pat = vim.fn.glob2regpat(au.pattern)
+      _regcache[au.pattern] = pat
+    end
+
+    if vim.fn.match(filename, pat) >= 0 then
+      return true
+    end
+  end
+  return false
 end
 
 return M
