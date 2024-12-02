@@ -718,7 +718,6 @@ M.select = function(opts, callback)
         vertical = opts.vertical,
         horizontal = opts.horizontal,
         split = opts.split,
-        keepalt = true,
       }
       local filebufnr = vim.fn.bufadd(normalized_url)
       local entry_is_file = not vim.endswith(normalized_url, "/")
