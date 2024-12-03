@@ -19,7 +19,18 @@ local function resolve(rhs)
   elseif type(rhs) == "table" then
     local opts = vim.deepcopy(rhs)
     -- We support passing in a `callback` key, or using the 1 index as the rhs of the keymap
-    local callback = resolve(opts.callback or opts[1])
+    local callback, parent_opts = resolve(opts.callback or opts[1])
+
+    -- Fall back to the parent desc, adding the opts as a string if it exists
+    if parent_opts.desc and not opts.desc then
+      if opts.opts then
+        opts.desc =
+          string.format("%s %s", parent_opts.desc, vim.inspect(opts.opts):gsub("%s+", " "))
+      else
+        opts.desc = parent_opts.desc
+      end
+    end
+
     local mode = opts.mode
     if type(rhs.callback) == "string" then
       local action_opts, action_mode
