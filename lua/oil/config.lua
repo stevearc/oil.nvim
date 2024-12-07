@@ -286,7 +286,7 @@ local M = {}
 ---@field natural_order boolean|"fast"
 ---@field case_insensitive boolean
 ---@field sort oil.SortSpec[]
----@field highlight_filename? fun(entry: oil.Entry, is_hidden: boolean, is_link_target: boolean, is_link_orphan: boolean): string|nil
+---@field highlight_filename? fun(entry: oil.Entry, is_hidden: boolean, is_link_target: boolean, is_link_orphan: boolean, bufnr: integer): string|nil
 
 ---@class (exact) oil.SetupViewOptions
 ---@field show_hidden? boolean Show files and directories that start with "."
