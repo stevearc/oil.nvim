@@ -617,6 +617,25 @@ M.select = function(opts, callback)
     if callback then
       callback(err)
     end
+
+    -- Set alternate for buffer
+    local has_orig, orig_buffer = pcall(vim.api.nvim_win_get_var, 0, "oil_original_buffer")
+
+    if has_orig and vim.api.nvim_buf_is_valid(orig_buffer) then
+      if vim.api.nvim_get_current_buf() ~= orig_buffer then
+        -- If we are editing a new file after navigating around oil, set the alternate buffer
+        -- to be the last buffer we were in before opening oil
+        vim.fn.setreg("#", orig_buffer)
+      else
+        -- If we are editing the same buffer that we started oil from, set the alternate to be
+        -- what it was before we opened oil
+        local has_orig_alt, alt_buffer =
+          pcall(vim.api.nvim_win_get_var, 0, "oil_original_alternate")
+        if has_orig_alt and vim.api.nvim_buf_is_valid(alt_buffer) then
+          vim.fn.setreg("#", alt_buffer)
+        end
+      end
+    end
   end
   if not opts.split and (opts.horizontal or opts.vertical) then
     if opts.horizontal then
