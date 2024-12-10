@@ -663,6 +663,10 @@ local function render_buffer(bufnr, opts)
   end
 
   local lines, highlights = util.render_table(line_table, col_width)
+  for k, v in pairs(lines) do
+    --maybe replace it for something else
+    lines[k] = v:gsub("\n", " ")
+  end
 
   vim.bo[bufnr].modifiable = true
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, true, lines)
