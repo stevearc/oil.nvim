@@ -734,6 +734,8 @@ M.format_entry_cols = function(entry, column_defs, col_width, adapter, is_hidden
   if meta and meta.display_name then
     name = meta.display_name
   end
+  -- We can't handle newlines in filenames (and shame on you for doing that)
+  name = name:gsub("\n", "")
   -- First put the unique ID
   local cols = {}
   local id_key = cache.format_id(entry[FIELD_ID])

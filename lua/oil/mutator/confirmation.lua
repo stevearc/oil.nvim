@@ -82,6 +82,8 @@ M.show = vim.schedule_wrap(function(actions, should_confirm, cb)
     else
       line = adapter.render_action(action)
     end
+    -- We can't handle lines with newlines in them
+    line = line:gsub("\n", "")
     table.insert(lines, line)
     local line_width = vim.api.nvim_strwidth(line)
     if line_width > max_line_width then
