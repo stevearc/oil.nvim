@@ -668,10 +668,17 @@ M.hack_around_termopen_autocmd = function(prev_mode)
   end, 10)
 end
 
+---@param opts? {include_not_owned?: boolean}
 ---@return nil|integer
-M.get_preview_win = function()
+M.get_preview_win = function(opts)
+  opts = opts or {}
+
   for _, winid in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
-    if vim.api.nvim_win_is_valid(winid) and vim.wo[winid].previewwindow then
+    if
+      vim.api.nvim_win_is_valid(winid)
+      and vim.wo[winid].previewwindow
+      and (opts.include_not_owned or vim.w[winid]["oil_preview"])
+    then
       return winid
     end
   end

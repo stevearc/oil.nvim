@@ -454,7 +454,7 @@ M.open_preview = function(opts, callback)
     end
   end
 
-  local preview_win = util.get_preview_win()
+  local preview_win = util.get_preview_win({ include_not_owned = true })
   local prev_win = vim.api.nvim_get_current_win()
   local bufnr = vim.api.nvim_get_current_buf()
 
@@ -501,6 +501,7 @@ M.open_preview = function(opts, callback)
 
       preview_win = vim.api.nvim_open_win(bufnr, true, win_opts)
       vim.api.nvim_set_option_value("previewwindow", true, { scope = "local", win = preview_win })
+      vim.api.nvim_win_set_var(preview_win, "oil_preview", true)
       vim.api.nvim_set_current_win(prev_win)
     elseif vim.fn.has("nvim-0.9") == 1 then
       vim.api.nvim_win_set_config(preview_win, { title = entry_title })
@@ -568,6 +569,7 @@ M.open_preview = function(opts, callback)
     end
 
     vim.api.nvim_set_option_value("previewwindow", true, { scope = "local", win = 0 })
+    vim.api.nvim_win_set_var(0, "oil_preview", true)
     for k, v in pairs(config.preview_win.win_options) do
       vim.api.nvim_set_option_value(k, v, { scope = "local", win = preview_win })
     end
