@@ -28,6 +28,8 @@ local default_config = {
   },
   -- Send deleted files to the trash instead of permanently deleting them (:help oil-trash)
   delete_to_trash = false,
+  -- Set the default mode to create files (:help oil-file_creation)
+  create_files_mode = 420,
   -- Skip the confirmation popup for simple operations (:help oil.skip_confirm_for_simple_edits)
   skip_confirm_for_simple_edits = false,
   -- Selecting a new/moved/renamed file or directory will prompt you to save changes first
@@ -223,6 +225,7 @@ default_config.view_options.highlight_filename = nil
 ---@field buf_options table<string, any>
 ---@field win_options table<string, any>
 ---@field delete_to_trash boolean
+---@field create_files_mode integer
 ---@field skip_confirm_for_simple_edits boolean
 ---@field prompt_save_on_select_new_entry boolean
 ---@field cleanup_delay_ms integer
@@ -251,6 +254,7 @@ local M = {}
 ---@field buf_options? table<string, any> Buffer-local options to use for oil buffers
 ---@field win_options? table<string, any> Window-local options to use for oil buffers
 ---@field delete_to_trash? boolean Send deleted files to the trash instead of permanently deleting them (:help oil-trash).
+---@field create_files_mode? integer Set the default mode to create files (:help oil-file_creation)
 ---@field skip_confirm_for_simple_edits? boolean Skip the confirmation popup for simple operations (:help oil.skip_confirm_for_simple_edits).
 ---@field prompt_save_on_select_new_entry? boolean Selecting a new/moved/renamed file or directory will prompt you to save changes first (:help prompt_save_on_select_new_entry).
 ---@field cleanup_delay_ms? integer Oil will automatically delete hidden buffers after this delay. You can set the delay to false to disable cleanup entirely. Note that the cleanup process only starts when none of the oil buffers are currently displayed.
@@ -408,6 +412,8 @@ M.setup = function(opts)
   if opts.preview and not opts.confirmation then
     new_conf.confirmation = vim.tbl_deep_extend("keep", opts.preview, default_config.confirmation)
   end
+
+  M.file_mode = opts.create_files_mode
   -- Backwards compatibility. We renamed the 'preview' config to 'preview_win'
   if opts.preview and opts.preview.update_on_cursor_moved ~= nil then
     new_conf.preview_win.update_on_cursor_moved = opts.preview.update_on_cursor_moved
