@@ -110,14 +110,14 @@ M.get_fullscreen_win_opts = function()
 
   local total_width = M.get_editor_width()
   local total_height = M.get_editor_height()
-  local width = total_width - 2 * config.float.padding
+  local width = total_width - 2 * config.float.padding.horizontal
   if config.float.border ~= "none" then
     width = width - 2 -- The border consumes 1 col on each side
   end
   if config.float.max_width > 0 then
     width = math.min(width, config.float.max_width)
   end
-  local height = total_height - 2 * config.float.padding
+  local height = total_height - 2 * config.float.padding.vertical
   if config.float.max_height > 0 then
     height = math.min(height, config.float.max_height)
   end

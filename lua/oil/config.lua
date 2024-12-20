@@ -123,6 +123,8 @@ local default_config = {
   -- Configuration for the floating window in oil.open_float
   float = {
     -- Padding around the floating window
+    -- Accepts a number for padding to be the same on each side
+    -- OR a table with { horizontal = number, vertical = number }
     padding = 2,
     max_width = 0,
     max_height = 0,
@@ -364,8 +366,12 @@ local M = {}
 ---@class (exact) oil.SetupProgressWindowConfig : oil.SetupWindowConfig
 ---@field minimized_border? string|string[] The border for the minimized progress window
 
+---@class (exact) oil.FloatWindowPaddingConfig
+---@field horizontal integer
+---@field vertical integer
+
 ---@class (exact) oil.FloatWindowConfig
----@field padding integer
+---@field padding integer|oil.FloatWindowPaddingConfig
 ---@field max_width integer
 ---@field max_height integer
 ---@field border string|string[]
@@ -425,6 +431,14 @@ M.setup = function(opts)
   -- This option was renamed because it is no longer experimental
   if new_conf.experimental_watch_for_changes then
     new_conf.watch_for_changes = true
+  end
+
+  -- If a number was given it is changed so no error is produced
+  if type(new_conf.float.padding) ~= "table" then
+    new_conf.float.padding = {
+      horizontal = new_conf.float.padding,
+      vertical = new_conf.float.padding
+    }
   end
 
   for k, v in pairs(new_conf) do
