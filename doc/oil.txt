@@ -10,6 +10,7 @@ CONTENTS                                                            *oil-content
   5. Actions                                                     |oil-actions|
   6. Highlights                                               |oil-highlights|
   7. Trash                                                         |oil-trash|
+  8. File Creation                                         |oil-file_creation|
 
 --------------------------------------------------------------------------------
 CONFIG                                                                *oil-config*
@@ -45,6 +46,8 @@ CONFIG                                                                *oil-confi
       },
       -- Send deleted files to the trash instead of permanently deleting them (:help oil-trash)
       delete_to_trash = false,
+      -- Set the default mode to create files (:help oil-file_creation)
+      create_files_mode = 420,
       -- Skip the confirmation popup for simple operations (:help oil.skip_confirm_for_simple_edits)
       skip_confirm_for_simple_edits = false,
       -- Selecting a new/moved/renamed file or directory will prompt you to save changes first
@@ -713,6 +716,36 @@ Mac:
 
 Windows:
     Oil supports the Windows Recycle Bin. All features should work.
+
+--------------------------------------------------------------------------------
+FILE CREATION                                                  *oil-file_creation*
+
+
+Oil defines `create_files_mode` to set the permission for new files. The mode
+follows the Posix numeric standard which use octal notation (base-8), however
+the variable must be set in decimal.
+
+    00700 user (file owner) has read, write, and execute permission
+    00400 user has read permission
+    00200 user has write permission
+    00100 user has execute permission
+    00070 group has read, write, and execute permission
+    00040 group has read permission
+    00020 group has write permission
+    00010 group has execute permission
+    00007 others have read, write, and execute permission
+    00004 others have read permission
+    00002 others have write permission
+    00001 others have execute permission
+    (from the open (2) man pages)
+
+An easy way to provide the right value for `create_files_mode` is using
+`tonumber(e [, base])` function with `base = 8`, for example:
+>lua
+    create_files_mode = tonumber("0644", 8)
+
+The default value is 420 in decimal or 0644 in octal
+
 
 ================================================================================
 vim:tw=80:ts=2:ft=help:norl:syntax=help:

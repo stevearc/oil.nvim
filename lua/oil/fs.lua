@@ -36,9 +36,10 @@ M.abspath = function(path)
 end
 
 ---@param path string
+---@param mode integer mode to open file (octal)
 ---@param cb fun(err: nil|string)
-M.touch = function(path, cb)
-  uv.fs_open(path, "a", 420, function(err, fd) -- 0644
+M.touch = function(path, mode, cb)
+  uv.fs_open(path, "a", mode, function(err, fd)
     if err then
       cb(err)
     else
