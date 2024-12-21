@@ -1,5 +1,39 @@
 # Changelog
 
+## [2.14.0](https://github.com/stevearc/oil.nvim/compare/v2.13.0...v2.14.0) (2024-12-21)
+
+
+### Features
+
+* add `win_options` to `preview_win` ([#514](https://github.com/stevearc/oil.nvim/issues/514)) ([bbeed86](https://github.com/stevearc/oil.nvim/commit/bbeed86bde134da8d09bed64b6aa0d65642e6b23))
+* add highlight group for orphaned links ([#502](https://github.com/stevearc/oil.nvim/issues/502)) ([740b8fd](https://github.com/stevearc/oil.nvim/commit/740b8fd425a2b77f7f40eb5ac155ebe66ff9515c))
+* better merging of action desc when overriding keymaps ([f2b3249](https://github.com/stevearc/oil.nvim/commit/f2b324933f4d505cff6f7d445fd61fad02dcd9ae))
+* config option to customize filename highlight group ([#508](https://github.com/stevearc/oil.nvim/issues/508)) ([99ce32f](https://github.com/stevearc/oil.nvim/commit/99ce32f4a2ecf76263b72fcc31efb163faa1a941))
+* config option to disable previewing a file ([3fa3161](https://github.com/stevearc/oil.nvim/commit/3fa3161aa9515ff6a7cf7e44458b6a2114262870))
+* disable preview for large files ([#511](https://github.com/stevearc/oil.nvim/issues/511)) ([c23fe08](https://github.com/stevearc/oil.nvim/commit/c23fe08e0546d9efc242e19f0d829efa7e7b2743))
+* highlight groups for hidden files ([#459](https://github.com/stevearc/oil.nvim/issues/459)) ([60e6896](https://github.com/stevearc/oil.nvim/commit/60e68967e51ff1ecd264c29e3de0d52bfff22df3))
+* option to quite vim if oil is closed as last buffer ([#491](https://github.com/stevearc/oil.nvim/issues/491)) ([81cc9c3](https://github.com/stevearc/oil.nvim/commit/81cc9c3f62ddbef3687931d119e505643496fa0a))
+* use scratch buffer for file previews ([#467](https://github.com/stevearc/oil.nvim/issues/467)) ([21705a1](https://github.com/stevearc/oil.nvim/commit/21705a1debe6d85a53c138ab944484b685432b2b))
+
+
+### Bug Fixes
+
+* cursor sometimes does not hover previous file ([8ea40b5](https://github.com/stevearc/oil.nvim/commit/8ea40b5506115b6d355e304dd9ee5089f7d78601))
+* don't take over the preview window until it's opened for oil ([#532](https://github.com/stevearc/oil.nvim/issues/532)) ([78ab7ca](https://github.com/stevearc/oil.nvim/commit/78ab7ca1073731ebdf82efa474202defa028d5a4))
+* handle files with newlines in the name ([#534](https://github.com/stevearc/oil.nvim/issues/534)) ([dba0375](https://github.com/stevearc/oil.nvim/commit/dba037598843973b8c54bc5ce0318db4a0da439d))
+* image.nvim previews with preview_method=scratch ([5acab3d](https://github.com/stevearc/oil.nvim/commit/5acab3d8a9bc85a571688db432f2702dd7d901a4))
+* improper file name escaping ([#530](https://github.com/stevearc/oil.nvim/issues/530)) ([7a55ede](https://github.com/stevearc/oil.nvim/commit/7a55ede5e745e31ea8e4cb5483221524922294bf))
+* set alternate when using floating windows ([#526](https://github.com/stevearc/oil.nvim/issues/526)) ([c5f7c56](https://github.com/stevearc/oil.nvim/commit/c5f7c56644425e2b77e71904da98cda0331b3342))
+* work around performance issue with treesitter, folds, and large directories ([da93d55](https://github.com/stevearc/oil.nvim/commit/da93d55e32d73a17c447067d168d80290ae96590))
+
+
+### Performance Improvements
+
+* change default view_options.natural_order behavior to disable on large directories ([01b0b9d](https://github.com/stevearc/oil.nvim/commit/01b0b9d8ef79b7b631e92f6b5fed1c639262d570))
+* only sort entries after we have them all ([792f0db](https://github.com/stevearc/oil.nvim/commit/792f0db6ba8b626b14bc127e1ce7247185b3be91))
+* optimize rendering cadence ([c96f93d](https://github.com/stevearc/oil.nvim/commit/c96f93d894cc97e76b0871bec4058530eee8ece4))
+* replace vim.endswith and vim.startswith with string.match ([4de3025](https://github.com/stevearc/oil.nvim/commit/4de30256c32cd272482bc6df0c6de78ffc389153))
+
 ## [2.13.0](https://github.com/stevearc/oil.nvim/compare/v2.12.2...v2.13.0) (2024-11-11)
 
 
