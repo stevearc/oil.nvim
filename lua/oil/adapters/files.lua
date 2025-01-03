@@ -12,6 +12,7 @@ local uv = vim.uv or vim.loop
 local M = {}
 
 local FIELD_NAME = constants.FIELD_NAME
+local FIELD_TYPE = constants.FIELD_TYPE
 local FIELD_META = constants.FIELD_META
 
 local function read_link_data(path, cb)
@@ -50,17 +51,8 @@ end
 
 local file_columns = {}
 
-local fs_stat_meta_fields = {
-  stat = function(parent_url, entry, cb)
-    local _, path = util.parse_url(parent_url)
-    assert(path)
-    local dir = fs.posix_to_os_path(path .. entry[FIELD_NAME])
-    uv.fs_stat(dir, cb)
-  end,
-}
-
 file_columns.size = {
-  meta_fields = fs_stat_meta_fields,
+  require_stat = true,
 
   render = function(entry, conf)
     local meta = entry[FIELD_META]
@@ -97,7 +89,7 @@ file_columns.size = {
 -- TODO support file permissions on windows
 if not fs.is_windows then
   file_columns.permissions = {
-    meta_fields = fs_stat_meta_fields,
+    require_stat = true,
 
     render = function(entry, conf)
       local meta = entry[FIELD_META]
@@ -160,7 +152,7 @@ end)
 
 for _, time_key in ipairs({ "ctime", "mtime", "atime", "birthtime" }) do
   file_columns[time_key] = {
-    meta_fields = fs_stat_meta_fields,
+    require_stat = true,
 
     render = function(entry, conf)
       local meta = entry[FIELD_META]
@@ -204,6 +196,20 @@ for _, time_key in ipairs({ "ctime", "mtime", "atime", "birthtime" }) do
       end
     end,
   }
+end
+
+---@param column_defs table[]
+---@return boolean
+local function columns_require_stat(column_defs)
+  for _, def in ipairs(column_defs) do
+    local name = util.split_config(def)
+    local column = M.get_column(name)
+    ---@diagnostic disable-next-line: undefined-field We only put this on the files adapter columns
+    if column and column.require_stat then
+      return true
+    end
+  end
+  return false
 end
 
 ---@param name string
@@ -283,12 +289,64 @@ M.get_entry_path = function(url, entry, cb)
   end
 end
 
+---@param parent_dir string
+---@param entry oil.InternalEntry
+---@param require_stat boolean
+---@param cb fun(err?: string)
+local function fetch_entry_metadata(parent_dir, entry, require_stat, cb)
+  local entry_path = fs.posix_to_os_path(parent_dir .. entry[FIELD_NAME])
+  local meta = entry[FIELD_META]
+  if not meta then
+    meta = {}
+    entry[FIELD_META] = meta
+  end
+
+  -- Make sure we always get fs_stat info for links
+  if entry[FIELD_TYPE] == "link" then
+    read_link_data(entry_path, function(link_err, link, link_stat)
+      if link_err then
+        return cb(link_err)
+      end
+      meta.link = link
+      if link_stat then
+        -- Use the fstat of the linked file as the stat for the link
+        meta.link_stat = link_stat
+        meta.stat = link_stat
+      elseif require_stat then
+        -- The link is broken, so let's use the stat of the link itself
+        uv.fs_lstat(entry_path, function(stat_err, stat)
+          if stat_err then
+            return cb(stat_err)
+          end
+          meta.stat = stat
+          cb()
+        end)
+        return
+      end
+
+      cb()
+    end)
+  elseif require_stat then
+    uv.fs_stat(entry_path, function(stat_err, stat)
+      if stat_err then
+        return cb(stat_err)
+      end
+      assert(stat)
+      meta.stat = stat
+      cb()
+    end)
+  else
+    cb()
+  end
+end
+
 ---@param url string
 ---@param column_defs string[]
 ---@param cb fun(err?: string, entries?: oil.InternalEntry[], fetch_more?: fun())
 local function list_windows_drives(url, column_defs, cb)
-  ---@cast M oil.FilesAdapter
-  local fetch_meta = columns.get_metadata_fetcher(M, column_defs)
+  local _, path = util.parse_url(url)
+  assert(path)
+  local require_stat = columns_require_stat(column_defs)
   local stdout = ""
   local jid = vim.fn.jobstart({ "wmic", "logicaldisk", "get", "name" }, {
     stdout_buffered = true,
@@ -318,14 +376,8 @@ local function list_windows_drives(url, column_defs, cb)
         else
           disk = disk:gsub(":%s*$", "")
           local cache_entry = cache.create_entry(url, disk, "directory")
-          fetch_meta(url, cache_entry, function(err)
-            if err then
-              complete_disk_cb(err)
-            else
-              table.insert(internal_entries, cache_entry)
-              complete_disk_cb()
-            end
-          end)
+          table.insert(internal_entries, cache_entry)
+          fetch_entry_metadata(path, cache_entry, require_stat, complete_disk_cb)
         end
       end
     end,
@@ -345,8 +397,7 @@ M.list = function(url, column_defs, cb)
     return list_windows_drives(url, column_defs, cb)
   end
   local dir = fs.posix_to_os_path(path)
-  ---@cast M oil.Adapter
-  local fetch_meta = columns.get_metadata_fetcher(M, column_defs)
+  local require_stat = columns_require_stat(column_defs)
 
   ---@diagnostic disable-next-line: param-type-mismatch, discard-returns
   uv.fs_opendir(dir, function(open_err, fd)
@@ -378,28 +429,8 @@ M.list = function(url, column_defs, cb)
           end)
           for _, entry in ipairs(entries) do
             local cache_entry = cache.create_entry(url, entry.name, entry.type)
-            fetch_meta(url, cache_entry, function(meta_err)
-              table.insert(internal_entries, cache_entry)
-              local meta = cache_entry[FIELD_META]
-              -- Make sure we always get fs_stat info for links
-              if entry.type == "link" then
-                read_link_data(fs.join(dir, entry.name), function(link_err, link, link_stat)
-                  if link_err then
-                    poll(link_err)
-                  else
-                    if not meta then
-                      meta = {}
-                      cache_entry[FIELD_META] = meta
-                    end
-                    meta.link = link
-                    meta.link_stat = link_stat
-                    poll()
-                  end
-                end)
-              else
-                poll()
-              end
-            end)
+            table.insert(internal_entries, cache_entry)
+            fetch_entry_metadata(path, cache_entry, require_stat, poll)
           end
         else
           uv.fs_closedir(fd, function(close_err)

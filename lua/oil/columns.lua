@@ -14,7 +14,6 @@ local all_columns = {}
 ---@class (exact) oil.ColumnDefinition
 ---@field render fun(entry: oil.InternalEntry, conf: nil|table): nil|oil.TextChunk
 ---@field parse fun(line: string, conf: nil|table): nil|string, nil|string
----@field meta_fields? table<string, fun(parent_url: string, entry: oil.InternalEntry, cb: fun(err: nil|string))>
 ---@field compare? fun(entry: oil.InternalEntry, parsed_value: any): boolean
 ---@field render_action? fun(action: oil.ChangeAction): string
 ---@field perform_action? fun(action: oil.ChangeAction, callback: fun(err: nil|string))
@@ -54,46 +53,6 @@ M.get_supported_columns = function(adapter_or_scheme)
   return ret
 end
 
----@param adapter oil.Adapter
----@param column_defs table[]
----@return fun(parent_url: string, entry: oil.InternalEntry, cb: fun(err: nil|string))
-M.get_metadata_fetcher = function(adapter, column_defs)
-  local keyfetches = {}
-  local num_keys = 0
-  for _, def in ipairs(column_defs) do
-    local name = util.split_config(def)
-    local column = M.get_column(adapter, name)
-    if column and column.meta_fields then
-      for k, v in pairs(column.meta_fields) do
-        if not keyfetches[k] then
-          keyfetches[k] = v
-          num_keys = num_keys + 1
-        end
-      end
-    end
-  end
-  if num_keys == 0 then
-    return function(_, _, cb)
-      cb()
-    end
-  end
-  return function(parent_url, entry, cb)
-    cb = util.cb_collect(num_keys, cb)
-    local meta = {}
-    entry[FIELD_META] = meta
-    for k, v in pairs(keyfetches) do
-      v(parent_url, entry, function(err, value)
-        if err then
-          cb(err)
-        else
-          meta[k] = value
-          cb()
-        end
-      end)
-    end
-  end
-end
-
 local EMPTY = { "-", "Comment" }
 
 M.EMPTY = EMPTY
@@ -110,18 +69,6 @@ M.render_col = function(adapter, col_def, entry)
     return EMPTY
   end
 
-  -- Make sure all the required metadata exists before attempting to render
-  if column.meta_fields then
-    local meta = entry[FIELD_META]
-    if not meta then
-      return EMPTY
-    end
-    for k in pairs(column.meta_fields) do
-      if not meta[k] then
-        return EMPTY
-      end
-    end
-  end
   local chunk = column.render(entry, conf)
   if type(chunk) == "table" then
     if chunk[1]:match("^%s*$") then
