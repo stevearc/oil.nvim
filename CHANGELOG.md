@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.14.1](https://github.com/stevearc/oil.nvim/compare/v2.14.0...v2.14.1) (2025-01-03)
+
+
+### Bug Fixes
+
+* stat files if fs_readdir doesn't provide a type ([#543](https://github.com/stevearc/oil.nvim/issues/543)) ([c6a39a6](https://github.com/stevearc/oil.nvim/commit/c6a39a69b2df7c10466f150dde0bd23e49c1fba3))
+
 ## [2.14.0](https://github.com/stevearc/oil.nvim/compare/v2.13.0...v2.14.0) (2024-12-21)
 
 
