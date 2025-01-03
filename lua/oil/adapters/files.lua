@@ -301,6 +301,12 @@ local function fetch_entry_metadata(parent_dir, entry, require_stat, cb)
     entry[FIELD_META] = meta
   end
 
+  -- Sometimes fs_readdir entries don't have a type, so we need to stat them.
+  -- See https://github.com/stevearc/oil.nvim/issues/543
+  if not require_stat and not entry[FIELD_TYPE] then
+    require_stat = true
+  end
+
   -- Make sure we always get fs_stat info for links
   if entry[FIELD_TYPE] == "link" then
     read_link_data(entry_path, function(link_err, link, link_stat)
@@ -332,6 +338,7 @@ local function fetch_entry_metadata(parent_dir, entry, require_stat, cb)
         return cb(stat_err)
       end
       assert(stat)
+      entry[FIELD_TYPE] = stat.type
       meta.stat = stat
       cb()
     end)
