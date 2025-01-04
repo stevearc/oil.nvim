@@ -126,7 +126,7 @@ ssh_columns.permissions = {
 
   compare = function(entry, parsed_value)
     local meta = entry[FIELD_META]
-    if parsed_value and meta.mode then
+    if parsed_value and meta and meta.mode then
       local mask = bit.lshift(1, 12) - 1
       local old_mode = bit.band(meta.mode, mask)
       if parsed_value ~= old_mode then
@@ -169,7 +169,7 @@ ssh_columns.size = {
 
   get_sort_value = function(entry)
     local meta = entry[FIELD_META]
-    if meta.size then
+    if meta and meta.size then
       return meta.size
     else
       return 0

@@ -56,7 +56,7 @@ file_columns.size = {
 
   render = function(entry, conf)
     local meta = entry[FIELD_META]
-    local stat = meta.stat
+    local stat = meta and meta.stat
     if not stat then
       return columns.EMPTY
     end
@@ -73,7 +73,7 @@ file_columns.size = {
 
   get_sort_value = function(entry)
     local meta = entry[FIELD_META]
-    local stat = meta.stat
+    local stat = meta and meta.stat
     if stat then
       return stat.size
     else
@@ -93,7 +93,7 @@ if not fs.is_windows then
 
     render = function(entry, conf)
       local meta = entry[FIELD_META]
-      local stat = meta.stat
+      local stat = meta and meta.stat
       if not stat then
         return columns.EMPTY
       end
@@ -106,7 +106,7 @@ if not fs.is_windows then
 
     compare = function(entry, parsed_value)
       local meta = entry[FIELD_META]
-      if parsed_value and meta.stat and meta.stat.mode then
+      if parsed_value and meta and meta.stat and meta.stat.mode then
         local mask = bit.lshift(1, 12) - 1
         local old_mode = bit.band(meta.stat.mode, mask)
         if parsed_value ~= old_mode then
@@ -156,7 +156,7 @@ for _, time_key in ipairs({ "ctime", "mtime", "atime", "birthtime" }) do
 
     render = function(entry, conf)
       local meta = entry[FIELD_META]
-      local stat = meta.stat
+      local stat = meta and meta.stat
       if not stat then
         return columns.EMPTY
       end
@@ -188,7 +188,7 @@ for _, time_key in ipairs({ "ctime", "mtime", "atime", "birthtime" }) do
 
     get_sort_value = function(entry)
       local meta = entry[FIELD_META]
-      local stat = meta.stat
+      local stat = meta and meta.stat
       if stat then
         return stat[time_key].sec
       else
