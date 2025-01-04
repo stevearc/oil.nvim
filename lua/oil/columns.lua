@@ -69,6 +69,11 @@ M.render_col = function(adapter, col_def, entry)
     return EMPTY
   end
 
+  local meta = entry[FIELD_META]
+  if not meta then
+    return EMPTY
+  end
+
   local chunk = column.render(entry, conf)
   if type(chunk) == "table" then
     if chunk[1]:match("^%s*$") then
