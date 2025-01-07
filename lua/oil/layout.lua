@@ -115,11 +115,13 @@ M.get_fullscreen_win_opts = function()
     width = width - 2 -- The border consumes 1 col on each side
   end
   if config.float.max_width > 0 then
-    width = math.min(width, config.float.max_width)
+    local max_width = math.floor(calc_float(config.float.max_width, total_width))
+    width = math.min(width, max_width)
   end
   local height = total_height - 2 * config.float.padding
   if config.float.max_height > 0 then
-    height = math.min(height, config.float.max_height)
+    local max_height = math.floor(calc_float(config.float.max_height, total_height))
+    height = math.min(height, max_height)
   end
   local row = math.floor((total_height - height) / 2)
   local col = math.floor((total_width - width) / 2) - 1 -- adjust for border width
