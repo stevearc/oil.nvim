@@ -770,6 +770,10 @@ M.format_entry_cols = function(entry, column_defs, col_width, adapter, is_hidden
     else
       local hl = get_custom_hl(external_entry, is_hidden, false, false)
       if hl then
+        -- Add the trailing / if this is a directory, this is important
+        if entry_type == "directory" then
+          name = name .. "/"
+        end
         table.insert(cols, { name, hl })
         return cols
       end
