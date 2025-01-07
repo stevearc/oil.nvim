@@ -490,20 +490,8 @@ M.is_modifiable = function(bufnr)
     return true
   end
 
-  -- Can't do permissions checks on windows
-  if fs.is_windows then
-    return true
-  end
-
-  local uid = uv.getuid()
-  local rwx = stat.mode
-  if uid == stat.uid then
-    rwx = bit.bor(rwx, bit.rshift(stat.mode, 6))
-  end
-  if vim.tbl_contains(get_group_ids(), stat.gid) then
-    rwx = bit.bor(rwx, bit.rshift(stat.mode, 3))
-  end
-  return bit.band(rwx, 2) ~= 0
+  -- fs_access can return nil, force boolean return
+  return uv.fs_access(dir, "W") == true
 end
 
 ---@param action oil.Action
