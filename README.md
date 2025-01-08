@@ -233,8 +233,7 @@ require("oil").setup({
       { "name", "asc" },
     },
     -- Customize the highlight group for the file name
-    highlight_filename = function(entry, is_hidden, is_link_target, is_link_orphan,
-      bufnr)
+    highlight_filename = function(entry, is_hidden, is_link_target, is_link_orphan)
       return nil
     end,
   },
