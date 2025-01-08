@@ -455,26 +455,6 @@ M.list = function(url, column_defs, cb)
   end, 10000)
 end
 
----@type nil|integer[]
-local _group_ids
----@return integer[]
-local function get_group_ids()
-  if not _group_ids then
-    local output = vim.fn.system({ "id", "-G" })
-    if vim.v.shell_error == 0 then
-      _group_ids = vim.tbl_map(tonumber, vim.split(output, "%s+", { trimempty = true }))
-    else
-      -- If the id command fails, fall back to just using the process group
-      _group_ids = { uv.getgid() }
-      vim.notify(
-        "[oil] missing the `id` command. Some directories may not be modifiable even if you have group access.",
-        vim.log.levels.WARN
-      )
-    end
-  end
-  return _group_ids
-end
-
 ---@param bufnr integer
 ---@return boolean
 M.is_modifiable = function(bufnr)
@@ -490,20 +470,8 @@ M.is_modifiable = function(bufnr)
     return true
   end
 
-  -- Can't do permissions checks on windows
-  if fs.is_windows then
-    return true
-  end
-
-  local uid = uv.getuid()
-  local rwx = stat.mode
-  if uid == stat.uid then
-    rwx = bit.bor(rwx, bit.rshift(stat.mode, 6))
-  end
-  if vim.tbl_contains(get_group_ids(), stat.gid) then
-    rwx = bit.bor(rwx, bit.rshift(stat.mode, 3))
-  end
-  return bit.band(rwx, 2) ~= 0
+  -- fs_access can return nil, force boolean return
+  return uv.fs_access(dir, "W") == true
 end
 
 ---@param action oil.Action
