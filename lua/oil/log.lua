@@ -73,7 +73,7 @@ local function initialize()
   end
 
   local parent = vim.fs.dirname(filepath)
-  vim.fn.mkdir(parent, "p")
+  require("oil.fs").mkdirp(parent)
 
   local logfile, openerr = io.open(filepath, "a+")
   if not logfile then
