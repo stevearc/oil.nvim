@@ -4,6 +4,7 @@ local config = require("oil.config")
 local constants = require("oil.constants")
 local fs = require("oil.fs")
 local git = require("oil.git")
+local log = require("oil.log")
 local permissions = require("oil.adapters.files.permissions")
 local trash = require("oil.adapters.files.trash")
 local util = require("oil.util")
@@ -311,7 +312,8 @@ local function fetch_entry_metadata(parent_dir, entry, require_stat, cb)
   if entry[FIELD_TYPE] == "link" then
     read_link_data(entry_path, function(link_err, link, link_stat)
       if link_err then
-        return cb(link_err)
+        log.warn("Error reading link data %s: %s", entry_path, link_err)
+        return cb()
       end
       meta.link = link
       if link_stat then
@@ -322,7 +324,8 @@ local function fetch_entry_metadata(parent_dir, entry, require_stat, cb)
         -- The link is broken, so let's use the stat of the link itself
         uv.fs_lstat(entry_path, function(stat_err, stat)
           if stat_err then
-            return cb(stat_err)
+            log.warn("Error lstat link file %s: %s", entry_path, stat_err)
+            return cb()
           end
           meta.stat = stat
           cb()
@@ -335,7 +338,8 @@ local function fetch_entry_metadata(parent_dir, entry, require_stat, cb)
   elseif require_stat then
     uv.fs_stat(entry_path, function(stat_err, stat)
       if stat_err then
-        return cb(stat_err)
+        log.warn("Error stat file %s: %s", entry_path, stat_err)
+        return cb()
       end
       assert(stat)
       entry[FIELD_TYPE] = stat.type
