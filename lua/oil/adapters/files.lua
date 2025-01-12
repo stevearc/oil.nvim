@@ -351,6 +351,33 @@ local function fetch_entry_metadata(parent_dir, entry, require_stat, cb)
   end
 end
 
+-- On windows, sometimes the entry type from fs_readdir is "link" but the actual type is not.
+-- See https://github.com/stevearc/oil.nvim/issues/535
+if fs.is_windows then
+  local old_fetch_metadata = fetch_entry_metadata
+  fetch_entry_metadata = function(parent_dir, entry, require_stat, cb)
+    if entry[FIELD_TYPE] == "link" then
+      local entry_path = fs.posix_to_os_path(parent_dir .. entry[FIELD_NAME])
+      uv.fs_lstat(entry_path, function(stat_err, stat)
+        if stat_err then
+          return cb(stat_err)
+        end
+        assert(stat)
+        entry[FIELD_TYPE] = stat.type
+        local meta = entry[FIELD_META]
+        if not meta then
+          meta = {}
+          entry[FIELD_META] = meta
+        end
+        meta.stat = stat
+        old_fetch_metadata(parent_dir, entry, require_stat, cb)
+      end)
+    else
+      return old_fetch_metadata(parent_dir, entry, require_stat, cb)
+    end
+  end
+end
+
 ---@param url string
 ---@param column_defs string[]
 ---@param cb fun(err?: string, entries?: oil.InternalEntry[], fetch_more?: fun())
