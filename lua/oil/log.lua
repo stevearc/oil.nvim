@@ -36,7 +36,9 @@ local function format(level, msg, ...)
     end
   end
   local ok, text = pcall(string.format, msg, vim.F.unpack_len(args))
-  local timestr = vim.fn.strftime("%Y-%m-%d %H:%M:%S")
+  -- TODO figure out how to get formatted time inside luv callback
+  -- local timestr = vim.fn.strftime("%Y-%m-%d %H:%M:%S")
+  local timestr = ""
   if ok then
     local str_level = levels_reverse[level]
     return string.format("%s[%s] %s", timestr, str_level, text)
