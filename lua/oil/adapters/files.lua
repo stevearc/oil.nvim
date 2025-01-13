@@ -360,7 +360,8 @@ if fs.is_windows then
       local entry_path = fs.posix_to_os_path(parent_dir .. entry[FIELD_NAME])
       uv.fs_lstat(entry_path, function(stat_err, stat)
         if stat_err then
-          return cb(stat_err)
+          log.warn("Error lstat link file %s: %s", entry_path, stat_err)
+          return old_fetch_metadata(parent_dir, entry, require_stat, cb)
         end
         assert(stat)
         entry[FIELD_TYPE] = stat.type
