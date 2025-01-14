@@ -430,11 +430,15 @@ M.copy_to_system_clipboard = {
     local path = dir .. entry.name
 
     if fs.is_mac then
-      local cmd = "osascript -e 'on run args' -e 'set the clipboard to POSIX file (first item of args)' -e end '%s'"
+      local cmd =
+        "osascript -e 'on run args' -e 'set the clipboard to POSIX file (first item of args)' -e end '%s'"
       local jid = vim.fn.jobstart(string.format(cmd, path), {
         on_exit = function(j, exit_code)
           if exit_code ~= 0 then
-            vim.notify(string.format("Error copying '%s' to system clipboard", path), vim.log.levels.ERROR)
+            vim.notify(
+              string.format("Error copying '%s' to system clipboard", path),
+              vim.log.levels.ERROR
+            )
           end
         end,
       })
@@ -456,7 +460,8 @@ M.paste_from_system_clipboard = {
 
     if fs.is_mac then
       local path = nil
-      local cmd = "osascript -e 'on run' -e 'POSIX path of (the clipboard as «class furl»)' -e end"
+      local cmd =
+        "osascript -e 'on run' -e 'POSIX path of (the clipboard as «class furl»)' -e end"
       local jid = vim.fn.jobstart(cmd, {
         stdout_buffered = true,
         on_stdout = function(j, output)
@@ -466,7 +471,10 @@ M.paste_from_system_clipboard = {
         end,
         on_exit = function(j, exit_code)
           if exit_code ~= 0 or path == nil then
-            vim.notify(string.format("Error pasting file path from system clipboard"), vim.log.levels.ERROR)
+            vim.notify(
+              string.format("Error pasting file path from system clipboard"),
+              vim.log.levels.ERROR
+            )
             return
           end
           local url = "oil://" .. path -- TODO: try to determine the adapter

@@ -299,9 +299,9 @@ M.parse = function(bufnr)
 
           local url_pieces = vim.split(name, "://", { plain = true })
           if #url_pieces == 2 then
-            local scheme = url_pieces[1] .. "://"
-            local path = url_pieces[2]
-            local stat, stat_err = vim.uv.fs_stat(path)
+            local url_scheme = url_pieces[1] .. "://"
+            local url_path = url_pieces[2]
+            local stat, stat_err = vim.uv.fs_stat(url_path)
             if stat_err then
               table.insert(errors, {
                 message = stat_err,
@@ -311,9 +311,9 @@ M.parse = function(bufnr)
               })
               return
             end
-            local parent_url = scheme .. vim.fn.fnamemodify(path, ":h")
-            local basename = vim.fn.fnamemodify(path, ":t")
-            local entry = cache.create_and_store_entry(parent_url, basename, stat.type)
+            local head_url = url_scheme .. vim.fn.fnamemodify(url_path, ":h")
+            local basename = vim.fn.fnamemodify(url_path, ":t")
+            local entry = cache.create_and_store_entry(head_url, basename, stat.type)
             table.insert(diffs, {
               type = "new",
               name = entry[FIELD_NAME],
