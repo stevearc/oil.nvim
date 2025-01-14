@@ -296,12 +296,38 @@ M.parse = function(bufnr)
             name, link = unpack(link_pieces)
           end
           check_dupe(name, i)
-          table.insert(diffs, {
-            type = "new",
-            name = name,
-            entry_type = entry_type,
-            link = link,
-          })
+
+          local url_pieces = vim.split(name, "://", { plain = true })
+          if #url_pieces == 2 then
+            local scheme = url_pieces[1] .. "://"
+            local path = url_pieces[2]
+            local stat, stat_err = vim.uv.fs_stat(path)
+            if stat_err then
+              table.insert(errors, {
+                message = stat_err,
+                lnum = i - 1,
+                end_lnum = i,
+                col = 0,
+              })
+              return
+            end
+            local parent_url = scheme .. vim.fn.fnamemodify(path, ":h")
+            local basename = vim.fn.fnamemodify(path, ":t")
+            local entry = cache.create_and_store_entry(parent_url, basename, stat.type)
+            table.insert(diffs, {
+              type = "new",
+              name = entry[FIELD_NAME],
+              entry_type = entry[FIELD_TYPE],
+              id = entry[FIELD_ID],
+            })
+          else
+            table.insert(diffs, {
+              type = "new",
+              name = name,
+              entry_type = entry_type,
+              link = link,
+            })
+          end
         end
       end
     end)()
