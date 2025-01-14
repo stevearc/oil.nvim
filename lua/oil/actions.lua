@@ -320,7 +320,7 @@ M.refresh = {
 
 local function open_cmdline_with_path(path)
   local escaped =
-    vim.api.nvim_replace_termcodes(": " .. vim.fn.fnameescape(path) .. "<Home>", true, false, true)
+      vim.api.nvim_replace_termcodes(": " .. vim.fn.fnameescape(path) .. "<Home>", true, false, true)
   vim.api.nvim_feedkeys(escaped, "n", false)
 end
 
@@ -418,6 +418,34 @@ M.copy_entry_filename = {
   end,
 }
 
+M.copy_to_system_clipboard = {
+  desc = "Copy the entry under the cursor to the system clipboard",
+  callback = function()
+    local fs = require("oil.fs")
+    local entry = oil.get_cursor_entry()
+    local dir = oil.get_current_dir()
+    if not entry or not dir then
+      return
+    end
+    local path = dir .. entry.name
+
+    if fs.is_mac then
+      local cmd = "osascript -e 'on run args' -e 'set the clipboard to POSIX file (first item of args)' -e end '%s'"
+      local jid = vim.fn.jobstart(string.format(cmd, path), {
+        stdout_buffered = true,
+        on_exit = function(j, exit_code)
+          if exit_code ~= 0 then
+            vim.notify(string.format("Error copying '%s' to system clipboard", path), vim.log.levels.ERROR)
+          end
+        end,
+      })
+      assert(jid > 0, "Failed to start job")
+    else
+      vim.notify("System clipboard not supported on this platform", vim.log.levels.WARN)
+    end
+  end,
+}
+
 M.open_cmdline_dir = {
   desc = "Open vim cmdline with current directory as an argument",
   deprecated = true,
@@ -455,7 +483,7 @@ M.change_sort = {
           order = order == "ascending" and "asc" or "desc"
           oil.set_sort({
             { "type", "asc" },
-            { col, order },
+            { col,    order },
           })
         end
       )
