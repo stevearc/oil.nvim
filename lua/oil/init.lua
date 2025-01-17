@@ -709,7 +709,7 @@ M.select = function(opts, callback)
     else
       -- Close floating window before opening a file
       if vim.w.is_oil_win then
-        vim.api.nvim_win_close(0, false)
+        M.close()
       end
     end
 
