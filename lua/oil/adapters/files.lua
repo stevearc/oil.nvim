@@ -427,6 +427,19 @@ local function list_windows_drives(url, column_defs, cb)
 end
 
 ---@param url string
+---@return nil|string, nil|oil.InternalEntry[]
+M.load = function(url)
+  local scheme, path = util.parse_url(url)
+  local stat, stat_err = vim.uv.fs_stat(path)
+  if stat_err then
+    return stat_err
+  end
+  local head_url = scheme .. vim.fn.fnamemodify(path, ":h")
+  local basename = vim.fn.fnamemodify(path, ":t")
+  return nil, cache.create_and_store_entry(head_url, basename, stat.type)
+end
+
+---@param url string
 ---@param column_defs string[]
 ---@param cb fun(err?: string, entries?: oil.InternalEntry[], fetch_more?: fun())
 M.list = function(url, column_defs, cb)

@@ -290,7 +290,7 @@ M.parse = function(bufnr)
         if name ~= "" then
           local link_pieces = vim.split(name, " -> ", { plain = true })
           local entry_type = isdir and "directory" or "file"
-          local link
+          local id, link
           if #link_pieces == 2 then
             entry_type = "link"
             name, link = unpack(link_pieces)
@@ -299,35 +299,37 @@ M.parse = function(bufnr)
 
           local url_pieces = vim.split(name, "://", { plain = true })
           if #url_pieces == 2 then
-            local url_scheme = url_pieces[1] .. "://"
-            local url_path = url_pieces[2]
-            local stat, stat_err = vim.uv.fs_stat(url_path)
-            if stat_err then
+            local target_adapter = config.get_adapter_by_scheme(url_pieces[1])
+            if target_adapter.name ~= "files" and target_adapter.name ~= "ssh" then
               table.insert(errors, {
-                message = stat_err,
+                message = "Adapter not supported",
                 lnum = i - 1,
                 end_lnum = i,
                 col = 0,
               })
               return
             end
-            local head_url = url_scheme .. vim.fn.fnamemodify(url_path, ":h")
-            local basename = vim.fn.fnamemodify(url_path, ":t")
-            local entry = cache.create_and_store_entry(head_url, basename, stat.type)
-            table.insert(diffs, {
-              type = "new",
-              name = entry[FIELD_NAME],
-              entry_type = entry[FIELD_TYPE],
-              id = entry[FIELD_ID],
-            })
-          else
-            table.insert(diffs, {
-              type = "new",
-              name = name,
-              entry_type = entry_type,
-              link = link,
-            })
+            local err, entry = target_adapter.load(name)
+            if err then
+              table.insert(errors, {
+                message = err,
+                lnum = i - 1,
+                end_lnum = i,
+                col = 0,
+              })
+              return
+            end
+            id = entry[FIELD_ID]
+            name = entry[FIELD_NAME]
+            entry_type = entry[FIELD_TYPE]
           end
+          table.insert(diffs, {
+            type = "new",
+            name = name,
+            entry_type = entry_type,
+            link = link,
+            id = id,
+          })
         end
       end
     end)()
