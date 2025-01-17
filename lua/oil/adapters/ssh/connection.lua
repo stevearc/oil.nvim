@@ -116,16 +116,19 @@ function SSHConnection.new(url)
   util.hack_around_termopen_autocmd(mode)
 
   -- If it takes more than 2 seconds to connect, pop open the terminal
-  vim.defer_fn(function()
+  local coru = coroutine.create(function()
+    coroutine.yield()
     if not self.connected and not self.connection_error then
       self:open_terminal()
     end
-  end, 2000)
+  end)
+  coroutine.resume(coru)
   self._stdout = {}
   local jid = vim.fn.jobstart(command, {
     pty = true, -- This is require for interactivity
     on_stdout = function(j, output)
       pcall(vim.api.nvim_chan_send, self.term_id, table.concat(output, "\r\n"))
+      coroutine.resume(coru)
       ---@diagnostic disable-next-line: invisible
       local new_i_start = output_extend(self._stdout, output)
       self:_handle_output(new_i_start)
