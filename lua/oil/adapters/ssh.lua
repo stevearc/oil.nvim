@@ -222,22 +222,23 @@ M.normalize_url = function(url, callback)
 end
 
 ---@param url string
----@return nil|string, nil|oil.InternalEntry[]
+---@return nil|string, nil|oil.InternalEntry
 M.load = function(url)
   local res = M.parse_url(url)
   local path = res.path
   res.path = vim.fn.fnamemodify(path, ":h")
 
-  local conn = get_connection(url)
-
   local ret = {}
+  local conn = get_connection(url)
   conn:list_dir(url_to_str(res), path, function(err, entries)
     ret.err = err
-    ret.entry = entries[1]
+    if entries and #entries ~= 0 then
+      ret.entry = entries[1]
+    end
   end)
-  local succ, err = vim.wait(60000, function()
+  local succ, err = vim.wait(5000, function()
     return ret.err or ret.entry
-  end)
+  end, 100)
   if not succ then
     if err == -1 then
       return "Connection timed out"

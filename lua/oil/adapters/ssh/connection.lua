@@ -10,6 +10,7 @@ local util = require("oil.util")
 ---@class (exact) oil.sshConnection
 ---@field new fun(url: oil.sshUrl): oil.sshConnection
 ---@field create_ssh_command fun(url: oil.sshUrl): string[]
+---@field url oil.sshUrl
 ---@field meta {user?: string, groups?: string[]}
 ---@field connection_error nil|string
 ---@field connected boolean
@@ -19,6 +20,23 @@ local util = require("oil.util")
 ---@field private commands oil.sshCommand[]
 ---@field private _stdout string[]
 local SSHConnection = {}
+
+---@param url oil.sshUrl
+---@return string
+local function url_to_str(url)
+  local pieces = { url.scheme }
+  if url.user then
+    table.insert(pieces, url.user)
+    table.insert(pieces, "@")
+  end
+  table.insert(pieces, url.host)
+  if url.port then
+    table.insert(pieces, string.format(":%d", url.port))
+  end
+  table.insert(pieces, "/")
+  table.insert(pieces, url.path)
+  return table.concat(pieces, "")
+end
 
 local function output_extend(agg, output)
   local start = #agg
@@ -92,6 +110,7 @@ function SSHConnection.new(url)
   })
   local term_bufnr = vim.api.nvim_create_buf(false, true)
   local self = setmetatable({
+    url = url,
     meta = {},
     commands = {},
     connected = false,
@@ -115,20 +134,16 @@ function SSHConnection.new(url)
   vim.api.nvim_chan_send(term_id, string.format("ssh %s\r\n", url.host))
   util.hack_around_termopen_autocmd(mode)
 
-  -- If it takes more than 2 seconds to connect, pop open the terminal
-  local coru = coroutine.create(function()
-    coroutine.yield()
+  vim.defer_fn(function()
     if not self.connected and not self.connection_error then
       self:open_terminal()
     end
-  end)
-  coroutine.resume(coru)
+  end, 2000)
   self._stdout = {}
   local jid = vim.fn.jobstart(command, {
     pty = true, -- This is require for interactivity
     on_stdout = function(j, output)
       pcall(vim.api.nvim_chan_send, self.term_id, table.concat(output, "\r\n"))
-      coroutine.resume(coru)
       ---@diagnostic disable-next-line: invisible
       local new_i_start = output_extend(self._stdout, output)
       self:_handle_output(new_i_start)
@@ -249,8 +264,14 @@ function SSHConnection:_handle_output(start_i)
     local last_line = last_lines[1]
     if last_line:match("^Are you sure you want to continue connecting") then
       self:open_terminal()
-    elseif last_line:match("Password:%s*$") then
-      self:open_terminal()
+    elseif last_line:lower():match("password:%s*$") then
+      if not self.connected then
+        local pw = vim.fn.inputsecret(string.format("%s password:", url_to_str(self.url)))
+        pcall(vim.api.nvim_chan_send, self.jid, pw .. "\r")
+        pcall(vim.api.nvim_chan_send, self.term_id, "(secret)\r")
+      else
+        self:open_terminal()
+      end
     elseif last_line:match(": Permission denied %(.+%)%.") then
       self:_set_connection_error(last_line:match(": (Permission denied %(.+%).)"))
     elseif last_line:match("^ssh: .*Connection refused%s*$") then
