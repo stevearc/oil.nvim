@@ -14,9 +14,6 @@ local FIELD_NAME = constants.FIELD_NAME
 local FIELD_TYPE = constants.FIELD_TYPE
 local FIELD_META = constants.FIELD_META
 
-local PREV_DIR_ID = 0
-local PREV_DIR_NAME = ".."
-
 -- map of path->last entry under cursor
 local last_cursor_entry = {}
 
@@ -685,8 +682,8 @@ local function render_buffer(bufnr, opts)
           local id = tonumber(id_str)
           if id then
             local entry = cache.get_entry_by_id(id)
-            if entry or id == PREV_DIR_ID then
-              local name = entry and entry[FIELD_NAME] or PREV_DIR_NAME
+            if entry or id == 0 then
+              local name = entry and entry[FIELD_NAME] or ".."
               local col = line:find(name, 1, true) or (id_str:len() + 1)
               vim.api.nvim_win_set_cursor(winid, { lnum, col - 1 })
             end
