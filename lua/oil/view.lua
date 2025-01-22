@@ -258,8 +258,9 @@ local function get_first_mutable_column_col(adapter, ranges)
 end
 
 ---Force cursor to be after hidden/immutable columns
-local function constrain_cursor()
-  if not config.constrain_cursor then
+---@param mode false|"name"|"editable"
+local function constrain_cursor(mode)
+  if not mode then
     return
   end
   local parser = require("oil.mutator.parser")
@@ -275,14 +276,12 @@ local function constrain_cursor()
   local result = parser.parse_line(adapter, line, column_defs)
   if result and result.ranges then
     local min_col
-    if config.constrain_cursor == "editable" then
+    if mode == "editable" then
       min_col = get_first_mutable_column_col(adapter, result.ranges)
-    elseif config.constrain_cursor == "name" then
+    elseif mode == "name" then
       min_col = result.ranges.name[1]
     else
-      error(
-        string.format('Unexpected value "%s" for option constrain_cursor', config.constrain_cursor)
-      )
+      error(string.format('Unexpected value "%s" for option constrain_cursor', mode))
     end
     if cur[2] < min_col then
       vim.api.nvim_win_set_cursor(0, { cur[1], min_col })
@@ -407,7 +406,7 @@ M.initialize = function(bufnr)
     callback = function()
       -- For some reason the cursor bounces back to its original position,
       -- so we have to defer the call
-      vim.schedule(constrain_cursor)
+      vim.schedule_wrap(constrain_cursor)(config.constrain_cursor)
     end,
   })
   vim.api.nvim_create_autocmd({ "CursorMoved", "ModeChanged" }, {
@@ -420,7 +419,7 @@ M.initialize = function(bufnr)
         return
       end
 
-      constrain_cursor()
+      constrain_cursor(config.constrain_cursor)
 
       if config.preview_win.update_on_cursor_moved then
         -- Debounce and update the preview window
@@ -675,19 +674,23 @@ local function render_buffer(bufnr, opts)
     vim.schedule(function()
       for _, winid in ipairs(vim.api.nvim_list_wins()) do
         if vim.api.nvim_win_is_valid(winid) and vim.api.nvim_win_get_buf(winid) == bufnr then
-          -- If we're not jumping to a specific lnum, use the current lnum so we can adjust the col
-          local lnum = jump_idx or vim.api.nvim_win_get_cursor(winid)[1]
-          local line = vim.api.nvim_buf_get_lines(bufnr, lnum - 1, lnum, true)[1]
-          local id_str = line:match("^/(%d+)")
-          local id = tonumber(id_str)
-          if id then
-            local entry = cache.get_entry_by_id(id)
-            if entry then
-              local name = entry[FIELD_NAME]
-              local col = line:find(name, 1, true) or (id_str:len() + 1)
-              vim.api.nvim_win_set_cursor(winid, { lnum, col - 1 })
+          if jump_idx then
+            local lnum = jump_idx
+            local line = vim.api.nvim_buf_get_lines(bufnr, lnum - 1, lnum, true)[1]
+            local id_str = line:match("^/(%d+)")
+            local id = tonumber(id_str)
+            if id then
+              local entry = cache.get_entry_by_id(id)
+              if entry then
+                local name = entry[FIELD_NAME]
+                local col = line:find(name, 1, true) or (id_str:len() + 1)
+                vim.api.nvim_win_set_cursor(winid, { lnum, col - 1 })
+                return
+              end
             end
           end
+
+          constrain_cursor("name")
         end
       end
     end)
