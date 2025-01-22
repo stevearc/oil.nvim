@@ -40,6 +40,8 @@ oil.nvim supports all the usual plugin managers
   -- Optional dependencies
   dependencies = { { "echasnovski/mini.icons", opts = {} } },
   -- dependencies = { "nvim-tree/nvim-web-devicons" }, -- use if prefer nvim-web-devicons
+  -- Disable lazy loading which can interfere with features like 'default_file_explorer' 
+  -- lazy = false,
 }
 ```
 
