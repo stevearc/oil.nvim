@@ -30,6 +30,8 @@ local M = {}
 ---@field filter_action? fun(action: oil.Action): boolean When present, filter out actions as they are created
 ---@field filter_error? fun(action: oil.ParseError): boolean When present, filter out errors from parsing a buffer
 
+local load_oil_buffer
+
 ---Get the entry on a specific line (1-indexed)
 ---@param bufnr integer
 ---@param lnum integer
@@ -568,6 +570,12 @@ M.open_preview = function(opts, callback)
       vim.api.nvim_echo({ { err, "Error" } }, true, {})
     end
 
+    -- If we called open_preview during an autocmd, then the edit command may not trigger the
+    -- BufReadCmd to load the buffer. So we need to do it manually.
+    if util.is_oil_bufnr(filebufnr) then
+      load_oil_buffer(filebufnr)
+    end
+
     vim.api.nvim_set_option_value("previewwindow", true, { scope = "local", win = 0 })
     vim.api.nvim_win_set_var(0, "oil_preview", true)
     for k, v in pairs(config.preview_win.win_options) do
@@ -994,7 +1002,7 @@ local function restore_alt_buf()
 end
 
 ---@param bufnr integer
-local function load_oil_buffer(bufnr)
+load_oil_buffer = function(bufnr)
   local config = require("oil.config")
   local keymap_util = require("oil.keymap_util")
   local loading = require("oil.loading")
@@ -1006,6 +1014,11 @@ local function load_oil_buffer(bufnr)
     scheme = config.adapter_aliases[scheme]
     bufname = scheme .. path
     util.rename_buffer(bufnr, bufname)
+  end
+
+  -- Early return if we're already loading or have already loaded this buffer
+  if loading.is_loading(bufnr) or vim.b[bufnr].filetype ~= nil then
+    return
   end
 
   local adapter = assert(config.get_adapter_by_scheme(scheme))
