@@ -351,9 +351,9 @@ of being permanently deleted. You can browse the trash for a directory using
 the `toggle_trash` action (bound to `g\\` by default). You can view all files
 in the trash with `:Oil --trash /`.
 
-To restore files, simply delete them from the trash and put them in the desired
-destination, the same as any other file operation. If you delete files from the
-trash they will be permanently deleted (purged).
+To restore files, simply move them from the trash to the desired destination,
+the same as any other file operation. If you delete files from the trash they
+will be permanently deleted (purged).
 
 Linux:
     Oil supports the FreeDesktop trash specification.
