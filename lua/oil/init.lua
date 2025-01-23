@@ -612,14 +612,6 @@ M.select = function(opts, callback)
   local FIELD_META = constants.FIELD_META
   opts = vim.tbl_extend("keep", opts or {}, {})
 
-  if opts.preview then
-    vim.notify_once(
-      "Deprecated: do not call oil.select with preview=true. Use oil.open_preview instead.\nThis shim will be removed on 2025-01-01"
-    )
-    M.open_preview(opts, callback)
-    return
-  end
-
   local function finish(err)
     if err then
       vim.notify(err, vim.log.levels.ERROR)
