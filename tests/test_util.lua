@@ -1,6 +1,7 @@
 require("plenary.async").tests.add_to_env()
 local cache = require("oil.cache")
 local test_adapter = require("oil.adapters.test")
+local util = require("oil.util")
 local M = {}
 
 M.reset_editor = function()
@@ -52,6 +53,10 @@ M.wait_for_autocmd = a.wrap(function(autocmd, cb)
 
   vim.api.nvim_create_autocmd(autocmd, opts)
 end, 2)
+
+M.wait_oil_ready = a.wrap(function(cb)
+  util.run_after_load(0, vim.schedule_wrap(cb))
+end, 1)
 
 ---@param actions string[]
 ---@param timestep integer

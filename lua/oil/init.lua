@@ -241,18 +241,21 @@ M.get_buffer_parent_url = function(bufname, use_oil_parent)
   end
 end
 
+---@class (exact) oil.OpenOpts
+---@field preview? oil.OpenPreviewOpts When present, open the preview window after opening oil
+
 ---Open oil browser in a floating window
----@param dir nil|string When nil, open the parent of the current buffer, or the cwd if current buffer is not a file
-M.open_float = function(dir)
+---@param dir? string When nil, open the parent of the current buffer, or the cwd if current buffer is not a file
+---@param opts? oil.OpenOpts
+---@param cb? fun() Called after the oil buffer is ready
+M.open_float = function(dir, opts, cb)
+  opts = opts or {}
   local config = require("oil.config")
   local layout = require("oil.layout")
   local util = require("oil.util")
   local view = require("oil.view")
 
   local parent_url, basename = M.get_url_for_path(dir)
-  if not parent_url then
-    return
-  end
   if basename then
     view.set_last_cursor(parent_url, basename)
   end
@@ -326,6 +329,14 @@ M.open_float = function(dir)
     vim.api.nvim_set_option_value("buflisted", config.buf_options.buflisted, { buf = 0 })
   end
 
+  util.run_after_load(0, function()
+    if opts.preview then
+      M.open_preview(opts.preview, cb)
+    elseif cb then
+      cb()
+    end
+  end)
+
   if vim.fn.has("nvim-0.9") == 0 then
     util.add_title_to_win(winid)
   end
@@ -359,15 +370,15 @@ local function update_preview_window(oil_bufnr)
 end
 
 ---Open oil browser for a directory
----@param dir nil|string When nil, open the parent of the current buffer, or the cwd if current buffer is not a file
-M.open = function(dir)
+---@param dir? string When nil, open the parent of the current buffer, or the cwd if current buffer is not a file
+---@param opts? oil.OpenOpts
+---@param cb? fun() Called after the oil buffer is ready
+M.open = function(dir, opts, cb)
+  opts = opts or {}
   local config = require("oil.config")
   local util = require("oil.util")
   local view = require("oil.view")
   local parent_url, basename = M.get_url_for_path(dir)
-  if not parent_url then
-    return
-  end
   if basename then
     view.set_last_cursor(parent_url, basename)
   end
@@ -376,6 +387,14 @@ M.open = function(dir)
   if config.buf_options.buflisted ~= nil then
     vim.api.nvim_set_option_value("buflisted", config.buf_options.buflisted, { buf = 0 })
   end
+
+  util.run_after_load(0, function()
+    if opts.preview then
+      M.open_preview(opts.preview, cb)
+    elseif cb then
+      cb()
+    end
+  end)
 
   -- If preview window exists, update its content
   update_preview_window()
@@ -1104,6 +1123,7 @@ M.setup = function(opts)
     end
     local float = false
     local trash = false
+    local preview = false
     local i = 1
     while i <= #args.fargs do
       local v = args.fargs[i]
@@ -1112,6 +1132,11 @@ M.setup = function(opts)
         table.remove(args.fargs, i)
       elseif v == "--trash" then
         trash = true
+        table.remove(args.fargs, i)
+      elseif v == "--preview" then
+        -- In the future we may want to support specifying options for the preview window (e.g.
+        -- vertical/horizontal), but if you want that level of control maybe just use the API
+        preview = true
         table.remove(args.fargs, i)
       elseif v == "--progress" then
         local mutator = require("oil.mutator")
@@ -1136,12 +1161,16 @@ M.setup = function(opts)
 
     local method = float and "open_float" or "open"
     local path = args.fargs[1]
+    local opts = {}
     if trash then
       local url = M.get_url_for_path(path, false)
       local _, new_path = util.parse_url(url)
       path = "oil-trash://" .. new_path
     end
-    M[method](path)
+    if preview then
+      opts.preview = {}
+    end
+    M[method](path, opts)
   end, { desc = "Open oil file browser on a directory", nargs = "*", complete = "dir" })
   local aug = vim.api.nvim_create_augroup("Oil", {})
 
