@@ -150,10 +150,10 @@ a.describe("files adapter", function()
   a.it("Editing a new oil://path/ creates an oil buffer", function()
     local tmpdir_url = "oil://" .. vim.fn.fnamemodify(tmpdir.path, ":p") .. "/"
     vim.cmd.edit({ args = { tmpdir_url } })
-    test_util.wait_for_autocmd({ "User", pattern = "OilEnter" })
+    test_util.wait_oil_ready()
     local new_url = "oil://" .. vim.fn.fnamemodify(tmpdir.path, ":p") .. "newdir"
     vim.cmd.edit({ args = { new_url } })
-    test_util.wait_for_autocmd({ "User", pattern = "OilEnter" })
+    test_util.wait_oil_ready()
     assert.equals("oil", vim.bo.filetype)
     -- The normalization will add a '/'
     assert.equals(new_url .. "/", vim.api.nvim_buf_get_name(0))

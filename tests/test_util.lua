@@ -34,6 +34,10 @@ local function throwiferr(err, ...)
   end
 end
 
+M.oil_open = function(...)
+  a.wrap(require("oil").open, 3)(...)
+end
+
 M.await = function(fn, nargs, ...)
   return throwiferr(a.wrap(fn, nargs)(...))
 end
