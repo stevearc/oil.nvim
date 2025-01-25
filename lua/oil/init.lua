@@ -1161,16 +1161,16 @@ M.setup = function(opts)
 
     local method = float and "open_float" or "open"
     local path = args.fargs[1]
-    local opts = {}
+    local open_opts = {}
     if trash then
       local url = M.get_url_for_path(path, false)
       local _, new_path = util.parse_url(url)
       path = "oil-trash://" .. new_path
     end
     if preview then
-      opts.preview = {}
+      open_opts.preview = {}
     end
-    M[method](path, opts)
+    M[method](path, open_opts)
   end, { desc = "Open oil file browser on a directory", nargs = "*", complete = "dir" })
   local aug = vim.api.nvim_create_augroup("Oil", {})
 
