@@ -926,7 +926,7 @@ M.read_file_to_scratch_buffer = function(path, preview_method)
     return
   end
   local ft = vim.filetype.match({ filename = path, buf = bufnr })
-  if ft and ft ~= "" then
+  if ft and ft ~= "" and vim.treesitter.language.get_lang then
     local lang = vim.treesitter.language.get_lang(ft)
     if not pcall(vim.treesitter.start, bufnr, lang) then
       vim.bo[bufnr].syntax = ft
