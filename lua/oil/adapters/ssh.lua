@@ -368,7 +368,7 @@ M.read_file = function(bufnr)
   local cache_dir = vim.fn.stdpath("cache")
   assert(type(cache_dir) == "string")
   local tmpdir = fs.join(cache_dir, "oil")
-  fs.mkdirp(tmpdir)
+  fs.mkdirp(tmpdir, config.new_dir_mode)
   local fd, tmpfile = vim.loop.fs_mkstemp(fs.join(tmpdir, "ssh_XXXXXX"))
   if fd then
     vim.loop.fs_close(fd)
