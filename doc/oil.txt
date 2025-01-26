@@ -605,9 +605,12 @@ send_to_qflist                                            *actions.send_to_qflis
     previous entries.
 
     Parameters:
-      {action} `"r"|"a"` Replace or add to current quickfix list (see
-               |setqflist-action|)
-      {target} `"qflist"|"loclist"` The target list to send files to
+      {target}               `"qflist"|"loclist"` The target list to send files to
+      {action}               `"r"|"a"` Replace or add to current quickfix list
+                             (see |setqflist-action|)
+      {only_matching_search} `boolean` Whether to only add the files that matches
+                             the last search. This option only applies when search
+                             highlighting is active
 
 show_help                                                      *actions.show_help*
     Show default keymaps

@@ -753,7 +753,7 @@ end
 
 ---Send files from the current oil directory to quickfix
 ---based on the provided options.
----@param opts {target?: "qflist"|"loclist", mode?: "r"|"a"}
+---@param opts {target?: "qflist"|"loclist", action?: "r"|"a", only_matching_search?: boolean}
 M.send_to_quickfix = function(opts)
   if type(opts) ~= "table" then
     opts = {}
@@ -767,10 +767,11 @@ M.send_to_quickfix = function(opts)
   if not range then
     range = { start_lnum = 1, end_lnum = vim.fn.line("$") }
   end
+  local match_all = not opts.only_matching_search
   local qf_entries = {}
   for i = range.start_lnum, range.end_lnum do
     local entry = oil.get_entry_on_line(0, i)
-    if entry and entry.type == "file" then
+    if entry and entry.type == "file" and (match_all or M.is_matching(entry)) then
       local qf_entry = {
         filename = dir .. entry.name,
         lnum = 1,
@@ -786,13 +787,14 @@ M.send_to_quickfix = function(opts)
   end
   vim.api.nvim_exec_autocmds("QuickFixCmdPre", {})
   local qf_title = "oil files"
-  local mode = opts.mode == "a" and "a" or "r"
+  local action = opts.action == "a" and "a" or "r"
   if opts.target == "loclist" then
-    vim.fn.setloclist(0, {}, mode, { title = qf_title, items = qf_entries })
+    vim.fn.setloclist(0, {}, action, { title = qf_title, items = qf_entries })
   else
-    vim.fn.setqflist({}, mode, { title = qf_title, items = qf_entries })
+    vim.fn.setqflist({}, action, { title = qf_title, items = qf_entries })
   end
   vim.api.nvim_exec_autocmds("QuickFixCmdPost", {})
+  vim.cmd.copen()
 end
 
 ---@return boolean
@@ -815,6 +817,19 @@ M.get_visual_range = function()
     start_lnum, end_lnum = end_lnum, start_lnum
   end
   return { start_lnum = start_lnum, end_lnum = end_lnum }
+end
+
+---@param entry oil.Entry
+---@return boolean
+M.is_matching = function(entry)
+  -- if search highlightig is not enabled, all files are considered to match
+  local search_highlighting_is_off = (vim.v.hlsearch == 0)
+  if search_highlighting_is_off then
+    return true
+  end
+  local pattern = vim.fn.getreg("/")
+  local position_of_match = vim.fn.match(entry.name, pattern)
+  return position_of_match ~= -1
 end
 
 ---@param bufnr integer
