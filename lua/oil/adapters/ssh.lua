@@ -222,6 +222,34 @@ M.normalize_url = function(url, callback)
 end
 
 ---@param url string
+---@return nil|string, nil|oil.InternalEntry
+M.load = function(url)
+  local res = M.parse_url(url)
+  local path = res.path
+  res.path = vim.fn.fnamemodify(path, ":h")
+
+  local ret = {}
+  local conn = get_connection(url)
+  conn:list_dir(url_to_str(res), path, function(err, entries)
+    ret.err = err
+    if entries and #entries ~= 0 then
+      ret.entry = entries[1]
+    end
+  end)
+  local succ, err = vim.wait(5000, function()
+    return ret.err or ret.entry
+  end, 100)
+  if not succ then
+    if err == -1 then
+      return "Connection timed out"
+    else
+      return "Connection interrupted"
+    end
+  end
+  return ret.err, ret.entry
+end
+
+---@param url string
 ---@param column_defs string[]
 ---@param callback fun(err?: string, entries?: oil.InternalEntry[], fetch_more?: fun())
 M.list = function(url, column_defs, callback)

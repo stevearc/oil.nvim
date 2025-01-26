@@ -418,6 +418,77 @@ M.copy_entry_filename = {
   end,
 }
 
+M.copy_to_system_clipboard = {
+  desc = "Copy the entry under the cursor to the system clipboard",
+  callback = function()
+    local fs = require("oil.fs")
+    local entry = oil.get_cursor_entry()
+    local dir = oil.get_current_dir()
+    if not entry or not dir then
+      return
+    end
+    local path = dir .. entry.name
+
+    if fs.is_mac then
+      local cmd =
+        "osascript -e 'on run args' -e 'set the clipboard to POSIX file (first item of args)' -e end '%s'"
+      local jid = vim.fn.jobstart(string.format(cmd, path), {
+        on_exit = function(j, exit_code)
+          if exit_code ~= 0 then
+            vim.notify(
+              string.format("Error copying '%s' to system clipboard", path),
+              vim.log.levels.ERROR
+            )
+          end
+        end,
+      })
+      assert(jid > 0, "Failed to start job")
+    else
+      vim.notify("System clipboard not supported on this platform", vim.log.levels.WARN)
+    end
+  end,
+}
+
+M.paste_from_system_clipboard = {
+  desc = "Paste the system clipboard into the current oil directory",
+  callback = function()
+    local fs = require("oil.fs")
+    local dir = oil.get_current_dir()
+    if not dir then
+      return
+    end
+
+    if fs.is_mac then
+      local path = nil
+      local cmd =
+        "osascript -e 'on run' -e 'POSIX path of (the clipboard as «class furl»)' -e end"
+      local jid = vim.fn.jobstart(cmd, {
+        stdout_buffered = true,
+        on_stdout = function(j, output)
+          if #output > 1 then
+            path = vim.uv.fs_realpath(output[1])
+          end
+        end,
+        on_exit = function(j, exit_code)
+          if exit_code ~= 0 or path == nil then
+            vim.notify(
+              string.format("Error pasting file path from system clipboard"),
+              vim.log.levels.ERROR
+            )
+            return
+          end
+          local url = "oil://" .. path
+          local pos = vim.api.nvim_win_get_cursor(0)
+          vim.api.nvim_buf_set_lines(0, pos[1], pos[1], false, { url })
+        end,
+      })
+      assert(jid > 0, "Failed to start job")
+    else
+      vim.notify("System clipboard not supported on this platform", vim.log.levels.WARN)
+    end
+  end,
+}
+
 M.open_cmdline_dir = {
   desc = "Open vim cmdline with current directory as an argument",
   deprecated = true,
