@@ -1,5 +1,30 @@
 # Changelog
 
+## [2.15.0](https://github.com/stevearc/oil.nvim/compare/v2.14.0...v2.15.0) (2025-01-26)
+
+
+### Features
+
+* API to automatically open preview window after opening oil ([#339](https://github.com/stevearc/oil.nvim/issues/339)) ([57528bf](https://github.com/stevearc/oil.nvim/commit/57528bf9c58080ca891e8d362d0a578895c136ce))
+* can selectively add entries to quickfix ([#564](https://github.com/stevearc/oil.nvim/issues/564)) ([b594b9a](https://github.com/stevearc/oil.nvim/commit/b594b9a9052618669ccf6520b2d0c0d942eb8118))
+* floating window max width/height can be percentages ([#553](https://github.com/stevearc/oil.nvim/issues/553)) ([1df90fa](https://github.com/stevearc/oil.nvim/commit/1df90faf927e78f5aacf278abd0bfdcb5f45e825))
+* pass oil bufnr to custom filename highlight function ([#552](https://github.com/stevearc/oil.nvim/issues/552)) ([f5c563a](https://github.com/stevearc/oil.nvim/commit/f5c563a074a38cee5a09f98e98b74dcd2c322490))
+
+
+### Bug Fixes
+
+* crash in preview on nvim 0.8 ([81b2c5f](https://github.com/stevearc/oil.nvim/commit/81b2c5f04ae24a8c83b20ecbd017fecac15faca0))
+* directory rendering with custom highlights ([#551](https://github.com/stevearc/oil.nvim/issues/551)) ([a6a4f48](https://github.com/stevearc/oil.nvim/commit/a6a4f48b14b4a51fded531c86f6c04b4503a2ef8))
+* error when non-current oil buffer has validation errors ([#561](https://github.com/stevearc/oil.nvim/issues/561)) ([8d11a2a](https://github.com/stevearc/oil.nvim/commit/8d11a2abf3039b1974d4acd65fbc83ada2ca1084))
+* gracefully handle fs_stat failures ([#558](https://github.com/stevearc/oil.nvim/issues/558)) ([7c26a59](https://github.com/stevearc/oil.nvim/commit/7c26a59ac0061b199bf9f44b19d45cfadd9b14f5))
+* guard against nil metadata values ([#548](https://github.com/stevearc/oil.nvim/issues/548)) ([254bc66](https://github.com/stevearc/oil.nvim/commit/254bc6635cb3f77e6e9a89155652f368e5535160))
+* more consistent cursor position when entering a new directory ([#536](https://github.com/stevearc/oil.nvim/issues/536)) ([c80fa5c](https://github.com/stevearc/oil.nvim/commit/c80fa5c415b882c1c694a32748cea09b7dafc2c5))
+* open files in correct window from floating oil ([#560](https://github.com/stevearc/oil.nvim/issues/560)) ([83ac518](https://github.com/stevearc/oil.nvim/commit/83ac5185f79ab8d869bccea792dc516ad02ad06e))
+* preview sometimes causes oil buffers to be stuck in unloaded state ([#563](https://github.com/stevearc/oil.nvim/issues/563)) ([1488f0d](https://github.com/stevearc/oil.nvim/commit/1488f0d96b1cb820dd12f05a7bf5283a631a7c4d))
+* stat files if fs_readdir doesn't provide a type ([#543](https://github.com/stevearc/oil.nvim/issues/543)) ([c6a39a6](https://github.com/stevearc/oil.nvim/commit/c6a39a69b2df7c10466f150dde0bd23e49c1fba3))
+* support permissions checks on windows and virtual filesystems ([#555](https://github.com/stevearc/oil.nvim/issues/555)) ([7041528](https://github.com/stevearc/oil.nvim/commit/7041528bdedb350ad66e650684deec8456e053cc))
+* work around incorrect link detection on windows ([#557](https://github.com/stevearc/oil.nvim/issues/557)) ([09fa1d2](https://github.com/stevearc/oil.nvim/commit/09fa1d22f5edf0730824d2b222d726c8c81bbdc9))
+
 ## [2.14.0](https://github.com/stevearc/oil.nvim/compare/v2.13.0...v2.14.0) (2024-12-21)
 
 
