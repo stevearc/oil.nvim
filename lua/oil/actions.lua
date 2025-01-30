@@ -430,7 +430,8 @@ M.copy_to_system_clipboard = {
     local path = dir .. entry.name
     local cmd
     if fs.is_mac then
-      cmd = "osascript -e 'on run args' -e 'set the clipboard to POSIX file (first item of args)' -e end '%s'"
+      cmd =
+        "osascript -e 'on run args' -e 'set the clipboard to POSIX file (first item of args)' -e end '%s'"
     else
       cmd = "exit 1"
     end
@@ -438,11 +439,14 @@ M.copy_to_system_clipboard = {
     local jid = vim.fn.jobstart(string.format(cmd, path), {
       on_exit = function(j, exit_code)
         if exit_code ~= 0 then
-          vim.schedule(function ()
+          vim.schedule(function()
             if not fs.is_mac then
               vim.notify("System clipboard not supported on this platform", vim.log.levels.WARN)
             else
-              vim.notify(string.format("Error copying '%s' to system clipboard", path), vim.log.levels.ERROR)
+              vim.notify(
+                string.format("Error copying '%s' to system clipboard", path),
+                vim.log.levels.ERROR
+              )
             end
           end)
         end
@@ -471,12 +475,13 @@ M.paste_from_system_clipboard = {
     else
       cmd = "exit 1"
     end
-    local write_pasted = function (entry, column_defs, adapter, bufnr)
+    local write_pasted = function(entry, column_defs, adapter, bufnr)
       local col_width = {}
       for i in ipairs(column_defs) do
         col_width[i + 1] = 1
       end
-      local line_table = { view.format_entry_cols(entry, column_defs, col_width, adapter, false, bufnr) }
+      local line_table =
+        { view.format_entry_cols(entry, column_defs, col_width, adapter, false, bufnr) }
       local lines, _ = util.render_table(line_table, col_width)
       local pos = vim.api.nvim_win_get_cursor(0)
       vim.api.nvim_buf_set_lines(0, pos[1], pos[1], true, lines)
@@ -491,11 +496,14 @@ M.paste_from_system_clipboard = {
       end,
       on_exit = function(j, exit_code)
         if exit_code ~= 0 or path == nil then
-          vim.schedule(function ()
+          vim.schedule(function()
             if not fs.is_mac then
               vim.notify("System clipboard not supported on this platform", vim.log.levels.WARN)
             else
-              vim.notify(string.format("Error pasting '%s' from system clipboard", path), vim.log.levels.ERROR)
+              vim.notify(
+                string.format("Error pasting '%s' from system clipboard", path),
+                vim.log.levels.ERROR
+              )
             end
           end)
           return
@@ -514,32 +522,36 @@ M.paste_from_system_clipboard = {
         end
 
         cache.begin_update_url(parent_url)
-        adapter.list(parent_url, column_defs, vim.schedule_wrap(function (err, entries, fetch_more)
-          if err then
-            cache.end_update_url(parent_url)
-            util.render_text(bufnr, { "Error: " .. err })
-            return
-          end
-          if entries then
-            for _, entry in ipairs(entries) do
-              cache.store_entry(parent_url, entry)
-              if entry[constants.FIELD_NAME] == vim.fs.basename(path) then
-                cache.end_update_url(parent_url)
-                write_pasted(entry, column_defs, adapter, bufnr)
-                return
+        adapter.list(
+          parent_url,
+          column_defs,
+          vim.schedule_wrap(function(err, entries, fetch_more)
+            if err then
+              cache.end_update_url(parent_url)
+              util.render_text(bufnr, { "Error: " .. err })
+              return
+            end
+            if entries then
+              for _, entry in ipairs(entries) do
+                cache.store_entry(parent_url, entry)
+                if entry[constants.FIELD_NAME] == vim.fs.basename(path) then
+                  cache.end_update_url(parent_url)
+                  write_pasted(entry, column_defs, adapter, bufnr)
+                  return
+                end
               end
             end
-          end
-          if fetch_more then
-            vim.defer_fn(fetch_more, 4)
-          else
-            cache.end_update_url(parent_url)
-            vim.notify(
-              string.format("The requested file is not found under '%s'", parent_url),
-              vim.log.levels.ERROR
-            )
-          end
-        end))
+            if fetch_more then
+              vim.defer_fn(fetch_more, 4)
+            else
+              cache.end_update_url(parent_url)
+              vim.notify(
+                string.format("The requested file is not found under '%s'", parent_url),
+                vim.log.levels.ERROR
+              )
+            end
+          end)
+        )
       end,
     })
     assert(jid > 0, "Failed to start job")
