@@ -418,6 +418,134 @@ M.copy_entry_filename = {
   end,
 }
 
+M.copy_to_system_clipboard = {
+  desc = "Copy the entry under the cursor to the system clipboard",
+  callback = function()
+    local fs = require("oil.fs")
+    local dir = oil.get_current_dir()
+    local entry = oil.get_cursor_entry()
+    if not dir or not entry then
+      return
+    end
+    local path = dir .. entry.name
+    local cmd
+    if fs.is_mac then
+      cmd = "osascript -e 'on run args' -e 'set the clipboard to POSIX file (first item of args)' -e end '%s'"
+    else
+      cmd = "exit 1"
+    end
+
+    local jid = vim.fn.jobstart(string.format(cmd, path), {
+      on_exit = function(j, exit_code)
+        if exit_code ~= 0 then
+          vim.schedule(function ()
+            if not fs.is_mac then
+              vim.notify("System clipboard not supported on this platform", vim.log.levels.WARN)
+            else
+              vim.notify(string.format("Error copying '%s' to system clipboard", path), vim.log.levels.ERROR)
+            end
+          end)
+        end
+      end,
+    })
+    assert(jid > 0, "Failed to start job")
+  end,
+}
+
+M.paste_from_system_clipboard = {
+  desc = "Paste the system clipboard into the current oil directory",
+  callback = function()
+    local fs = require("oil.fs")
+    local view = require("oil.view")
+    local cache = require("oil.cache")
+    local config = require("oil.config")
+    local columns = require("oil.columns")
+    local constants = require("oil.constants")
+    local dir = oil.get_current_dir()
+    if not dir then
+      return
+    end
+    local cmd, path
+    if fs.is_mac then
+      cmd = "osascript -e 'on run' -e 'POSIX path of (the clipboard as «class furl»)' -e end"
+    else
+      cmd = "exit 1"
+    end
+    local write_pasted = function (entry, column_defs, adapter, bufnr)
+      local col_width = {}
+      for i in ipairs(column_defs) do
+        col_width[i + 1] = 1
+      end
+      local line_table = { view.format_entry_cols(entry, column_defs, col_width, adapter, false, bufnr) }
+      local lines, _ = util.render_table(line_table, col_width)
+      local pos = vim.api.nvim_win_get_cursor(0)
+      vim.api.nvim_buf_set_lines(0, pos[1], pos[1], true, lines)
+    end
+
+    local jid = vim.fn.jobstart(cmd, {
+      stdout_buffered = true,
+      on_stdout = function(j, output)
+        if #output > 1 then
+          path = vim.uv.fs_realpath(output[1])
+        end
+      end,
+      on_exit = function(j, exit_code)
+        if exit_code ~= 0 or path == nil then
+          vim.schedule(function ()
+            if not fs.is_mac then
+              vim.notify("System clipboard not supported on this platform", vim.log.levels.WARN)
+            else
+              vim.notify(string.format("Error pasting '%s' from system clipboard", path), vim.log.levels.ERROR)
+            end
+          end)
+          return
+        end
+
+        local bufnr = 0
+        local scheme = "oil://"
+        local parent_url = scheme .. vim.fs.dirname(path)
+        local adapter = assert(config.get_adapter_by_scheme(parent_url))
+        local column_defs = columns.get_supported_columns(scheme)
+
+        local ori_entry = cache.get_entry_by_url(scheme .. path)
+        if ori_entry then
+          write_pasted(ori_entry, column_defs, adapter, bufnr)
+          return
+        end
+
+        cache.begin_update_url(parent_url)
+        adapter.list(parent_url, column_defs, vim.schedule_wrap(function (err, entries, fetch_more)
+          if err then
+            cache.end_update_url(parent_url)
+            util.render_text(bufnr, { "Error: " .. err })
+            return
+          end
+          if entries then
+            for _, entry in ipairs(entries) do
+              cache.store_entry(parent_url, entry)
+              if entry[constants.FIELD_NAME] == vim.fs.basename(path) then
+                cache.end_update_url(parent_url)
+                write_pasted(entry, column_defs, adapter, bufnr)
+                return
+              end
+            end
+          end
+          if fetch_more then
+            vim.defer_fn(fetch_more, 4)
+          else
+            cache.end_update_url(parent_url)
+            vim.notify(
+              string.format("The requested file is not found under '%s'", parent_url),
+              vim.log.levels.ERROR
+            )
+          end
+        end))
+      end,
+    })
+    assert(jid > 0, "Failed to start job")
+  end,
+}
+
 M.open_cmdline_dir = {
   desc = "Open vim cmdline with current directory as an argument",
   deprecated = true,
