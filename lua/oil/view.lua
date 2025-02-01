@@ -747,7 +747,7 @@ M.format_entry_cols = function(entry, column_defs, col_width, adapter, is_hidden
   table.insert(cols, id_key)
   -- Then add all the configured columns
   for i, column in ipairs(column_defs) do
-    local chunk = columns.render_col(adapter, column, entry)
+    local chunk = columns.render_col(adapter, column, entry, bufnr)
     local text = type(chunk) == "table" and chunk[1] or chunk
     ---@cast text string
     col_width[i + 1] = math.max(col_width[i + 1], vim.api.nvim_strwidth(text))
