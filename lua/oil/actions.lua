@@ -433,7 +433,7 @@ M.copy_to_system_clipboard = {
       cmd =
         "osascript -e 'on run args' -e 'set the clipboard to POSIX file (first item of args)' -e end '%s'"
     elseif fs.is_linux then
-      cmd = "echo -en '%s\\n' | xclip -i -selection clipboard -t 'text/uri-list'"
+      cmd = "echo -en '%s\\n' | xclip -i -selection clipboard -t text/uri-list"
     else
       cmd = "exit 1"
     end
@@ -475,7 +475,7 @@ M.paste_from_system_clipboard = {
     if fs.is_mac then
       cmd = "osascript -e 'on run' -e 'POSIX path of (the clipboard as «class furl»)' -e end"
     elseif fs.is_linux then
-      cmd = "xclip -o -selection clipboard"
+      cmd = "xclip -o -selection clipboard -t text/uri-list"
     else
       cmd = "exit 1"
     end
