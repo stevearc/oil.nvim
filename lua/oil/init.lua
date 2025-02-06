@@ -560,6 +560,7 @@ M.open_preview = function(opts, callback)
       entry_is_file
       and config.preview_win.preview_method ~= "load"
       and not util.file_matches_bufreadcmd(normalized_url)
+      and not config.preview_win.disable_preview(normalized_url)
     then
       filebufnr =
         util.read_file_to_scratch_buffer(normalized_url, config.preview_win.preview_method)
