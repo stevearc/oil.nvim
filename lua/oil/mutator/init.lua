@@ -554,6 +554,8 @@ M.try_write_changes = function(confirm, cb)
       )
     else
       local bufnr, errs = next(all_errors)
+      assert(bufnr)
+      assert(errs)
       -- HACK: This is a workaround for the fact that we can't switch buffers in the middle of a
       -- BufWriteCmd.
       vim.schedule(function()
