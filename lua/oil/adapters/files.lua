@@ -180,7 +180,10 @@ for _, time_key in ipairs({ "ctime", "mtime", "atime", "birthtime" }) do
       local fmt = conf and conf.format
       local pattern
       if fmt then
-        pattern = fmt:gsub("%%.", "%%S+")
+        -- Replace placeholders with a pattern that matches non-space characters (e.g. %H -> %S+)
+        -- and whitespace with a pattern that matches any amount of whitespace
+        -- e.g. "%b %d %Y" -> "%S+%s+%S+%s+%S+"
+        pattern = fmt:gsub("%%.", "%%S+"):gsub("%s+", "%%s+")
       else
         pattern = "%S+%s+%d+%s+%d%d:?%d%d"
       end
