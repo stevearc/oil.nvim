@@ -556,18 +556,19 @@ M.open_preview = function(opts, callback)
 
     local entry_is_file = not vim.endswith(normalized_url, "/")
     local filebufnr
-    if
-      entry_is_file
-      and config.preview_win.preview_method ~= "load"
-      and not util.file_matches_bufreadcmd(normalized_url)
-    then
-      filebufnr =
-        util.read_file_to_scratch_buffer(normalized_url, config.preview_win.preview_method)
-    elseif entry_is_file and config.preview_win.disable_preview(normalized_url) then
-      filebufnr = vim.api.nvim_create_buf(false, true)
-      vim.bo[filebufnr].bufhidden = "wipe"
-      vim.bo[filebufnr].buftype = "nofile"
-      util.render_text(filebufnr, "Preview disabled", { winid = preview_win })
+    if entry_is_file then
+      if config.preview_win.disable_preview(normalized_url) then
+        filebufnr = vim.api.nvim_create_buf(false, true)
+        vim.bo[filebufnr].bufhidden = "wipe"
+        vim.bo[filebufnr].buftype = "nofile"
+        util.render_text(filebufnr, "Preview disabled", { winid = preview_win })
+      elseif
+        config.preview_win.preview_method ~= "load"
+        and not util.file_matches_bufreadcmd(normalized_url)
+      then
+        filebufnr =
+          util.read_file_to_scratch_buffer(normalized_url, config.preview_win.preview_method)
+      end
     end
 
     if not filebufnr then
