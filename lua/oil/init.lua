@@ -556,7 +556,7 @@ M.open_preview = function(opts, callback)
 
     local entry_is_file = not vim.endswith(normalized_url, "/")
     local filebufnr
-    if entry_is_file
+    if entry_is_file then
       if config.preview_win.disable_preview(normalized_url) then
         filebufnr = vim.api.nvim_create_buf(false, true)
         vim.bo[filebufnr].bufhidden = "wipe"
