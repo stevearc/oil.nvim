@@ -1,3 +1,4 @@
+local log = require("oil.log")
 local M = {}
 
 local uv = vim.uv or vim.loop
@@ -245,6 +246,37 @@ M.recursive_delete = function(entry_type, path, cb)
   end, 10000)
 end
 
+---Move the undofile for the file at src_path to dest_path
+---@param src_path string
+---@param dest_path string
+---@param copy boolean
+local move_undofile = vim.schedule_wrap(function(src_path, dest_path, copy)
+  local undofile = vim.fn.undofile(src_path)
+  uv.fs_stat(
+    undofile,
+    vim.schedule_wrap(function(stat_err)
+      if stat_err then
+        -- undofile doesn't exist
+        return
+      end
+      local dest_undofile = vim.fn.undofile(dest_path)
+      if copy then
+        uv.fs_copyfile(src_path, dest_path, function(err)
+          if err then
+            log.warn("Error copying undofile %s: %s", undofile, err)
+          end
+        end)
+      else
+        uv.fs_rename(undofile, dest_undofile, function(err)
+          if err then
+            log.warn("Error moving undofile %s: %s", undofile, err)
+          end
+        end)
+      end
+    end)
+  )
+end)
+
 ---@param entry_type oil.EntryType
 ---@param src_path string
 ---@param dest_path string
@@ -262,6 +294,7 @@ M.recursive_copy = function(entry_type, src_path, dest_path, cb)
   end
   if entry_type ~= "directory" then
     uv.fs_copyfile(src_path, dest_path, { excl = true }, cb)
+    move_undofile(src_path, dest_path, true)
     return
   end
   uv.fs_stat(src_path, function(stat_err, src_stat)
@@ -333,6 +366,9 @@ M.recursive_move = function(entry_type, src_path, dest_path, cb)
         end
       end)
     else
+      if entry_type ~= "directory" then
+        move_undofile(src_path, dest_path, false)
+      end
       cb()
     end
   end)

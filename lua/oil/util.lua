@@ -195,6 +195,18 @@ M.rename_buffer = function(src_bufnr, dest_buf_name)
       -- Try to delete, but don't if the buffer has changes
       pcall(vim.api.nvim_buf_delete, src_bufnr, {})
     end
+    -- Renaming a buffer won't load the undo file, so we need to do that manually
+    if vim.bo[dest_bufnr].undofile then
+      vim.api.nvim_buf_call(dest_bufnr, function()
+        vim.cmd.rundo({
+          args = { vim.fn.undofile(dest_buf_name) },
+          magic = { file = false, bar = false },
+          mods = {
+            emsg_silent = true,
+          },
+        })
+      end)
+    end
   end)
   return true
 end

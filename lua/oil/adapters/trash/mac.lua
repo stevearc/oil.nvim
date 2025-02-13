@@ -224,7 +224,6 @@ M.delete_to_trash = function(path, cb)
       end
 
       local stat_type = src_stat.type
-      ---@cast stat_type oil.EntryType
       fs.recursive_move(stat_type, path, dest, vim.schedule_wrap(cb))
     end)
   )
