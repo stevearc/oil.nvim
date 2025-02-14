@@ -451,6 +451,10 @@ M.copy_to_system_clipboard = {
               )
             end
           end)
+        else
+          vim.schedule(function()
+            vim.notify(string.format("Copied '%s' to system clipboard", path))
+          end)
         end
       end,
     })
@@ -495,7 +499,8 @@ M.paste_from_system_clipboard = {
       stdout_buffered = true,
       on_stdout = function(j, output)
         if #output > 1 then
-          path = vim.uv.fs_realpath(output[1]:gsub("^files?://", ""))
+          local sub_scheme = output[1]:gsub("^files?://", "")
+          path = vim.uv.fs_realpath(sub_scheme)
         end
       end,
       on_exit = function(j, exit_code)
