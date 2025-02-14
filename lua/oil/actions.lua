@@ -478,7 +478,8 @@ M.paste_from_system_clipboard = {
     end
     local cmd, path
     if fs.is_mac then
-      cmd = "osascript -e 'on run' -e 'POSIX path of (the clipboard as «class furl»)' -e 'end run'"
+      cmd =
+        "osascript -e 'on run' -e 'POSIX path of (the clipboard as «class furl»)' -e 'end run'"
     elseif fs.is_linux then
       cmd = "xclip -o -selection clipboard -t text/uri-list"
     else
