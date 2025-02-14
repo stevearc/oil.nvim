@@ -431,7 +431,7 @@ M.copy_to_system_clipboard = {
     local cmd
     if fs.is_mac then
       cmd =
-        "osascript -e 'on run args' -e 'set the clipboard to POSIX file (first item of args)' -e end '%s'"
+        "osascript -e 'on run args' -e 'set the clipboard to POSIX file (first item of args)' -e 'end run' '%s'"
     elseif fs.is_linux then
       cmd = "echo -en '%s\\n' | xclip -i -selection clipboard -t text/uri-list"
     else
@@ -465,6 +465,7 @@ M.copy_to_system_clipboard = {
 M.paste_from_system_clipboard = {
   desc = "Paste the system clipboard into the current oil directory",
   callback = function()
+    local uv = vim.uv or vim.loop
     local fs = require("oil.fs")
     local view = require("oil.view")
     local cache = require("oil.cache")
@@ -477,7 +478,7 @@ M.paste_from_system_clipboard = {
     end
     local cmd, path
     if fs.is_mac then
-      cmd = "osascript -e 'on run' -e 'POSIX path of (the clipboard as «class furl»)' -e end"
+      cmd = "osascript -e 'on run' -e 'POSIX path of (the clipboard as «class furl»)' -e 'end run'"
     elseif fs.is_linux then
       cmd = "xclip -o -selection clipboard -t text/uri-list"
     else
@@ -500,7 +501,7 @@ M.paste_from_system_clipboard = {
       on_stdout = function(j, output)
         if #output > 1 then
           local sub_scheme = output[1]:gsub("^files?://", "")
-          path = vim.uv.fs_realpath(sub_scheme)
+          path = uv.fs_realpath(sub_scheme)
         end
       end,
       on_exit = function(j, exit_code)
