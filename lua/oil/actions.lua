@@ -433,24 +433,27 @@ M.copy_to_system_clipboard = {
       cmd =
         "osascript -e 'on run args' -e 'set the clipboard to POSIX file (first item of args)' -e 'end run' '%s'"
     elseif fs.is_linux then
+      local content, program, mime_type
       local xdg_session_type = vim.env.XDG_SESSION_TYPE:lower()
       if xdg_session_type:find("x11") then
-        if
-          vim.env.XDG_SESSION_DESKTOP:lower():find("gnome")
-          or vim.env.XDG_CURRENT_DESKTOP:lower():find("gnome")
-        then
-          cmd =
-            "echo -en 'copy\\nfile://%s\\0' | xclip -i -selection clipboard -t x-special/gnome-copied-files"
-        else
-          cmd = "echo -en '%s\\n' | xclip -i -selection clipboard -t text/uri-list"
-        end
+        program = "xclip -i -selection clipboard"
       elseif xdg_session_type:find("wayland") then
-        vim.notify("System clipboard not supported on Wayland", vim.log.levels.WARN)
-        return
+        program = "wl-copy"
       else
         vim.notify("System clipboard not supported, check $XDG_SESSION_TYPE", vim.log.levels.WARN)
         return
       end
+      if
+        vim.env.XDG_SESSION_DESKTOP:lower():find("gnome")
+        or vim.env.XDG_CURRENT_DESKTOP:lower():find("gnome")
+      then
+        content = "copy\\nfile://%s\\0"
+        mime_type = "x-special/gnome-copied-files"
+      else
+        content = "%s\\n"
+        mime_type = "text/uri-list"
+      end
+      cmd = string.format("echo -en '%s' | %s -t %s", content, program, mime_type)
     else
       vim.notify("System clipboard not supported on this platform", vim.log.levels.WARN)
       return
@@ -500,24 +503,25 @@ M.paste_from_system_clipboard = {
       cmd =
         "osascript -e 'on run' -e 'POSIX path of (the clipboard as «class furl»)' -e 'end run'"
     elseif fs.is_linux then
+      local program, mime_type
       local xdg_session_type = vim.env.XDG_SESSION_TYPE:lower()
       if xdg_session_type:find("x11") then
-        if
-          vim.env.XDG_SESSION_DESKTOP:lower():find("gnome")
-          or vim.env.XDG_CURRENT_DESKTOP:lower():find("gnome")
-        then
-          cmd =
-            "xclip -o -selection clipboard -t x-special/gnome-copied-files | grep --text --color=never file://"
-        else
-          cmd = "xclip -o -selection clipboard -t text/uri-list"
-        end
+        program = "xclip -o -selection clipboard"
       elseif xdg_session_type:find("wayland") then
-        vim.notify("System clipboard not supported on Wayland", vim.log.levels.WARN)
-        return
+        program = "wl-paste"
       else
         vim.notify("System clipboard not supported, check $XDG_SESSION_TYPE", vim.log.levels.WARN)
         return
       end
+      if
+        vim.env.XDG_SESSION_DESKTOP:lower():find("gnome")
+        or vim.env.XDG_CURRENT_DESKTOP:lower():find("gnome")
+      then
+        mime_type = "x-special/gnome-copied-files | grep --text --color=never file://"
+      else
+        mime_type = "text/uri-list"
+      end
+      cmd = string.format("%s -t %s", program, mime_type)
     else
       vim.notify("System clipboard not supported on this platform", vim.log.levels.WARN)
       return
@@ -542,7 +546,7 @@ M.paste_from_system_clipboard = {
       on_stdout = function(j, output)
         if #output > 1 then
           local sub_scheme = output[1]:gsub("^files?://", "")
-          path = uv.fs_realpath(sub_scheme)
+          path = uv.fs_realpath(fs.posix_to_os_path(sub_scheme))
         end
       end,
       on_stderr = function(_, data)
