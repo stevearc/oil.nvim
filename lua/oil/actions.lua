@@ -433,23 +433,42 @@ M.copy_to_system_clipboard = {
       cmd =
         "osascript -e 'on run args' -e 'set the clipboard to POSIX file (first item of args)' -e 'end run' '%s'"
     elseif fs.is_linux then
-      cmd = "echo -en '%s\\n' | xclip -i -selection clipboard -t text/uri-list"
+      local xdg_session_type = vim.env.XDG_SESSION_TYPE:lower()
+      if xdg_session_type:find("x11") then
+        if
+          vim.env.XDG_SESSION_DESKTOP:lower():find("gnome")
+          or vim.env.XDG_CURRENT_DESKTOP:lower():find("gnome")
+        then
+          cmd =
+            "echo -en 'copy\\nfile://%s\\0' | xclip -i -selection clipboard -t x-special/gnome-copied-files"
+        else
+          cmd = "echo -en '%s\\n' | xclip -i -selection clipboard -t text/uri-list"
+        end
+      elseif xdg_session_type:find("wayland") then
+        vim.notify("System clipboard not supported on Wayland", vim.log.levels.WARN)
+        return
+      else
+        vim.notify("System clipboard not supported, check $XDG_SESSION_TYPE", vim.log.levels.WARN)
+        return
+      end
     else
-      cmd = "exit 1"
+      vim.notify("System clipboard not supported on this platform", vim.log.levels.WARN)
+      return
     end
 
+    local stderr = ""
     local jid = vim.fn.jobstart(string.format(cmd, path), {
+      stderr_buffered = true,
+      on_stderr = function(_, data)
+        stderr = table.concat(data, "\n")
+      end,
       on_exit = function(j, exit_code)
         if exit_code ~= 0 then
           vim.schedule(function()
-            if fs.is_windows then
-              vim.notify("System clipboard not supported on this platform", vim.log.levels.WARN)
-            else
-              vim.notify(
-                string.format("Error copying '%s' to system clipboard", path),
-                vim.log.levels.ERROR
-              )
-            end
+            vim.notify(
+              string.format("Error copying '%s' to system clipboard\n%s", path, stderr),
+              vim.log.levels.ERROR
+            )
           end)
         else
           vim.schedule(function()
@@ -476,14 +495,32 @@ M.paste_from_system_clipboard = {
     if not dir then
       return
     end
-    local cmd, path
+    local cmd
     if fs.is_mac then
       cmd =
         "osascript -e 'on run' -e 'POSIX path of (the clipboard as «class furl»)' -e 'end run'"
     elseif fs.is_linux then
-      cmd = "xclip -o -selection clipboard -t text/uri-list"
+      local xdg_session_type = vim.env.XDG_SESSION_TYPE:lower()
+      if xdg_session_type:find("x11") then
+        if
+          vim.env.XDG_SESSION_DESKTOP:lower():find("gnome")
+          or vim.env.XDG_CURRENT_DESKTOP:lower():find("gnome")
+        then
+          cmd =
+            "xclip -o -selection clipboard -t x-special/gnome-copied-files | grep --text --color=never file://"
+        else
+          cmd = "xclip -o -selection clipboard -t text/uri-list"
+        end
+      elseif xdg_session_type:find("wayland") then
+        vim.notify("System clipboard not supported on Wayland", vim.log.levels.WARN)
+        return
+      else
+        vim.notify("System clipboard not supported, check $XDG_SESSION_TYPE", vim.log.levels.WARN)
+        return
+      end
     else
-      cmd = "exit 1"
+      vim.notify("System clipboard not supported on this platform", vim.log.levels.WARN)
+      return
     end
     local write_pasted = function(entry, column_defs, adapter, bufnr)
       local col_width = {}
@@ -497,25 +534,27 @@ M.paste_from_system_clipboard = {
       vim.api.nvim_buf_set_lines(0, pos[1], pos[1], true, lines)
     end
 
+    local path
+    local stderr = ""
     local jid = vim.fn.jobstart(cmd, {
       stdout_buffered = true,
+      stderr_buffered = true,
       on_stdout = function(j, output)
         if #output > 1 then
           local sub_scheme = output[1]:gsub("^files?://", "")
           path = uv.fs_realpath(sub_scheme)
         end
       end,
+      on_stderr = function(_, data)
+        stderr = table.concat(data, "\n")
+      end,
       on_exit = function(j, exit_code)
         if exit_code ~= 0 or path == nil then
           vim.schedule(function()
-            if fs.is_windows then
-              vim.notify("System clipboard not supported on this platform", vim.log.levels.WARN)
-            else
-              vim.notify(
-                string.format("Error pasting '%s' from system clipboard", path),
-                vim.log.levels.ERROR
-              )
-            end
+            vim.notify(
+              string.format("Error pasting '%s' from system clipboard\n%s", path, stderr),
+              vim.log.levels.ERROR
+            )
           end)
           return
         end
