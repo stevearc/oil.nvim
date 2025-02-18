@@ -264,6 +264,9 @@ local function constrain_cursor(bufnr, mode)
   if not mode then
     return
   end
+  if bufnr ~= vim.api.nvim_get_current_buf() then
+    return
+  end
   local parser = require("oil.mutator.parser")
 
   local adapter = util.get_adapter(bufnr)
