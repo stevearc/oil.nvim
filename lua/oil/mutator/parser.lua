@@ -156,7 +156,7 @@ M.parse = function(bufnr)
   ---@type oil.ParseError[]
   local errors = {}
   local bufname = vim.api.nvim_buf_get_name(bufnr)
-  local adapter = util.get_adapter(bufnr)
+  local adapter = util.get_adapter(bufnr, true)
   if not adapter then
     table.insert(errors, {
       lnum = 0,

@@ -224,7 +224,7 @@ M.get_buffer_parent_url = function(bufname, use_oil_parent)
     if not use_oil_parent then
       return bufname
     end
-    local adapter = config.get_adapter_by_scheme(scheme)
+    local adapter = assert(config.get_adapter_by_scheme(scheme))
     local parent_url
     if adapter and adapter.get_parent then
       local adapter_scheme = config.adapter_to_scheme[adapter.name]
@@ -1253,8 +1253,7 @@ M.setup = function(opts)
         end)
         vim.cmd.doautocmd({ args = { "BufWritePost", params.file }, mods = { silent = true } })
       else
-        local adapter = config.get_adapter_by_scheme(bufname)
-        assert(adapter)
+        local adapter = assert(config.get_adapter_by_scheme(bufname))
         adapter.write_file(params.buf)
       end
     end,

@@ -146,7 +146,7 @@ M.unlock_buffers = function()
   buffers_locked = false
   for bufnr in pairs(session) do
     if vim.api.nvim_buf_is_loaded(bufnr) then
-      local adapter = util.get_adapter(bufnr)
+      local adapter = util.get_adapter(bufnr, true)
       if adapter then
         vim.bo[bufnr].modifiable = adapter.is_modifiable(bufnr)
       end
@@ -265,7 +265,7 @@ local function constrain_cursor(mode)
   end
   local parser = require("oil.mutator.parser")
 
-  local adapter = util.get_adapter(0)
+  local adapter = util.get_adapter(0, true)
   if not adapter then
     return
   end
@@ -296,7 +296,7 @@ local function redraw_trash_virtual_text(bufnr)
     return
   end
   local parser = require("oil.mutator.parser")
-  local adapter = util.get_adapter(bufnr)
+  local adapter = util.get_adapter(bufnr, true)
   if not adapter or adapter.name ~= "trash" then
     return
   end
@@ -456,7 +456,7 @@ M.initialize = function(bufnr)
     end,
   })
 
-  local adapter = util.get_adapter(bufnr)
+  local adapter = util.get_adapter(bufnr, true)
 
   -- Set up a watcher that will refresh the directory
   if
@@ -616,7 +616,7 @@ local function render_buffer(bufnr, opts)
     jump_first = false,
   })
   local scheme = util.parse_url(bufname)
-  local adapter = util.get_adapter(bufnr)
+  local adapter = util.get_adapter(bufnr, true)
   if not scheme or not adapter then
     return false
   end
@@ -877,7 +877,7 @@ M.render_buffer_async = function(bufnr, opts, callback)
     handle_error(string.format("Could not parse oil url '%s'", bufname))
     return
   end
-  local adapter = util.get_adapter(bufnr)
+  local adapter = util.get_adapter(bufnr, true)
   if not adapter then
     handle_error(string.format("[oil] no adapter for buffer '%s'", bufname))
     return
