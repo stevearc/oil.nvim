@@ -464,10 +464,6 @@ M.get_adapter_by_scheme = function(scheme)
   if adapter == nil then
     local name = M.adapters[scheme]
     if not name then
-      vim.notify(
-        string.format("Could not find oil adapter for scheme '%s'", scheme),
-        vim.log.levels.ERROR
-      )
       return nil
     end
     local ok
@@ -478,7 +474,6 @@ M.get_adapter_by_scheme = function(scheme)
     else
       M._adapter_by_scheme[scheme] = false
       adapter = false
-      vim.notify(string.format("Could not find oil adapter '%s'", name), vim.log.levels.ERROR)
     end
   end
   if adapter then

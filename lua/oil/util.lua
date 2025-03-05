@@ -60,11 +60,12 @@ M.url_escape = function(string)
 end
 
 ---@param bufnr integer
+---@param silent? boolean
 ---@return nil|oil.Adapter
-M.get_adapter = function(bufnr)
+M.get_adapter = function(bufnr, silent)
   local bufname = vim.api.nvim_buf_get_name(bufnr)
   local adapter = config.get_adapter_by_scheme(bufname)
-  if not adapter then
+  if not adapter and not silent then
     vim.notify_once(
       string.format("[oil] could not find adapter for buffer '%s://'", bufname),
       vim.log.levels.ERROR
@@ -500,10 +501,7 @@ end
 ---@return oil.Adapter
 ---@return nil|oil.CrossAdapterAction
 M.get_adapter_for_action = function(action)
-  local adapter = config.get_adapter_by_scheme(action.url or action.src_url)
-  if not adapter then
-    error("no adapter found")
-  end
+  local adapter = assert(config.get_adapter_by_scheme(action.url or action.src_url))
   if action.dest_url then
     local dest_adapter = assert(config.get_adapter_by_scheme(action.dest_url))
     if adapter ~= dest_adapter then
@@ -887,7 +885,7 @@ M.get_edit_path = function(bufnr, entry, callback)
 
   local bufname = vim.api.nvim_buf_get_name(bufnr)
   local scheme, dir = M.parse_url(bufname)
-  local adapter = M.get_adapter(bufnr)
+  local adapter = M.get_adapter(bufnr, true)
   assert(scheme and dir and adapter)
 
   local url = scheme .. dir .. entry.name

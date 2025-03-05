@@ -85,7 +85,7 @@ M.create_actions_from_diffs = function(all_diffs)
     end
   end
   for bufnr, diffs in pairs(all_diffs) do
-    local adapter = util.get_adapter(bufnr)
+    local adapter = util.get_adapter(bufnr, true)
     if not adapter then
       error("Missing adapter")
     end
@@ -519,7 +519,7 @@ M.try_write_changes = function(confirm, cb)
     if vim.bo[bufnr].modified then
       local diffs, errors = parser.parse(bufnr)
       all_diffs[bufnr] = diffs
-      local adapter = assert(util.get_adapter(bufnr))
+      local adapter = assert(util.get_adapter(bufnr, true))
       if adapter.filter_error then
         errors = vim.tbl_filter(adapter.filter_error, errors)
       end
