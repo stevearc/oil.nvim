@@ -1,5 +1,14 @@
 # Changelog
 
+## [2.15.1](https://github.com/stevearc/oil.nvim/compare/v2.15.0...v2.15.1) (2025-03-05)
+
+
+### Bug Fixes
+
+* better detection of oil buffers ([#589](https://github.com/stevearc/oil.nvim/issues/589)) ([548587d](https://github.com/stevearc/oil.nvim/commit/548587d68b55e632d8a69c92cefd981f360634fa))
+* pass bufnr to constrain_cursor ([#574](https://github.com/stevearc/oil.nvim/issues/574)) ([54fe7dc](https://github.com/stevearc/oil.nvim/commit/54fe7dca365e2b917ee269744055320c1f29380d))
+* silent handling when buffer has no oil adapter ([#573](https://github.com/stevearc/oil.nvim/issues/573)) ([d7c61c7](https://github.com/stevearc/oil.nvim/commit/d7c61c70849ec99f005615c4175118986f200e4f))
+
 ## [2.15.0](https://github.com/stevearc/oil.nvim/compare/v2.14.0...v2.15.0) (2025-02-13)
 
 
