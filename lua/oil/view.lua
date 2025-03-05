@@ -258,20 +258,24 @@ local function get_first_mutable_column_col(adapter, ranges)
 end
 
 ---Force cursor to be after hidden/immutable columns
+---@param bufnr integer
 ---@param mode false|"name"|"editable"
-local function constrain_cursor(mode)
+local function constrain_cursor(bufnr, mode)
   if not mode then
+    return
+  end
+  if bufnr ~= vim.api.nvim_get_current_buf() then
     return
   end
   local parser = require("oil.mutator.parser")
 
-  local adapter = util.get_adapter(0, true)
+  local adapter = util.get_adapter(bufnr, true)
   if not adapter then
     return
   end
 
   local cur = vim.api.nvim_win_get_cursor(0)
-  local line = vim.api.nvim_buf_get_lines(0, cur[1] - 1, cur[1], true)[1]
+  local line = vim.api.nvim_buf_get_lines(bufnr, cur[1] - 1, cur[1], true)[1]
   local column_defs = columns.get_supported_columns(adapter)
   local result = parser.parse_line(adapter, line, column_defs)
   if result and result.ranges then
@@ -406,7 +410,7 @@ M.initialize = function(bufnr)
     callback = function()
       -- For some reason the cursor bounces back to its original position,
       -- so we have to defer the call
-      vim.schedule_wrap(constrain_cursor)(config.constrain_cursor)
+      vim.schedule_wrap(constrain_cursor)(bufnr, config.constrain_cursor)
     end,
   })
   vim.api.nvim_create_autocmd({ "CursorMoved", "ModeChanged" }, {
@@ -419,7 +423,7 @@ M.initialize = function(bufnr)
         return
       end
 
-      constrain_cursor(config.constrain_cursor)
+      constrain_cursor(bufnr, config.constrain_cursor)
 
       if config.preview_win.update_on_cursor_moved then
         -- Debounce and update the preview window
@@ -690,7 +694,7 @@ local function render_buffer(bufnr, opts)
             end
           end
 
-          constrain_cursor("name")
+          constrain_cursor(bufnr, "name")
         end
       end
     end)
