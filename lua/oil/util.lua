@@ -654,8 +654,12 @@ end
 ---@param bufnr integer
 ---@return boolean
 M.is_oil_bufnr = function(bufnr)
-  if vim.bo[bufnr].filetype == "oil" then
+  local filetype = vim.bo[bufnr].filetype
+  if filetype == "oil" then
     return true
+  elseif filetype ~= "" then
+    -- If the filetype is set and is NOT "oil", then it's not an oil buffer
+    return false
   end
   local scheme = M.parse_url(vim.api.nvim_buf_get_name(bufnr))
   return config.adapters[scheme] or config.adapter_aliases[scheme]
