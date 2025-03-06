@@ -28,6 +28,16 @@ end
 
 ---@param init_command? string
 function PowershellConnection:_init(init_command)
+  -- For some reason beyond my understanding, at least one of the following
+  -- things requires `noshellslash` to avoid the embeded powershell process to
+  -- send only "" to the stdout (never calling the callback because
+  -- "===DONE(True)===" is never sent to stdout)
+  -- * vim.fn.jobstart
+  -- * cmd.exe
+  -- * powershell.exe
+  local saved_shellslash = vim.o.shellslash
+  vim.o.shellslash = false
+
   -- 65001 is the UTF-8 codepage
   -- powershell needs to be launched with the UTF-8 codepage to use it for both stdin and stdout
   local jid = vim.fn.jobstart({
@@ -57,6 +67,7 @@ function PowershellConnection:_init(init_command)
       end
     end,
   })
+  vim.o.shellslash = saved_shellslash
 
   if jid == 0 then
     self:_set_error("passed invalid arguments to 'powershell'")
