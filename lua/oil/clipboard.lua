@@ -80,7 +80,8 @@ M.copy_to_system_clipboard = function()
     return
   end
   local path = dir .. entry.name
-  local cmd, stdin
+  local cmd = {}
+  local stdin
   if fs.is_mac then
     cmd = {
       "osascript",
@@ -93,24 +94,22 @@ M.copy_to_system_clipboard = function()
       path,
     }
   elseif fs.is_linux then
-    local program, mime_type
     local xdg_session_type = get_linux_session_type()
     if xdg_session_type == "x11" then
-      program = "xclip -i -selection clipboard"
+      vim.list_extend(cmd, { "xclip", "-i", "-selection", "clipboard" })
     elseif xdg_session_type == "wayland" then
-      program = "wl-copy"
+      table.insert(cmd, "wl-copy")
     else
       vim.notify("System clipboard not supported, check $XDG_SESSION_TYPE", vim.log.levels.ERROR)
       return
     end
     if is_linux_desktop_gnome() then
       stdin = string.format("copy\nfile://%s\0", path)
-      mime_type = "x-special/gnome-copied-files"
+      vim.list_extend(cmd, { "-t", "x-special/gnome-copied-files" })
     else
       stdin = string.format("file://%s\n", path)
-      mime_type = "text/uri-list"
+      vim.list_extend(cmd, { "-t", "text/uri-list" })
     end
-    cmd = { program, "-t", mime_type }
   else
     vim.notify("System clipboard not supported on Windows", vim.log.levels.ERROR)
     return
@@ -145,7 +144,7 @@ M.paste_from_system_clipboard = function()
   if not dir then
     return
   end
-  local cmd
+  local cmd = {}
   if fs.is_mac then
     cmd = {
       "osascript",
@@ -157,22 +156,20 @@ M.paste_from_system_clipboard = function()
       "end run",
     }
   elseif fs.is_linux then
-    local program, mime_type
     local xdg_session_type = get_linux_session_type()
     if xdg_session_type == "x11" then
-      program = "xclip -o -selection clipboard"
+      vim.list_extend(cmd, { "xclip", "-o", "-selection", "clipboard" })
     elseif xdg_session_type == "wayland" then
-      program = "wl-paste"
+      table.insert(cmd, "wl-paste")
     else
       vim.notify("System clipboard not supported, check $XDG_SESSION_TYPE", vim.log.levels.ERROR)
       return
     end
     if is_linux_desktop_gnome() then
-      mime_type = "x-special/gnome-copied-files"
+      vim.list_extend(cmd, { "-t", "x-special/gnome-copied-files" })
     else
-      mime_type = "text/uri-list"
+      vim.list_extend(cmd, { "-t", "text/uri-list" })
     end
-    cmd = { program, "-t", mime_type }
   else
     vim.notify("System clipboard not supported on Windows", vim.log.levels.ERROR)
     return
