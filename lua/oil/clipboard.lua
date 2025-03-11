@@ -50,7 +50,7 @@ local function paste_path(path)
   local bufnr = vim.api.nvim_get_current_buf()
   local scheme = "oil://"
   local parent_url = scheme .. vim.fs.dirname(path)
-  local adapter = assert(config.get_adapter_by_scheme(parent_url))
+  local adapter = assert(config.get_adapter_by_scheme(scheme))
   local column_defs = columns.get_supported_columns(scheme)
 
   local ori_entry = cache.get_entry_by_url(scheme .. path)
@@ -99,12 +99,20 @@ M.copy_to_system_clipboard = function()
     return
   end
   local path = dir .. entry.name
-  local cmd
+  local cmd, stdin
   if fs.is_mac then
-    cmd =
-      "osascript -e 'on run args' -e 'set the clipboard to POSIX file (first item of args)' -e 'end run' '%s'"
+    cmd = {
+      "osascript",
+      "-e",
+      "on run args",
+      "-e",
+      "set the clipboard to POSIX file (first item of args)",
+      "-e",
+      "end run",
+      path,
+    }
   elseif fs.is_linux then
-    local content, program, mime_type
+    local program, mime_type
     local xdg_session_type = get_linux_session_type()
     if xdg_session_type == "x11" then
       program = "xclip -i -selection clipboard"
@@ -115,20 +123,20 @@ M.copy_to_system_clipboard = function()
       return
     end
     if is_linux_desktop_gnome() then
-      content = "copy\\nfile://%s\\0"
+      stdin = string.format("copy\nfile://%s\0", path)
       mime_type = "x-special/gnome-copied-files"
     else
-      content = "%s\\n"
+      stdin = string.format("file://%s\n", path)
       mime_type = "text/uri-list"
     end
-    cmd = string.format("echo -en '%s' | %s -t %s", content, program, mime_type)
+    cmd = { program, "-t", mime_type }
   else
     vim.notify("System clipboard not supported on Windows", vim.log.levels.ERROR)
     return
   end
 
   local stderr = ""
-  local jid = vim.fn.jobstart(string.format(cmd, path), {
+  local jid = vim.fn.jobstart(cmd, {
     stderr_buffered = true,
     on_stderr = function(_, data)
       stderr = table.concat(data, "\n")
@@ -145,6 +153,10 @@ M.copy_to_system_clipboard = function()
     end,
   })
   assert(jid > 0, "Failed to start job")
+  if stdin then
+    vim.api.nvim_chan_send(jid, stdin)
+    vim.fn.chanclose(jid, "stdin")
+  end
 end
 
 M.paste_from_system_clipboard = function()
@@ -154,7 +166,15 @@ M.paste_from_system_clipboard = function()
   end
   local cmd
   if fs.is_mac then
-    cmd = "osascript -e 'on run' -e 'POSIX path of (the clipboard as «class furl»)' -e 'end run'"
+    cmd = {
+      "osascript",
+      "-e",
+      "on run",
+      "-e",
+      "POSIX path of (the clipboard as «class furl»)",
+      "-e",
+      "end run",
+    }
   elseif fs.is_linux then
     local program, mime_type
     local xdg_session_type = get_linux_session_type()
@@ -167,11 +187,11 @@ M.paste_from_system_clipboard = function()
       return
     end
     if is_linux_desktop_gnome() then
-      mime_type = "x-special/gnome-copied-files | grep --text --color=never file://"
+      mime_type = "x-special/gnome-copied-files"
     else
       mime_type = "text/uri-list"
     end
-    cmd = string.format("%s -t %s", program, mime_type)
+    cmd = { program, "-t", mime_type }
   else
     vim.notify("System clipboard not supported on Windows", vim.log.levels.ERROR)
     return
@@ -181,10 +201,14 @@ M.paste_from_system_clipboard = function()
   local jid = vim.fn.jobstart(cmd, {
     stdout_buffered = true,
     stderr_buffered = true,
-    on_stdout = function(j, output)
-      if #output > 1 then
-        local sub_scheme = output[1]:gsub("^files?://", "")
-        path = uv.fs_realpath(fs.posix_to_os_path(sub_scheme))
+    on_stdout = function(j, data)
+      local lines = vim.split(table.concat(data, "\n"), "\r?\n")
+      for _, line in ipairs(lines) do
+        local uri_path = line:match("^files?://(.+)$")
+        if uri_path then
+          path = util.url_unescape(uri_path)
+          break
+        end
       end
     end,
     on_stderr = function(_, data)

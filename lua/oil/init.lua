@@ -993,8 +993,9 @@ local function restore_alt_buf()
   end
 end
 
+---@private
 ---@param bufnr integer
-local function load_oil_buffer(bufnr)
+M.load_oil_buffer = function(bufnr)
   local config = require("oil.config")
   local keymap_util = require("oil.keymap_util")
   local loading = require("oil.loading")
@@ -1183,7 +1184,7 @@ M.setup = function(opts)
     pattern = scheme_pattern,
     nested = true,
     callback = function(params)
-      load_oil_buffer(params.buf)
+      M.load_oil_buffer(params.buf)
     end,
   })
   vim.api.nvim_create_autocmd("BufWriteCmd", {
@@ -1354,7 +1355,7 @@ M.setup = function(opts)
       local util = require("oil.util")
       local scheme = util.parse_url(params.file)
       if config.adapters[scheme] and vim.api.nvim_buf_line_count(params.buf) == 1 then
-        load_oil_buffer(params.buf)
+        M.load_oil_buffer(params.buf)
       end
     end,
   })
@@ -1363,7 +1364,7 @@ M.setup = function(opts)
   if maybe_hijack_directory_buffer(bufnr) and vim.v.vim_did_enter == 1 then
     -- manually call load on a hijacked directory buffer if vim has already entered
     -- (the BufReadCmd will not trigger)
-    load_oil_buffer(bufnr)
+    M.load_oil_buffer(bufnr)
   end
 end
 

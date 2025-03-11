@@ -25,38 +25,54 @@ M.escape_filename = function(filename)
   return ret
 end
 
-local _url_escape_chars = {
-  [" "] = "%20",
-  ["$"] = "%24",
-  ["&"] = "%26",
-  ["`"] = "%60",
-  [":"] = "%3A",
-  ["<"] = "%3C",
-  ["="] = "%3D",
-  [">"] = "%3E",
-  ["?"] = "%3F",
-  ["["] = "%5B",
-  ["\\"] = "%5C",
-  ["]"] = "%5D",
-  ["^"] = "%5E",
-  ["{"] = "%7B",
-  ["|"] = "%7C",
-  ["}"] = "%7D",
-  ["~"] = "%7E",
-  ["“"] = "%22",
-  ["‘"] = "%27",
-  ["+"] = "%2B",
-  [","] = "%2C",
-  ["#"] = "%23",
-  ["%"] = "%25",
-  ["@"] = "%40",
-  ["/"] = "%2F",
-  [";"] = "%3B",
+local _url_escape_to_char = {
+  ["20"] = " ",
+  ["22"] = "“",
+  ["23"] = "#",
+  ["24"] = "$",
+  ["25"] = "%",
+  ["26"] = "&",
+  ["27"] = "‘",
+  ["2B"] = "+",
+  ["2C"] = ",",
+  ["2F"] = "/",
+  ["3A"] = ":",
+  ["3B"] = ";",
+  ["3C"] = "<",
+  ["3D"] = "=",
+  ["3E"] = ">",
+  ["3F"] = "?",
+  ["40"] = "@",
+  ["5B"] = "[",
+  ["5C"] = "\\",
+  ["5D"] = "]",
+  ["5E"] = "^",
+  ["60"] = "`",
+  ["7B"] = "{",
+  ["7C"] = "|",
+  ["7D"] = "}",
+  ["7E"] = "~",
 }
+local _char_to_url_escape = {}
+for k, v in pairs(_url_escape_to_char) do
+  _char_to_url_escape[v] = "%" .. k
+end
+-- TODO this uri escape handling is very incomplete
+
 ---@param string string
 ---@return string
 M.url_escape = function(string)
-  return (string:gsub(".", _url_escape_chars))
+  return (string:gsub(".", _char_to_url_escape))
+end
+
+---@param string string
+---@return string
+M.url_unescape = function(string)
+  return (
+    string:gsub("%%([0-9A-Fa-f][0-9A-Fa-f])", function(seq)
+      return _url_escape_to_char[seq:upper()] or ("%" .. seq)
+    end)
+  )
 end
 
 ---@param bufnr integer
