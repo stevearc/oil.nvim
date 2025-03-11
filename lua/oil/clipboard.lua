@@ -1,8 +1,6 @@
-local uv = vim.uv or vim.loop
 local cache = require("oil.cache")
 local columns = require("oil.columns")
 local config = require("oil.config")
-local constants = require("oil.constants")
 local fs = require("oil.fs")
 local oil = require("oil")
 local util = require("oil.util")
@@ -42,14 +40,13 @@ local function write_pasted(entry, column_defs, adapter, bufnr)
     { view.format_entry_cols(entry, column_defs, col_width, adapter, false, bufnr) }
   local lines, _ = util.render_table(line_table, col_width)
   local pos = vim.api.nvim_win_get_cursor(0)
-  vim.api.nvim_buf_set_lines(0, pos[1], pos[1], true, lines)
+  vim.api.nvim_buf_set_lines(bufnr, pos[1], pos[1], true, lines)
 end
 
 ---@param path string
 local function paste_path(path)
   local bufnr = vim.api.nvim_get_current_buf()
   local scheme = "oil://"
-  local parent_url = scheme .. vim.fs.dirname(path)
   local adapter = assert(config.get_adapter_by_scheme(scheme))
   local column_defs = columns.get_supported_columns(scheme)
 
@@ -59,37 +56,21 @@ local function paste_path(path)
     return
   end
 
-  cache.begin_update_url(parent_url)
-  adapter.list(
-    parent_url,
-    column_defs,
-    vim.schedule_wrap(function(err, entries, fetch_more)
-      if err then
-        cache.end_update_url(parent_url)
-        util.render_text(bufnr, { "Error: " .. err })
-        return
-      end
-      if entries then
-        for _, entry in ipairs(entries) do
-          cache.store_entry(parent_url, entry)
-          if entry[constants.FIELD_NAME] == vim.fs.basename(path) then
-            cache.end_update_url(parent_url)
-            write_pasted(entry, column_defs, adapter, bufnr)
-            return
-          end
-        end
-      end
-      if fetch_more then
-        vim.defer_fn(fetch_more, 4)
-      else
-        cache.end_update_url(parent_url)
-        vim.notify(
-          string.format("The requested file is not found under '%s'", parent_url),
-          vim.log.levels.ERROR
-        )
-      end
-    end)
-  )
+  local new_bufnr = vim.api.nvim_create_buf(false, false)
+  local parent_url = scheme .. vim.fs.dirname(path)
+  vim.api.nvim_buf_set_name(new_bufnr, parent_url)
+  oil.load_oil_buffer(new_bufnr)
+  util.run_after_load(new_bufnr, function()
+    ori_entry = cache.get_entry_by_url(scheme .. path)
+    if ori_entry then
+      write_pasted(ori_entry, column_defs, adapter, bufnr)
+    else
+      vim.notify(
+        string.format("The pasted file '%s' could not be found", path),
+        vim.log.levels.ERROR
+      )
+    end
+  end)
 end
 
 M.copy_to_system_clipboard = function()
