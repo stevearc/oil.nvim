@@ -34,7 +34,7 @@ jobs:
         uses: JohnnyMorganz/stylua-action@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          version: v0.20.0
+          version: v2.0.2
           args: --check lua tests
 
   typecheck:
@@ -53,6 +53,7 @@ jobs:
           - nvim_tag: v0.8.3
           - nvim_tag: v0.9.4
           - nvim_tag: v0.10.0
+          - nvim_tag: v0.10.4
 
     name: Run tests
     runs-on: ubuntu-22.04

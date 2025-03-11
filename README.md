@@ -39,7 +39,9 @@ oil.nvim supports all the usual plugin managers
   opts = {},
   -- Optional dependencies
   dependencies = { { "echasnovski/mini.icons", opts = {} } },
-  -- dependencies = { "nvim-tree/nvim-web-devicons" }, -- use if prefer nvim-web-devicons
+  -- dependencies = { "nvim-tree/nvim-web-devicons" }, -- use if you prefer nvim-web-devicons
+  -- Lazy loading is not recommended because it is very tricky to make it work correctly in all situations.
+  lazy = false,
 }
 ```
 
@@ -370,9 +372,9 @@ Note that at the moment the ssh adapter does not support Windows machines, and i
 - [set_is_hidden_file(is_hidden_file)](doc/api.md#set_is_hidden_fileis_hidden_file)
 - [toggle_hidden()](doc/api.md#toggle_hidden)
 - [get_current_dir(bufnr)](doc/api.md#get_current_dirbufnr)
-- [open_float(dir)](doc/api.md#open_floatdir)
+- [open_float(dir, opts, cb)](doc/api.md#open_floatdir-opts-cb)
 - [toggle_float(dir)](doc/api.md#toggle_floatdir)
-- [open(dir)](doc/api.md#opendir)
+- [open(dir, opts, cb)](doc/api.md#opendir-opts-cb)
 - [close(opts)](doc/api.md#closeopts)
 - [open_preview(opts, callback)](doc/api.md#open_previewopts-callback)
 - [select(opts, callback)](doc/api.md#selectopts-callback)

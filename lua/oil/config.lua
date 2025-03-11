@@ -394,6 +394,13 @@ local M = {}
 M.setup = function(opts)
   opts = opts or {}
 
+  if opts.trash_command then
+    vim.notify(
+      "[oil.nvim] trash_command is deprecated. Use built-in trash functionality instead (:help oil-trash).\nCompatibility will be removed on 2025-06-01.",
+      vim.log.levels.WARN
+    )
+  end
+
   local new_conf = vim.tbl_deep_extend("keep", opts, default_config)
   if not new_conf.use_default_keymaps then
     new_conf.keymaps = opts.keymaps or {}
@@ -457,10 +464,6 @@ M.get_adapter_by_scheme = function(scheme)
   if adapter == nil then
     local name = M.adapters[scheme]
     if not name then
-      vim.notify(
-        string.format("Could not find oil adapter for scheme '%s'", scheme),
-        vim.log.levels.ERROR
-      )
       return nil
     end
     local ok
@@ -471,7 +474,6 @@ M.get_adapter_by_scheme = function(scheme)
     else
       M._adapter_by_scheme[scheme] = false
       adapter = false
-      vim.notify(string.format("Could not find oil adapter '%s'", name), vim.log.levels.ERROR)
     end
   end
   if adapter then

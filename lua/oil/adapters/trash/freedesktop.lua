@@ -151,7 +151,7 @@ end
 ---@field info_file string
 ---@field original_path string
 ---@field deletion_date number
----@field stat uv_fs_t
+---@field stat uv.aliases.fs_stat_table
 
 ---@param info_file string
 ---@param cb fun(err?: string, info?: oil.TrashInfo)
@@ -596,8 +596,7 @@ M.perform_action = function(action, cb)
         if err then
           cb(err)
         else
-          ---@diagnostic disable-next-line: undefined-field
-          local stat_type = trash_info.stat.type
+          local stat_type = trash_info.stat.type or "unknown"
           fs.recursive_copy(stat_type, path, trash_info.trash_file, vim.schedule_wrap(cb))
         end
       end)
@@ -625,8 +624,7 @@ M.delete_to_trash = function(path, cb)
     if err then
       cb(err)
     else
-      ---@diagnostic disable-next-line: undefined-field
-      local stat_type = trash_info.stat.type
+      local stat_type = trash_info.stat.type or "unknown"
       fs.recursive_move(stat_type, path, trash_info.trash_file, vim.schedule_wrap(cb))
     end
   end)

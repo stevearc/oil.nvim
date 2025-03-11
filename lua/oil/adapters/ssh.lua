@@ -303,8 +303,8 @@ M.perform_action = function(action, cb)
     local conn = get_connection(action.url)
     conn:rm(res.path, cb)
   elseif action.type == "move" then
-    local src_adapter = config.get_adapter_by_scheme(action.src_url)
-    local dest_adapter = config.get_adapter_by_scheme(action.dest_url)
+    local src_adapter = assert(config.get_adapter_by_scheme(action.src_url))
+    local dest_adapter = assert(config.get_adapter_by_scheme(action.dest_url))
     if src_adapter == M and dest_adapter == M then
       local src_res = M.parse_url(action.src_url)
       local dest_res = M.parse_url(action.dest_url)
@@ -324,8 +324,8 @@ M.perform_action = function(action, cb)
       cb("We should never attempt to move across adapters")
     end
   elseif action.type == "copy" then
-    local src_adapter = config.get_adapter_by_scheme(action.src_url)
-    local dest_adapter = config.get_adapter_by_scheme(action.dest_url)
+    local src_adapter = assert(config.get_adapter_by_scheme(action.src_url))
+    local dest_adapter = assert(config.get_adapter_by_scheme(action.dest_url))
     if src_adapter == M and dest_adapter == M then
       local src_res = M.parse_url(action.src_url)
       local dest_res = M.parse_url(action.dest_url)

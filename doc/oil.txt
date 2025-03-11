@@ -304,12 +304,20 @@ get_current_dir({bufnr}): nil|string                         *oil.get_current_di
     Parameters:
       {bufnr} `nil|integer`
 
-open_float({dir})                                                 *oil.open_float*
+open_float({dir}, {opts}, {cb})                                   *oil.open_float*
     Open oil browser in a floating window
 
     Parameters:
-      {dir} `nil|string` When nil, open the parent of the current buffer, or the
-            cwd if current buffer is not a file
+      {dir}  `nil|string` When nil, open the parent of the current buffer, or
+             the cwd if current buffer is not a file
+      {opts} `nil|oil.OpenOpts`
+          {preview} `nil|oil.OpenPreviewOpts` When present, open the preview
+                    window after opening oil
+              {vertical}   `nil|boolean` Open the buffer in a vertical split
+              {horizontal} `nil|boolean` Open the buffer in a horizontal split
+              {split}      `nil|"aboveleft"|"belowright"|"topleft"|"botright"` S
+                           plit modifier
+      {cb}   `nil|fun()` Called after the oil buffer is ready
 
 toggle_float({dir})                                             *oil.toggle_float*
     Open oil browser in a floating window, or close it if open
@@ -318,12 +326,20 @@ toggle_float({dir})                                             *oil.toggle_floa
       {dir} `nil|string` When nil, open the parent of the current buffer, or the
             cwd if current buffer is not a file
 
-open({dir})                                                             *oil.open*
+open({dir}, {opts}, {cb})                                               *oil.open*
     Open oil browser for a directory
 
     Parameters:
-      {dir} `nil|string` When nil, open the parent of the current buffer, or the
-            cwd if current buffer is not a file
+      {dir}  `nil|string` When nil, open the parent of the current buffer, or
+             the cwd if current buffer is not a file
+      {opts} `nil|oil.OpenOpts`
+          {preview} `nil|oil.OpenPreviewOpts` When present, open the preview
+                    window after opening oil
+              {vertical}   `nil|boolean` Open the buffer in a vertical split
+              {horizontal} `nil|boolean` Open the buffer in a horizontal split
+              {split}      `nil|"aboveleft"|"belowright"|"topleft"|"botright"` S
+                           plit modifier
+      {cb}   `nil|fun()` Called after the oil buffer is ready
 
 close({opts})                                                          *oil.close*
     Restore the buffer that was present when oil was opened
@@ -597,6 +613,9 @@ send_to_qflist                                            *actions.send_to_qflis
     Parameters:
       {action} `"r"|"a"` Replace or add to current quickfix list (see
                |setqflist-action|)
+      {only_matching_search} `boolean` Whether to only add the files that
+               matches the last search. This option only applies when search
+               highlighting is active
       {target} `"qflist"|"loclist"` The target list to send files to
 
 show_help                                                      *actions.show_help*
@@ -704,9 +723,9 @@ of being permanently deleted. You can browse the trash for a directory using
 the `toggle_trash` action (bound to `g\` by default). You can view all files
 in the trash with `:Oil --trash /`.
 
-To restore files, simply delete them from the trash and put them in the desired
-destination, the same as any other file operation. If you delete files from the
-trash they will be permanently deleted (purged).
+To restore files, simply move them from the trash to the desired destination,
+the same as any other file operation. If you delete files from the trash they
+will be permanently deleted (purged).
 
 Linux:
     Oil supports the FreeDesktop trash specification.
