@@ -27,11 +27,12 @@ local function is_linux_desktop_gnome()
   return idx ~= nil or cur_desktop == "X-Cinnamon" or cur_desktop == "XFCE"
 end
 
+---@param winid integer
 ---@param entry oil.InternalEntry
 ---@param column_defs oil.ColumnSpec[]
 ---@param adapter oil.Adapter
 ---@param bufnr integer
-local function write_pasted(entry, column_defs, adapter, bufnr)
+local function write_pasted(winid, entry, column_defs, adapter, bufnr)
   local col_width = {}
   for i in ipairs(column_defs) do
     col_width[i + 1] = 1
@@ -39,7 +40,7 @@ local function write_pasted(entry, column_defs, adapter, bufnr)
   local line_table =
     { view.format_entry_cols(entry, column_defs, col_width, adapter, false, bufnr) }
   local lines, _ = util.render_table(line_table, col_width)
-  local pos = vim.api.nvim_win_get_cursor(0)
+  local pos = vim.api.nvim_win_get_cursor(winid)
   vim.api.nvim_buf_set_lines(bufnr, pos[1], pos[1], true, lines)
 end
 
@@ -49,13 +50,15 @@ local function paste_path(path)
   local scheme = "oil://"
   local adapter = assert(config.get_adapter_by_scheme(scheme))
   local column_defs = columns.get_supported_columns(scheme)
+  local winid = vim.api.nvim_get_current_win()
 
   local ori_entry = cache.get_entry_by_url(scheme .. path)
   if ori_entry then
-    write_pasted(ori_entry, column_defs, adapter, bufnr)
+    write_pasted(winid, ori_entry, column_defs, adapter, bufnr)
     return
   end
 
+  local cursor = vim.api.nvim_win_get_cursor(winid)
   local new_bufnr = vim.api.nvim_create_buf(false, false)
   local parent_url = scheme .. vim.fs.dirname(path)
   vim.api.nvim_buf_set_name(new_bufnr, parent_url)
@@ -63,7 +66,9 @@ local function paste_path(path)
   util.run_after_load(new_bufnr, function()
     ori_entry = cache.get_entry_by_url(scheme .. path)
     if ori_entry then
-      write_pasted(ori_entry, column_defs, adapter, bufnr)
+      -- Something in this process moves the cursor to the top of the window, so have to restore it
+      vim.api.nvim_win_set_cursor(winid, cursor)
+      write_pasted(winid, ori_entry, column_defs, adapter, bufnr)
     else
       vim.notify(
         string.format("The pasted file '%s' could not be found", path),
@@ -77,6 +82,7 @@ M.copy_to_system_clipboard = function()
   local dir = oil.get_current_dir()
   local entry = oil.get_cursor_entry()
   if not dir or not entry then
+    vim.notify("Could not find local file under cursor", vim.log.levels.WARN)
     return
   end
   local path = dir .. entry.name
@@ -127,12 +133,12 @@ M.copy_to_system_clipboard = function()
     end,
     on_exit = function(j, exit_code)
       if exit_code ~= 0 then
-        vim.schedule_wrap(vim.notify)(
+        vim.notify(
           string.format("Error copying '%s' to system clipboard\n%s", path, stderr),
           vim.log.levels.ERROR
         )
       else
-        vim.schedule_wrap(vim.notify)(string.format("Copied '%s' to system clipboard", path))
+        vim.notify(string.format("Copied '%s' to system clipboard", path))
       end
     end,
   })
@@ -143,17 +149,24 @@ M.copy_to_system_clipboard = function()
   end
 end
 
----@param line string
----@return nil|string
-local function parse_file_path(line)
-  if line:match("^%s*$") then
-    return nil
+---@param lines string[]
+---@return string|nil
+local function handle_paste_output_mac(lines)
+  for _, line in ipairs(lines) do
+    if not line:match("^%s*$") then
+      return line
+    end
   end
-  local path = line:match("^files?://(.+)$")
-  if path then
-    return util.url_unescape(path)
-  else
-    return line
+end
+
+---@param lines string[]
+---@return string|nil
+local function handle_paste_output_linux(lines)
+  for _, line in ipairs(lines) do
+    local path = line:match("^file://(.+)$")
+    if path then
+      return util.url_unescape(path)
+    end
   end
 end
 
@@ -163,6 +176,7 @@ M.paste_from_system_clipboard = function()
     return
   end
   local cmd = {}
+  local handle_paste_output
   if fs.is_mac then
     cmd = {
       "osascript",
@@ -173,6 +187,7 @@ M.paste_from_system_clipboard = function()
       "-e",
       "end run",
     }
+    handle_paste_output = handle_paste_output_mac
   elseif fs.is_linux then
     local xdg_session_type = get_linux_session_type()
     if xdg_session_type == "x11" then
@@ -188,6 +203,7 @@ M.paste_from_system_clipboard = function()
     else
       vim.list_extend(cmd, { "-t", "text/uri-list" })
     end
+    handle_paste_output = handle_paste_output_linux
   else
     vim.notify("System clipboard not supported on Windows", vim.log.levels.ERROR)
     return
@@ -203,20 +219,15 @@ M.paste_from_system_clipboard = function()
     stderr_buffered = true,
     on_stdout = function(j, data)
       local lines = vim.split(table.concat(data, "\n"), "\r?\n")
-      for _, line in ipairs(lines) do
-        path = parse_file_path(line)
-        if path then
-          break
-        end
-      end
+      path = handle_paste_output(lines)
     end,
     on_stderr = function(_, data)
       stderr = table.concat(data, "\n")
     end,
     on_exit = function(j, exit_code)
       if exit_code ~= 0 or path == nil then
-        vim.schedule_wrap(vim.notify)(
-          string.format("Error pasting '%s' from system clipboard\n%s", path, stderr),
+        vim.notify(
+          string.format("Error pasting from system clipboard: %s", stderr),
           vim.log.levels.ERROR
         )
       else
