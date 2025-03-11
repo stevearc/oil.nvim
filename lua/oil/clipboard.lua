@@ -143,6 +143,20 @@ M.copy_to_system_clipboard = function()
   end
 end
 
+---@param line string
+---@return nil|string
+local function parse_file_path(line)
+  if line:match("^%s*$") then
+    return nil
+  end
+  local path = line:match("^files?://(.+)$")
+  if path then
+    return util.url_unescape(path)
+  else
+    return line
+  end
+end
+
 M.paste_from_system_clipboard = function()
   local dir = oil.get_current_dir()
   if not dir then
@@ -190,9 +204,8 @@ M.paste_from_system_clipboard = function()
     on_stdout = function(j, data)
       local lines = vim.split(table.concat(data, "\n"), "\r?\n")
       for _, line in ipairs(lines) do
-        local uri_path = line:match("^files?://(.+)$")
-        if uri_path then
-          path = util.url_unescape(uri_path)
+        path = parse_file_path(line)
+        if path then
           break
         end
       end
