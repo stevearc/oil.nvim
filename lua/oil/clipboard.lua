@@ -115,6 +115,10 @@ M.copy_to_system_clipboard = function()
     return
   end
 
+  if vim.fn.executable(cmd[1]) == 0 then
+    vim.notify(string.format("Could not find executable '%s'", cmd[1]), vim.log.levels.ERROR)
+    return
+  end
   local stderr = ""
   local jid = vim.fn.jobstart(cmd, {
     stderr_buffered = true,
@@ -176,6 +180,10 @@ M.paste_from_system_clipboard = function()
   end
   local path
   local stderr = ""
+  if vim.fn.executable(cmd[1]) == 0 then
+    vim.notify(string.format("Could not find executable '%s'", cmd[1]), vim.log.levels.ERROR)
+    return
+  end
   local jid = vim.fn.jobstart(cmd, {
     stdout_buffered = true,
     stderr_buffered = true,
