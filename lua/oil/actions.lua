@@ -418,6 +418,20 @@ M.copy_entry_filename = {
   end,
 }
 
+M.copy_to_system_clipboard = {
+  desc = "Copy the entry under the cursor to the system clipboard",
+  callback = function()
+    require("oil.clipboard").copy_to_system_clipboard()
+  end,
+}
+
+M.paste_from_system_clipboard = {
+  desc = "Paste the system clipboard into the current oil directory",
+  callback = function()
+    require("oil.clipboard").paste_from_system_clipboard()
+  end,
+}
+
 M.open_cmdline_dir = {
   desc = "Open vim cmdline with current directory as an argument",
   deprecated = true,

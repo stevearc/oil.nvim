@@ -545,6 +545,9 @@ close                                                              *actions.clos
     Parameters:
       {exit_if_last_buf} `boolean` Exit vim if oil is closed as the last buffer
 
+copy_to_system_clipboard                        *actions.copy_to_system_clipboard*
+    Copy the entry under the cursor to the system clipboard
+
 open_cmdline                                                *actions.open_cmdline*
     Open vim cmdline with current entry as an argument
 
@@ -564,6 +567,9 @@ open_terminal                                              *actions.open_termina
 
 parent                                                            *actions.parent*
     Navigate to the parent path
+
+paste_from_system_clipboard                  *actions.paste_from_system_clipboard*
+    Paste the system clipboard into the current oil directory
 
 preview                                                          *actions.preview*
     Open the entry under the cursor in a preview window, or close the preview
