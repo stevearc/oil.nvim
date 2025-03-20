@@ -10,7 +10,11 @@ local M = {}
 
 ---@return "wayland"|"x11"|nil
 local function get_linux_session_type()
-  local xdg_session_type = vim.env.XDG_SESSION_TYPE:lower()
+  local xdg_session_type = vim.env.XDG_SESSION_TYPE
+  if not xdg_session_type then
+    return
+  end
+  xdg_session_type = xdg_session_type:lower()
   if xdg_session_type:find("x11") then
     return "x11"
   elseif xdg_session_type:find("wayland") then
@@ -23,7 +27,9 @@ end
 ---@return boolean
 local function is_linux_desktop_gnome()
   local cur_desktop = vim.env.XDG_CURRENT_DESKTOP
-  local idx = vim.env.XDG_SESSION_DESKTOP:lower():find("gnome") or cur_desktop:lower():find("gnome")
+  local session_desktop = vim.env.XDG_SESSION_DESKTOP
+  local idx = session_desktop and session_desktop:lower():find("gnome")
+    or cur_desktop and cur_desktop:lower():find("gnome")
   return idx ~= nil or cur_desktop == "X-Cinnamon" or cur_desktop == "XFCE"
 end
 
