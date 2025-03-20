@@ -104,14 +104,61 @@ local function paste_paths(paths)
   end
 end
 
+---@return integer start
+---@return integer end
+local function range_from_selection()
+  -- [bufnum, lnum, col, off]; both row and column 1-indexed
+  local start = vim.fn.getpos("v")
+  local end_ = vim.fn.getpos(".")
+  local start_row = start[2]
+  local end_row = end_[2]
+
+  if start_row > end_row then
+    start_row, end_row = end_row, start_row
+  end
+
+  return start_row, end_row
+end
+
 M.copy_to_system_clipboard = function()
   local dir = oil.get_current_dir()
-  local entry = oil.get_cursor_entry()
-  if not dir or not entry then
+  if not dir then
+    vim.notify("System clipboard only works for local files", vim.log.levels.ERROR)
+    return
+  end
+
+  local entries = {}
+  local mode = vim.api.nvim_get_mode().mode
+  if mode == "v" or mode == "V" then
+    if fs.is_mac then
+      vim.notify(
+        "Copying multiple paths to clipboard is not supported on mac",
+        vim.log.levels.ERROR
+      )
+      return
+    end
+    local start_row, end_row = range_from_selection()
+    for i = start_row, end_row do
+      table.insert(entries, oil.get_entry_on_line(0, i))
+    end
+
+    -- leave visual mode
+    vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Esc>", true, false, true), "n", true)
+  else
+    table.insert(entries, oil.get_cursor_entry())
+  end
+
+  -- This removes holes in the list-like table
+  entries = vim.tbl_values(entries)
+
+  if #entries == 0 then
     vim.notify("Could not find local file under cursor", vim.log.levels.WARN)
     return
   end
-  local path = dir .. entry.name
+  local paths = {}
+  for _, entry in ipairs(entries) do
+    table.insert(paths, dir .. entry.name)
+  end
   local cmd = {}
   local stdin
   if fs.is_mac then
@@ -123,7 +170,7 @@ M.copy_to_system_clipboard = function()
       "set the clipboard to POSIX file (first item of args)",
       "-e",
       "end run",
-      path,
+      paths[1],
     }
   elseif fs.is_linux then
     local xdg_session_type = get_linux_session_type()
@@ -135,11 +182,15 @@ M.copy_to_system_clipboard = function()
       vim.notify("System clipboard not supported, check $XDG_SESSION_TYPE", vim.log.levels.ERROR)
       return
     end
+    local urls = {}
+    for _, path in ipairs(paths) do
+      table.insert(urls, "file://" .. path)
+    end
     if is_linux_desktop_gnome() then
-      stdin = string.format("copy\nfile://%s\0", path)
+      stdin = string.format("copy\n%s\0", table.concat(urls, "\n"))
       vim.list_extend(cmd, { "-t", "x-special/gnome-copied-files" })
     else
-      stdin = string.format("file://%s\n", path)
+      stdin = table.concat(urls, "\n") .. "\n"
       vim.list_extend(cmd, { "-t", "text/uri-list" })
     end
   else
@@ -160,11 +211,15 @@ M.copy_to_system_clipboard = function()
     on_exit = function(j, exit_code)
       if exit_code ~= 0 then
         vim.notify(
-          string.format("Error copying '%s' to system clipboard\n%s", path, stderr),
+          string.format("Error copying '%s' to system clipboard\n%s", vim.inspect(paths), stderr),
           vim.log.levels.ERROR
         )
       else
-        vim.notify(string.format("Copied '%s' to system clipboard", path))
+        if #paths == 1 then
+          vim.notify(string.format("Copied '%s' to system clipboard", paths[1]))
+        else
+          vim.notify(string.format("Copied %d files to system clipboard", #paths))
+        end
       end
     end,
   })
