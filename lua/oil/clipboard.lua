@@ -44,38 +44,64 @@ local function write_pasted(winid, entry, column_defs, adapter, bufnr)
   vim.api.nvim_buf_set_lines(bufnr, pos[1], pos[1], true, lines)
 end
 
----@param path string
-local function paste_path(path)
+---@param paths string[]
+local function paste_paths(paths)
   local bufnr = vim.api.nvim_get_current_buf()
   local scheme = "oil://"
   local adapter = assert(config.get_adapter_by_scheme(scheme))
   local column_defs = columns.get_supported_columns(scheme)
   local winid = vim.api.nvim_get_current_win()
 
-  local ori_entry = cache.get_entry_by_url(scheme .. path)
-  if ori_entry then
-    write_pasted(winid, ori_entry, column_defs, adapter, bufnr)
+  local parent_urls = {}
+  local pending_paths = {}
+
+  for _, path in ipairs(paths) do
+    -- Trim the trailing slash off directories
+    if vim.endswith(path, "/") then
+      path = path:sub(1, -2)
+    end
+
+    local ori_entry = cache.get_entry_by_url(scheme .. path)
+    if ori_entry then
+      write_pasted(winid, ori_entry, column_defs, adapter, bufnr)
+    else
+      local parent_url = scheme .. vim.fs.dirname(path)
+      parent_urls[parent_url] = true
+      table.insert(pending_paths, path)
+    end
+  end
+  if #pending_paths == 0 then
     return
   end
 
   local cursor = vim.api.nvim_win_get_cursor(winid)
-  local new_bufnr = vim.api.nvim_create_buf(false, false)
-  local parent_url = scheme .. vim.fs.dirname(path)
-  vim.api.nvim_buf_set_name(new_bufnr, parent_url)
-  oil.load_oil_buffer(new_bufnr)
-  util.run_after_load(new_bufnr, function()
-    ori_entry = cache.get_entry_by_url(scheme .. path)
-    if ori_entry then
+  local complete_loading = util.cb_collect(#vim.tbl_keys(parent_urls), function(err)
+    if err then
+      vim.notify(string.format("Error loading parent directory: %s", err), vim.log.levels.ERROR)
+    else
       -- Something in this process moves the cursor to the top of the window, so have to restore it
       vim.api.nvim_win_set_cursor(winid, cursor)
-      write_pasted(winid, ori_entry, column_defs, adapter, bufnr)
-    else
-      vim.notify(
-        string.format("The pasted file '%s' could not be found", path),
-        vim.log.levels.ERROR
-      )
+
+      for _, path in ipairs(pending_paths) do
+        local ori_entry = cache.get_entry_by_url(scheme .. path)
+        if ori_entry then
+          write_pasted(winid, ori_entry, column_defs, adapter, bufnr)
+        else
+          vim.notify(
+            string.format("The pasted file '%s' could not be found", path),
+            vim.log.levels.ERROR
+          )
+        end
+      end
     end
   end)
+
+  for parent_url, _ in pairs(parent_urls) do
+    local new_bufnr = vim.api.nvim_create_buf(false, false)
+    vim.api.nvim_buf_set_name(new_bufnr, parent_url)
+    oil.load_oil_buffer(new_bufnr)
+    util.run_after_load(new_bufnr, complete_loading)
+  end
 end
 
 M.copy_to_system_clipboard = function()
@@ -150,24 +176,28 @@ M.copy_to_system_clipboard = function()
 end
 
 ---@param lines string[]
----@return string|nil
+---@return string[]
 local function handle_paste_output_mac(lines)
+  local ret = {}
   for _, line in ipairs(lines) do
     if not line:match("^%s*$") then
-      return line
+      table.insert(ret, line)
     end
   end
+  return ret
 end
 
 ---@param lines string[]
----@return string|nil
+---@return string[]
 local function handle_paste_output_linux(lines)
+  local ret = {}
   for _, line in ipairs(lines) do
     local path = line:match("^file://(.+)$")
     if path then
-      return util.url_unescape(path)
+      table.insert(ret, util.url_unescape(path))
     end
   end
+  return ret
 end
 
 M.paste_from_system_clipboard = function()
@@ -208,7 +238,7 @@ M.paste_from_system_clipboard = function()
     vim.notify("System clipboard not supported on Windows", vim.log.levels.ERROR)
     return
   end
-  local path
+  local paths
   local stderr = ""
   if vim.fn.executable(cmd[1]) == 0 then
     vim.notify(string.format("Could not find executable '%s'", cmd[1]), vim.log.levels.ERROR)
@@ -219,19 +249,21 @@ M.paste_from_system_clipboard = function()
     stderr_buffered = true,
     on_stdout = function(j, data)
       local lines = vim.split(table.concat(data, "\n"), "\r?\n")
-      path = handle_paste_output(lines)
+      paths = handle_paste_output(lines)
     end,
     on_stderr = function(_, data)
       stderr = table.concat(data, "\n")
     end,
     on_exit = function(j, exit_code)
-      if exit_code ~= 0 or path == nil then
+      if exit_code ~= 0 or not paths then
         vim.notify(
           string.format("Error pasting from system clipboard: %s", stderr),
           vim.log.levels.ERROR
         )
+      elseif #paths == 0 then
+        vim.notify("No valid files found in system clipboard", vim.log.levels.WARN)
       else
-        paste_path(path)
+        paste_paths(paths)
       end
     end,
   })
