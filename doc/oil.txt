@@ -122,6 +122,10 @@ CONFIG                                                                *oil-confi
           return nil
         end,
       },
+      -- Set the default mode to create files
+      new_files_mode = 644,
+      -- Set the default mode to create directories
+      new_dir_mode = 755,
       -- Extra arguments to pass to SCP when moving/copying files over SSH
       extra_scp_args = {},
       -- EXPERIMENTAL support for performing file operations with git
