@@ -183,7 +183,17 @@ for _, time_key in ipairs({ "ctime", "mtime", "atime", "birthtime" }) do
         -- Replace placeholders with a pattern that matches non-space characters (e.g. %H -> %S+)
         -- and whitespace with a pattern that matches any amount of whitespace
         -- e.g. "%b %d %Y" -> "%S+%s+%S+%s+%S+"
-        pattern = fmt:gsub("%%.", "%%S+"):gsub("%s+", "%%s+")
+        pattern = fmt
+          :gsub("%%.", "%%S+")
+          :gsub("%s+", "%%s+")
+          -- escape `()[]` because those are special characters in Lua patterns
+          :gsub(
+            "%(",
+            "%%("
+          )
+          :gsub("%)", "%%)")
+          :gsub("%[", "%%[")
+          :gsub("%]", "%%]")
       else
         pattern = "%S+%s+%d+%s+%d%d:?%d%d"
       end
