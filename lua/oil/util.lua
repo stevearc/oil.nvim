@@ -363,7 +363,12 @@ M.set_highlights = function(bufnr, highlights)
   local ns = vim.api.nvim_create_namespace("Oil")
   vim.api.nvim_buf_clear_namespace(bufnr, ns, 0, -1)
   for _, hl in ipairs(highlights) do
-    vim.api.nvim_buf_add_highlight(bufnr, ns, unpack(hl))
+    local group, line, col_start, col_end = unpack(hl)
+    vim.api.nvim_buf_set_extmark(bufnr, ns, line, col_start, {
+      end_col = col_end,
+      hl_group = group,
+      strict = false,
+    })
   end
 end
 
@@ -638,11 +643,7 @@ M.render_text = function(bufnr, text, opts)
   pcall(vim.api.nvim_buf_set_lines, bufnr, 0, -1, false, lines)
   vim.bo[bufnr].modifiable = false
   vim.bo[bufnr].modified = false
-  local ns = vim.api.nvim_create_namespace("Oil")
-  vim.api.nvim_buf_clear_namespace(bufnr, ns, 0, -1)
-  for _, hl in ipairs(highlights) do
-    vim.api.nvim_buf_add_highlight(bufnr, ns, unpack(hl))
-  end
+  M.set_highlights(bufnr, highlights)
 end
 
 ---Run a function in the context of a full-editor window

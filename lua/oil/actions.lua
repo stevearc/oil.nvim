@@ -229,13 +229,24 @@ M.open_terminal = {
       assert(dir, "Oil buffer with files adapter must have current directory")
       local bufnr = vim.api.nvim_create_buf(false, true)
       vim.api.nvim_set_current_buf(bufnr)
-      vim.fn.termopen(vim.o.shell, { cwd = dir })
+      if vim.fn.has("nvim-0.11") == 1 then
+        vim.fn.jobstart(vim.o.shell, { cwd = dir, term = true })
+      else
+        ---@diagnostic disable-next-line: deprecated
+        vim.fn.termopen(vim.o.shell, { cwd = dir })
+      end
     elseif adapter.name == "ssh" then
       local bufnr = vim.api.nvim_create_buf(false, true)
       vim.api.nvim_set_current_buf(bufnr)
       local url = require("oil.adapters.ssh").parse_url(bufname)
       local cmd = require("oil.adapters.ssh.connection").create_ssh_command(url)
-      local term_id = vim.fn.termopen(cmd)
+      local term_id
+      if vim.fn.has("nvim-0.11") == 1 then
+        term_id = vim.fn.jobstart(cmd, { term = true })
+      else
+        ---@diagnostic disable-next-line: deprecated
+        term_id = vim.fn.termopen(cmd)
+      end
       if term_id then
         vim.api.nvim_chan_send(term_id, string.format("cd %s\n", url.path))
       end
