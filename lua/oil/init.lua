@@ -1113,9 +1113,13 @@ local _on_key_ns = 0
 M.setup = function(opts)
   local Ringbuf = require("oil.ringbuf")
   local config = require("oil.config")
+  local passwd = require('oil.passwd')
 
   config.setup(opts)
   set_colors()
+  passwd.parse_passwd()
+  passwd.parse_groups()
+
   vim.api.nvim_create_user_command("Oil", function(args)
     local util = require("oil.util")
     if args.smods.tab == 1 then

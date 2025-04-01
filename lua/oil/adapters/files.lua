@@ -8,6 +8,7 @@ local log = require("oil.log")
 local permissions = require("oil.adapters.files.permissions")
 local trash = require("oil.adapters.files.trash")
 local util = require("oil.util")
+local passwd = require("oil.passwd")
 local uv = vim.uv or vim.loop
 
 local M = {}
@@ -51,6 +52,30 @@ M.to_short_os_path = function(path, entry_type)
 end
 
 local file_columns = {}
+
+---@type oil.ColumnDefinition
+file_columns.ownership = {
+  render = function (entry, _, _)
+    local meta = entry[FIELD_META]
+    local stat = meta and meta.stat
+    local user = passwd.passwd_entries[stat.uid]
+    local group = passwd.group_entries[stat.gid]
+    if user ~= nil and group ~= nil then
+      return string.format("%s:%s", user.username, group.name)
+    else
+      return nil
+    end
+  end,
+  parse = function(line, _)
+    return line:match('^([%w%d-_%.]+:[%w%d-_%.]+)%s+(.*)$')
+  end,
+  render_action = function(action)
+    return "do"
+  end,
+  perform_action = function(action, callback)
+    callback()
+  end,
+}
 
 file_columns.size = {
   require_stat = true,
