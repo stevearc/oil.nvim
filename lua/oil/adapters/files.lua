@@ -58,6 +58,9 @@ file_columns.ownership = {
   render = function (entry, _, _)
     local meta = entry[FIELD_META]
     local stat = meta and meta.stat
+    if not stat then
+      return columns.EMPTY
+    end
     local user = passwd.passwd_entries[stat.uid]
     local group = passwd.group_entries[stat.gid]
     if user ~= nil and group ~= nil then
