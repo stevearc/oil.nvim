@@ -5,6 +5,8 @@ local M = {}
 ---@field uid integer
 ---@field gid integer
 
+-- XXX: we need to do both username->uid and uid->username lookups
+-- so maybe restructure this table to be more efficient...
 ---@type {[integer]: PasswdEntry}
 M.passwd_entries = {}
 
@@ -54,6 +56,28 @@ M.parse_groups = function()
     end
     ::continue::
   end
+end
+
+---@param username string
+---@return integer?
+M.uid_from_username = function(username)
+  for uid, fields in pairs(M.passwd_entries) do
+    if fields.username == username then
+      return uid
+    end
+  end
+  return nil
+end
+
+---@param groupname string
+---@return integer?
+M.gid_from_groupname = function(groupname)
+  for gid, fields in pairs(M.group_entries) do
+    if fields.name == groupname then
+      return gid
+    end
+  end
+  return nil
 end
 
 return M
