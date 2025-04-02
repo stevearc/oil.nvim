@@ -55,6 +55,7 @@ local file_columns = {}
 
 ---@type oil.ColumnDefinition
 file_columns.ownership = {
+  require_stat = true,
   render = function (entry, _, _)
     local meta = entry[FIELD_META]
     local stat = meta and meta.stat
@@ -70,13 +71,52 @@ file_columns.ownership = {
     end
   end,
   parse = function(line, _)
+    -- user-group pair has to be matched in a single capture for this match to work...
     return line:match('^([%w%d-_%.]+:[%w%d-_%.]+)%s+(.*)$')
   end,
+  compare = function(entry, parsed_value)
+    local meta = entry[FIELD_META]
+    if meta and meta.stat and parsed_value then
+      local user = passwd.passwd_entries[meta.stat.uid]
+      local group = passwd.group_entries[meta.stat.gid]
+      if user and group and parsed_value ~= string.format("%s:%s", user.username, group.name) then
+        return true
+      end
+    end
+    return false
+  end,
   render_action = function(action)
-    return "do"
+    local _, path = util.parse_url(action.url)
+    assert(path)
+    local new_user, new_group = action.value:match("([%w%d-_%.]+):([%w%d-_%.]+)")
+    assert(new_user and new_group)
+    return string.format(
+      "CHOWN %s:%s %s",
+      new_user,
+      new_group,
+      M.to_short_os_path(path, action.entry_type)
+    )
   end,
   perform_action = function(action, callback)
-    callback()
+    local _, path = util.parse_url(action.url)
+    assert(path)
+    path = fs.posix_to_os_path(path)
+
+    local user, group = action.value:match("([%w%d-_%.]+):([%w%d-_%.]+)")
+    assert(user and group)
+    local uid, gid = passwd.uid_from_username(user), passwd.gid_from_groupname(group)
+    if not uid then
+      return callback(string.format("No such user '%s'", user))
+    end
+    if not gid then
+      return callback(string.format("No such group '%s'", group))
+    end
+    uv.fs_chown(path, uid, gid, function(err)
+      if err then
+        return callback(err)
+      end
+      callback()
+    end)
   end,
 }
 
