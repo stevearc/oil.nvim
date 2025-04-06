@@ -198,7 +198,7 @@ CONFIG                                                                *oil-confi
         -- "<C-c>" and "<Esc>".
         -- If you map an unmapped key, it will be added to the defaults.
         -- If you map an already mapped key, it will be overriden.
-        -- Possible values are "confirm", "cancel" or false.
+        -- Possible values are "confirm" and "cancel", any other will be ignored.
         confirmation = {
           keymaps = {
             ["<CR>"] = "confirm",   -- Map Enter to confirm
