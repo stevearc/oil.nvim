@@ -193,6 +193,19 @@ CONFIG                                                                *oil-confi
         win_options = {
           winblend = 0,
         },
+        -- Set keymaps to confirm or cancel
+        -- Default keymaps are "y", "Y", "o" and "O" to confirm and "n", "N", "c", "C", "q",
+        -- "<C-c>" and "<Esc>".
+        -- If you map an unmapped key, it will be added to the defaults.
+        -- If you map an already mapped key, it will be overriden.
+        -- Possible values are "confirm", "cancel" or false.
+        confirmation = {
+          keymaps = {
+            ["<CR>"] = "confirm",   -- Map Enter to confirm
+            ["<Esc>"] = "cancel",   -- Map Escape to cancel
+            ["q"] = false,          -- Disable 'q' for cancel by setting to false
+          },
+        },
       },
       -- Configuration for the floating progress window
       progress = {
