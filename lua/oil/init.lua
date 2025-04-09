@@ -749,21 +749,23 @@ M.select = function(opts, callback)
         vim.bo[filebufnr].buflisted = true
       end
 
-      local cmd = "buffer"
       if opts.tab then
-        vim.cmd.tabnew({ mods = mods })
-      elseif opts.split then
-        cmd = "sbuffer"
-      end
-      ---@diagnostic disable-next-line: param-type-mismatch
-      local ok, err = pcall(vim.cmd, {
-        cmd = cmd,
-        args = { filebufnr },
-        mods = mods,
-      })
-      -- Ignore swapfile errors
-      if not ok and err and not err:match("^Vim:E325:") then
-        vim.api.nvim_echo({ { err, "Error" } }, true, {})
+        vim.cmd.tabnew({ args = { "#"..filebufnr },  mods = mods })
+      else
+        local cmd = "buffer"
+        if opts.split then
+          cmd = "sbuffer"
+        end
+        ---@diagnostic disable-next-line: param-type-mismatch
+        local ok, err = pcall(vim.cmd, {
+          cmd = cmd,
+          args = { filebufnr },
+          mods = mods,
+        })
+        -- Ignore swapfile errors
+        if not ok and err and not err:match("^Vim:E325:") then
+          vim.api.nvim_echo({ { err, "Error" } }, true, {})
+        end
       end
 
       open_next_entry(cb)
