@@ -269,7 +269,16 @@ M.normalize_url = function(url, callback)
         elseif vim.endswith(realpath, "/") or (fs.is_windows and vim.endswith(realpath, "\\")) then
           is_directory = true
         else
-          local filetype = vim.filetype.match({ filename = vim.fs.basename(realpath) })
+          local opts = {
+            filename = vim.fs.basename(realpath)
+          }
+
+          local ok, contents = pcall(vim.fn.readfile, path, "", 1)
+          if ok then
+            opts.contents = contents
+          end
+
+          local filetype = vim.filetype.match(opts)
           is_directory = filetype == nil
         end
 
