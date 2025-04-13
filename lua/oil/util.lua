@@ -8,7 +8,7 @@ local FIELD_NAME = constants.FIELD_NAME
 local FIELD_TYPE = constants.FIELD_TYPE
 local FIELD_META = constants.FIELD_META
 
----@alias oil.IconProvider fun(type: string, name: string, conf: table?): (icon: string, hl: string)
+---@alias oil.IconProvider fun(type: string, name: string, ft: string, conf: table?): (icon: string, hl: string)
 
 ---@param url string
 ---@return nil|string
@@ -930,19 +930,26 @@ M.get_icon_provider = function()
   local _, mini_icons = pcall(require, "mini.icons")
   ---@diagnostic disable-next-line: undefined-field
   if _G.MiniIcons then -- `_G.MiniIcons` is a better check to see if the module is setup
-    return function(type, name)
-      return mini_icons.get(type == "directory" and "directory" or "file", name)
+    return function(type, name, ft)
+      local icon, hl, is_default = mini_icons.get(type == "directory" and "directory" or "file", name)
+      if icon == nil or is_default then
+        icon, hl = mini_icons.get("filetype", ft or "")
+      end
+      return icon, hl
     end
   end
 
   -- fallback to `nvim-web-devicons`
   local has_devicons, devicons = pcall(require, "nvim-web-devicons")
   if has_devicons then
-    return function(type, name, conf)
+    return function(type, name, ft, conf)
       if type == "directory" then
         return conf and conf.directory or "", "OilDirIcon"
       else
         local icon, hl = devicons.get_icon(name)
+        if icon == nil then
+            icon, hl = devicons.get_icon(name, ft)
+        end
         icon = icon or (conf and conf.default_file or "")
         return icon, hl
       end
