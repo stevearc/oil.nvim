@@ -176,6 +176,11 @@ local default_config = {
     win_options = {
       winblend = 0,
     },
+    -- Custom keymaps for confirmation dialog
+    -- Key is the key to map, value is either "confirm" or "cancel"
+    -- These will be merged with the default keymaps
+    -- Example: { ["<CR>"] = "confirm", ["<Esc>"] = "cancel" }
+    keymaps = {},
   },
   -- Configuration for the floating progress window
   progress = {

@@ -172,21 +172,56 @@ M.show = vim.schedule_wrap(function(actions, should_confirm, cb)
     })
   )
 
-  -- We used to use [C]ancel to cancel, so preserve the old keymap
-  local cancel_keys = { "n", "N", "c", "C", "q", "<C-c>", "<Esc>" }
-  for _, cancel_key in ipairs(cancel_keys) do
-    vim.keymap.set("n", cancel_key, function()
-      cancel()
-    end, { buffer = bufnr, nowait = true })
+  local function setup_keymaps(bufnr, confirm, cancel)
+    -- Define default keymaps
+    -- We used to use [O]k to confirm, so preserve the old keymap
+    local default_confirm_keys = { "y", "Y", "o", "O" }
+    -- We used to use [C]ancel to cancel, so preserve the old keymap
+    local default_cancel_keys = { "n", "N", "c", "C", "q", "<C-c>", "<Esc>" }
+
+    -- Get custom keymaps from config
+    local custom_keymaps = config.confirmation.keymaps or {}
+
+    -- Apply custom keymaps
+    for key, action in pairs(custom_keymaps) do
+      if action == "confirm" then
+        vim.keymap.set("n", key, confirm, { buffer = bufnr, nowait = true })
+      elseif action == "cancel" then
+        vim.keymap.set("n", key, cancel, { buffer = bufnr, nowait = true })
+      else
+        -- Log warning for invalid mapping values
+        vim.notify(
+          string.format(
+            "[oil.nvim] Invalid confirmation keymap action for key '%s': '%s'. " ..
+            "Valid values are 'confirm' or 'cancel'." ..
+            "Any other value will be ignored.", key, tostring(action)
+          ),
+          vim.log.levels.WARN
+        )
+        custom_keymaps[key] = nil
+      end
+    end
+
+    -- Apply default keymaps (only if not overridden by custom keymaps)
+    for _, cancel_key in ipairs(default_cancel_keys) do
+      if not custom_keymaps[cancel_key] then
+        vim.keymap.set("n", cancel_key, function()
+          cancel()
+        end, { buffer = bufnr, nowait = true })
+      end
+    end
+
+    for _, confirm_key in ipairs(default_confirm_keys) do
+      if not custom_keymaps[confirm_key] then
+        vim.keymap.set("n", confirm_key, function()
+          confirm()
+        end, { buffer = bufnr, nowait = true })
+      end
+    end
   end
 
-  -- We used to use [O]k to confirm, so preserve the old keymap
-  local confirm_keys = { "y", "Y", "o", "O" }
-  for _, confirm_key in ipairs(confirm_keys) do
-    vim.keymap.set("n", confirm_key, function()
-      confirm()
-    end, { buffer = bufnr, nowait = true })
-  end
+  setup_keymaps(bufnr, confirm, cancel)
+
 end)
 
 return M
