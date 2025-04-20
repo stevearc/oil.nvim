@@ -174,8 +174,10 @@ M.rename_buffer = function(src_bufnr, dest_buf_name)
     -- This will fail if the dest buf name already exists
     local ok = pcall(vim.api.nvim_buf_set_name, src_bufnr, dest_buf_name)
     if ok then
-      -- Renaming the buffer creates a new buffer with the old name. Find it and delete it.
-      vim.api.nvim_buf_delete(vim.fn.bufadd(bufname), {})
+      -- Renaming the buffer creates a new buffer with the old name.
+      -- Find it and try to delete it, but don't if the buffer is in a context
+      -- where Neovim doesn't allow buffer modifications.
+      pcall(vim.api.nvim_buf_delete, vim.fn.bufadd(bufname), {})
       if altbuf and vim.api.nvim_buf_is_valid(altbuf) then
         vim.fn.setreg("#", altbuf)
       end
