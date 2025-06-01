@@ -752,6 +752,8 @@ M.select = function(opts, callback)
       local cmd = "buffer"
       if opts.tab then
         vim.cmd.tabnew({ mods = mods })
+        -- Make sure the new buffer from tabnew gets cleaned up
+        vim.bo.bufhidden = "wipe"
       elseif opts.split then
         cmd = "sbuffer"
       end
