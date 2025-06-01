@@ -12,6 +12,7 @@ https://user-images.githubusercontent.com/506791/209727111-6b4a11f4-634a-4efa-94
 - [Options](#options)
 - [Adapters](#adapters)
 - [Recipes](#recipes)
+- [Third-party extensions](#third-party-extensions)
 - [API](#api)
 - [FAQ](#faq)
 
@@ -359,6 +360,13 @@ Note that at the moment the ssh adapter does not support Windows machines, and i
 - [Toggle file detail view](doc/recipes.md#toggle-file-detail-view)
 - [Show CWD in the winbar](doc/recipes.md#show-cwd-in-the-winbar)
 - [Hide gitignored files and show git tracked hidden files](doc/recipes.md#hide-gitignored-files-and-show-git-tracked-hidden-files)
+
+## Third-party extensions
+
+These are plugins maintained by other authors that extend the functionality of oil.nvim.
+
+- [oil-git-status.nvim](https://github.com/refractalize/oil-git-status.nvim) - Shows git status of files in statuscolumn
+- [oil-lsp-diagnostics.nvim](https://github.com/JezerM/oil-lsp-diagnostics.nvim) - Shows LSP diagnostics indicator as virtual text
 
 ## API
 
