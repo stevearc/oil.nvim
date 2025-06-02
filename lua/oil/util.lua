@@ -931,11 +931,11 @@ M.get_icon_provider = function()
   ---@diagnostic disable-next-line: undefined-field
   if _G.MiniIcons then -- `_G.MiniIcons` is a better check to see if the module is setup
     return function(type, name, ft)
-      local icon, hl, is_default = mini_icons.get(type == "directory" and "directory" or "file", name)
-      if icon == nil or is_default then
-        icon, hl = mini_icons.get("filetype", ft or "")
+      if ft ~= nil then
+        return mini_icons.get("filetype", ft)
       end
-      return icon, hl
+
+      return mini_icons.get(type == "directory" and "directory" or "file", name)
     end
   end
 
@@ -946,10 +946,11 @@ M.get_icon_provider = function()
       if type == "directory" then
         return conf and conf.directory or "", "OilDirIcon"
       else
-        local icon, hl = devicons.get_icon(name)
-        if icon == nil then
-            icon, hl = devicons.get_icon(name, ft)
+        if ft ~= nil then
+          return devicons.get_icon(name, ft)
         end
+
+        local icon, hl = devicons.get_icon(name)
         icon = icon or (conf and conf.default_file or "")
         return icon, hl
       end
