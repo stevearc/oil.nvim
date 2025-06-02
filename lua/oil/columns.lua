@@ -169,10 +169,12 @@ if icon_provider then
         name = meta.display_name
       end
 
-      local ft = ""
-      if field_type == "file" then
-        local firstline = vim.fn.readfile(name, '', 1)
-        ft = vim.filetype.match({ filename = name, contents = firstline }) or ""
+      local ft = nil
+      if config.use_vim_ft then
+        if field_type == "file" then
+          local firstline = vim.fn.readfile(name, '', 1)
+          ft = vim.filetype.match({ filename = name, contents = firstline }) or ""
+        end
       end
 
       local icon, hl = icon_provider(field_type, name, ft, conf)

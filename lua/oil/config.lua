@@ -100,6 +100,9 @@ local default_config = {
       { "type", "asc" },
       { "name", "asc" },
     },
+    -- Read the first line of the file and use vim's matching ft.
+    -- Can slow down the execution considerably for large projects.
+    use_vim_ft = false,
     -- Customize the highlight group for the file name
     highlight_filename = function(entry, is_hidden, is_link_target, is_link_orphan)
       return nil
