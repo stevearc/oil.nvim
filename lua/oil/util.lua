@@ -946,7 +946,17 @@ M.get_icon_provider = function()
       if type == "directory" then
         return conf and conf.directory or "", "OilDirIcon"
       else
-        local icon, hl = devicons.get_icon(name, ft)
+        local icon = ""
+        local hl = ""
+
+        if ft ~= nil then
+            icon, hl = devicons.get_icon_by_filetype(ft)
+        end
+
+        if icon == "" then
+            icon, hl = devicons.get_icon(name)
+        end
+
         icon = icon or (conf and conf.default_file or "")
         return icon, hl
       end
