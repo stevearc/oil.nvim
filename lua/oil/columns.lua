@@ -173,7 +173,7 @@ if icon_provider then
       if config.use_vim_ft then
         if field_type == "file" then
           local firstline = vim.fn.readfile(name, '', 1)
-          ft = vim.filetype.match({ filename = name, contents = firstline }) or ""
+          ft = vim.filetype.match({ filename = name, contents = firstline })
         end
       end
 
