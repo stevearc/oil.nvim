@@ -293,11 +293,11 @@ function M.will_rename_files(files, options)
       local result, err
       if vim.fn.has("nvim-0.11") == 1 then
         result, err =
-            client:request_sync(ms.workspace_willRenameFiles, params, options.timeout_ms or 1000, 0)
+          client:request_sync(ms.workspace_willRenameFiles, params, options.timeout_ms or 1000, 0)
       else
         result, err =
-        ---@diagnostic disable-next-line: param-type-mismatch
-            client.request_sync(ms.workspace_willRenameFiles, params, options.timeout_ms or 1000, 0)
+          ---@diagnostic disable-next-line: param-type-mismatch
+          client.request_sync(ms.workspace_willRenameFiles, params, options.timeout_ms or 1000, 0)
       end
       if result and result.result then
         if options.apply_edits ~= false then
@@ -318,7 +318,7 @@ function M.did_rename_files(files)
   local clients = get_clients(ms.workspace_didRenameFiles)
   for _, client in ipairs(clients) do
     local filters =
-        vim.tbl_get(client.server_capabilities, "workspace", "fileOperations", "didRename", "filters")
+      vim.tbl_get(client.server_capabilities, "workspace", "fileOperations", "didRename", "filters")
     local matching_files = get_matching_paths(client, filters, vim.tbl_keys(files))
     if matching_files then
       local params = {
