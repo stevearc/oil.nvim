@@ -153,7 +153,7 @@ end
 local icon_provider = util.get_icon_provider()
 if icon_provider then
   M.register("icon", {
-    render = function(entry, conf)
+    render = function(entry, conf, bufnr)
       local field_type = entry[FIELD_TYPE]
       local name = entry[FIELD_NAME]
       local meta = entry[FIELD_META]
@@ -172,7 +172,9 @@ if icon_provider then
       local ft = nil
       if config.use_slow_filetype_detection then
         if field_type == "file" then
-          local firstline = vim.fn.readfile(name, '', 1)
+          local bufname = vim.api.nvim_buf_get_name(bufnr)
+          local _, path = util.parse_url(bufname)
+          local firstline = vim.fn.readfile(path .. name, '', 1)
           ft = vim.filetype.match({ filename = name, contents = firstline })
         end
       end
