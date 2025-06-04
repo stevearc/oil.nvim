@@ -100,9 +100,6 @@ local default_config = {
       { "type", "asc" },
       { "name", "asc" },
     },
-    -- Read the first line of the file and use vim's matching ft.
-    -- Can slow down the execution considerably for large projects.
-    use_vim_ft = false,
     -- Customize the highlight group for the file name
     highlight_filename = function(entry, is_hidden, is_link_target, is_link_orphan)
       return nil
@@ -290,7 +287,6 @@ local M = {}
 ---@field natural_order boolean|"fast"
 ---@field case_insensitive boolean
 ---@field sort oil.SortSpec[]
----@field use_vim_ft boolean
 ---@field highlight_filename? fun(entry: oil.Entry, is_hidden: boolean, is_link_target: boolean, is_link_orphan: boolean, bufnr: integer): string|nil
 
 ---@class (exact) oil.SetupViewOptions
@@ -300,7 +296,6 @@ local M = {}
 ---@field natural_order? boolean|"fast" Sort file names with numbers in a more intuitive order for humans. Can be slow for large directories.
 ---@field case_insensitive? boolean Sort file and directory names case insensitive
 ---@field sort? oil.SortSpec[] Sort order for the file list
----@field use_vim_ft boolean Whether to detect ft with vim built-in method.
 ---@field highlight_filename? fun(entry: oil.Entry, is_hidden: boolean, is_link_target: boolean, is_link_orphan: boolean): string|nil Customize the highlight group for the file name
 
 ---@class (exact) oil.SortSpec
