@@ -68,7 +68,8 @@ local function get_matching_paths(client, filters, paths)
       end
 
       -- Some language servers use forward slashes as path separators on Windows (LuaLS)
-      if fs.is_windows then
+      -- We no longer need this after 0.12: https://github.com/neovim/neovim/commit/322a6d305d088420b23071c227af07b7c1beb41a
+      if vim.fn.has("nvim-0.12") == 0 and fs.is_windows then
         glob = glob:gsub("/", "\\")
       end
 
