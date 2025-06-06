@@ -950,11 +950,11 @@ M.get_icon_provider = function()
         local hl = ""
 
         if ft ~= nil then
-            icon, hl = devicons.get_icon_by_filetype(ft)
+          icon, hl = devicons.get_icon_by_filetype(ft)
         end
 
         if icon == "" then
-            icon, hl = devicons.get_icon(name)
+          icon, hl = devicons.get_icon(name)
         end
 
         icon = icon or (conf and conf.default_file or "")

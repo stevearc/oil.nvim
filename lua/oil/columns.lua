@@ -174,7 +174,7 @@ if icon_provider then
         if field_type == "file" then
           local bufname = vim.api.nvim_buf_get_name(bufnr)
           local _, path = util.parse_url(bufname)
-          local firstline = vim.fn.readfile(path .. name, '', 1)
+          local firstline = vim.fn.readfile(path .. name, "", 1)
           ft = vim.filetype.match({ filename = name, contents = firstline })
         end
       end
