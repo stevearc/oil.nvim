@@ -42,10 +42,17 @@ local function parse_ls_line(line)
   local name, size, date, major, minor
   if typechar == "c" or typechar == "b" then
     major, minor, date, name = rem:match("^(%d+)%s*,%s*(%d+)%s+(%S+%s+%d+%s+%d%d:?%d%d)%s+(.*)")
+    if name == nil then
+      major, minor, date, name =
+        rem:match("^(%d+)%s*,%s*(%d+)%s+(%d+%-%d+%-%d+%s+%d%d:?%d%d)%s+(.*)")
+    end
     meta.major = tonumber(major)
     meta.minor = tonumber(minor)
   else
     size, date, name = rem:match("^(%d+)%s+(%S+%s+%d+%s+%d%d:?%d%d)%s+(.*)")
+    if name == nil then
+      size, date, name = rem:match("^(%d+)%s+(%d+%-%d+%-%d+%s+%d%d:?%d%d)%s+(.*)")
+    end
     meta.size = tonumber(size)
   end
   meta.iso_modified_date = date
