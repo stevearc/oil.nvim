@@ -965,8 +965,12 @@ M.read_file_to_scratch_buffer = function(path, preview_method)
   vim.bo[bufnr].bufhidden = "wipe"
   vim.bo[bufnr].buftype = "nofile"
 
-  local max_lines = preview_method == "fast_scratch" and vim.o.lines or nil
-  local has_lines, read_res = pcall(vim.fn.readfile, path, "", max_lines)
+  local has_lines, read_res
+  if preview_method == "fast_scratch" then
+    has_lines, read_res = pcall(vim.fn.readfile, path, "", vim.o.lines)
+  else
+    has_lines, read_res = pcall(vim.fn.readfile, path)
+  end
   local lines = has_lines and vim.split(table.concat(read_res, "\n"), "\n") or {}
 
   local ok = pcall(vim.api.nvim_buf_set_lines, bufnr, 0, -1, false, lines)
