@@ -1,12 +1,15 @@
 local cache = require("oil.cache")
 local columns = require("oil.columns")
 local config = require("oil.config")
+local constants = require("oil.constants")
 local fs = require("oil.fs")
 local oil = require("oil")
 local util = require("oil.util")
 local view = require("oil.view")
 
 local M = {}
+
+local FIELD_ID = constants.FIELD_ID
 
 ---@return "wayland"|"x11"|nil
 local function get_linux_session_type()
@@ -50,8 +53,27 @@ local function write_pasted(winid, entry, column_defs, adapter, bufnr)
   vim.api.nvim_buf_set_lines(bufnr, pos[1], pos[1], true, lines)
 end
 
+local function cut_pasted(parent_url, entry)
+  for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+    local buf_name = vim.api.nvim_buf_get_name(buf)
+    if buf_name == parent_url and vim.api.nvim_buf_is_loaded(buf) then
+      local lines = vim.api.nvim_buf_get_lines(buf, 0, -1, false)
+      for i, line in ipairs(lines) do
+        local id_str = line:match("^/(%d+)")
+        if id_str and tonumber(id_str) == entry[FIELD_ID] then
+          vim.api.nvim_buf_set_lines(buf, i - 1, i, false, {})
+          break
+        end
+      end
+      return
+    end
+  end
+  -- This should not happen, but just in case
+  vim.notify(string.format("The parent url '%s' is not loaded", parent_url), vim.log.levels.ERROR)
+end
+
 ---@param paths string[]
-local function paste_paths(paths)
+local function paste_paths(paths, cut)
   local bufnr = vim.api.nvim_get_current_buf()
   local scheme = "oil://"
   local adapter = assert(config.get_adapter_by_scheme(scheme))
@@ -70,8 +92,12 @@ local function paste_paths(paths)
     local ori_entry = cache.get_entry_by_url(scheme .. path)
     if ori_entry then
       write_pasted(winid, ori_entry, column_defs, adapter, bufnr)
+      if cut then
+        local parent_url = util.addslash(scheme .. vim.fs.dirname(path))
+        cut_pasted(parent_url, ori_entry)
+      end
     else
-      local parent_url = scheme .. vim.fs.dirname(path)
+      local parent_url = util.addslash(scheme .. vim.fs.dirname(path))
       parent_urls[parent_url] = true
       table.insert(pending_paths, path)
     end
@@ -92,6 +118,10 @@ local function paste_paths(paths)
         local ori_entry = cache.get_entry_by_url(scheme .. path)
         if ori_entry then
           write_pasted(winid, ori_entry, column_defs, adapter, bufnr)
+          if cut then
+            local parent_url = util.addslash(scheme .. vim.fs.dirname(path))
+            cut_pasted(parent_url, ori_entry)
+          end
         else
           vim.notify(
             string.format("The pasted file '%s' could not be found", path),
@@ -261,7 +291,7 @@ local function handle_paste_output_linux(lines)
   return ret
 end
 
-M.paste_from_system_clipboard = function()
+M.paste_from_system_clipboard = function(cut)
   local dir = oil.get_current_dir()
   if not dir then
     return
@@ -324,7 +354,7 @@ M.paste_from_system_clipboard = function()
       elseif #paths == 0 then
         vim.notify("No valid files found in system clipboard", vim.log.levels.WARN)
       else
-        paste_paths(paths)
+        paste_paths(paths, cut)
       end
     end,
   })
