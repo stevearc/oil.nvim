@@ -228,8 +228,8 @@ M.register("type", {
   end,
 })
 
-local function pad_number(int)
-  return string.format("%012d", int)
+local function adjust_number(int)
+  return string.format("%03d%s", #int, int)
 end
 
 M.register("name", {
@@ -258,11 +258,11 @@ M.register("name", {
     else
       if config.view_options.case_insensitive then
         return function(entry)
-          return entry[FIELD_NAME]:gsub("%d+", pad_number):lower()
+          return entry[FIELD_NAME]:gsub("0*(%d+)", adjust_number):lower()
         end
       else
         return function(entry)
-          return entry[FIELD_NAME]:gsub("%d+", pad_number)
+          return entry[FIELD_NAME]:gsub("0*(%d+)", adjust_number)
         end
       end
     end
