@@ -256,14 +256,16 @@ M.register("name", {
         end
       end
     else
-      if config.view_options.case_insensitive then
-        return function(entry)
-          return entry[FIELD_NAME]:gsub("0*(%d+)", adjust_number):lower()
+      local memo = {}
+      return function(entry)
+        if memo[entry] == nil then
+          local name = entry[FIELD_NAME]:gsub("0*(%d+)", adjust_number)
+          if config.view_options.case_insensitive then
+            name = name:lower()
+          end
+          memo[entry] = name
         end
-      else
-        return function(entry)
-          return entry[FIELD_NAME]:gsub("0*(%d+)", adjust_number)
-        end
+        return memo[entry]
       end
     end
   end,
