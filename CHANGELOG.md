@@ -1,5 +1,28 @@
 # Changelog
 
+## [2.16.0](https://github.com/stevearc/oil.nvim/compare/v2.15.0...v2.16.0) (2025-08-21)
+
+
+### Features
+
+* copy/paste to system clipboard ([#559](https://github.com/stevearc/oil.nvim/issues/559)) ([4c9bdf0](https://github.com/stevearc/oil.nvim/commit/4c9bdf0d839932617cdb25ed46a2f7bb1e090f77))
+
+
+### Bug Fixes
+
+* better detection of oil buffers ([#589](https://github.com/stevearc/oil.nvim/issues/589)) ([548587d](https://github.com/stevearc/oil.nvim/commit/548587d68b55e632d8a69c92cefd981f360634fa))
+* clean up empty buffer when opening in new tab ([#616](https://github.com/stevearc/oil.nvim/issues/616)) ([5b6068a](https://github.com/stevearc/oil.nvim/commit/5b6068aad7d2057dd399fac73b7fb2cdf23ccd6e))
+* file time column escapes ()[] chars in parser ([#603](https://github.com/stevearc/oil.nvim/issues/603)) ([ba1f50a](https://github.com/stevearc/oil.nvim/commit/ba1f50a9a81f65c07af584065ab9a5ad2a9e5fe0))
+* glob formatting on windows in neovim nightly ([#631](https://github.com/stevearc/oil.nvim/issues/631)) ([08c2bce](https://github.com/stevearc/oil.nvim/commit/08c2bce8b00fd780fb7999dbffdf7cd174e896fb))
+* indexing nil when env vars does not exist ([#601](https://github.com/stevearc/oil.nvim/issues/601)) ([ab887d9](https://github.com/stevearc/oil.nvim/commit/ab887d926c2665a708fbe9e6c4654042cc5f4c60))
+* pass bufnr to constrain_cursor ([#574](https://github.com/stevearc/oil.nvim/issues/574)) ([54fe7dc](https://github.com/stevearc/oil.nvim/commit/54fe7dca365e2b917ee269744055320c1f29380d))
+* prevent E565 error when opening directories with nvim . ([#608](https://github.com/stevearc/oil.nvim/issues/608)) ([685cdb4](https://github.com/stevearc/oil.nvim/commit/685cdb4ffa74473d75a1b97451f8654ceeab0f4a))
+* scratch preview method ([#628](https://github.com/stevearc/oil.nvim/issues/628)) ([bbad9a7](https://github.com/stevearc/oil.nvim/commit/bbad9a76b2617ce1221d49619e4e4b659b3c61fc))
+* silent handling when buffer has no oil adapter ([#573](https://github.com/stevearc/oil.nvim/issues/573)) ([d7c61c7](https://github.com/stevearc/oil.nvim/commit/d7c61c70849ec99f005615c4175118986f200e4f))
+* ssh adapter supports iso8601 dates ([#635](https://github.com/stevearc/oil.nvim/issues/635)) ([1498d2f](https://github.com/stevearc/oil.nvim/commit/1498d2fccff75a1321e92e4aa03ff220f87cc27e))
+* support natural ordering for numbers with &gt;12 digits ([#652](https://github.com/stevearc/oil.nvim/issues/652)) ([07f80ad](https://github.com/stevearc/oil.nvim/commit/07f80ad645895af849a597d1cac897059d89b686))
+* **trash-win:** don't hang when `shellslash` is enabled ([#592](https://github.com/stevearc/oil.nvim/issues/592)) ([8649818](https://github.com/stevearc/oil.nvim/commit/8649818fb29322a8ee24c5cd2cd7b2f6c40258a3))
+
 ## [2.15.0](https://github.com/stevearc/oil.nvim/compare/v2.14.0...v2.15.0) (2025-02-13)
 
 
