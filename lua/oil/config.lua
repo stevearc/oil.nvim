@@ -282,8 +282,8 @@ local M = {}
 
 ---@class (exact) oil.ViewOptions
 ---@field show_hidden boolean
----@field is_hidden_file fun(name: string, bufnr: integer): boolean
----@field is_always_hidden fun(name: string, bufnr: integer): boolean
+---@field is_hidden_file fun(name: string, bufnr: integer, entry: oil.Entry): boolean
+---@field is_always_hidden fun(name: string, bufnr: integer, entry: oil.Entry): boolean
 ---@field natural_order boolean|"fast"
 ---@field case_insensitive boolean
 ---@field sort oil.SortSpec[]
