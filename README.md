@@ -262,7 +262,7 @@ require("oil").setup({
     -- max_width and max_height can be integers or a float between 0 and 1 (e.g. 0.4 for 40%)
     max_width = 0,
     max_height = 0,
-    border = "rounded",
+    border = nil,
     win_options = {
       winblend = 0,
     },
@@ -307,7 +307,7 @@ require("oil").setup({
     min_height = { 5, 0.1 },
     -- optionally define an integer/float for the exact height of the preview window
     height = nil,
-    border = "rounded",
+    border = nil,
     win_options = {
       winblend = 0,
     },
@@ -320,7 +320,7 @@ require("oil").setup({
     max_height = { 10, 0.9 },
     min_height = { 5, 0.1 },
     height = nil,
-    border = "rounded",
+    border = nil,
     minimized_border = "none",
     win_options = {
       winblend = 0,
@@ -328,11 +328,11 @@ require("oil").setup({
   },
   -- Configuration for the floating SSH window
   ssh = {
-    border = "rounded",
+    border = nil,
   },
   -- Configuration for the floating keymaps help window
   keymaps_help = {
-    border = "rounded",
+    border = nil,
   },
 })
 ```
