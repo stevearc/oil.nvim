@@ -587,7 +587,7 @@ local function get_sort_function(adapter, num_entries)
   end
   return function(a, b)
     for _, sort_fn in ipairs(idx_funs) do
-      local get_sort_value, order = unpack(sort_fn)
+      local get_sort_value, order = sort_fn[1], sort_fn[2]
       local a_val = get_sort_value(a)
       local b_val = get_sort_value(b)
       if a_val ~= b_val then
