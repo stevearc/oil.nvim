@@ -7,10 +7,12 @@ Have a cool recipe to share? Open a pull request and add it to this doc!
 - [Toggle file detail view](#toggle-file-detail-view)
 - [Show CWD in the winbar](#show-cwd-in-the-winbar)
 - [Hide gitignored files and show git tracked hidden files](#hide-gitignored-files-and-show-git-tracked-hidden-files)
+- [Use oil as a persistent file explorer](#use-oil-as-a-persistent-file-explorer)
 
 <!-- /TOC -->
 
 ## Toggle file detail view
+
 
 ```lua
 local detail = false
@@ -124,4 +126,119 @@ require("oil").setup({
     end,
   },
 })
+```
+
+## Use oil as a persistent file explorer
+Two separate windows: one for oil and another for editing. Once toggled, new buffers loading into the editing window cause the cwd shown by oil to be refreshed. Any new files opened via the oil window/buffer are opened in the editing window.
+
+```lua
+---@class OilFileEx
+local OilFileEx = {}
+
+---@return string
+local function get_current_parent_dir()
+  return vim.fn.expand('%:p:h')
+end
+
+local function is_oil_buffer(bufnr)
+  if vim.api.nvim_buf_is_valid(bufnr) then
+    local bufname = vim.api.nvim_buf_get_name(bufnr)
+    return string.find(bufname, "^oil")
+  end
+end
+
+local function open_oil_parent_dir()
+  local dir = get_current_parent_dir()
+  require "oil".open(dir)
+end
+
+-- Opens the filetree to the left of the current window
+-- and sets up an autocmd for reloading filetree on the buffer
+-- in the code window changing
+function OilFileEx:up()
+  self.code_winnr = vim.api.nvim_get_current_win()
+  self.code_bufnr = vim.api.nvim_get_current_buf()
+
+  vim.api.nvim_create_autocmd("BufEnter", {
+    group = vim.api.nvim_create_augroup("OilFileTreeCodeWindow", { clear = true }),
+    callback = function(_)
+      if not vim.api.nvim_win_is_valid(self.code_winnr) or self.killed then
+        return
+      end
+
+      local bufnr = vim.api.nvim_win_get_buf(self.code_winnr)
+      if bufnr ~= self.code_bufnr and not is_oil_buffer(bufnr) then
+        self.code_bufnr = bufnr
+        self:reload()
+      end
+    end
+  })
+  self:load()
+end
+
+function OilFileEx:load()
+  vim.cmd("40vs") -- specify width of vertically split window that contains oil
+  open_oil_parent_dir()
+  self.oil_bufnr = vim.api.nvim_get_current_buf()
+  self.oil_winnr = vim.api.nvim_get_current_win()
+
+  -- Divert buffers that are opened from the oil window via oil to the main code
+  -- window.
+  vim.api.nvim_create_autocmd("BufEnter", {
+    group = vim.api.nvim_create_augroup("OilFileTreeOilWindow", { clear = true }),
+    callback = function(_)
+      if not vim.api.nvim_win_is_valid(self.oil_winnr) then
+        return
+      end
+
+      local bufnr = vim.api.nvim_win_get_buf(self.oil_winnr)
+      if bufnr ~= self.oil_bufnr then
+        -- reload oil if anything but an oil buffer is
+        -- loaded in the designated oil window
+        if not is_oil_buffer(bufnr) then
+          self:reload()
+          -- put whatever was loaded into the code window
+          vim.api.nvim_win_set_buf(self.code_winnr, bufnr)
+        end
+      end
+    end
+  })
+
+  vim.api.nvim_set_current_win(self.code_winnr)
+end
+
+function OilFileEx:reload()
+  vim.schedule(function()
+    self:down()
+    self:load()
+  end)
+end
+
+function OilFileEx:new() self.__index = self
+  return setmetatable({}, self)
+end
+
+function OilFileEx:down()
+  if self.oil_bufnr and vim.api.nvim_buf_is_valid(self.oil_bufnr) then
+    vim.api.nvim_buf_delete(self.oil_bufnr, { force = true })
+  end
+
+  if self.oil_winnr and vim.api.nvim_win_is_valid(self.oil_winnr) then
+    vim.api.nvim_win_close(self.oil_winnr, true)
+  end
+end
+
+function OilFileEx:kill()
+  self:down()
+  self.killed = true
+end
+
+-- Practical example:
+
+-- local oil_file_ex = OilFileEx:new()
+-- oil_file_ex:up()   -- opens the oil file explorer
+-- oil_file_ex:down() -- closes the file explorer, but the autocommands will remain intact meaning that if you navigate to other files from your coding buffer then oil will be reopened to the left.
+-- oil_file_ex:kill() -- closes the file explorer and stops the autocommands from being triggered, you are truly free of the file explorer at this point... unless you make a new one and call up.
+
+return OilFileEx
 ```
