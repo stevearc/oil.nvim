@@ -279,6 +279,8 @@ local function constrain_cursor(bufnr, mode)
   if config.show_header and row == 1 then
     row = 2
   end
+  -- TODO: this seems to be flakey. I occasionally get an index out of bounds error
+  -- here but can't figure out how to reliably reproduce it. 
   local line = vim.api.nvim_buf_get_lines(bufnr, row - 1, row, true)[1]
   local column_defs = columns.get_supported_columns(adapter)
   local result = parser.parse_line(adapter, line, column_defs)
