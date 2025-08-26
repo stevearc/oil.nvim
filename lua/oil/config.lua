@@ -53,6 +53,8 @@ local default_config = {
   watch_for_changes = false,
   -- Show column headers at the top of the oil buffer using virtual text
   show_header = false,
+  -- Optional function to format header text for each column
+  header_format = nil,
   -- Keymaps in oil buffer. Can be any value that `vim.keymap.set` accepts OR a table of keymap
   -- options with a `callback` (e.g. { callback = function() ... end, desc = "", mode = "n" })
   -- Additionally, if it is a string that matches "actions.<name>",
@@ -233,6 +235,7 @@ default_config.view_options.highlight_filename = nil
 ---@field constrain_cursor false|"name"|"editable"
 ---@field watch_for_changes boolean
 ---@field show_header boolean
+---@field header_format? fun(header_text: string): string
 ---@field keymaps table<string, any>
 ---@field use_default_keymaps boolean
 ---@field view_options oil.ViewOptions
@@ -262,6 +265,7 @@ local M = {}
 ---@field constrain_cursor? false|"name"|"editable" Constrain the cursor to the editable parts of the oil buffer. Set to `false` to disable, or "name" to keep it on the file names.
 ---@field watch_for_changes? boolean Set to true to watch the filesystem for changes and reload oil.
 ---@field show_header? boolean Show column headers at the top of the oil buffer using virtual text.
+---@field header_format? fun(header_text: string): string Optional function to format header text for each column.
 ---@field keymaps? table<string, any>
 ---@field use_default_keymaps? boolean Set to false to disable all of the above keymaps
 ---@field view_options? oil.SetupViewOptions Configure which files are shown and how they are shown.

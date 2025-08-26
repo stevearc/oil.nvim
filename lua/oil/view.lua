@@ -315,6 +315,12 @@ M.render_column_headers = function(bufnr, column_defs, col_width, adapter)
 
     if name ~= "icon" then
       local display_name = name:upper()
+
+      -- Apply header format function if provided
+      if config.header_format then
+        display_name = config.header_format(display_name)
+      end
+
       local padded_text = util.rpad(display_name, width)
       header_line = header_line .. padded_text
     else
@@ -327,7 +333,12 @@ M.render_column_headers = function(bufnr, column_defs, col_width, adapter)
     end
   end
 
-  header_line = header_line .. " NAME"
+  -- Add filename column header
+  local name_header = "NAME"
+  if config.header_format then
+    name_header = config.header_format(name_header)
+  end
+  header_line = header_line .. " " .. name_header
 
   if header_line:match("%S") then
     vim.api.nvim_buf_set_extmark(bufnr, ns, 0, 0, {
@@ -715,6 +726,12 @@ local function render_buffer(bufnr, opts)
       local name = util.split_config(column_def)
       if name ~= "icon" then
         local display_name = name:upper()
+
+        -- Apply header format function if provided
+        if config.header_format then
+          display_name = config.header_format(display_name)
+        end
+
         col_width[i + 1] = math.max(col_width[i + 1], vim.api.nvim_strwidth(display_name))
       end
     end
