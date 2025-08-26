@@ -293,6 +293,50 @@ local function constrain_cursor(bufnr, mode)
   end
 end
 
+---Render column headers using virtual text
+---@param bufnr integer
+---@param column_defs oil.ColumnSpec[]
+---@param col_width integer[]
+---@param adapter oil.Adapter
+M.render_column_headers = function(bufnr, column_defs, col_width, adapter)
+  local ns = vim.api.nvim_create_namespace("OilHeaders")
+  vim.api.nvim_buf_clear_namespace(bufnr, ns, 0, -1)
+
+  if not vim.api.nvim_buf_is_valid(bufnr) then
+    return
+  end
+
+  local header_line = ""
+
+  -- Add configured columns (excluding icon)
+  for i, column_def in ipairs(column_defs) do
+    local name = util.split_config(column_def)
+    local width = col_width[i + 1]
+
+    if name ~= "icon" then
+      local display_name = name:upper()
+      local padded_text = util.rpad(display_name, width)
+      header_line = header_line .. padded_text
+    else
+      local empty_space = string.rep(" ", width)
+      header_line = header_line .. empty_space
+    end
+
+    if i < #column_defs then
+      header_line = header_line .. " "
+    end
+  end
+
+  header_line = header_line .. " NAME"
+
+  if header_line:match("%S") then
+    vim.api.nvim_buf_set_extmark(bufnr, ns, 0, 0, {
+      virt_text = { { header_line, "OilColumnHeader" } },
+      virt_text_pos = "overlay",
+    })
+  end
+end
+
 ---Redraw original path virtual text for trash buffer
 ---@param bufnr integer
 local function redraw_trash_virtual_text(bufnr)
@@ -665,13 +709,38 @@ local function render_buffer(bufnr, opts)
     end
   end
 
+  -- Update column widths to account for header text if enabled
+  if config.show_header then
+    for i, column_def in ipairs(column_defs) do
+      local name = util.split_config(column_def)
+      if name ~= "icon" then
+        local display_name = name:upper()
+        col_width[i + 1] = math.max(col_width[i + 1], vim.api.nvim_strwidth(display_name))
+      end
+    end
+  end
+
   local lines, highlights = util.render_table(line_table, col_width)
+
+  -- Insert empty line at the top for headers if enabled
+  if config.show_header then
+    table.insert(lines, 1, "")
+    -- Adjust highlight line numbers since we added a line at the top
+    for _, hl in ipairs(highlights) do
+      hl[2] = hl[2] + 1 -- increment line number
+    end
+  end
 
   vim.bo[bufnr].modifiable = true
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, true, lines)
   vim.bo[bufnr].modifiable = false
   vim.bo[bufnr].modified = false
   util.set_highlights(bufnr, highlights)
+
+  -- Render column headers if enabled
+  if config.show_header then
+    M.render_column_headers(bufnr, column_defs, col_width, adapter)
+  end
 
   if opts.jump then
     -- TODO why is the schedule necessary?
@@ -680,6 +749,10 @@ local function render_buffer(bufnr, opts)
         if vim.api.nvim_win_is_valid(winid) and vim.api.nvim_win_get_buf(winid) == bufnr then
           if jump_idx then
             local lnum = jump_idx
+            -- Adjust line number for header offset
+            if config.show_header then
+              lnum = lnum + 1
+            end
             local line = vim.api.nvim_buf_get_lines(bufnr, lnum - 1, lnum, true)[1]
             local id_str = line:match("^/(%d+)")
             local id = tonumber(id_str)

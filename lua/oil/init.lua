@@ -899,6 +899,11 @@ M._get_highlights = function()
       desc = "Hidden normal files in an oil buffer",
     },
     {
+      name = "OilColumnHeader",
+      link = "Title",
+      desc = "Column headers in an oil buffer",
+    },
+    {
       name = "OilCreate",
       link = "DiagnosticInfo",
       desc = "Create action in the oil preview window",
