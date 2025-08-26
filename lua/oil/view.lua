@@ -275,7 +275,11 @@ local function constrain_cursor(bufnr, mode)
   end
 
   local cur = vim.api.nvim_win_get_cursor(0)
-  local line = vim.api.nvim_buf_get_lines(bufnr, cur[1] - 1, cur[1], true)[1]
+  local row = cur[1]
+  if config.show_header and row == 1 then
+    row = 2
+  end
+  local line = vim.api.nvim_buf_get_lines(bufnr, row - 1, row, true)[1]
   local column_defs = columns.get_supported_columns(adapter)
   local result = parser.parse_line(adapter, line, column_defs)
   if result and result.ranges then
@@ -288,7 +292,7 @@ local function constrain_cursor(bufnr, mode)
       error(string.format('Unexpected value "%s" for option constrain_cursor', mode))
     end
     if cur[2] < min_col then
-      vim.api.nvim_win_set_cursor(0, { cur[1], min_col })
+      vim.api.nvim_win_set_cursor(0, { row, min_col })
     end
   end
 end
