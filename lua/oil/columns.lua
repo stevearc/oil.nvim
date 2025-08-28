@@ -57,6 +57,41 @@ local EMPTY = { "-", "Comment" }
 
 M.EMPTY = EMPTY
 
+---Check if a column is editable (has perform_action function)
+---@param adapter oil.Adapter
+---@param defn oil.ColumnSpec
+---@return boolean
+M.is_editable_column = function(adapter, defn)
+  if defn == "name" then
+    return true
+  end
+  local column = M.get_column(adapter, defn)
+  return column and column.perform_action ~= nil
+end
+
+---Get only the editable columns (those with perform_action)
+---@param adapter_or_scheme string|oil.Adapter
+---@return oil.ColumnSpec[]
+M.get_editable_columns = function(adapter_or_scheme)
+  if not config.virtual_text_columns then
+    return M.get_supported_columns(adapter_or_scheme)
+  end
+  local adapter
+  if type(adapter_or_scheme) == "string" then
+    adapter = config.get_adapter_by_scheme(adapter_or_scheme)
+  else
+    adapter = adapter_or_scheme
+  end
+  assert(adapter)
+  local ret = {}
+  for _, def in ipairs(config.columns) do
+    if M.get_column(adapter, def) and M.is_editable_column(adapter, def) then
+      table.insert(ret, def)
+    end
+  end
+  return ret
+end
+
 ---@param adapter oil.Adapter
 ---@param col_def oil.ColumnSpec
 ---@param entry oil.InternalEntry

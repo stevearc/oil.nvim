@@ -55,7 +55,7 @@ local function paste_paths(paths)
   local bufnr = vim.api.nvim_get_current_buf()
   local scheme = "oil://"
   local adapter = assert(config.get_adapter_by_scheme(scheme))
-  local column_defs = columns.get_supported_columns(scheme)
+  local column_defs = columns.get_editable_columns(scheme)
   local winid = vim.api.nvim_get_current_win()
 
   local parent_urls = {}

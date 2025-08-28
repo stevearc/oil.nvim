@@ -50,7 +50,7 @@ M.get_entry_on_line = function(bufnr, lnum)
   if not line then
     return nil
   end
-  local column_defs = columns.get_supported_columns(adapter)
+  local column_defs = columns.get_editable_columns(adapter)
   local result = parser.parse_line(adapter, line, column_defs)
   if result then
     if result.entry then
@@ -943,6 +943,11 @@ M._get_highlights = function()
       link = "Comment",
       desc = "Virtual text that shows the original path of file in the trash",
     },
+    {
+      name = "OilVirtualText",
+      link = "Comment",
+      desc = "Virtual text in an oil buffer",
+    },
   }
 end
 
@@ -1391,6 +1396,14 @@ M.setup = function(opts)
       if config.adapters[scheme] and vim.api.nvim_buf_line_count(params.buf) == 1 then
         M.load_oil_buffer(params.buf)
       end
+    end,
+  })
+
+  local ns = vim.api.nvim_create_namespace("OilVirtualColumns")
+  vim.api.nvim_set_decoration_provider(ns, {
+    on_win = function(_, winid, bufnr, toprow, botrow)
+      local view = require("oil.view")
+      view.render_virtual_columns_on_win(ns, winid, bufnr, toprow, botrow)
     end,
   })
 
