@@ -57,7 +57,6 @@ local EMPTY = { "-", "Comment" }
 
 M.EMPTY = EMPTY
 
----Check if a column is editable (has perform_action function)
 ---@param adapter oil.Adapter
 ---@param defn oil.ColumnSpec
 ---@return boolean
@@ -69,7 +68,7 @@ M.is_editable_column = function(adapter, defn)
   return column and column.perform_action ~= nil
 end
 
----Get only the editable columns (those with perform_action)
+---Get all editable columns (identical to get_supported_columns when virtual_text_columns is false)
 ---@param adapter_or_scheme string|oil.Adapter
 ---@return oil.ColumnSpec[]
 M.get_editable_columns = function(adapter_or_scheme)

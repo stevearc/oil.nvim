@@ -287,7 +287,9 @@ local function constrain_cursor(bufnr, mode)
     else
       error(string.format('Unexpected value "%s" for option constrain_cursor', mode))
     end
-    if cur[2] < min_col then
+    if cur[2] <= min_col then
+      -- vim.notify("constraining cursor to col " .. tostring(min_col), vim.log.levels.INFO)
+      -- set cursor forward and then back
       vim.api.nvim_win_set_cursor(0, { cur[1], min_col })
     end
   end
@@ -654,7 +656,7 @@ local function determine_column_config(bufnr, adapter)
   if vim.b[bufnr].oil_column_config and vim.b[bufnr].oil_buffer_columns then
     return vim.b[bufnr].oil_column_config, vim.b[bufnr].oil_buffer_columns
   end
-  
+
   local bufname = vim.api.nvim_buf_get_name(bufnr)
   local scheme = util.parse_url(bufname)
   local all_columns = columns.get_supported_columns(scheme)
@@ -780,14 +782,15 @@ local function render_buffer(bufnr, opts)
       end
     end
   end
-
-  local lines, highlights = util.render_table(line_table, buffer_column_widths)
-
   if config.virtual_text_columns then
     vim.b[bufnr].oil_buffer_column_widths = buffer_column_widths
     -- Calculate widths for virtual columns
     determine_virtual_column_widths(bufnr, column_config, entry_list, adapter)
+    -- remove the name column width from buffer columns so that it doesn't get padded by render_table
+    buffer_column_widths[#buffer_column_widths] = nil
   end
+
+  local lines, highlights = util.render_table(line_table, buffer_column_widths)
 
   vim.bo[bufnr].modifiable = true
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, true, lines)
@@ -797,7 +800,7 @@ local function render_buffer(bufnr, opts)
 
   if opts.jump then
     -- TODO why is the schedule necessary?
-    vim.schedule(function()
+    vim.defer_fn(function()
       for _, winid in ipairs(vim.api.nvim_list_wins()) do
         if vim.api.nvim_win_is_valid(winid) and vim.api.nvim_win_get_buf(winid) == bufnr then
           if jump_idx then
@@ -819,7 +822,7 @@ local function render_buffer(bufnr, opts)
           constrain_cursor(bufnr, "name")
         end
       end
-    end)
+    end, 50)
   end
   return seek_after_render_found
 end
@@ -1181,6 +1184,9 @@ M.render_virtual_columns_on_win = function(ns, winid, bufnr, toprow, botrow)
       return
     end
 
+    -- DEBUG: Log line content and structure
+    -- vim.notify(string.format("DEBUG [Line %d]: '%s' (length: %d)", lnum + 1, line, #line), vim.log.levels.INFO)
+
     local id_str = line:match("^/(%d+)")
     local id = tonumber(id_str)
     if not id then
@@ -1199,6 +1205,10 @@ M.render_virtual_columns_on_win = function(ns, winid, bufnr, toprow, botrow)
 
     local editable_column_index = 2
     local inline_pos = buffer_column_widths[1] -- start after ID column
+
+    -- DEBUG: Log initial positioning
+    -- vim.notify(string.format("DEBUG [Line %d]: Initial inline_pos=%d, buffer_column_widths[1]=%d", 
+      -- lnum + 1, inline_pos, buffer_column_widths[1]), vim.log.levels.INFO)
 
     local found_name_column = false
     for col_idx, col_info in ipairs(column_config) do
@@ -1227,7 +1237,7 @@ M.render_virtual_columns_on_win = function(ns, winid, bufnr, toprow, botrow)
           -- If we have any accumulated inline virtual text, apply it now before
           -- moving on to the next section after this editable column
           table.insert(inline_virt_text, { " ", "OilVirtText" }) -- space before editable column
-          vim.api.nvim_buf_set_extmark(bufnr, ns, lnum, inline_pos, {
+          vim.api.nvim_buf_set_extmark(bufnr, ns, lnum, inline_pos - 1, {
             virt_text = inline_virt_text,
             virt_text_pos = "inline",
           })
@@ -1247,7 +1257,7 @@ M.render_virtual_columns_on_win = function(ns, winid, bufnr, toprow, botrow)
       -- that means the name column was not configured, so we want to apply it now
       -- there also shouldn't be any trailing virtual text in this case
       table.insert(inline_virt_text, { " ", "OilVirtText" })
-      vim.api.nvim_buf_set_extmark(bufnr, ns, lnum, inline_pos, {
+      vim.api.nvim_buf_set_extmark(bufnr, ns, lnum, inline_pos - 1, {
         virt_text = inline_virt_text,
         virt_text_pos = "inline",
       })
@@ -1263,6 +1273,16 @@ M.render_virtual_columns_on_win = function(ns, winid, bufnr, toprow, botrow)
       })
     end
   end
+  -- vim.notify("finished rendering virtual columns for bufnr: " .. tostring(bufnr), vim.log.levels.DEBUG)
+end
+
+M.constrain_cursor_on_enter = function(args)
+  vim.defer_fn(function()
+    vim.notify("entered oil buffer: " .. args.data.buf)
+    -- constrain_cursor(args.data.buf, "name")
+    vim.cmd("redraw")
+    vim.notify("cursor pos: " .. vim.inspect(vim.api.nvim_win_get_cursor(0)))
+  end, 1000)
 end
 
 return M

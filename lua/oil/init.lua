@@ -944,7 +944,7 @@ M._get_highlights = function()
       desc = "Virtual text that shows the original path of file in the trash",
     },
     {
-      name = "OilVirtualText",
+      name = "OilVirtText",
       link = "Comment",
       desc = "Virtual text in an oil buffer",
     },
@@ -1120,6 +1120,7 @@ local _on_key_ns = 0
 M.setup = function(opts)
   local Ringbuf = require("oil.ringbuf")
   local config = require("oil.config")
+  local view = require("oil.view")
 
   config.setup(opts)
   set_colors()
@@ -1307,6 +1308,10 @@ M.setup = function(opts)
       close_preview_window_if_not_in_oil()
     end,
   })
+  vim.api.nvim_create_autocmd("User", {
+    pattern = "OilEnter",
+    callback = view.constrain_cursor_on_enter
+  })
 
   vim.api.nvim_create_autocmd({ "BufWinEnter", "WinNew", "WinEnter" }, {
     desc = "Reset bufhidden when entering a preview buffer",
@@ -1402,7 +1407,6 @@ M.setup = function(opts)
   local ns = vim.api.nvim_create_namespace("OilVirtualColumns")
   vim.api.nvim_set_decoration_provider(ns, {
     on_win = function(_, winid, bufnr, toprow, botrow)
-      local view = require("oil.view")
       view.render_virtual_columns_on_win(ns, winid, bufnr, toprow, botrow)
     end,
   })
