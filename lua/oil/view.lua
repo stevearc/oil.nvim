@@ -275,6 +275,13 @@ local function constrain_cursor(bufnr, mode)
   end
 
   local cur = vim.api.nvim_win_get_cursor(0)
+  if config.show_header and cur[1] == 1 and vim.b[bufnr].oil_rendered_lines then
+    vim.defer_fn(function()
+      vim.api.nvim_win_set_cursor(0, { cur[1] + 1, cur[2] })
+      vim.cmd("normal! 0")
+    end, 0)
+    return
+  end
   local line = vim.api.nvim_buf_get_lines(bufnr, cur[1] - 1, cur[1], true)[1]
   local column_defs = columns.get_editable_columns(adapter)
   local result = parser.parse_line(adapter, line, column_defs)
@@ -633,7 +640,7 @@ local function determine_virtual_column_widths(bufnr, column_config, entries, ad
   for _, entry in ipairs(all_entries_for_calc) do
     for i, col_info in ipairs(column_config) do
       if col_info.is_virtual then
-        local chunk = columns.render_col(adapter, col_info.def, entry, bufnr)
+        local chunk = columns.render_col(adapter, col_info.name, entry, bufnr)
         local text = type(chunk) == "table" and chunk[1] or chunk or ""
         text = string.gsub(text, "^%s*(.-)%s*$", "%1")
         virtual_column_widths[i] =
@@ -681,7 +688,7 @@ local function determine_column_config(bufnr, adapter)
       )
     end
     column_config[i] = {
-      def = col_def,
+      name = util.split_config(col_def),
       is_virtual = not is_editable,
     }
     if is_editable then
@@ -694,7 +701,7 @@ local function determine_column_config(bufnr, adapter)
   if not configured_name_column and config.virtual_text_columns then
     -- If the name column is not configured, we need to add it at the end
     column_config[#column_config + 1] = {
-      def = "name",
+      name = "name",
       is_virtual = false,
     }
     table.insert(buffer_column_defs, "name")
@@ -702,6 +709,94 @@ local function determine_column_config(bufnr, adapter)
   vim.b[bufnr].oil_column_config = column_config
   vim.b[bufnr].oil_buffer_columns = buffer_column_defs
   return column_config, buffer_column_defs
+end
+
+---Generate column header text chunks
+---@param bufnr integer Buffer number
+---@param adapter oil.Adapter
+---@return oil.TextChunk[]
+local function build_column_headers(bufnr, adapter)
+  local header_chunks = {}
+  local column_config = vim.b[bufnr].oil_column_config
+  local virtual_column_widths = vim.b[bufnr].oil_virtual_column_widths
+  local buffer_column_widths = vim.b[bufnr].oil_buffer_column_widths
+  local buffer_column_defs = vim.b[bufnr].oil_buffer_columns
+
+  if not config.virtual_text_columns then
+    -- When virtual_text_columns is false, render headers for all supported columns + the name column
+    local all_columns = columns.get_supported_columns(adapter)
+
+    for i, col_def in ipairs(all_columns) do
+      local col_name = util.split_config(col_def)
+      local header_text = col_name:upper()
+      if config.header_format then
+        header_text = config.header_format(header_text)
+      end
+      local col_width = buffer_column_widths[i + 1] or 1
+      if vim.api.nvim_strwidth(header_text) > col_width then
+        header_text = header_text:sub(1, col_width - 1) .. "…"
+      end
+      local padding = math.max(0, col_width - vim.api.nvim_strwidth(header_text))
+      local padded_text = header_text .. string.rep(" ", padding)
+      table.insert(header_chunks, { padded_text, "OilHeader" })
+      table.insert(header_chunks, { " ", "OilHeader" })
+    end
+    local name_header = "NAME"
+    if config.header_format then
+      name_header = config.header_format(name_header)
+    end
+    table.insert(header_chunks, { name_header, "OilHeader" })
+  else
+    -- When virtual_text_columns is true, headers are rendered according to column_config
+    -- to ensure correct alignment for trailing virtual columns
+    if not column_config or not virtual_column_widths or not buffer_column_widths then
+      return {}
+    end
+    local switch_to_trailing = false
+    table.insert(header_chunks, { " ", "OilHeader" })
+
+    local editable_column_index = 2
+    for col_idx, col_info in ipairs(column_config) do
+      local col_name = col_info.name
+      if col_name == "name" then
+        switch_to_trailing = true
+      end
+      local header_text = col_name:upper()
+      if config.header_format then
+        header_text = config.header_format(header_text)
+      end
+
+      if col_info.is_virtual then
+        if switch_to_trailing then
+          -- If we're rendering trailing virtual column headers, then we need to ensure
+          -- we're aligned with the tracked trailing column start as buffer text changes
+          local target_trailing_col_start = vim.b[bufnr].oil_trailing_column_start or 1
+          local current_header_length = 0
+          for _, chunk in ipairs(header_chunks) do
+            current_header_length = current_header_length + #chunk[1]
+          end
+          local extra_padding = math.max(0, target_trailing_col_start - current_header_length + 1)
+          if extra_padding > 0 then
+            table.insert(header_chunks, { string.rep(" ", extra_padding), "OilHeader" })
+          end
+        end
+
+        local col_width = virtual_column_widths[col_idx] or 1
+        local padding = math.max(0, col_width - vim.api.nvim_strwidth(header_text))
+        local padded_text = header_text .. string.rep(" ", padding)
+        table.insert(header_chunks, { padded_text, "OilHeader" })
+      else
+        col_width = buffer_column_widths[editable_column_index] or 1
+        local padding = math.max(0, col_width - vim.api.nvim_strwidth(header_text))
+        header_text = header_text .. string.rep(" ", padding)
+        editable_column_index = editable_column_index + 1
+        table.insert(header_chunks, { header_text, "OilHeader" })
+      end
+      table.insert(header_chunks, { " ", "OilHeader" })
+    end
+  end
+
+  return header_chunks
 end
 
 ---@param bufnr integer
@@ -750,6 +845,10 @@ local function render_buffer(bufnr, opts)
     buffer_column_widths[i] = 1
   end
 
+  if config.show_header then
+    table.insert(line_table, {}) -- start with a blank line for the header
+  end
+
   if M.should_display("..", bufnr) then
     local cols = M.format_entry_cols(
       { 0, "..", "directory" },
@@ -788,12 +887,19 @@ local function render_buffer(bufnr, opts)
     determine_virtual_column_widths(bufnr, column_config, entry_list, adapter)
     -- remove the name column width from buffer columns so that it doesn't get padded by render_table
     buffer_column_widths[#buffer_column_widths] = nil
+  elseif config.show_header then
+    -- Store buffer column widths for header rendering even when virtual_text_columns is false
+    vim.b[bufnr].oil_buffer_column_widths = buffer_column_widths
   end
 
   local lines, highlights = util.render_table(line_table, buffer_column_widths)
 
   vim.bo[bufnr].modifiable = true
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, true, lines)
+  vim.b[bufnr].oil_rendered_lines = true
+  -- Reset dynamic trailing column position when re-rendering
+  vim.b[bufnr].oil_trailing_column_start = nil
+  -- vim.api.nvim_exec_autocmds("User", { pattern = "OilBufReady", modeline = false, data = { buf = bufnr } })
   vim.bo[bufnr].modifiable = false
   vim.bo[bufnr].modified = false
   util.set_highlights(bufnr, highlights)
@@ -1130,7 +1236,6 @@ M.render_buffer_async = function(bufnr, opts, callback)
   end)
 end
 
----Render virtual columns on visible window lines (decoration provider callback)
 ---@param ns integer Namespace ID
 ---@param winid integer Window ID
 ---@param bufnr integer Buffer number
@@ -1151,6 +1256,9 @@ M.render_virtual_columns_on_win = function(ns, winid, bufnr, toprow, botrow)
   local column_config = vim.b[bufnr].oil_column_config
   local virtual_column_widths = vim.b[bufnr].oil_virtual_column_widths
   local buffer_column_widths = vim.b[bufnr].oil_buffer_column_widths
+  local bufname = vim.api.nvim_buf_get_name(bufnr)
+  local scheme = util.parse_url(bufname)
+  local all_columns = columns.get_supported_columns(scheme)
 
   if not column_config or not virtual_column_widths or not buffer_column_widths then
     return
@@ -1169,7 +1277,7 @@ M.render_virtual_columns_on_win = function(ns, winid, bufnr, toprow, botrow)
         trailing_column_start = trailing_column_start + width
       end
     else
-      if col_info.def == "name" then
+      if col_info.name == "name" then
         break
       end
     end
@@ -1177,15 +1285,23 @@ M.render_virtual_columns_on_win = function(ns, winid, bufnr, toprow, botrow)
   trailing_column_start = trailing_column_start - 1 -- remove last space
 
   vim.api.nvim_buf_clear_namespace(bufnr, ns, toprow, botrow + 1)
+  local header_offset = 0
+  if config.show_header then
+    header_offset = 1
+    local header_chunks = build_column_headers(bufnr, adapter)
+    vim.api.nvim_buf_set_extmark(bufnr, ns, 0, 0, {
+      virt_text = header_chunks,
+      virt_text_pos = "overlay",
+      strict = false,
+      virt_text_win_col = 0,
+    })
+  end
 
-  for lnum = toprow, botrow do
+  for lnum = toprow + header_offset, botrow do
     local line = vim.api.nvim_buf_get_lines(bufnr, lnum, lnum + 1, true)[1]
     if not line then
       return
     end
-
-    -- DEBUG: Log line content and structure
-    -- vim.notify(string.format("DEBUG [Line %d]: '%s' (length: %d)", lnum + 1, line, #line), vim.log.levels.INFO)
 
     local id_str = line:match("^/(%d+)")
     local id = tonumber(id_str)
@@ -1206,14 +1322,11 @@ M.render_virtual_columns_on_win = function(ns, winid, bufnr, toprow, botrow)
     local editable_column_index = 2
     local inline_pos = buffer_column_widths[1] -- start after ID column
 
-    -- DEBUG: Log initial positioning
-    -- vim.notify(string.format("DEBUG [Line %d]: Initial inline_pos=%d, buffer_column_widths[1]=%d", 
-      -- lnum + 1, inline_pos, buffer_column_widths[1]), vim.log.levels.INFO)
-
     local found_name_column = false
     for col_idx, col_info in ipairs(column_config) do
       if col_info.is_virtual then
-        local chunk = columns.render_col(adapter, col_info.def, entry, bufnr)
+        local col_def = all_columns[col_idx]
+        local chunk = columns.render_col(adapter, col_def, entry, bufnr)
         local text = type(chunk) == "table" and chunk[1] or chunk or ""
         -- strip text so that we can pad it correctly
         text = string.gsub(text, "^%s*(.-)%s*$", "%1")
@@ -1243,7 +1356,7 @@ M.render_virtual_columns_on_win = function(ns, winid, bufnr, toprow, botrow)
           })
           inline_virt_text = {}
         end
-        if col_info.def == "name" then
+        if col_info.name == "name" then
           -- If this is the name column, we are done with inline text, all remaining columns will be trailing
           found_name_column = true
         else
@@ -1263,26 +1376,55 @@ M.render_virtual_columns_on_win = function(ns, winid, bufnr, toprow, botrow)
       })
     end
 
-    -- Apply trailing virtual text
     if #trailing_virt_text > 0 then
-      vim.api.nvim_buf_set_extmark(bufnr, ns, lnum, trailing_column_start, {
+      local dynamic_trailing_start = vim.b[bufnr].oil_trailing_column_start
+      local actual_trailing_start = dynamic_trailing_start and math.max(dynamic_trailing_start, trailing_column_start) or trailing_column_start
+      vim.b[bufnr].oil_trailing_column_start = actual_trailing_start
+      
+      vim.api.nvim_buf_set_extmark(bufnr, ns, lnum, actual_trailing_start, {
         virt_text = trailing_virt_text,
         virt_text_pos = "overlay",
         strict = false,
-        virt_text_win_col = trailing_column_start,
+        virt_text_win_col = actual_trailing_start,
       })
     end
   end
-  -- vim.notify("finished rendering virtual columns for bufnr: " .. tostring(bufnr), vim.log.levels.DEBUG)
 end
 
-M.constrain_cursor_on_enter = function(args)
-  vim.defer_fn(function()
-    vim.notify("entered oil buffer: " .. args.data.buf)
-    -- constrain_cursor(args.data.buf, "name")
-    vim.cmd("redraw")
-    vim.notify("cursor pos: " .. vim.inspect(vim.api.nvim_win_get_cursor(0)))
-  end, 1000)
+---Update the trailing column start position for the current line
+---@param bufnr integer
+M.update_trailing_column_position = function(bufnr)
+  local config = require("oil.config")
+  if not config.virtual_text_columns then
+    return
+  end
+  
+  local cursor = vim.api.nvim_win_get_cursor(0)
+  local lnum = cursor[1] - 1 -- 0-indexed
+  local col = cursor[2]
+  
+  local line = vim.api.nvim_buf_get_lines(bufnr, lnum, lnum + 1, true)[1]
+  if not line then
+    return
+  end
+  
+  -- Calculate the width of the entire line
+  local new_trailing_start = vim.api.nvim_strwidth(line)
+  -- add inline virtual column widths
+  for i, col_info in ipairs(vim.b[bufnr].oil_column_config) do
+    if col_info.is_virtual then
+      new_trailing_start = new_trailing_start + (vim.b[bufnr].oil_virtual_column_widths[i] or 0) - 1
+    else
+      if col_info.name == "name" then
+        break
+      end
+    end
+  end
+  
+  local current_trailing_start = vim.b[bufnr].oil_trailing_column_start or 0
+  if new_trailing_start > current_trailing_start then
+    vim.b[bufnr].oil_trailing_column_start = new_trailing_start
+  end
 end
 
 return M
