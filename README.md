@@ -360,6 +360,7 @@ Note that at the moment the ssh adapter does not support Windows machines, and i
 - [Toggle file detail view](doc/recipes.md#toggle-file-detail-view)
 - [Show CWD in the winbar](doc/recipes.md#show-cwd-in-the-winbar)
 - [Hide gitignored files and show git tracked hidden files](doc/recipes.md#hide-gitignored-files-and-show-git-tracked-hidden-files)
+- [Open Oil on startup when no file is opened](doc/recipes.md#open-oil-on-startup-when-no-file-is-opened)
 
 ## Third-party extensions
 
