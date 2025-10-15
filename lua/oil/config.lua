@@ -412,6 +412,17 @@ M.setup = function(opts)
     end
   end
 
+  -- Backwards compatibility for old versions that don't support winborder
+  if vim.fn.has("nvim-0.11") == 0 then
+    new_conf = vim.tbl_deep_extend("keep", new_conf, {
+      float = { border = "rounded" },
+      confirmation = { border = "rounded" },
+      progress = { border = "rounded" },
+      ssh = { border = "rounded" },
+      keymaps_help = { border = "rounded" },
+    })
+  end
+
   -- Backwards compatibility. We renamed the 'preview' window config to be called 'confirmation'.
   if opts.preview and not opts.confirmation then
     new_conf.confirmation = vim.tbl_deep_extend("keep", opts.preview, default_config.confirmation)
