@@ -159,15 +159,16 @@ Preview the entry under the cursor in a split
 `select(opts, callback)` \
 Select the entry under the cursor
 
-| Param       | Type                                                    | Desc                                                 |
-| ----------- | ------------------------------------------------------- | ---------------------------------------------------- |
-| opts        | `nil\|oil.SelectOpts`                                   |                                                      |
-| >vertical   | `nil\|boolean`                                          | Open the buffer in a vertical split                  |
-| >horizontal | `nil\|boolean`                                          | Open the buffer in a horizontal split                |
-| >split      | `nil\|"aboveleft"\|"belowright"\|"topleft"\|"botright"` | Split modifier                                       |
-| >tab        | `nil\|boolean`                                          | Open the buffer in a new tab                         |
-| >close      | `nil\|boolean`                                          | Close the original oil buffer once selection is made |
-| callback    | `nil\|fun(err: nil\|string)`                            | Called once all entries have been opened             |
+| Param                   | Type                                                    | Desc                                                                                                                                                  |
+| ----------------------- | ------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| opts                    | `nil\|oil.SelectOpts`                                   |                                                                                                                                                       |
+| >vertical               | `nil\|boolean`                                          | Open the buffer in a vertical split                                                                                                                   |
+| >horizontal             | `nil\|boolean`                                          | Open the buffer in a horizontal split                                                                                                                 |
+| >split                  | `nil\|"aboveleft"\|"belowright"\|"topleft"\|"botright"` | Split modifier                                                                                                                                        |
+| >tab                    | `nil\|boolean`                                          | Open the buffer in a new tab                                                                                                                          |
+| >close                  | `nil\|boolean`                                          | Close the original oil buffer once selection is made                                                                                                  |
+| >handle_buffer_callback | `nil\|fun(buf_id: integer)`                             | If defined, all other buffer related options here would be ignored. This callback allows you to take over the process of opening the buffer yourself. |
+| callback                | `nil\|fun(err: nil\|string)`                            | Called once all entries have been opened                                                                                                              |
 
 ## save(opts, cb)
 
