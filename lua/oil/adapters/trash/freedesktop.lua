@@ -447,7 +447,7 @@ M.render_action = function(action)
     local entry = assert(cache.get_entry_by_url(action.url))
     local meta = entry[FIELD_META]
     ---@type oil.TrashInfo
-    local trash_info = meta and meta.trash_info
+    local trash_info = assert(meta).trash_info
     local short_path = fs.shorten_path(trash_info.original_path)
     return string.format(" PURGE %s", short_path)
   elseif action.type == "move" then
@@ -561,7 +561,7 @@ M.perform_action = function(action, cb)
     local entry = assert(cache.get_entry_by_url(action.url))
     local meta = entry[FIELD_META]
     ---@type oil.TrashInfo
-    local trash_info = meta and meta.trash_info
+    local trash_info = assert(meta).trash_info
     purge(trash_info, cb)
   elseif action.type == "move" then
     local src_adapter = assert(config.get_adapter_by_scheme(action.src_url))
@@ -576,7 +576,7 @@ M.perform_action = function(action, cb)
       local entry = assert(cache.get_entry_by_url(action.src_url))
       local meta = entry[FIELD_META]
       ---@type oil.TrashInfo
-      local trash_info = meta and meta.trash_info
+      local trash_info = assert(meta).trash_info
       fs.recursive_move(action.entry_type, trash_info.trash_file, dest_path, function(err)
         if err then
           return cb(err)
@@ -607,7 +607,7 @@ M.perform_action = function(action, cb)
       local entry = assert(cache.get_entry_by_url(action.src_url))
       local meta = entry[FIELD_META]
       ---@type oil.TrashInfo
-      local trash_info = meta and meta.trash_info
+      local trash_info = assert(meta).trash_info
       fs.recursive_copy(action.entry_type, trash_info.trash_file, dest_path, cb)
     else
       error("Must be moving files into or out of trash")

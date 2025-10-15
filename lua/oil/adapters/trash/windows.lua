@@ -266,7 +266,7 @@ M.render_action = function(action)
     local entry = assert(cache.get_entry_by_url(action.url))
     local meta = entry[FIELD_META]
     ---@type oil.WindowsTrashInfo
-    local trash_info = meta and meta.trash_info
+    local trash_info = assert(meta).trash_info
     local short_path = fs.shorten_path(trash_info.original_path)
     return string.format(" PURGE %s", short_path)
   elseif action.type == "move" then
