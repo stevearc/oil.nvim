@@ -3,6 +3,7 @@ local columns = require("oil.columns")
 local config = require("oil.config")
 local fs = require("oil.fs")
 local oil = require("oil")
+local parser = require("oil.mutator.parser")
 local util = require("oil.util")
 local view = require("oil.view")
 
@@ -50,8 +51,31 @@ local function write_pasted(winid, entry, column_defs, adapter, bufnr)
   vim.api.nvim_buf_set_lines(bufnr, pos[1], pos[1], true, lines)
 end
 
+---@param parent_url string
+---@param entry oil.InternalEntry
+local function remove_entry_from_parent_buffer(parent_url, entry)
+  local bufnr = vim.fn.bufadd(parent_url)
+  assert(vim.api.nvim_buf_is_loaded(bufnr), "Expected parent buffer to be loaded during paste")
+  local adapter = assert(util.get_adapter(bufnr))
+  local column_defs = columns.get_supported_columns(adapter)
+  local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+  for i, line in ipairs(lines) do
+    local result = parser.parse_line(adapter, line, column_defs)
+    if result and result.entry == entry then
+      vim.api.nvim_buf_set_lines(bufnr, i - 1, i, false, {})
+      return
+    end
+  end
+  local exported = util.export_entry(entry)
+  vim.notify(
+    string.format("Error: could not delete original file '%s'", exported.name),
+    vim.log.levels.ERROR
+  )
+end
+
 ---@param paths string[]
-local function paste_paths(paths)
+---@param delete_original? boolean
+local function paste_paths(paths, delete_original)
   local bufnr = vim.api.nvim_get_current_buf()
   local scheme = "oil://"
   local adapter = assert(config.get_adapter_by_scheme(scheme))
@@ -61,6 +85,7 @@ local function paste_paths(paths)
   local parent_urls = {}
   local pending_paths = {}
 
+  -- Handle as many paths synchronously as possible
   for _, path in ipairs(paths) do
     -- Trim the trailing slash off directories
     if vim.endswith(path, "/") then
@@ -68,18 +93,24 @@ local function paste_paths(paths)
     end
 
     local ori_entry = cache.get_entry_by_url(scheme .. path)
+    local parent_url = util.addslash(scheme .. vim.fs.dirname(path))
     if ori_entry then
       write_pasted(winid, ori_entry, column_defs, adapter, bufnr)
+      if delete_original then
+        remove_entry_from_parent_buffer(parent_url, ori_entry)
+      end
     else
-      local parent_url = scheme .. vim.fs.dirname(path)
       parent_urls[parent_url] = true
       table.insert(pending_paths, path)
     end
   end
+
+  -- If all paths could be handled synchronously, we're done
   if #pending_paths == 0 then
     return
   end
 
+  -- Process the remaining paths by asynchronously loading them
   local cursor = vim.api.nvim_win_get_cursor(winid)
   local complete_loading = util.cb_collect(#vim.tbl_keys(parent_urls), function(err)
     if err then
@@ -92,6 +123,10 @@ local function paste_paths(paths)
         local ori_entry = cache.get_entry_by_url(scheme .. path)
         if ori_entry then
           write_pasted(winid, ori_entry, column_defs, adapter, bufnr)
+          if delete_original then
+            local parent_url = util.addslash(scheme .. vim.fs.dirname(path))
+            remove_entry_from_parent_buffer(parent_url, ori_entry)
+          end
         else
           vim.notify(
             string.format("The pasted file '%s' could not be found", path),
@@ -261,7 +296,8 @@ local function handle_paste_output_linux(lines)
   return ret
 end
 
-M.paste_from_system_clipboard = function()
+---@param delete_original? boolean Delete the source file after pasting
+M.paste_from_system_clipboard = function(delete_original)
   local dir = oil.get_current_dir()
   if not dir then
     return
@@ -324,7 +360,7 @@ M.paste_from_system_clipboard = function()
       elseif #paths == 0 then
         vim.notify("No valid files found in system clipboard", vim.log.levels.WARN)
       else
-        paste_paths(paths)
+        paste_paths(paths, delete_original)
       end
     end,
   })
