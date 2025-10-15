@@ -571,6 +571,9 @@ parent                                                            *actions.paren
 paste_from_system_clipboard                  *actions.paste_from_system_clipboard*
     Paste the system clipboard into the current oil directory
 
+    Parameters:
+      {delete_original} `boolean` Delete the original file after copying
+
 preview                                                          *actions.preview*
     Open the entry under the cursor in a preview window, or close the preview
     window if already open
