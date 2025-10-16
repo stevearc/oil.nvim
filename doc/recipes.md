@@ -7,6 +7,7 @@ Have a cool recipe to share? Open a pull request and add it to this doc!
 - [Toggle file detail view](#toggle-file-detail-view)
 - [Show CWD in the winbar](#show-cwd-in-the-winbar)
 - [Hide gitignored files and show git tracked hidden files](#hide-gitignored-files-and-show-git-tracked-hidden-files)
+- [Open Oil on startup when no file is opened](#open-oil-on-startup-when-no-file-is-opened)
 
 <!-- /TOC -->
 
@@ -123,5 +124,24 @@ require("oil").setup({
       end
     end,
   },
+})
+```
+
+## Open Oil on startup when no file is opened
+
+```lua
+vim.api.nvim_create_autocmd('VimEnter', {
+  once = true,
+  callback = function()
+    if vim.fn.argc() > 0 then
+      return
+    end
+    vim.schedule(function()
+      local listed = vim.fn.getbufinfo { buflisted = 1 }
+      if #listed == 1 and listed[1].name == '' then
+        require('oil').open()
+      end
+    end)
+  end,
 })
 ```
