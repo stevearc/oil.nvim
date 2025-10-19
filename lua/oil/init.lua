@@ -1286,7 +1286,10 @@ M.setup = function(opts)
       local util = require("oil.util")
       local bufname = vim.api.nvim_buf_get_name(0)
       local scheme = util.parse_url(bufname)
-      if scheme and config.adapters[scheme] then
+      local is_oil_buf = scheme and config.adapters[scheme]
+      -- We want to filter out oil buffers that are not directories (i.e. ssh files)
+      local is_oil_dir_or_unknown = (vim.bo.filetype == "oil" or vim.bo.filetype == "")
+      if is_oil_buf and is_oil_dir_or_unknown then
         local view = require("oil.view")
         view.maybe_set_cursor()
         -- While we are in an oil buffer, set the alternate file to the buffer we were in prior to
