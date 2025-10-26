@@ -7,12 +7,12 @@ local M = {}
 ---@field parsed_name nil|string
 ---@field meta nil|table
 
----@alias oil.EntryType uv.aliases.fs_types
+---@alias oil.EntryType "link"|"directory"|"fifo"|"socket"|"file"|"bucket"
 ---@alias oil.HlRange { [1]: string, [2]: integer, [3]: integer } A tuple of highlight group name, col_start, col_end
 ---@alias oil.HlTuple { [1]: string, [2]: string } A tuple of text, highlight group
 ---@alias oil.HlRangeTuple { [1]: string, [2]: oil.HlRange[] } A tuple of text, internal highlights
 ---@alias oil.TextChunk string|oil.HlTuple|oil.HlRangeTuple
----@alias oil.CrossAdapterAction "copy"|"move"
+---@alias oil.CrossAdapterAction "copy"|"move"|"all"
 
 ---@class (exact) oil.Adapter
 ---@field name string The unique name of the adapter (this will be set automatically)

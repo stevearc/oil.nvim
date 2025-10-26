@@ -401,7 +401,7 @@ M.process_actions = function(actions, cb)
     if action.type == "move" then
       local _, cross_action = util.get_adapter_for_action(action)
       -- Only do the conversion if the cross-adapter support is "copy"
-      if cross_action == "copy" then
+      if cross_action == "copy" or cross_action == "all" then
         ---@diagnostic disable-next-line: assign-type-mismatch
         action.type = "copy"
         table.insert(actions, {
