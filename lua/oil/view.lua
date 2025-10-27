@@ -793,7 +793,7 @@ M.format_entry_cols = function(entry, column_defs, col_width, adapter, is_hidden
   elseif entry_type == "socket" then
     table.insert(cols, { name, "OilSocket" .. hl_suffix })
   elseif entry_type == "bucket" then
-    table.insert(cols, { name .. "/", "OilBucket" .. hl_suffix })
+    table.insert(cols, { "s3://" .. name .. "/", "OilBucket" .. hl_suffix })
   elseif entry_type == "link" then
     if not link_name then
       link_name, link_target = get_link_text(name, meta)

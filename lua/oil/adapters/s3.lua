@@ -23,7 +23,7 @@ M.parse_url = function(oil_url)
   local scheme, url = util.parse_url(oil_url)
   assert(scheme and url, string.format("Malformed input url '%s'", oil_url))
   local ret = { scheme = scheme }
-  local bucket, path = url:match("^(.*)/(.*)")
+  local bucket, path = url:match("^([^/]+)/?(.*)$")
   ret.bucket = bucket
   ret.path = path
   if not ret.bucket and ret.path then
@@ -175,7 +175,6 @@ end
 ---@param cb fun(err: nil|string)
 M.perform_action = function(action, cb)
   local is_folder = action.entry_type == "directory" or action.entry_type == "bucket"
-  assert(action.entry_type == "bucket", "perform_action action.entry_type: " .. action.entry_type)
   if action.type == "create" then
     local res = M.parse_url(action.url)
     local s3 = s3fs.new()
@@ -183,7 +182,7 @@ M.perform_action = function(action, cb)
     if action.entry_type == "directory" or action.entry_type == "file" then
       s3:touch(url_to_s3(res, is_folder), cb)
     elseif action.entry_type == "bucket" then
-      s3:mb(res.bucket, cb)
+      s3:mb(url_to_s3(res, true), cb)
     else
       cb(string.format("Bad entry type on s3 create action: %s", action.entry_type))
     end
@@ -194,7 +193,7 @@ M.perform_action = function(action, cb)
     if action.entry_type == "directory" or action.entry_type == "file" then
       s3:rm(url_to_s3(res, is_folder), is_folder, cb)
     elseif action.entry_type == "bucket" then
-      s3:rb(res.bucket, cb)
+      s3:rb(url_to_s3(res, true), cb)
     else
       cb(string.format("Bad entry type on s3 delete action: %s", action.entry_type))
     end
@@ -318,7 +317,7 @@ M.write_file = function(bufnr)
   local cache_dir = vim.fn.stdpath("cache")
   assert(type(cache_dir) == "string")
   local tmpdir = fs.join(cache_dir, "oil")
-  local fd, tmpfile = vim.loop.fs_mkstemp(fs.join(tmpdir, "ssh_XXXXXXXX"))
+  local fd, tmpfile = vim.loop.fs_mkstemp(fs.join(tmpdir, "s3_XXXXXXXX"))
   if fd then
     vim.loop.fs_close(fd)
   end

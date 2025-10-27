@@ -482,8 +482,10 @@ M.open_preview = function(opts, callback)
     return finish("Could not find entry under cursor")
   end
   local entry_title = entry.name
-  if entry.type == "directory" or entry.type == "bucket" then
+  if entry.type == "directory" then
     entry_title = entry_title .. "/"
+  elseif entry.type == "bucket" then
+    entry_title = "s3://" .. entry_title .. "/"
   end
 
   if util.is_floating_win() then

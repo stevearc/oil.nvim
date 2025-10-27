@@ -108,7 +108,7 @@ local default_config = {
   -- Extra arguments to pass to SCP when moving/copying files over SSH
   extra_scp_args = {},
   -- Extra arguments to pass to aws s3 when moving/copying files using aws s3
-  extra_s3_args = { "--profile=danielkonge" },
+  extra_s3_args = {},
   -- EXPERIMENTAL support for performing file operations with git
   git = {
     -- Return true to automatically git add/mv/rm files

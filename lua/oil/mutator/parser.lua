@@ -44,6 +44,17 @@ local function parsedir(name)
   return name, isdir
 end
 
+---@param name string
+---@return string
+---@return boolean
+local function parsebucket(name)
+  local isbucket = vim.startswith(name, "s3://")
+  if isbucket then
+    name = name:sub(6, name:len())
+  end
+  return name, isbucket
+end
+
 ---@param meta nil|table
 ---@param parsed_entry table
 ---@return boolean True if metadata and parsed entry have the same link target
@@ -106,12 +117,17 @@ M.parse_line = function(adapter, line, column_defs)
   end
   local name = rem
   if name then
-    local isdir
+    local isdir, isbucket
     name, isdir = parsedir(vim.trim(name))
+    name, isbucket = parsebucket(name)
     if name ~= "" then
       ret.name = name
     end
-    ret._type = isdir and "directory" or "file"
+    if not isbucket then
+      ret._type = isdir and "directory" or "file"
+    else
+      ret._type = "bucket"
+    end
   end
   local entry = cache.get_entry_by_id(ret.id)
   ranges.name = { start, start + string.len(rem) - 1 }
@@ -136,8 +152,6 @@ M.parse_line = function(adapter, line, column_defs)
 
   -- Try to keep the same file type
   if entry_type ~= "directory" and entry_type ~= "file" and ret._type ~= "directory" then
-    ret._type = entry[FIELD_TYPE]
-  elseif entry_type == "bucket" and ret._type == "directory" then
     ret._type = entry[FIELD_TYPE]
   end
 
@@ -279,7 +293,9 @@ M.parse = function(bufnr)
         end
       else
         -- Parse a new entry
+        local isbucket
         local name, isdir = parsedir(vim.trim(line))
+        name, isbucket = parsebucket(name)
         if vim.startswith(name, "/") then
           table.insert(errors, {
             message = "Paths cannot start with '/'",
@@ -289,9 +305,17 @@ M.parse = function(bufnr)
           })
           return
         end
+        if isbucket and name ~= "" then
+          table.insert(diffs, {
+            type = "new",
+            name = name,
+            entry_type = "bucket",
+            link = nil,
+          })
+          return
+        end
         if name ~= "" then
           local link_pieces = vim.split(name, " -> ", { plain = true })
-          -- TODO: ALLOW BUCKET HERE!!
           local entry_type = isdir and "directory" or "file"
           local link
           if #link_pieces == 2 then
