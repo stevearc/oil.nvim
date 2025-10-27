@@ -19,8 +19,7 @@ local function parse_ls_line_bucket(line)
   if not date or not name then
     error(string.format("Could not parse '%s'", line))
   end
-  -- name = "s3://" .. name  -- this could give nicer display, but it causes other problems
-  local type = "bucket" -- this is really bucket, but we need other updates to fix it
+  local type = "bucket"
   local meta = { date = date }
   return name, type, meta
 end

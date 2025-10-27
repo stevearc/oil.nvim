@@ -228,10 +228,10 @@ end
 M.delete_hidden_buffers = function()
   local visible_buffers, hidden_buffers = get_visible_hidden_buffers()
   if
-      not visible_buffers
-      or not hidden_buffers
-      or not vim.tbl_isempty(visible_buffers)
-      or vim.fn.win_gettype() == "command"
+    not visible_buffers
+    or not hidden_buffers
+    or not vim.tbl_isempty(visible_buffers)
+    or vim.fn.win_gettype() == "command"
   then
     return
   end
@@ -464,10 +464,10 @@ M.initialize = function(bufnr)
 
   -- Set up a watcher that will refresh the directory
   if
-      adapter
-      and adapter.name == "files"
-      and config.watch_for_changes
-      and not session[bufnr].fs_event
+    adapter
+    and adapter.name == "files"
+    and config.watch_for_changes
+    and not session[bufnr].fs_event
   then
     local fs_event = assert(uv.new_fs_event())
     local bufname = vim.api.nvim_buf_get_name(bufnr)
@@ -647,7 +647,7 @@ local function render_buffer(bufnr, opts)
 
   if M.should_display("..", bufnr) then
     local cols =
-        M.format_entry_cols({ 0, "..", "directory" }, column_defs, col_width, adapter, true, bufnr)
+      M.format_entry_cols({ 0, "..", "directory" }, column_defs, col_width, adapter, true, bufnr)
     table.insert(line_table, cols)
   end
 
@@ -779,8 +779,10 @@ M.format_entry_cols = function(entry, column_defs, col_width, adapter, is_hidden
       local hl = get_custom_hl(external_entry, is_hidden, false, false, bufnr)
       if hl then
         -- Add the trailing / if this is a directory or bucket, this is important
-        if entry_type == "directory" or entry_type == "bucket" then
+        if entry_type == "directory" then
           name = name .. "/"
+        elseif entry_type == "bucket" then
+          name = "s3://" .. name .. "/"
         end
         table.insert(cols, { name, hl })
         return cols
@@ -949,7 +951,7 @@ M.render_buffer_async = function(bufnr, opts, callback)
         start_ms = now
         vim.schedule(function()
           seek_after_render_found =
-              render_buffer(bufnr, { jump = not seek_after_render_found, jump_first = first })
+            render_buffer(bufnr, { jump = not seek_after_render_found, jump_first = first })
           start_ms = uv.hrtime() / 1e6
         end)
       end
