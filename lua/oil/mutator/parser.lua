@@ -137,6 +137,8 @@ M.parse_line = function(adapter, line, column_defs)
   -- Try to keep the same file type
   if entry_type ~= "directory" and entry_type ~= "file" and ret._type ~= "directory" then
     ret._type = entry[FIELD_TYPE]
+  elseif entry_type == "bucket" and ret._type == "directory" then
+    ret._type = entry[FIELD_TYPE]
   end
 
   return { data = ret, entry = entry, ranges = ranges }
@@ -289,6 +291,7 @@ M.parse = function(bufnr)
         end
         if name ~= "" then
           local link_pieces = vim.split(name, " -> ", { plain = true })
+          -- TODO: ALLOW BUCKET HERE!!
           local entry_type = isdir and "directory" or "file"
           local link
           if #link_pieces == 2 then

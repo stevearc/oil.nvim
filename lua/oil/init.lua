@@ -482,7 +482,7 @@ M.open_preview = function(opts, callback)
     return finish("Could not find entry under cursor")
   end
   local entry_title = entry.name
-  if entry.type == "directory" then
+  if entry.type == "directory" or entry.type == "bucket" then
     entry_title = entry_title .. "/"
   end
 
@@ -837,6 +837,16 @@ M._get_highlights = function()
       name = "OilDirIcon",
       link = "OilDir",
       desc = "Icon for directories",
+    },
+    {
+      name = "OilBucket",
+      link = "OilDir",
+      desc = "S3 buckets in an oil buffer",
+    },
+    {
+      name = "OilBucketIcon",
+      link = "OilBucket",
+      desc = "Icon for S3 buckets",
     },
     {
       name = "OilSocket",

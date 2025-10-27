@@ -54,21 +54,19 @@ local function url_to_str(url)
 end
 
 ---@param url oil.s3Url
+---@param is_folder boolean
 ---@return string
-local function url_to_s3(url)
+local function url_to_s3(url, is_folder)
   local pieces = { "s3://" }
   if url.bucket then
     table.insert(pieces, url.bucket)
     table.insert(pieces, "/")
   end
-  if url.path then
-    local path = url.path
-    -- paths ending with "/-" are usually used for an "empty folder" in s3
-    if path and vim.endswith(path, "/-") then
-      path = path:sub(1, #path - 1)
+  if url.path and url.path ~= "" then
+    table.insert(pieces, url.path)
+    if is_folder and not vim.endswith(url.path, "/") then
+      table.insert(pieces, "/")
     end
-
-    table.insert(pieces, path)
   end
   return table.concat(pieces, "")
 end
@@ -116,6 +114,8 @@ M.get_parent = function(bufname)
   local res = M.parse_url(bufname)
   if res.path then
     res.path = pathutil.parent(res.path)
+  elseif res.bucket then
+    res.bucket = nil
   end
   return url_to_str(res)
 end
@@ -134,7 +134,7 @@ M.list = function(url, column_defs, callback)
   local res = M.parse_url(url)
 
   local s3 = s3fs.new()
-  s3:list_dir(url, url_to_s3(res), callback)
+  s3:list_dir(url, url_to_s3(res, true), callback)
 end
 
 ---@param bufnr integer
@@ -174,12 +174,14 @@ end
 ---@param action oil.Action
 ---@param cb fun(err: nil|string)
 M.perform_action = function(action, cb)
+  local is_folder = action.entry_type == "directory" or action.entry_type == "bucket"
+  assert(action.entry_type == "bucket", "perform_action action.entry_type: " .. action.entry_type)
   if action.type == "create" then
     local res = M.parse_url(action.url)
     local s3 = s3fs.new()
 
     if action.entry_type == "directory" or action.entry_type == "file" then
-      s3:touch(url_to_s3(res), cb)
+      s3:touch(url_to_s3(res, is_folder), cb)
     elseif action.entry_type == "bucket" then
       s3:mb(res.bucket, cb)
     else
@@ -190,7 +192,7 @@ M.perform_action = function(action, cb)
     local s3 = s3fs.new()
 
     if action.entry_type == "directory" or action.entry_type == "file" then
-      s3:rm(res.path, cb)
+      s3:rm(url_to_s3(res, is_folder), is_folder, cb)
     elseif action.entry_type == "bucket" then
       s3:rb(res.bucket, cb)
     else
@@ -210,7 +212,7 @@ M.perform_action = function(action, cb)
     local src
     if src_adapter == M then
       local src_res = M.parse_url(action.src_url)
-      src = url_to_s3(src_res)
+      src = url_to_s3(src_res, is_folder)
     else
       _, src = util.parse_url(action.src_url)
     end
@@ -219,14 +221,14 @@ M.perform_action = function(action, cb)
     local dest
     if dest_adapter == M then
       local dest_res = M.parse_url(action.dest_url)
-      dest = url_to_s3(dest_res)
+      dest = url_to_s3(dest_res, is_folder)
     else
       _, dest = util.parse_url(action.dest_url)
     end
     assert(dest)
 
     local s3 = s3fs.new()
-    s3:mv(src, dest, cb)
+    s3:mv(src, dest, is_folder, cb)
   elseif action.type == "copy" then
     local src_adapter = assert(config.get_adapter_by_scheme(action.src_url))
     local dest_adapter = assert(config.get_adapter_by_scheme(action.dest_url))
@@ -241,7 +243,7 @@ M.perform_action = function(action, cb)
     local src
     if src_adapter == M then
       local src_res = M.parse_url(action.src_url)
-      src = url_to_s3(src_res)
+      src = url_to_s3(src_res, is_folder)
     else
       _, src = util.parse_url(action.src_url)
     end
@@ -250,14 +252,14 @@ M.perform_action = function(action, cb)
     local dest
     if dest_adapter == M then
       local dest_res = M.parse_url(action.dest_url)
-      dest = url_to_s3(dest_res)
+      dest = url_to_s3(dest_res, is_folder)
     else
       _, dest = util.parse_url(action.dest_url)
     end
     assert(dest)
 
     local s3 = s3fs.new()
-    s3:cp(src, dest, cb)
+    s3:cp(src, dest, is_folder, cb)
   else
     cb(string.format("Bad action type: %s", action.type))
   end
@@ -282,7 +284,7 @@ M.read_file = function(bufnr)
   local tmp_bufnr = vim.fn.bufadd(tmpfile)
 
   local s3 = s3fs.new()
-  s3:cp(url_to_s3(url), tmpfile, function(err)
+  s3:cp(url_to_s3(url, false), tmpfile, false, function(err)
     loading.set_loading(bufnr, false)
     vim.bo[bufnr].modifiable = true
     vim.cmd.doautocmd({ args = { "BufReadPre", bufname }, mods = { silent = true } })
@@ -326,7 +328,7 @@ M.write_file = function(bufnr)
   local tmp_bufnr = vim.fn.bufadd(tmpfile)
 
   local s3 = s3fs.new()
-  s3:cp(tmpfile, url_to_s3(url), function(err)
+  s3:cp(tmpfile, url_to_s3(url, false), false, function(err)
     vim.bo[bufnr].modifiable = true
     if err then
       vim.notify(string.format("Error writing file: %s", err), vim.log.levels.ERROR)
