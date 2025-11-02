@@ -1121,6 +1121,13 @@ local function close_preview_window_if_not_in_oil()
   pcall(vim.api.nvim_win_close, preview_win_id, true)
 end
 
+---@param pat string Pattern to escape
+---@return string Escaped pattern
+local function escape_pattern(pat)
+  local res = pat:gsub("-", "%%-")
+  return res
+end
+
 local _on_key_ns = 0
 ---Initialize oil
 ---@param opts oil.setupOpts|nil
@@ -1201,11 +1208,11 @@ M.setup = function(opts)
   local filetype_patterns = {}
   for scheme in pairs(config.adapters) do
     table.insert(patterns, scheme .. "*")
-    filetype_patterns[scheme .. ".*"] = { "oil", { priority = 10 } }
+    filetype_patterns[escape_pattern(scheme) .. ".*"] = { "oil", { priority = 10 } }
   end
   for scheme in pairs(config.adapter_aliases) do
     table.insert(patterns, scheme .. "*")
-    filetype_patterns[scheme .. ".*"] = { "oil", { priority = 10 } }
+    filetype_patterns[escape_pattern(scheme) .. ".*"] = { "oil", { priority = 10 } }
   end
   local scheme_pattern = table.concat(patterns, ",")
   -- We need to add these patterns to the filetype matcher so the filetype doesn't get overridden

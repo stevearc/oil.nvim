@@ -148,10 +148,10 @@ end
 ---@return string
 M.render_action = function(action)
   if action.type == "create" then
-    local extra = action.type == "bucket" and "BUCKET " or ""
+    local extra = action.entry_type == "bucket" and "BUCKET " or ""
     return string.format("CREATE %s%s", extra, action.url)
   elseif action.type == "delete" then
-    local extra = action.type == "bucket" and "BUCKET " or ""
+    local extra = action.entry_type == "bucket" and "BUCKET " or ""
     return string.format("DELETE %s%s", extra, action.url)
   elseif action.type == "move" or action.type == "copy" then
     local src = action.src_url
