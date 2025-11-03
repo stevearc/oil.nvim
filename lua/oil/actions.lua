@@ -389,6 +389,8 @@ M.yank_entry = {
     local name = entry.name
     if entry.type == "directory" then
       name = name .. "/"
+    elseif entry.type == "bucket" then
+      name = "s3://" .. name .. "/"
     end
     local path = dir .. name
     if opts.modify then

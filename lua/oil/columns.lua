@@ -196,7 +196,7 @@ local default_type_icons = {
 ---@return boolean
 local function is_entry_directory(entry)
   local type = entry[FIELD_TYPE]
-  if type == "directory" then
+  if type == "directory" or type == "bucket" then
     return true
   elseif type == "link" then
     local meta = entry[FIELD_META]
