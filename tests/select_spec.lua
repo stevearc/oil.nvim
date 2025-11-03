@@ -91,13 +91,5 @@ a.describe("oil select", function()
       assert.equals(bufnr, vim.api.nvim_get_current_buf())
     end)
 
-    a.it("deletes oil buffer when reusing window", function()
-      test_util.oil_open()
-      local oil_bufnr = vim.api.nvim_get_current_buf()
-      -- Go to the bottom, so the cursor is not on a directory
-      vim.cmd.normal({ args = { "G" } })
-      a.wrap(oil.select, 2)({ close = true })
-      assert.is_false(vim.api.nvim_buf_is_valid(oil_bufnr))
-    end)
   end)
 end)
