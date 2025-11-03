@@ -209,7 +209,7 @@ local default_config = {
 default_config.adapters = {
   ["oil://"] = "files",
   ["oil-ssh://"] = "ssh",
-  ["oil-sthree://"] = "s3", -- not "oil-s3://" , since it doesn't open buffers correctly with a number in the name
+  ["oil-sss://"] = "s3", -- not "oil-s3://" , since it doesn't open buffers correctly with a number in the name
   ["oil-trash://"] = "trash",
 }
 default_config.adapter_aliases = {}

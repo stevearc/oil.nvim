@@ -4,9 +4,7 @@ local constants = require("oil.constants")
 local shell = require("oil.shell")
 local util = require("oil.util")
 
----@class (exact) oil.s3Fs
----@field new fun(): oil.s3Fs
-local S3FS = {}
+local M = {}
 
 local FIELD_META = constants.FIELD_META
 
@@ -15,7 +13,7 @@ local FIELD_META = constants.FIELD_META
 ---@return oil.EntryType
 ---@return table Metadata for entry
 local function parse_ls_line_bucket(line)
-  local date, name = line:match("^(%d+%-%d+-%d+%s%d+:%d+:%d+)%s+(.*)$")
+  local date, name = line:match("^(%d+%-%d+%-%d+%s%d+:%d+:%d+)%s+(.*)$")
   if not date or not name then
     error(string.format("Could not parse '%s'", line))
   end
@@ -36,7 +34,7 @@ local function parse_ls_line_file(line)
     return name, type, meta
   end
   local date, size
-  date, size, name = line:match("^(%d+%-%d+-%d+%s%d+:%d+:%d+)%s+(%d+)%s+(.*)$")
+  date, size, name = line:match("^(%d+%-%d+%-%d+%s%d+:%d+:%d+)%s+(%d+)%s+(.*)$")
   if not name then
     error(string.format("Could not parse '%s'", line))
   end
@@ -52,18 +50,10 @@ local function create_s3_command(cmd)
   return vim.list_extend(full_cmd, config.extra_s3_args)
 end
 
----@return oil.s3Fs
-function S3FS.new()
-  ---@type oil.s3Fs
-  return setmetatable({}, {
-    __index = S3FS,
-  })
-end
-
 ---@param url string
 ---@param path string
 ---@param callback fun(err?: string, entries?: oil.InternalEntry[], fetch_more?: fun())
-function S3FS:list_dir(url, path, callback)
+function M.list_dir(url, path, callback)
   local cmd = create_s3_command({ "ls", path, "--color=off", "--no-cli-pager" })
   vim.notify("COMMAND: " .. table.concat(cmd, " "))
   shell.run(cmd, function(err, lines)
@@ -94,7 +84,7 @@ end
 --- Create files
 ---@param path string
 ---@param callback fun(err: nil|string)
-function S3FS:touch(path, callback)
+function M.touch(path, callback)
   -- here "-" means that we copy from stdin
   local cmd = create_s3_command({ "cp", "-", path })
   vim.notify("COMMAND: " .. table.concat(cmd, " "))
@@ -105,7 +95,7 @@ end
 ---@param path string
 ---@param is_folder boolean
 ---@param callback fun(err: nil|string)
-function S3FS:rm(path, is_folder, callback)
+function M.rm(path, is_folder, callback)
   local main_cmd = { "rm", path }
   if is_folder then
     table.insert(main_cmd, "--recursive")
@@ -118,7 +108,7 @@ end
 --- Remove bucket
 ---@param bucket string
 ---@param callback fun(err: nil|string)
-function S3FS:rb(bucket, callback)
+function M.rb(bucket, callback)
   local cmd = create_s3_command({ "rb", bucket })
   vim.notify("COMMAND: " .. table.concat(cmd, " "))
   shell.run(cmd, callback)
@@ -127,7 +117,7 @@ end
 --- Make bucket
 ---@param bucket string
 ---@param callback fun(err: nil|string)
-function S3FS:mb(bucket, callback)
+function M.mb(bucket, callback)
   local cmd = create_s3_command({ "mb", bucket })
   vim.notify("COMMAND: " .. table.concat(cmd, " "))
   shell.run(cmd, callback)
@@ -138,7 +128,7 @@ end
 ---@param dest string
 ---@param is_folder boolean
 ---@param callback fun(err: nil|string)
-function S3FS:mv(src, dest, is_folder, callback)
+function M.mv(src, dest, is_folder, callback)
   local main_cmd = { "mv", src, dest }
   if is_folder then
     table.insert(main_cmd, "--recursive")
@@ -153,7 +143,7 @@ end
 ---@param dest string
 ---@param is_folder boolean
 ---@param callback fun(err: nil|string)
-function S3FS:cp(src, dest, is_folder, callback)
+function M.cp(src, dest, is_folder, callback)
   local main_cmd = { "cp", src, dest }
   if is_folder then
     table.insert(main_cmd, "--recursive")
@@ -163,4 +153,4 @@ function S3FS:cp(src, dest, is_folder, callback)
   shell.run(cmd, callback)
 end
 
-return S3FS
+return M
