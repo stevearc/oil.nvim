@@ -188,15 +188,19 @@ M.perform_action = function(action, cb)
   elseif action.type == "move" then
     local src_adapter = assert(config.get_adapter_by_scheme(action.src_url))
     local dest_adapter = assert(config.get_adapter_by_scheme(action.dest_url))
-    if (src_adapter ~= M and src_adapter ~= files) or (dest_adapter ~= M and dest_adapter ~= files) then
-      cb(string.format(
-        "We should never attempt to move from the %s adapter to the %s adapter.",
-        src_adapter.name,
-        dest_adapter.name
-      ))
+    if
+      (src_adapter ~= M and src_adapter ~= files) or (dest_adapter ~= M and dest_adapter ~= files)
+    then
+      cb(
+        string.format(
+          "We should never attempt to move from the %s adapter to the %s adapter.",
+          src_adapter.name,
+          dest_adapter.name
+        )
+      )
     end
 
-    local src
+    local src, _
     if src_adapter == M then
       local src_res = M.parse_url(action.src_url)
       src = url_to_s3(src_res, is_folder)
@@ -218,15 +222,19 @@ M.perform_action = function(action, cb)
   elseif action.type == "copy" then
     local src_adapter = assert(config.get_adapter_by_scheme(action.src_url))
     local dest_adapter = assert(config.get_adapter_by_scheme(action.dest_url))
-    if (src_adapter ~= M and src_adapter ~= files) or (dest_adapter ~= M and dest_adapter ~= files) then
-      cb(string.format(
-        "We should never attempt to copy from the %s adapter to the %s adapter.",
-        src_adapter.name,
-        dest_adapter.name
-      ))
+    if
+      (src_adapter ~= M and src_adapter ~= files) or (dest_adapter ~= M and dest_adapter ~= files)
+    then
+      cb(
+        string.format(
+          "We should never attempt to copy from the %s adapter to the %s adapter.",
+          src_adapter.name,
+          dest_adapter.name
+        )
+      )
     end
 
-    local src
+    local src, _
     if src_adapter == M then
       local src_res = M.parse_url(action.src_url)
       src = url_to_s3(src_res, is_folder)

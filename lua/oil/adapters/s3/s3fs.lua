@@ -1,5 +1,5 @@
-local config = require("oil.config")
 local cache = require("oil.cache")
+local config = require("oil.config")
 local constants = require("oil.constants")
 local shell = require("oil.shell")
 local util = require("oil.util")
@@ -62,7 +62,7 @@ function M.list_dir(url, path, callback)
     end
     assert(lines)
     local cache_entries = {}
-    local url_path
+    local url_path, _
     _, url_path = util.parse_url(url)
     local is_top_level = url_path == nil or url_path:match("/") == nil
     local parse_ls_line = is_top_level and parse_ls_line_bucket or parse_ls_line_file

@@ -890,12 +890,7 @@ end
 ---@return boolean
 M.is_directory = function(entry)
   local is_directory = entry.type == "directory"
-    or (
-      entry.type == "link"
-      and entry.meta
-      and entry.meta.link_stat
-      and entry.meta.link_stat.type == "directory"
-    )
+    or (entry.type == "link" and entry.meta and entry.meta.link_stat and entry.meta.link_stat.type == "directory")
     or entry.type == "bucket"
   return is_directory == true
 end
