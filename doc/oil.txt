@@ -54,6 +54,15 @@ CONFIG                                                                *oil-confi
       -- You can set the delay to false to disable cleanup entirely
       -- Note that the cleanup process only starts when none of the oil buffers are currently displayed
       cleanup_delay_ms = 2000,
+      -- Configure how Oil interacts with buffers for files/directories that were modified
+      buffer_cleanup = {
+        -- Close unmodified buffers for files that are deleted with Oil
+        delete = false,
+        -- Reload buffers for files that are moved with Oil
+        move = false,
+        -- Set to true to apply the above rules even when the buffer has unsaved changes
+        force = false,
+      },
       lsp_file_methods = {
         -- Enable or disable LSP file operations
         enabled = true,

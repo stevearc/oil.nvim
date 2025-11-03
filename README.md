@@ -172,6 +172,15 @@ require("oil").setup({
   -- You can set the delay to false to disable cleanup entirely
   -- Note that the cleanup process only starts when none of the oil buffers are currently displayed
   cleanup_delay_ms = 2000,
+  -- Configure how Oil interacts with existing buffers after file operations
+  buffer_cleanup = {
+    -- Close unmodified buffers when files are deleted via Oil
+    delete = false,
+    -- Reload unmodified buffers after files are moved via Oil
+    move = false,
+    -- Apply the above rules even for buffers with unsaved changes
+    force = false,
+  },
   lsp_file_methods = {
     -- Enable or disable LSP file operations
     enabled = true,

@@ -248,14 +248,40 @@ end
 
 ---@param url string
 ---@return string[]
+local function uniq(list)
+  local seen = {}
+  local ret = {}
+  for _, item in ipairs(list) do
+    if item ~= "" and not seen[item] then
+      seen[item] = true
+      table.insert(ret, item)
+    end
+  end
+  return ret
+end
+
+---@param url string
+---@return string[]
 local function get_possible_buffer_names_from_url(url)
   local fs = require("oil.fs")
   local scheme, path = M.parse_url(url)
   if config.adapters[scheme] == "files" then
     assert(path)
-    return { fs.posix_to_os_path(path) }
+    local os_path = fs.posix_to_os_path(path)
+    return uniq({
+      os_path,
+      vim.fn.fnamemodify(os_path, ":p"),
+      vim.fn.fnamemodify(os_path, ":."),
+      vim.fn.fnamemodify(os_path, ":~"),
+    })
   end
   return { url }
+end
+
+---@param url string
+---@return string[]
+M.get_buffer_name_variants_from_url = function(url)
+  return get_possible_buffer_names_from_url(url)
 end
 
 ---@param entry_type oil.EntryType
