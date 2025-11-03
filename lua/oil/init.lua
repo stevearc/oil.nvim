@@ -781,18 +781,14 @@ M.select = function(opts, callback)
     if err then
       return finish(err)
     end
-    if opts.close and vim.api.nvim_buf_is_valid(oil_bufnr) then
-      local wins = vim.fn.win_findbuf(oil_bufnr)
-      for _, winid in ipairs(wins) do
-        if vim.api.nvim_win_is_valid(winid) then
-          vim.api.nvim_win_call(winid, function()
-            M.close()
-          end)
-        end
-      end
-      if vim.api.nvim_buf_is_valid(oil_bufnr) and vim.tbl_isempty(vim.fn.win_findbuf(oil_bufnr)) then
-        vim.api.nvim_buf_delete(oil_bufnr, { force = true })
-      end
+    if
+      opts.close
+      and vim.api.nvim_win_is_valid(prev_win)
+      and prev_win ~= vim.api.nvim_get_current_win()
+    then
+      vim.api.nvim_win_call(prev_win, function()
+        M.close()
+      end)
     end
 
     update_preview_window()
