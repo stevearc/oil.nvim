@@ -1,3 +1,4 @@
+local buffer_cleanup = require("oil.buffer_cleanup")
 local constants = require("oil.constants")
 local util = require("oil.util")
 local M = {}
@@ -200,6 +201,7 @@ M.perform_action = function(action)
     ---@diagnostic disable-next-line: undefined-field
     error(string.format("Bad action type: '%s'", action.type))
   end
+  buffer_cleanup.handle_action(action)
 end
 
 return M

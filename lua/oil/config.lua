@@ -37,6 +37,11 @@ local default_config = {
   -- You can set the delay to false to disable cleanup entirely
   -- Note that the cleanup process only starts when none of the oil buffers are currently displayed
   cleanup_delay_ms = 2000,
+  buffer_cleanup = {
+    delete = false,
+    move = false,
+    force = false,
+  },
   lsp_file_methods = {
     -- Enable or disable LSP file operations
     enabled = true,
@@ -227,6 +232,7 @@ default_config.view_options.highlight_filename = nil
 ---@field skip_confirm_for_simple_edits boolean
 ---@field prompt_save_on_select_new_entry boolean
 ---@field cleanup_delay_ms integer
+---@field buffer_cleanup { delete: boolean, move: boolean, force: boolean }
 ---@field lsp_file_methods oil.LspFileMethods
 ---@field constrain_cursor false|"name"|"editable"
 ---@field watch_for_changes boolean
@@ -255,6 +261,7 @@ local M = {}
 ---@field skip_confirm_for_simple_edits? boolean Skip the confirmation popup for simple operations (:help oil.skip_confirm_for_simple_edits).
 ---@field prompt_save_on_select_new_entry? boolean Selecting a new/moved/renamed file or directory will prompt you to save changes first (:help prompt_save_on_select_new_entry).
 ---@field cleanup_delay_ms? integer Oil will automatically delete hidden buffers after this delay. You can set the delay to false to disable cleanup entirely. Note that the cleanup process only starts when none of the oil buffers are currently displayed.
+---@field buffer_cleanup? { delete?: boolean, move?: boolean, force?: boolean } Configure how Oil handles existing buffers after file operations run.
 ---@field lsp_file_methods? oil.SetupLspFileMethods Configure LSP file operation integration.
 ---@field constrain_cursor? false|"name"|"editable" Constrain the cursor to the editable parts of the oil buffer. Set to `false` to disable, or "name" to keep it on the file names.
 ---@field watch_for_changes? boolean Set to true to watch the filesystem for changes and reload oil.
