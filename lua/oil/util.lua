@@ -823,11 +823,12 @@ M.send_to_quickfix = function(opts)
   local action = opts.action == "a" and "a" or "r"
   if opts.target == "loclist" then
     vim.fn.setloclist(0, {}, action, { title = qf_title, items = qf_entries })
+    vim.cmd.lopen()
   else
     vim.fn.setqflist({}, action, { title = qf_title, items = qf_entries })
+    vim.cmd.copen()
   end
   vim.api.nvim_exec_autocmds("QuickFixCmdPost", {})
-  vim.cmd.copen()
 end
 
 ---@return boolean
