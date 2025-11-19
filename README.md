@@ -163,8 +163,8 @@ require("oil").setup({
   },
   -- Send deleted files to the trash instead of permanently deleting them (:help oil-trash)
   delete_to_trash = false,
-  -- Skip the confirmation popup for simple operations (:help oil.skip_confirm_for_simple_edits)
-  skip_confirm_for_simple_edits = false,
+  -- Determines when to skip the confirmation popup. Set to `true` to skip all operations, "simple" to skip for simple operations or `false` to never skip. (:help oil.skip_confirm)
+  skip_confirm = false,
   -- Selecting a new/moved/renamed file or directory will prompt you to save changes first
   -- (:help prompt_save_on_select_new_entry)
   prompt_save_on_select_new_entry = true,

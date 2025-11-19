@@ -175,11 +175,11 @@ Select the entry under the cursor
 `save(opts, cb)` \
 Save all changes
 
-| Param    | Type                         | Desc                                                                                        |
-| -------- | ---------------------------- | ------------------------------------------------------------------------------------------- |
-| opts     | `nil\|table`                 |                                                                                             |
-| >confirm | `nil\|boolean`               | Show confirmation when true, never when false, respect skip_confirm_for_simple_edits if nil |
-| cb       | `nil\|fun(err: nil\|string)` | Called when mutations complete.                                                             |
+| Param    | Type                         | Desc                                                                       |
+| -------- | ---------------------------- | -------------------------------------------------------------------------- |
+| opts     | `nil\|table`                 |                                                                            |
+| >confirm | `nil\|boolean`               | Show confirmation when true, never when false, respect skip_confirm if nil |
+| cb       | `nil\|fun(err: nil\|string)` | Called when mutations complete.                                            |
 
 **Note:**
 <pre>

@@ -45,8 +45,8 @@ CONFIG                                                                *oil-confi
       },
       -- Send deleted files to the trash instead of permanently deleting them (:help oil-trash)
       delete_to_trash = false,
-      -- Skip the confirmation popup for simple operations (:help oil.skip_confirm_for_simple_edits)
-      skip_confirm_for_simple_edits = false,
+      -- Determines when to skip the confirmation popup. Set to `true` to skip all operations, "simple" to skip for simple operations or `false` to never skip. (:help oil.skip_confirm).
+      skip_confirm = false,
       -- Selecting a new/moved/renamed file or directory will prompt you to save changes first
       -- (:help prompt_save_on_select_new_entry)
       prompt_save_on_select_new_entry = true,
@@ -223,11 +223,12 @@ CONFIG                                                                *oil-confi
 OPTIONS                                                              *oil-options*
 
 
-skip_confirm_for_simple_edits                  *oil.skip_confirm_for_simple_edits*
-    type: `boolean` default: `false`
+skip_confirm                                 *oil.skip_confirm*
+    type: `boolean`|"simple" default: `false`
     Before performing filesystem operations, Oil displays a confirmation popup to ensure
-    that all operations are intentional. When this option is `true`, the popup will be
-    skipped if the operations:
+    that all operations are intentional. When this option is `true` or `false`, the popup
+    is toggled (`true` the popup will always be skipped, `false` will never be skipped).
+    When setted to "simple", the popup will be skipped if the operations:
         * contain no deletes
         * contain no cross-adapter moves or copies (e.g. from local to ssh)
         * contain at most one copy or move
@@ -386,7 +387,7 @@ save({opts}, {cb})                                                      *oil.sav
     Parameters:
       {opts} `nil|table`
           {confirm} `nil|boolean` Show confirmation when true, never when false,
-                    respect skip_confirm_for_simple_edits if nil
+                    respect skip_confirm if nil
       {cb}   `nil|fun(err: nil|string)` Called when mutations complete.
 
     Note:

@@ -195,11 +195,12 @@ def get_options_detail_vimdoc() -> "VimdocSection":
     section = VimdocSection("options", "oil-options")
     section.body.append(
         """
-skip_confirm_for_simple_edits                  *oil.skip_confirm_for_simple_edits*
-    type: `boolean` default: `false`
+skip_confirm                                 *oil.skip_confirm*
+    type: `boolean`|"simple" default: `false`
     Before performing filesystem operations, Oil displays a confirmation popup to ensure
-    that all operations are intentional. When this option is `true`, the popup will be
-    skipped if the operations:
+    that all operations are intentional. When this option is `true` or `false`, the popup
+    is toggled (`true` the popup will always be skipped, `false` will never be skipped).
+    When setted to "simple", the popup will be skipped if the operations:
         * contain no deletes
         * contain no cross-adapter moves or copies (e.g. from local to ssh)
         * contain at most one copy or move

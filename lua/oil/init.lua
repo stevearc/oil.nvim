@@ -975,7 +975,7 @@ end
 
 ---Save all changes
 ---@param opts nil|table
----    confirm nil|boolean Show confirmation when true, never when false, respect skip_confirm_for_simple_edits if nil
+---    confirm nil|boolean Show confirmation when true, never when false, respect skip_confirm if nil
 ---@param cb? fun(err: nil|string) Called when mutations complete.
 ---@note
 --- If you provide your own callback function, there will be no notification for errors.
