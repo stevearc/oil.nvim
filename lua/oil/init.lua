@@ -824,6 +824,11 @@ end
 M._get_highlights = function()
   return {
     {
+      name = "OilEmpty",
+      link = "Comment",
+      desc = "Empty column values",
+    },
+    {
       name = "OilHidden",
       link = "Comment",
       desc = "Hidden entry in an oil buffer",
