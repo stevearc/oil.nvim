@@ -644,6 +644,9 @@ yank_entry                                                    *actions.yank_entr
 --------------------------------------------------------------------------------
 HIGHLIGHTS                                                        *oil-highlights*
 
+OilEmpty                                                             *hl-OilEmpty*
+    Empty column values
+
 OilHidden                                                           *hl-OilHidden*
     Hidden entry in an oil buffer
 
