@@ -87,22 +87,26 @@ M.parse_line = function(adapter, line, column_defs)
     local line_adapter = assert(config.get_adapter_by_scheme(parent_url))
     if adapter ~= line_adapter then
       adapter = line_adapter
-      column_defs = columns.get_supported_columns(adapter)
+      column_defs = columns.get_editable_columns(adapter)
     end
   end
 
   for _, def in ipairs(column_defs) do
-    local name = util.split_config(def)
-    local range = { start }
-    local start_len = string.len(rem)
-    value, rem = columns.parse_col(adapter, rem, def)
-    if not rem then
-      return nil, string.format("Parsing %s failed", name)
+    -- We want to skip the parse of the name column when virtual text columns are enabled
+    -- to allow for the name column to be configured before virtual columns
+    if def ~= "name" or not config.virtual_text_columns then
+      local name = util.split_config(def)
+      local range = { start }
+      local start_len = string.len(rem)
+      value, rem = columns.parse_col(adapter, rem, def)
+      if not rem then
+        return nil, string.format("Parsing %s failed", name)
+      end
+      ret[name] = value
+      range[2] = range[1] + start_len - string.len(rem) - 1
+      ranges[name] = range
+      start = range[2] + 1
     end
-    ret[name] = value
-    range[2] = range[1] + start_len - string.len(rem) - 1
-    ranges[name] = range
-    start = range[2] + 1
   end
   local name = rem
   if name then
@@ -168,7 +172,7 @@ M.parse = function(bufnr)
 
   local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, true)
   local scheme, path = util.parse_url(bufname)
-  local column_defs = columns.get_supported_columns(adapter)
+  local column_defs = columns.get_editable_columns(adapter)
   local parent_url = scheme .. path
   local children = cache.list_url(parent_url)
   -- map from name to entry ID for all entries previously in the buffer
