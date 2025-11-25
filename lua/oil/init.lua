@@ -1123,9 +1123,9 @@ M.setup = function(opts)
 
   config.setup(opts)
   set_colors()
-  vim.api.nvim_create_user_command("Oil", function(args)
+  local callback = function(args)
     local util = require("oil.util")
-    if args.smods.tab == 1 then
+    if args.smods.tab > 0 then
       vim.cmd.tabnew()
     end
     local float = false
@@ -1158,11 +1158,11 @@ M.setup = function(opts)
       end
     end
 
-    if not float and (args.smods.vertical or args.smods.split ~= "") then
+    if not float and (args.smods.vertical or args.smods.horizontal or args.smods.split ~= "") then
       if args.smods.vertical then
-        vim.cmd.vsplit({ mods = { split = args.smods.split } })
+        vim.cmd.vsplit({ mods = { split = args.smods.split }, range = { args.count } })
       else
-        vim.cmd.split({ mods = { split = args.smods.split } })
+        vim.cmd.split({ mods = { split = args.smods.split }, range = { args.count } })
       end
     end
 
@@ -1178,7 +1178,12 @@ M.setup = function(opts)
       open_opts.preview = {}
     end
     M[method](path, open_opts)
-  end, { desc = "Open oil file browser on a directory", nargs = "*", complete = "dir" })
+  end
+  vim.api.nvim_create_user_command(
+    "Oil",
+    callback,
+    { desc = "Open oil file browser on a directory", nargs = "*", complete = "dir", count = true }
+  )
   local aug = vim.api.nvim_create_augroup("Oil", {})
 
   if config.default_file_explorer then
