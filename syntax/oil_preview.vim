@@ -2,9 +2,9 @@ if exists("b:current_syntax")
   finish
 endif
 
-syn match oilCreate /^CREATE /
+syn match oilCreate /^CREATE\( BUCKET\)\? /
 syn match oilMove   /^  MOVE /
-syn match oilDelete /^DELETE /
+syn match oilDelete /^DELETE\( BUCKET\)\? /
 syn match oilCopy   /^  COPY /
 syn match oilChange /^CHANGE /
 " Trash operations

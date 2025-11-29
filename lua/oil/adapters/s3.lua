@@ -36,10 +36,12 @@ end
 local function url_to_str(url)
   local pieces = { url.scheme }
   if url.bucket then
+    assert(url.bucket ~= "")
     table.insert(pieces, url.bucket)
     table.insert(pieces, "/")
   end
-  if url.path and url.path ~= "" then
+  if url.path then
+    assert(url.path ~= "")
     table.insert(pieces, url.path)
   end
   return table.concat(pieces, "")
@@ -51,16 +53,29 @@ end
 local function url_to_s3(url, is_folder)
   local pieces = { "s3://" }
   if url.bucket then
+    assert(url.bucket ~= "")
     table.insert(pieces, url.bucket)
     table.insert(pieces, "/")
   end
-  if url.path and url.path ~= "" then
+  if url.path then
+    assert(url.path ~= "")
     table.insert(pieces, url.path)
     if is_folder and not vim.endswith(url.path, "/") then
       table.insert(pieces, "/")
     end
   end
   return table.concat(pieces, "")
+end
+
+---@param url oil.s3Url
+---@return boolean
+local function is_bucket(url)
+  assert(url.bucket and url.bucket ~= "")
+  if url.path then
+    assert(url.path ~= "")
+    return false
+  end
+  return true
 end
 
 local s3_columns = {}
@@ -94,6 +109,34 @@ s3_columns.size = {
   end,
 }
 
+s3_columns.birthtime = {
+  render = function(entry, conf)
+    local meta = entry[FIELD_META]
+    if not meta or not meta.date then
+      return ""
+    else
+      return meta.date
+    end
+  end,
+
+  parse = function(line, conf)
+    return line:match("^(%d+%-%d+%-%d+%s%d+:%d+:%d+)%s+(.*)$")
+  end,
+
+  get_sort_value = function(entry)
+    local meta = entry[FIELD_META]
+    if meta and meta.date then
+      local year, month, day, hour, min, sec =
+        meta.date:match("^(%d+)%-(%d+)%-(%d+)%s(%d+):(%d+):(%d+)$")
+      local time =
+        os.time({ year = year, month = month, day = day, hour = hour, min = min, sec = sec })
+      return time
+    else
+      return 0
+    end
+  end,
+}
+
 ---@param name string
 ---@return nil|oil.ColumnDefinition
 M.get_column = function(name)
@@ -104,8 +147,10 @@ end
 ---@return string
 M.get_parent = function(bufname)
   local res = M.parse_url(bufname)
-  if res.path and res.path ~= "" then
-    res.path = pathutil.parent(res.path)
+  if res.path then
+    assert(res.path ~= "")
+    local path = pathutil.parent(res.path)
+    res.path = path ~= "" and path or nil
   else
     res.bucket = nil
   end
@@ -137,12 +182,15 @@ end
 ---@param action oil.Action
 ---@return string
 M.render_action = function(action)
+  local is_folder = action.entry_type == "directory"
   if action.type == "create" then
-    local extra = action.entry_type == "bucket" and "BUCKET " or ""
-    return string.format("CREATE %s%s", extra, action.url)
+    local res = M.parse_url(action.url)
+    local extra = is_bucket(res) and "BUCKET " or ""
+    return string.format("CREATE %s%s", extra, url_to_s3(res, is_folder))
   elseif action.type == "delete" then
-    local extra = action.entry_type == "bucket" and "BUCKET " or ""
-    return string.format("DELETE %s%s", extra, action.url)
+    local res = M.parse_url(action.url)
+    local extra = is_bucket(res) and "BUCKET " or ""
+    return string.format("DELETE %s%s", extra, url_to_s3(res, is_folder))
   elseif action.type == "move" or action.type == "copy" then
     local src = action.src_url
     local dest = action.dest_url
@@ -150,10 +198,12 @@ M.render_action = function(action)
       local _, path = util.parse_url(src)
       assert(path)
       src = files.to_short_os_path(path, action.entry_type)
+      dest = url_to_s3(M.parse_url(dest), is_folder)
     elseif config.get_adapter_by_scheme(dest) ~= M then
       local _, path = util.parse_url(dest)
       assert(path)
       dest = files.to_short_os_path(path, action.entry_type)
+      src = url_to_s3(M.parse_url(src), is_folder)
     end
     return string.format("  %s %s -> %s", action.type:upper(), src, dest)
   else
@@ -164,24 +214,26 @@ end
 ---@param action oil.Action
 ---@param cb fun(err: nil|string)
 M.perform_action = function(action, cb)
-  local is_folder = action.entry_type == "directory" or action.entry_type == "bucket"
+  local is_folder = action.entry_type == "directory"
   if action.type == "create" then
     local res = M.parse_url(action.url)
+    local bucket = is_bucket(res)
 
-    if action.entry_type == "directory" or action.entry_type == "file" then
-      s3fs.touch(url_to_s3(res, is_folder), cb)
-    elseif action.entry_type == "bucket" then
+    if action.entry_type == "directory" and bucket then
       s3fs.mb(url_to_s3(res, true), cb)
+    elseif action.entry_type == "directory" or action.entry_type == "file" then
+      s3fs.touch(url_to_s3(res, is_folder), cb)
     else
       cb(string.format("Bad entry type on s3 create action: %s", action.entry_type))
     end
   elseif action.type == "delete" then
     local res = M.parse_url(action.url)
+    local bucket = is_bucket(res)
 
-    if action.entry_type == "directory" or action.entry_type == "file" then
-      s3fs.rm(url_to_s3(res, is_folder), is_folder, cb)
-    elseif action.entry_type == "bucket" then
+    if action.entry_type == "directory" and bucket then
       s3fs.rb(url_to_s3(res, true), cb)
+    elseif action.entry_type == "directory" or action.entry_type == "file" then
+      s3fs.rm(url_to_s3(res, is_folder), is_folder, cb)
     else
       cb(string.format("Bad entry type on s3 delete action: %s", action.entry_type))
     end

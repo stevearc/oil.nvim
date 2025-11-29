@@ -44,17 +44,6 @@ local function parsedir(name)
   return name, isdir
 end
 
----@param name string
----@return string
----@return boolean
-local function parsebucket(name)
-  local isbucket = vim.startswith(name, "s3://")
-  if isbucket then
-    name = name:sub(6, name:len())
-  end
-  return name, isbucket
-end
-
 ---@param meta nil|table
 ---@param parsed_entry table
 ---@return boolean True if metadata and parsed entry have the same link target
@@ -117,17 +106,12 @@ M.parse_line = function(adapter, line, column_defs)
   end
   local name = rem
   if name then
-    local isdir, isbucket
+    local isdir
     name, isdir = parsedir(vim.trim(name))
-    name, isbucket = parsebucket(name)
     if name ~= "" then
       ret.name = name
     end
-    if not isbucket then
-      ret._type = isdir and "directory" or "file"
-    else
-      ret._type = "bucket"
-    end
+    ret._type = isdir and "directory" or "file"
   end
   local entry = cache.get_entry_by_id(ret.id)
   ranges.name = { start, start + string.len(rem) - 1 }
@@ -293,24 +277,13 @@ M.parse = function(bufnr)
         end
       else
         -- Parse a new entry
-        local isbucket
         local name, isdir = parsedir(vim.trim(line))
-        name, isbucket = parsebucket(name)
         if vim.startswith(name, "/") then
           table.insert(errors, {
             message = "Paths cannot start with '/'",
             lnum = i - 1,
             end_lnum = i,
             col = 0,
-          })
-          return
-        end
-        if isbucket and name ~= "" then
-          table.insert(diffs, {
-            type = "new",
-            name = name,
-            entry_type = "bucket",
-            link = nil,
           })
           return
         end

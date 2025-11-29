@@ -17,7 +17,7 @@ local function parse_ls_line_bucket(line)
   if not date or not name then
     error(string.format("Could not parse '%s'", line))
   end
-  local type = "bucket"
+  local type = "directory"
   local meta = { date = date }
   return name, type, meta
 end
@@ -39,7 +39,7 @@ local function parse_ls_line_file(line)
     error(string.format("Could not parse '%s'", line))
   end
   type = "file"
-  meta = { date = date, size = size }
+  meta = { date = date, size = tonumber(size) }
   return name, type, meta
 end
 
@@ -55,7 +55,6 @@ end
 ---@param callback fun(err?: string, entries?: oil.InternalEntry[], fetch_more?: fun())
 function M.list_dir(url, path, callback)
   local cmd = create_s3_command({ "ls", path, "--color=off", "--no-cli-pager" })
-  vim.notify("COMMAND: " .. table.concat(cmd, " "))
   shell.run(cmd, function(err, lines)
     if err then
       return callback(err)
@@ -87,7 +86,6 @@ end
 function M.touch(path, callback)
   -- here "-" means that we copy from stdin
   local cmd = create_s3_command({ "cp", "-", path })
-  vim.notify("COMMAND: " .. table.concat(cmd, " "))
   shell.run(cmd, { stdin = "null" }, callback)
 end
 
@@ -101,7 +99,6 @@ function M.rm(path, is_folder, callback)
     table.insert(main_cmd, "--recursive")
   end
   local cmd = create_s3_command(main_cmd)
-  vim.notify("COMMAND: " .. table.concat(cmd, " "))
   shell.run(cmd, callback)
 end
 
@@ -110,7 +107,6 @@ end
 ---@param callback fun(err: nil|string)
 function M.rb(bucket, callback)
   local cmd = create_s3_command({ "rb", bucket })
-  vim.notify("COMMAND: " .. table.concat(cmd, " "))
   shell.run(cmd, callback)
 end
 
@@ -119,7 +115,6 @@ end
 ---@param callback fun(err: nil|string)
 function M.mb(bucket, callback)
   local cmd = create_s3_command({ "mb", bucket })
-  vim.notify("COMMAND: " .. table.concat(cmd, " "))
   shell.run(cmd, callback)
 end
 
@@ -134,7 +129,6 @@ function M.mv(src, dest, is_folder, callback)
     table.insert(main_cmd, "--recursive")
   end
   local cmd = create_s3_command(main_cmd)
-  vim.notify("COMMAND: " .. table.concat(cmd, " "))
   shell.run(cmd, callback)
 end
 
@@ -149,7 +143,6 @@ function M.cp(src, dest, is_folder, callback)
     table.insert(main_cmd, "--recursive")
   end
   local cmd = create_s3_command(main_cmd)
-  vim.notify("COMMAND: " .. table.concat(cmd, " "))
   shell.run(cmd, callback)
 end
 

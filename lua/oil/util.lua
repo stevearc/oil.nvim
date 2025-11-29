@@ -823,11 +823,12 @@ M.send_to_quickfix = function(opts)
   local action = opts.action == "a" and "a" or "r"
   if opts.target == "loclist" then
     vim.fn.setloclist(0, {}, action, { title = qf_title, items = qf_entries })
+    vim.cmd.lopen()
   else
     vim.fn.setqflist({}, action, { title = qf_title, items = qf_entries })
+    vim.cmd.copen()
   end
   vim.api.nvim_exec_autocmds("QuickFixCmdPost", {})
-  vim.cmd.copen()
 end
 
 ---@return boolean
@@ -890,8 +891,12 @@ end
 ---@return boolean
 M.is_directory = function(entry)
   local is_directory = entry.type == "directory"
-    or (entry.type == "link" and entry.meta and entry.meta.link_stat and entry.meta.link_stat.type == "directory")
-    or entry.type == "bucket"
+    or (
+      entry.type == "link"
+      and entry.meta
+      and entry.meta.link_stat
+      and entry.meta.link_stat.type == "directory"
+    )
   return is_directory == true
 end
 
@@ -939,8 +944,6 @@ M.get_icon_provider = function()
     return function(type, name, conf)
       if type == "directory" then
         return conf and conf.directory or "", "OilDirIcon"
-      elseif type == "bucket" then
-        return conf and conf.bucket or "󱐖", "OilBucketIcon"
       else
         local icon, hl = devicons.get_icon(name)
         icon = icon or (conf and conf.default_file or "")

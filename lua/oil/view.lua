@@ -778,11 +778,9 @@ M.format_entry_cols = function(entry, column_defs, col_width, adapter, is_hidden
     else
       local hl = get_custom_hl(external_entry, is_hidden, false, false, bufnr)
       if hl then
-        -- Add the trailing / if this is a directory or bucket, this is important
+        -- Add the trailing / if this is a directory, this is important
         if entry_type == "directory" then
           name = name .. "/"
-        elseif entry_type == "bucket" then
-          name = "s3://" .. name .. "/"
         end
         table.insert(cols, { name, hl })
         return cols
@@ -794,8 +792,6 @@ M.format_entry_cols = function(entry, column_defs, col_width, adapter, is_hidden
     table.insert(cols, { name .. "/", "OilDir" .. hl_suffix })
   elseif entry_type == "socket" then
     table.insert(cols, { name, "OilSocket" .. hl_suffix })
-  elseif entry_type == "bucket" then
-    table.insert(cols, { "s3://" .. name .. "/", "OilBucket" .. hl_suffix })
   elseif entry_type == "link" then
     if not link_name then
       link_name, link_target = get_link_text(name, meta)

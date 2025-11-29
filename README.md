@@ -242,6 +242,8 @@ require("oil").setup({
   },
   -- Extra arguments to pass to SCP when moving/copying files over SSH
   extra_scp_args = {},
+  -- Extra arguments to pass to aws s3 when creating/deleting/moving/copying files using aws s3
+  extra_s3_args = {},
   -- EXPERIMENTAL support for performing file operations with git
   git = {
     -- Return true to automatically git add/mv/rm files
@@ -354,6 +356,16 @@ nvim oil-ssh://[username@]hostname[:port]/[path]
 This may look familiar. In fact, this is the same url format that netrw uses.
 
 Note that at the moment the ssh adapter does not support Windows machines, and it requires the server to have a `/bin/sh` binary as well as standard unix commands (`ls`, `rm`, `mv`, `mkdir`, `chmod`, `cp`, `touch`, `ln`, `echo`).
+
+### S3
+
+This adapter allows you to browse files stored in aws s3. To use it, make sure `aws` is setup correctly and then simply open a buffer using the following name template:
+
+```
+nvim oil-s3://[bucket]/[path]
+```
+
+Note that older versions of Neovim don't support numbers in the url, so for Neovim 0.11 and older the url starts with `oil-sss`.
 
 ## Recipes
 

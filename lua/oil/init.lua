@@ -7,7 +7,7 @@ local M = {}
 ---@field parsed_name nil|string
 ---@field meta nil|table
 
----@alias oil.EntryType "char"|"link"|"directory"|"fifo"|"socket"|"file"|"bucket"
+---@alias oil.EntryType uv.aliases.fs_types
 ---@alias oil.HlRange { [1]: string, [2]: integer, [3]: integer } A tuple of highlight group name, col_start, col_end
 ---@alias oil.HlTuple { [1]: string, [2]: string } A tuple of text, highlight group
 ---@alias oil.HlRangeTuple { [1]: string, [2]: oil.HlRange[] } A tuple of text, internal highlights
@@ -484,8 +484,6 @@ M.open_preview = function(opts, callback)
   local entry_title = entry.name
   if entry.type == "directory" then
     entry_title = entry_title .. "/"
-  elseif entry.type == "bucket" then
-    entry_title = "s3://" .. entry_title .. "/"
   end
 
   if util.is_floating_win() then
@@ -841,16 +839,6 @@ M._get_highlights = function()
       desc = "Icon for directories",
     },
     {
-      name = "OilBucket",
-      link = "OilDir",
-      desc = "S3 buckets in an oil buffer",
-    },
-    {
-      name = "OilBucketIcon",
-      link = "OilBucket",
-      desc = "Icon for S3 buckets",
-    },
-    {
       name = "OilSocket",
       link = "Keyword",
       desc = "Socket files in an oil buffer",
@@ -1121,13 +1109,6 @@ local function close_preview_window_if_not_in_oil()
   pcall(vim.api.nvim_win_close, preview_win_id, true)
 end
 
----@param pat string Pattern to escape
----@return string Escaped pattern
-local function escape_pattern(pat)
-  local res = pat:gsub("-", "%%-")
-  return res
-end
-
 local _on_key_ns = 0
 ---Initialize oil
 ---@param opts oil.setupOpts|nil
@@ -1208,11 +1189,11 @@ M.setup = function(opts)
   local filetype_patterns = {}
   for scheme in pairs(config.adapters) do
     table.insert(patterns, scheme .. "*")
-    filetype_patterns[escape_pattern(scheme) .. ".*"] = { "oil", { priority = 10 } }
+    filetype_patterns[scheme .. ".*"] = { "oil", { priority = 10 } }
   end
   for scheme in pairs(config.adapter_aliases) do
     table.insert(patterns, scheme .. "*")
-    filetype_patterns[escape_pattern(scheme) .. ".*"] = { "oil", { priority = 10 } }
+    filetype_patterns[scheme .. ".*"] = { "oil", { priority = 10 } }
   end
   local scheme_pattern = table.concat(patterns, ",")
   -- We need to add these patterns to the filetype matcher so the filetype doesn't get overridden
