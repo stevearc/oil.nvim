@@ -200,7 +200,7 @@ local function is_entry_directory(entry)
     return true
   elseif type == "link" then
     local meta = entry[FIELD_META]
-    return meta and meta.link_stat and meta.link_stat.type == "directory"
+    return (meta and meta.link_stat and meta.link_stat.type == "directory") == true
   else
     return false
   end

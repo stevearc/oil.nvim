@@ -146,7 +146,7 @@ CONFIG                                                                *oil-confi
         -- max_width and max_height can be integers or a float between 0 and 1 (e.g. 0.4 for 40%)
         max_width = 0,
         max_height = 0,
-        border = "rounded",
+        border = nil,
         win_options = {
           winblend = 0,
         },
@@ -191,7 +191,7 @@ CONFIG                                                                *oil-confi
         min_height = { 5, 0.1 },
         -- optionally define an integer/float for the exact height of the preview window
         height = nil,
-        border = "rounded",
+        border = nil,
         win_options = {
           winblend = 0,
         },
@@ -204,7 +204,7 @@ CONFIG                                                                *oil-confi
         max_height = { 10, 0.9 },
         min_height = { 5, 0.1 },
         height = nil,
-        border = "rounded",
+        border = nil,
         minimized_border = "none",
         win_options = {
           winblend = 0,
@@ -212,11 +212,11 @@ CONFIG                                                                *oil-confi
       },
       -- Configuration for the floating SSH window
       ssh = {
-        border = "rounded",
+        border = nil,
       },
       -- Configuration for the floating keymaps help window
       keymaps_help = {
-        border = "rounded",
+        border = nil,
       },
     })
 <
@@ -375,6 +375,10 @@ select({opts}, {callback})                                            *oil.selec
           {tab}        `nil|boolean` Open the buffer in a new tab
           {close}      `nil|boolean` Close the original oil buffer once
                        selection is made
+          {handle_buffer_callback} `nil|fun(buf_id: integer)` If defined, all
+                       other buffer related options here would be ignored. This
+                       callback allows you to take over the process of opening
+                       the buffer yourself.
       {callback} `nil|fun(err: nil|string)` Called once all entries have been
                  opened
 
@@ -572,6 +576,9 @@ parent                                                            *actions.paren
 
 paste_from_system_clipboard                  *actions.paste_from_system_clipboard*
     Paste the system clipboard into the current oil directory
+
+    Parameters:
+      {delete_original} `boolean` Delete the original file after copying
 
 preview                                                          *actions.preview*
     Open the entry under the cursor in a preview window, or close the preview

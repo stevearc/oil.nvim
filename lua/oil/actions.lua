@@ -438,9 +438,15 @@ M.copy_to_system_clipboard = {
 
 M.paste_from_system_clipboard = {
   desc = "Paste the system clipboard into the current oil directory",
-  callback = function()
-    require("oil.clipboard").paste_from_system_clipboard()
+  callback = function(opts)
+    require("oil.clipboard").paste_from_system_clipboard(opts and opts.delete_original)
   end,
+  parameters = {
+    delete_original = {
+      type = "boolean",
+      desc = "Delete the original file after copying",
+    },
+  },
 }
 
 M.open_cmdline_dir = {

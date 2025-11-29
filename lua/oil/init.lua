@@ -618,6 +618,7 @@ end
 ---@field split? "aboveleft"|"belowright"|"topleft"|"botright" Split modifier
 ---@field tab? boolean Open the buffer in a new tab
 ---@field close? boolean Close the original oil buffer once selection is made
+---@field handle_buffer_callback? fun(buf_id: integer) If defined, all other buffer related options here would be ignored. This callback allows you to take over the process of opening the buffer yourself.
 
 ---Select the entry under the cursor
 ---@param opts nil|oil.SelectOpts
@@ -757,15 +758,19 @@ M.select = function(opts, callback)
       elseif opts.split then
         cmd = "sbuffer"
       end
-      ---@diagnostic disable-next-line: param-type-mismatch
-      local ok, err = pcall(vim.cmd, {
-        cmd = cmd,
-        args = { filebufnr },
-        mods = mods,
-      })
-      -- Ignore swapfile errors
-      if not ok and err and not err:match("^Vim:E325:") then
-        vim.api.nvim_echo({ { err, "Error" } }, true, {})
+      if opts.handle_buffer_callback ~= nil then
+        opts.handle_buffer_callback(filebufnr)
+      else
+        ---@diagnostic disable-next-line: param-type-mismatch
+        local ok, err = pcall(vim.cmd, {
+          cmd = cmd,
+          args = { filebufnr },
+          mods = mods,
+        })
+        -- Ignore swapfile errors
+        if not ok and err and not err:match("^Vim:E325:") then
+          vim.api.nvim_echo({ { err, "Error" } }, true, {})
+        end
       end
 
       open_next_entry(cb)
@@ -1281,7 +1286,10 @@ M.setup = function(opts)
       local util = require("oil.util")
       local bufname = vim.api.nvim_buf_get_name(0)
       local scheme = util.parse_url(bufname)
-      if scheme and config.adapters[scheme] then
+      local is_oil_buf = scheme and config.adapters[scheme]
+      -- We want to filter out oil buffers that are not directories (i.e. ssh files)
+      local is_oil_dir_or_unknown = (vim.bo.filetype == "oil" or vim.bo.filetype == "")
+      if is_oil_buf and is_oil_dir_or_unknown then
         local view = require("oil.view")
         view.maybe_set_cursor()
         -- While we are in an oil buffer, set the alternate file to the buffer we were in prior to
