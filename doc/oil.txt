@@ -124,6 +124,8 @@ CONFIG                                                                *oil-confi
       },
       -- Extra arguments to pass to SCP when moving/copying files over SSH
       extra_scp_args = {},
+      -- Extra arguments to pass to aws s3 when creating/deleting/moving/copying files using aws s3
+      extra_s3_args = {},
       -- EXPERIMENTAL support for performing file operations with git
       git = {
         -- Return true to automatically git add/mv/rm files
@@ -428,7 +430,7 @@ icon                                                                 *column-ico
                      the icon
 
 size                                                                 *column-size*
-    Adapters: files, ssh
+    Adapters: files, ssh, s3
     Sortable: this column can be used in view_props.sort
     The size of the file
 
@@ -476,7 +478,7 @@ atime                                                               *column-atim
       {format}    `string` Format string (see :help strftime)
 
 birthtime                                                       *column-birthtime*
-    Adapters: files
+    Adapters: files, s3
     Sortable: this column can be used in view_props.sort
     The time the file was created
 
