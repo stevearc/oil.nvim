@@ -53,7 +53,7 @@ M.get_supported_columns = function(adapter_or_scheme)
   return ret
 end
 
-local EMPTY = { "-", "Comment" }
+local EMPTY = { "-", "OilEmpty" }
 
 M.EMPTY = EMPTY
 
