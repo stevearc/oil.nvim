@@ -183,7 +183,7 @@ end
 ---@param callback fun(err?: string, entries?: oil.InternalEntry[], fetch_more?: fun())
 M.list = function(url, column_defs, callback)
   if not M.has_awscli() then
-    callback(string.format("`aws` is not executable. Can you run `aws s3 ls`?"))
+    callback("`aws` is not executable. Can you run `aws s3 ls`?")
     return
   end
 
