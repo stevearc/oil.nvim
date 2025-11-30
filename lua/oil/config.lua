@@ -107,6 +107,8 @@ local default_config = {
   },
   -- Extra arguments to pass to SCP when moving/copying files over SSH
   extra_scp_args = {},
+  -- Extra arguments to pass to aws s3 when creating/deleting/moving/copying files using aws s3
+  extra_s3_args = {},
   -- EXPERIMENTAL support for performing file operations with git
   git = {
     -- Return true to automatically git add/mv/rm files
@@ -204,9 +206,14 @@ local default_config = {
 -- The adapter API hasn't really stabilized yet. We're not ready to advertise or encourage people to
 -- write their own adapters, and so there's no real reason to edit these config options. For that
 -- reason, I'm taking them out of the section above so they won't show up in the autogen docs.
+
+-- not "oil-s3://" on older neovim versions, since it doesn't open buffers correctly with a number
+-- in the name
+local oil_s3_string = vim.fn.has("nvim-0.12") == 1 and "oil-s3://" or "oil-sss://"
 default_config.adapters = {
   ["oil://"] = "files",
   ["oil-ssh://"] = "ssh",
+  [oil_s3_string] = "s3",
   ["oil-trash://"] = "trash",
 }
 default_config.adapter_aliases = {}
@@ -234,6 +241,7 @@ default_config.view_options.highlight_filename = nil
 ---@field use_default_keymaps boolean
 ---@field view_options oil.ViewOptions
 ---@field extra_scp_args string[]
+---@field extra_s3_args string[]
 ---@field git oil.GitOptions
 ---@field float oil.FloatWindowConfig
 ---@field preview_win oil.PreviewWindowConfig
@@ -262,6 +270,7 @@ local M = {}
 ---@field use_default_keymaps? boolean Set to false to disable all of the above keymaps
 ---@field view_options? oil.SetupViewOptions Configure which files are shown and how they are shown.
 ---@field extra_scp_args? string[] Extra arguments to pass to SCP when moving/copying files over SSH
+---@field extra_s3_args? string[] Extra arguments to pass to aws s3 when moving/copying files using aws s3
 ---@field git? oil.SetupGitOptions EXPERIMENTAL support for performing file operations with git
 ---@field float? oil.SetupFloatWindowConfig Configuration for the floating window in oil.open_float
 ---@field preview_win? oil.SetupPreviewWindowConfig Configuration for the file preview window
