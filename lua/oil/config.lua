@@ -209,7 +209,7 @@ local default_config = {
 
 -- not "oil-s3://" on older neovim versions, since it doesn't open buffers correctly with a number
 -- in the name
-local oil_s3_string = vim.fn.has("nvim-0.12") and "oil-s3://" or "oil-sss://"
+local oil_s3_string = vim.fn.has("nvim-0.12") == 1 and "oil-s3://" or "oil-sss://"
 default_config.adapters = {
   ["oil://"] = "files",
   ["oil-ssh://"] = "ssh",

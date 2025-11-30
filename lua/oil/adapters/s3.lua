@@ -164,10 +164,32 @@ M.normalize_url = function(url, callback)
   callback(url_to_str(res))
 end
 
+M.has_awscli_checked = false
+---@return boolean
+M.has_awscli = function()
+  if M.has_awscli_checked then
+    return true
+  end
+
+  local err_code = vim.system({ "which", "aws" }):wait().code
+  if err_code == 0 then
+    M.has_awscli_checked = true
+    return true
+  end
+  return false
+end
+
 ---@param url string
 ---@param column_defs string[]
 ---@param callback fun(err?: string, entries?: oil.InternalEntry[], fetch_more?: fun())
 M.list = function(url, column_defs, callback)
+  if not M.has_awscli() then
+    callback(
+      string.format("Could not locate aws client with `which aws`. Can you run `aws s3 ls`?")
+    )
+    return
+  end
+
   local res = M.parse_url(url)
   s3fs.list_dir(url, url_to_s3(res, true), callback)
 end
