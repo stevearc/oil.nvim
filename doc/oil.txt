@@ -430,7 +430,7 @@ icon                                                                 *column-ico
                      the icon
 
 size                                                                 *column-size*
-    Adapters: files, ssh, s3
+    Adapters: files, ssh
     Sortable: this column can be used in view_props.sort
     The size of the file
 
@@ -478,7 +478,7 @@ atime                                                               *column-atim
       {format}    `string` Format string (see :help strftime)
 
 birthtime                                                       *column-birthtime*
-    Adapters: files, s3
+    Adapters: files
     Sortable: this column can be used in view_props.sort
     The time the file was created
 
