@@ -171,8 +171,7 @@ M.has_awscli = function()
     return true
   end
 
-  local err_code = vim.system({ "which", "aws" }):wait().code
-  if err_code == 0 then
+  if vim.fn.executable("aws") == 1 then
     M.has_awscli_checked = true
     return true
   end
@@ -184,9 +183,7 @@ end
 ---@param callback fun(err?: string, entries?: oil.InternalEntry[], fetch_more?: fun())
 M.list = function(url, column_defs, callback)
   if not M.has_awscli() then
-    callback(
-      string.format("Could not locate aws client with `which aws`. Can you run `aws s3 ls`?")
-    )
+    callback(string.format("`aws` is not executable. Can you run `aws s3 ls`?"))
     return
   end
 
