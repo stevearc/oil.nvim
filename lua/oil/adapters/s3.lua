@@ -164,25 +164,11 @@ M.normalize_url = function(url, callback)
   callback(url_to_str(res))
 end
 
-M.has_awscli_checked = false
----@return boolean
-M.has_awscli = function()
-  if M.has_awscli_checked then
-    return true
-  end
-
-  if vim.fn.executable("aws") == 1 then
-    M.has_awscli_checked = true
-    return true
-  end
-  return false
-end
-
 ---@param url string
 ---@param column_defs string[]
 ---@param callback fun(err?: string, entries?: oil.InternalEntry[], fetch_more?: fun())
 M.list = function(url, column_defs, callback)
-  if not M.has_awscli() then
+  if vim.fn.executable("aws") ~= 1 then
     callback("`aws` is not executable. Can you run `aws s3 ls`?")
     return
   end
