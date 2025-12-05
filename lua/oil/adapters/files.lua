@@ -164,6 +164,12 @@ for _, time_key in ipairs({ "ctime", "mtime", "atime", "birthtime" }) do
       local fmt = conf and conf.format
       local ret
       if fmt then
+        if type(fmt) == "function" then
+          if not config.virtual_text_columns then
+            error("Custom format functions for time columns require virtual_text_columns to be enabled")
+          end
+          return fmt(stat[time_key].sec)
+        end
         ret = vim.fn.strftime(fmt, stat[time_key].sec)
       else
         local year = vim.fn.strftime("%Y", stat[time_key].sec)

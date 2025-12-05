@@ -10,6 +10,15 @@ local default_config = {
     -- "size",
     -- "mtime",
   },
+  -- Render immutable columns with virtual text instead of in the buffer
+  -- When enabled, the name column can optionally be added to columns config
+  -- though it is still required to be the last MUTABLE column
+  virtual_text_columns = false,
+  -- Show column headers above the file list
+  show_header = false,
+  -- Optional function to customize header text
+  -- Example: header_format = function(text) return text:lower() end
+  header_format = nil,
   -- Buffer-local options to use for oil buffers
   buf_options = {
     buflisted = false,
@@ -228,6 +237,9 @@ default_config.view_options.highlight_filename = nil
 ---@field silence_scp_warning? boolean Undocumented option
 ---@field default_file_explorer boolean
 ---@field columns oil.ColumnSpec[]
+---@field virtual_text_columns boolean
+---@field show_header boolean
+---@field header_format? fun(text: string): string
 ---@field buf_options table<string, any>
 ---@field win_options table<string, any>
 ---@field delete_to_trash boolean
@@ -257,6 +269,9 @@ local M = {}
 ---@class (exact) oil.SetupOpts
 ---@field default_file_explorer? boolean Oil will take over directory buffers (e.g. `vim .` or `:e src/`). Set to false if you still want to use netrw.
 ---@field columns? oil.ColumnSpec[] The columns to display. See :help oil-columns.
+---@field virtual_text_columns? boolean If true, then immutable columns will be rendered with virtual text. When this option is on, the name column can be configured in columns config but it must still be the last mutable column.
+---@field show_header? boolean Show column headers above the file list.
+---@field header_format? fun(text: string): string Optional function to customize header text. Example: header_format = function(text) return text:lower() end
 ---@field buf_options? table<string, any> Buffer-local options to use for oil buffers
 ---@field win_options? table<string, any> Window-local options to use for oil buffers
 ---@field delete_to_trash? boolean Send deleted files to the trash instead of permanently deleting them (:help oil-trash).

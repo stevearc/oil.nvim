@@ -50,7 +50,7 @@ M.get_entry_on_line = function(bufnr, lnum)
   if not line then
     return nil
   end
-  local column_defs = columns.get_supported_columns(adapter)
+  local column_defs = columns.get_editable_columns(adapter)
   local result = parser.parse_line(adapter, line, column_defs)
   if result then
     if result.entry then
@@ -953,6 +953,16 @@ M._get_highlights = function()
       link = "Comment",
       desc = "Virtual text that shows the original path of file in the trash",
     },
+    {
+      name = "OilVirtText",
+      link = "Comment",
+      desc = "Virtual text in an oil buffer",
+    },
+    {
+      name = "OilHeader",
+      link = "Title",
+      desc = "Column headers in an oil buffer",
+    },
   }
 end
 
@@ -1125,6 +1135,7 @@ local _on_key_ns = 0
 M.setup = function(opts)
   local Ringbuf = require("oil.ringbuf")
   local config = require("oil.config")
+  local view = require("oil.view")
 
   config.setup(opts)
   set_colors()
@@ -1321,6 +1332,42 @@ M.setup = function(opts)
     end,
   })
 
+  -- Set up autocommand to update trailing column position on text changes
+  if config.virtual_text_columns then
+    vim.api.nvim_create_autocmd({ "TextChanged", "TextChangedI" }, {
+      desc = "Update oil virtual column positions on text change",
+      group = aug,
+      pattern = "*",
+      callback = function()
+        local util = require("oil.util")
+        local bufnr = vim.api.nvim_get_current_buf()
+        if util.is_oil_bufnr(bufnr) then
+          local view = require("oil.view")
+          view.update_trailing_column_position(bufnr)
+        end
+      end,
+    })
+  end
+
+  -- if config.virtual_text_colums then
+  --   -- HACK: When opening an oil buffer, ensure the cursor starts at the beginning of the line
+  --   -- This is necessary to avoid a visual glitch when using virtual columns in front of the
+  --   -- name column where the inline virtual text would push the buffer text but not the cursor
+  --   vim.api.nvim_create_autocmd("User", {
+  --     pattern = "OilBufReady",
+  --     callback = function(args)
+  --       vim.defer_fn(function()
+  --         -- This will trigger the constrain_cursor autocommand in view.lua, which will ensure
+  --         -- the cursor lands on a valid column
+  --         if config.show_header then
+  --           vim.cmd("normal! j")
+  --         end
+  --         vim.cmd("normal! 0")
+  --       end, 2000)
+  --     end,
+  --   })
+  -- end
+
   vim.api.nvim_create_autocmd({ "BufWinEnter", "WinNew", "WinEnter" }, {
     desc = "Reset bufhidden when entering a preview buffer",
     group = aug,
@@ -1409,6 +1456,13 @@ M.setup = function(opts)
       if config.adapters[scheme] and vim.api.nvim_buf_line_count(params.buf) == 1 then
         M.load_oil_buffer(params.buf)
       end
+    end,
+  })
+
+  local ns = vim.api.nvim_create_namespace("OilVirtualColumns")
+  vim.api.nvim_set_decoration_provider(ns, {
+    on_win = function(_, winid, bufnr, toprow, botrow)
+      view.render_virtual_columns_on_win(ns, winid, bufnr, toprow, botrow)
     end,
   })
 
