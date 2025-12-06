@@ -86,6 +86,20 @@ end
 
 ---@param path string
 ---@return string
+local function normalized_path_seperators(path)
+  local leading_slashes, rem = path:match("^([\\/]*)(.*)$")
+  local normalized_rem = rem:gsub("[\\/]+", M.sep)
+  local normalized_leading = ""
+  if #leading_slashes >= 2 then
+    normalized_leading = M.sep .. M.sep
+  elseif #leading_slashes == 1 then
+    normalized_leading = M.sep
+  end
+  return string.format("%s%s", normalized_leading, normalized_rem)
+end
+
+---@param path string
+---@return string
 M.posix_to_os_path = function(path)
   if M.is_windows then
     if vim.startswith(path, "/") and not vim.startswith(path, "//") then
@@ -105,11 +119,12 @@ end
 ---@return string
 M.os_to_posix_path = function(path)
   if M.is_windows then
-    if M.is_absolute(path) then
-      local drive, rem = path:match("^([^:]+):\\(.*)$")
+    local normalized_path = normalized_path_seperators(path)
+    if M.is_absolute(normalized_path) then
+      local drive, rem = normalized_path:match("^([^:]+):\\(.*)$")
       return string.format("/%s/%s", drive:upper(), rem:gsub("\\", "/"))
     else
-      local newpath = path:gsub("\\", "/")
+      local newpath = normalized_path:gsub("\\", "/")
       return newpath
     end
   else

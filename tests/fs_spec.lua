@@ -30,6 +30,16 @@ a.describe("File system", function()
     assert.equals("/C/a/b/c", fs.os_to_posix_path("C:\\a\\b\\c"))
   end)
 
+  a.it("converts Windows local path with extra backslash path seperators to posix", function()
+    set_env_windows()
+    assert.equals("/C/a/b/c", fs.os_to_posix_path("C:\\\\a\\b\\c"))
+  end)
+
+  a.it("converts Windows local path with forward slashes to posix", function()
+    set_env_windows()
+    assert.equals("/C/a/b/c", fs.os_to_posix_path("C:/a/b/c"))
+  end)
+
   a.it("converts Windows UNC path to posix", function()
     set_env_windows()
     assert.equals("//a/b/c", fs.os_to_posix_path("\\\\a\\b\\c"))
