@@ -1164,10 +1164,12 @@ M.setup = function(opts)
     end
 
     if not float and (args.smods.vertical or args.smods.horizontal or args.smods.split ~= "") then
+      local range = args.count > 0 and { args.count } or nil
+      local cmdargs = { mods = { split = args.smods.split }, range = range }
       if args.smods.vertical then
-        vim.cmd.vsplit({ mods = { split = args.smods.split }, range = { args.count } })
+        vim.cmd.vsplit(cmdargs)
       else
-        vim.cmd.split({ mods = { split = args.smods.split }, range = { args.count } })
+        vim.cmd.split(cmdargs)
       end
     end
 
