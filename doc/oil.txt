@@ -697,6 +697,9 @@ OilFile                                                               *hl-OilFil
 OilFileHidden                                                   *hl-OilFileHidden*
     Hidden normal files in an oil buffer
 
+OilExecutable                                                   *hl-OilExecutable*
+    Executable files in an oil buffer
+
 OilCreate                                                           *hl-OilCreate*
     Create action in the oil preview window
 
