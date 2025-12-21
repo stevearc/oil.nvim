@@ -257,24 +257,13 @@ local function get_first_mutable_column_col(adapter, ranges)
   return min_col
 end
 
----Force cursor to be after hidden/immutable columns
----@param bufnr integer
----@param mode false|"name"|"editable"
-local function constrain_cursor(bufnr, mode)
-  if not mode then
-    return
-  end
-  if bufnr ~= vim.api.nvim_get_current_buf() then
-    return
-  end
+--- @param bufnr integer
+--- @param adapter oil.Adapter
+--- @param mode false|"name"|"editable"
+--- @param cur integer[]
+--- @return integer[] | nil
+local function calc_constrained_cursor_pos(bufnr, adapter, mode, cur)
   local parser = require("oil.mutator.parser")
-
-  local adapter = util.get_adapter(bufnr, true)
-  if not adapter then
-    return
-  end
-
-  local cur = vim.api.nvim_win_get_cursor(0)
   local line = vim.api.nvim_buf_get_lines(bufnr, cur[1] - 1, cur[1], true)[1]
   local column_defs = columns.get_supported_columns(adapter)
   local result = parser.parse_line(adapter, line, column_defs)
@@ -288,7 +277,45 @@ local function constrain_cursor(bufnr, mode)
       error(string.format('Unexpected value "%s" for option constrain_cursor', mode))
     end
     if cur[2] < min_col then
-      vim.api.nvim_win_set_cursor(0, { cur[1], min_col })
+      return { cur[1], min_col }
+    end
+  end
+end
+
+---Force cursor to be after hidden/immutable columns
+---@param bufnr integer
+---@param mode false|"name"|"editable"
+local function constrain_cursor(bufnr, mode)
+  if not mode then
+    return
+  end
+  if bufnr ~= vim.api.nvim_get_current_buf() then
+    return
+  end
+
+  local adapter = util.get_adapter(bufnr, true)
+  if not adapter then
+    return
+  end
+
+  local mc = package.loaded["multicursor-nvim"]
+  if mc then
+    mc.onSafeState(function()
+      mc.action(function(ctx)
+        ctx:forEachCursor(function(cursor)
+          local new_cur =
+            calc_constrained_cursor_pos(bufnr, adapter, mode, { cursor:line(), cursor:col() - 1 })
+          if new_cur then
+            cursor:setPos({ new_cur[1], new_cur[2] + 1 })
+          end
+        end)
+      end)
+    end, { once = true })
+  else
+    local cur = vim.api.nvim_win_get_cursor(0)
+    local new_cur = calc_constrained_cursor_pos(bufnr, adapter, mode, cur)
+    if new_cur then
+      vim.api.nvim_win_set_cursor(0, new_cur)
     end
   end
 end
