@@ -282,7 +282,6 @@ local function calc_constrained_cursor_pos(bufnr, adapter, mode, cur)
   end
 end
 
-
 ---Force cursor to be after hidden/immutable columns
 ---@param bufnr integer
 ---@param mode false|"name"|"editable"
@@ -304,10 +303,10 @@ local function constrain_cursor(bufnr, mode)
     mc.onSafeState(function()
       mc.action(function(ctx)
         ctx:forEachCursor(function(cursor)
-          local new_cur = calc_constrained_cursor_pos(
-            bufnr, adapter, mode, { cursor:line(), cursor:col() - 1 })
+          local new_cur =
+            calc_constrained_cursor_pos(bufnr, adapter, mode, { cursor:line(), cursor:col() - 1 })
           if new_cur then
-            cursor:setPos({new_cur[1], new_cur[2] + 1})
+            cursor:setPos({ new_cur[1], new_cur[2] + 1 })
           end
         end)
       end)
@@ -319,7 +318,6 @@ local function constrain_cursor(bufnr, mode)
       vim.api.nvim_win_set_cursor(0, new_cur)
     end
   end
-
 end
 
 ---Redraw original path virtual text for trash buffer
