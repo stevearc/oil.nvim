@@ -95,7 +95,7 @@ M.parse_line = function(adapter, line, column_defs)
     local name = util.split_config(def)
     local range = { start }
     local start_len = string.len(rem)
-    value, rem = columns.parse_col(adapter, rem, def)
+    value, rem = columns.parse_col(adapter, assert(rem), def)
     if not rem then
       return nil, string.format("Parsing %s failed", name)
     end
