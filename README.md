@@ -372,6 +372,7 @@ Note that older versions of Neovim don't support numbers in the url, so for Neov
 - [Toggle file detail view](doc/recipes.md#toggle-file-detail-view)
 - [Show CWD in the winbar](doc/recipes.md#show-cwd-in-the-winbar)
 - [Hide gitignored files and show git tracked hidden files](doc/recipes.md#hide-gitignored-files-and-show-git-tracked-hidden-files)
+- [Open Oil on startup when no file is opened](doc/recipes.md#open-oil-on-startup-when-no-file-is-opened)
 
 ## Third-party extensions
 
