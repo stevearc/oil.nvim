@@ -7,6 +7,7 @@ Have a cool recipe to share? Open a pull request and add it to this doc!
 - [Toggle file detail view](#toggle-file-detail-view)
 - [Show CWD in the winbar](#show-cwd-in-the-winbar)
 - [Hide gitignored files and show git tracked hidden files](#hide-gitignored-files-and-show-git-tracked-hidden-files)
+- [Add custom column for file extension](#add-custom-column-for-file-extension)
 
 <!-- /TOC -->
 
@@ -122,6 +123,86 @@ require("oil").setup({
         return git_status[dir].ignored[name]
       end
     end,
+  },
+})
+```
+
+## Add custom column for file extension
+
+```lua
+local oil_cfg = require "oil.config"
+local oil_constant = require "oil.constants"
+local oil_column = require "oil.columns"
+
+local FIELD_TYPE = oil_constant.FIELD_TYPE
+local FIELD_NAME = oil_constant.FIELD_NAME
+
+-- this is a private function pulled from `oil.columns`
+local function adjust_number(int)
+  return string.format("%03d%s", #int, int)
+end
+
+-- helper function to get file extension
+local function format(output)
+  return vim.fn.fnamemodify(output, ":e")
+end
+
+oil_column.register("extension", {
+  render = function(entry, _)
+    local field_type = entry[FIELD_TYPE]
+    local name = entry[FIELD_NAME]
+
+    if field_type == "file" then
+      if name then
+        local extension = format(name)
+
+        -- if the extension contains a space then it's not really an extension
+        if not extension:match "%s" then
+          return extension
+        end
+      end
+    end
+  end,
+  parse = function(line, _)
+    return line:match "^(%S+)%s+(.*)$"
+  end,
+  -- this function is similar to the one used by the default `name` column
+  create_sort_value_factory = function(num_entries)
+    if
+      oil_cfg.view_options.natural_order == false
+      or (oil_cfg.view_options.natural_order == "fast" and num_entries > 5000)
+    then
+      return function(entry)
+        return format(entry[FIELD_NAME]:lower())
+      end
+    else
+      local memo = {}
+
+      return function(entry)
+        if memo[entry] == nil and entry[FIELD_TYPE] == "file" then
+          local name = entry[FIELD_NAME]:gsub("0*(%d+)", adjust_number)
+
+          memo[entry] = format(name:lower())
+        end
+
+        return memo[entry]
+      end
+    end
+  end,
+})
+
+require("oil").setup({
+  columns = {
+    "size",
+    "extension",
+    "icon",
+  },
+  view_options = {
+    sort = {
+      { "type", "asc" },
+      { "extension", "asc" },
+      { "name", "asc" },
+    },
   },
 })
 ```
