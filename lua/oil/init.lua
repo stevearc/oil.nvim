@@ -543,6 +543,8 @@ M.open_preview = function(opts, callback)
   end
 
   util.get_edit_path(bufnr, entry, function(normalized_url)
+    local mc = package.loaded["multicursor-nvim"]
+    local has_multicursors = mc and mc.hasCursors()
     local is_visual_mode = util.is_visual_mode()
     if preview_win then
       if is_visual_mode then
@@ -601,7 +603,10 @@ M.open_preview = function(opts, callback)
     end
     vim.w.oil_entry_id = entry.id
     vim.w.oil_source_win = prev_win
-    if is_visual_mode then
+    if has_multicursors then
+      hack_set_win(prev_win)
+      mc.restoreCursors()
+    elseif is_visual_mode then
       hack_set_win(prev_win)
       -- Restore the visual selection
       vim.cmd.normal({ args = { "gv" }, bang = true })
