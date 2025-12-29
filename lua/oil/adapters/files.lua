@@ -277,7 +277,7 @@ M.normalize_url = function(url, callback)
           local norm_path = util.addslash(fs.os_to_posix_path(realpath))
           callback(scheme .. norm_path)
         else
-          callback(realpath)
+          callback(vim.fn.fnamemodify(realpath, ":."))
         end
       end)
     )
