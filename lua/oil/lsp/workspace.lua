@@ -76,7 +76,7 @@ local function get_matching_paths(client, filters, paths)
       ---@type string|vim.lpeg.Pattern
       local glob_to_match = glob
       if vim.glob and vim.glob.to_lpeg then
-        glob = glob:gsub("{(.*)}", function(s)
+        glob = glob:gsub("{(.-)}", function(s)
           local patterns = vim.split(s, ",")
           local filtered = {}
           for _, pattern in ipairs(patterns) do
