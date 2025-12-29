@@ -79,9 +79,9 @@ local function get_matching_paths(client, filters, paths)
         glob = glob:gsub("{(.-)}", function(s)
           local patterns = vim.split(s, ",")
           local filtered = {}
-          for _, pattern in ipairs(patterns) do
-            if pattern ~= "" then
-              table.insert(filtered, pattern)
+          for _, pat in ipairs(patterns) do
+            if pat ~= "" then
+              table.insert(filtered, pat)
             end
           end
           if #filtered == 0 then
