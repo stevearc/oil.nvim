@@ -6,7 +6,6 @@ local fs = require("oil.fs")
 local git = require("oil.git")
 local log = require("oil.log")
 local permissions = require("oil.adapters.files.permissions")
-local trash = require("oil.adapters.files.trash")
 local util = require("oil.util")
 local uv = vim.uv or vim.loop
 
@@ -620,15 +619,7 @@ M.perform_action = function(action, cb)
     end
 
     if config.delete_to_trash then
-      if config.trash_command then
-        vim.notify_once(
-          "Oil now has native support for trash. Remove the `trash_command` from your config to try it out!",
-          vim.log.levels.WARN
-        )
-        trash.recursive_delete(path, cb)
-      else
-        require("oil.adapters.trash").delete_to_trash(path, cb)
-      end
+      require("oil.adapters.trash").delete_to_trash(path, cb)
     else
       fs.recursive_delete(action.entry_type, path, cb)
     end

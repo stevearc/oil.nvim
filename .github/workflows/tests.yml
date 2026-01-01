@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - stevearc-*
   pull_request:
     branches:
       - master
