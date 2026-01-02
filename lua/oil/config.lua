@@ -105,6 +105,10 @@ local default_config = {
       return nil
     end,
   },
+  -- Set the default mode to create files
+  new_file_mode = 644,
+  -- Set the default mode to create directories
+  new_dir_mode = 755,
   -- Extra arguments to pass to SCP when moving/copying files over SSH
   extra_scp_args = {},
   -- Extra arguments to pass to aws s3 when creating/deleting/moving/copying files using aws s3
@@ -239,6 +243,8 @@ default_config.view_options.highlight_filename = nil
 ---@field keymaps table<string, any>
 ---@field use_default_keymaps boolean
 ---@field view_options oil.ViewOptions
+---@field new_file_mode integer
+---@field new_dir_mode integer
 ---@field extra_scp_args string[]
 ---@field extra_s3_args string[]
 ---@field git oil.GitOptions
@@ -268,6 +274,8 @@ local M = {}
 ---@field keymaps? table<string, any>
 ---@field use_default_keymaps? boolean Set to false to disable all of the above keymaps
 ---@field view_options? oil.SetupViewOptions Configure which files are shown and how they are shown.
+---@field new_file_mode? integer Set the default mode to create files
+---@field new_dir_mode? integer Set the default mode to create directories
 ---@field extra_scp_args? string[] Extra arguments to pass to SCP when moving/copying files over SSH
 ---@field extra_s3_args? string[] Extra arguments to pass to aws s3 when moving/copying files using aws s3
 ---@field git? oil.SetupGitOptions EXPERIMENTAL support for performing file operations with git
@@ -428,6 +436,9 @@ M.setup = function(opts)
   if opts.preview and not opts.confirmation then
     new_conf.confirmation = vim.tbl_deep_extend("keep", opts.preview, default_config.confirmation)
   end
+
+  new_conf.new_file_mode = tonumber(tostring(new_conf.new_file_mode), 8)
+  new_conf.new_dir_mode = tonumber(tostring(new_conf.new_dir_mode), 8)
   -- Backwards compatibility. We renamed the 'preview' config to 'preview_win'
   if opts.preview and opts.preview.update_on_cursor_moved ~= nil then
     new_conf.preview_win.update_on_cursor_moved = opts.preview.update_on_cursor_moved
