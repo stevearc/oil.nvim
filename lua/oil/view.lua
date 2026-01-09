@@ -668,8 +668,11 @@ local function render_buffer(bufnr, opts)
   local column_defs = columns.get_supported_columns(scheme)
   local line_table = {}
   local col_width = {}
-  for i in ipairs(column_defs) do
+  local col_align = {}
+  for i, col_def in ipairs(column_defs) do
     col_width[i + 1] = 1
+    local _, conf = util.split_config(col_def)
+    col_align[i + 1] = conf and conf.align or "left"
   end
 
   if M.should_display("..", bufnr) then
@@ -692,7 +695,7 @@ local function render_buffer(bufnr, opts)
     end
   end
 
-  local lines, highlights = util.render_table(line_table, col_width)
+  local lines, highlights = util.render_table(line_table, col_width, col_align)
 
   vim.bo[bufnr].modifiable = true
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, true, lines)

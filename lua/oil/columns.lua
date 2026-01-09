@@ -97,6 +97,8 @@ end
 ---@return nil|string
 M.parse_col = function(adapter, line, col_def)
   local name, conf = util.split_config(col_def)
+  local leading_ws = line:match("^(%s*)")
+  line = line:sub(#leading_ws + 1)
   -- If rendering failed, there will just be a "-"
   local empty_col, rem = line:match("^(-%s+)(.*)$")
   if empty_col then
