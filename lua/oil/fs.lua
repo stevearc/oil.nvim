@@ -218,7 +218,7 @@ M.recursive_delete = function(entry_type, path, cb)
           local waiting = #entries
           local complete
           complete = function(err2)
-            if err then
+            if err2 then
               complete = function() end
               return inner_cb(err2)
             end
@@ -320,7 +320,7 @@ M.recursive_copy = function(entry_type, src_path, dest_path, cb)
               local waiting = #entries
               local complete
               complete = function(err2)
-                if err then
+                if err2 then
                   complete = function() end
                   return inner_cb(err2)
                 end
