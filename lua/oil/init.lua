@@ -466,10 +466,23 @@ M.open_preview = function(opts, callback)
     opts.vertical = true
   end
   if not opts.split then
+    local preview_split = config.preview_win.split
     if opts.horizontal then
-      opts.split = vim.o.splitbelow and "belowright" or "aboveleft"
+      if preview_split == "below" then
+        opts.split = "belowright"
+      elseif preview_split == "above" then
+        opts.split = "aboveleft"
+      else
+        opts.split = vim.o.splitbelow and "belowright" or "aboveleft"
+      end
     else
-      opts.split = vim.o.splitright and "belowright" or "aboveleft"
+      if preview_split == "right" then
+        opts.split = "belowright"
+      elseif preview_split == "left" then
+        opts.split = "aboveleft"
+      else
+        opts.split = vim.o.splitright and "belowright" or "aboveleft"
+      end
     end
   end
 

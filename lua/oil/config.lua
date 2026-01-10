@@ -155,6 +155,8 @@ local default_config = {
     end,
     -- Window-local options to use for preview window buffers
     win_options = {},
+    -- Split direction for preview window in regular (non-floating) buffers: "auto", "left", "right", "above", "below"
+    split = "auto",
   },
   -- Configuration for the floating action confirmation window
   confirmation = {
@@ -356,6 +358,7 @@ local M = {}
 ---@field preview_method oil.PreviewMethod
 ---@field disable_preview fun(filename: string): boolean
 ---@field win_options table<string, any>
+---@field split "auto"|"left"|"right"|"above"|"below"
 
 ---@class (exact) oil.ConfirmationWindowConfig : oil.WindowConfig
 
@@ -364,6 +367,7 @@ local M = {}
 ---@field disable_preview? fun(filename: string): boolean A function that returns true to disable preview on a file e.g. to avoid lag
 ---@field preview_method? oil.PreviewMethod How to open the preview window
 ---@field win_options? table<string, any> Window-local options to use for preview window buffers
+---@field split? "auto"|"left"|"right"|"above"|"below" Split direction for preview window in regular (non-floating) buffers
 
 ---@class (exact) oil.SetupConfirmationWindowConfig : oil.SetupWindowConfig
 
