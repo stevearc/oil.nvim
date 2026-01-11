@@ -142,7 +142,7 @@ M.preview_scroll_left = {
     local winid = util.get_preview_win()
     if winid then
       vim.api.nvim_win_call(winid, function()
-        vim.cmd.normal({ "zH", bang = true, })
+        vim.cmd.normal({ "zH", bang = true })
       end)
     end
   end,
@@ -154,7 +154,7 @@ M.preview_scroll_right = {
     local winid = util.get_preview_win()
     if winid then
       vim.api.nvim_win_call(winid, function()
-        vim.cmd.normal({ "zL", bang = true, })
+        vim.cmd.normal({ "zL", bang = true })
       end)
     end
   end,
