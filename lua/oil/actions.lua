@@ -136,6 +136,30 @@ M.preview_scroll_up = {
   end,
 }
 
+M.preview_scroll_left = {
+  desc = "Scroll left in the preview window",
+  callback = function()
+    local winid = util.get_preview_win()
+    if winid then
+      vim.api.nvim_win_call(winid, function()
+        vim.cmd.normal({ "zH", bang = true })
+      end)
+    end
+  end,
+}
+
+M.preview_scroll_right = {
+  desc = "Scroll right in the preview window",
+  callback = function()
+    local winid = util.get_preview_win()
+    if winid then
+      vim.api.nvim_win_call(winid, function()
+        vim.cmd.normal({ "zL", bang = true })
+      end)
+    end
+  end,
+}
+
 M.parent = {
   desc = "Navigate to the parent path",
   callback = oil.open,
