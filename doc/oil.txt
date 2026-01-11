@@ -593,14 +593,14 @@ preview                                                          *actions.previe
 preview_scroll_down                                  *actions.preview_scroll_down*
     Scroll down in the preview window
 
-preview_scroll_up                                      *actions.preview_scroll_up*
-    Scroll up in the preview window
-
 preview_scroll_left                                  *actions.preview_scroll_left*
     Scroll left in the preview window
 
 preview_scroll_right                                *actions.preview_scroll_right*
     Scroll right in the preview window
+
+preview_scroll_up                                      *actions.preview_scroll_up*
+    Scroll up in the preview window
 
 refresh                                                          *actions.refresh*
     Refresh current directory list
