@@ -93,22 +93,6 @@ end
 ---@param text string
 ---@param length nil|integer
 ---@return string
-M.rpad = function(text, length)
-  if not length then
-    return text
-  end
-  local textlen = vim.api.nvim_strwidth(text)
-  local delta = length - textlen
-  if delta > 0 then
-    return text .. string.rep(" ", delta)
-  else
-    return text
-  end
-end
-
----@param text string
----@param length nil|integer
----@return string
 M.lpad = function(text, length)
   if not length then
     return text
