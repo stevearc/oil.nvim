@@ -346,12 +346,11 @@ M.render_table = function(lines, col_width, col_align)
         text = chunk
       end
 
-      local text_len = text:len()
+      local unpadded_len = text:len()
       local padding
       text, padding = M.pad_align(text, col_width[i], col_align[i] or "left")
 
       table.insert(pieces, text)
-      local col_end = col + text:len() + 1
       if hl then
         if type(hl) == "table" then
           -- hl has the form { [1]: hl_name, [2]: col_start, [3]: col_end }[]
@@ -366,10 +365,10 @@ M.render_table = function(lines, col_width, col_align)
             })
           end
         else
-          table.insert(highlights, { hl, #str_lines, col + padding, col + padding + text_len })
+          table.insert(highlights, { hl, #str_lines, col + padding, col + padding + unpadded_len })
         end
       end
-      col = col_end
+      col = col + text:len() + 1
     end
     table.insert(str_lines, table.concat(pieces, " "))
   end
