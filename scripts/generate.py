@@ -110,11 +110,16 @@ class ColumnDef:
     params: List["LuaParam"] = field(default_factory=list)
 
 
-HL = [
+UNIVERSAL = [
     LuaParam(
         "highlight",
         "string|fun(value: string): string",
         "Highlight group, or function that returns a highlight group",
+    ),
+    LuaParam(
+        "align",
+        '"left"|"center"|"right"',
+        "Text alignment within the column",
     )
 ]
 TIME = [
@@ -127,7 +132,7 @@ COL_DEFS = [
         False,
         True,
         "The type of the entry (file, directory, link, etc)",
-        HL
+        UNIVERSAL
         + [LuaParam("icons", "table<string, string>", "Mapping of entry type to icon")],
     ),
     ColumnDef(
@@ -136,7 +141,7 @@ COL_DEFS = [
         False,
         False,
         "An icon for the entry's type (requires nvim-web-devicons)",
-        HL
+        UNIVERSAL
         + [
             LuaParam(
                 "default_file",
@@ -151,23 +156,23 @@ COL_DEFS = [
             ),
         ],
     ),
-    ColumnDef("size", "files, ssh", False, True, "The size of the file", HL + []),
+    ColumnDef("size", "files, ssh", False, True, "The size of the file", UNIVERSAL + []),
     ColumnDef(
         "permissions",
         "files, ssh",
         True,
         False,
         "Access permissions of the file",
-        HL + [],
+        UNIVERSAL + [],
     ),
     ColumnDef(
-        "ctime", "files", False, True, "Change timestamp of the file", HL + TIME + []
+        "ctime", "files", False, True, "Change timestamp of the file", UNIVERSAL + TIME + []
     ),
     ColumnDef(
-        "mtime", "files", False, True, "Last modified time of the file", HL + TIME + []
+        "mtime", "files", False, True, "Last modified time of the file", UNIVERSAL + TIME + []
     ),
     ColumnDef(
-        "atime", "files", False, True, "Last access time of the file", HL + TIME + []
+        "atime", "files", False, True, "Last access time of the file", UNIVERSAL + TIME + []
     ),
     ColumnDef(
         "birthtime",
@@ -175,7 +180,7 @@ COL_DEFS = [
         False,
         True,
         "The time the file was created",
-        HL + TIME + [],
+        UNIVERSAL + TIME + [],
     ),
 ]
 

@@ -414,8 +414,8 @@ type                                                                 *column-typ
     Parameters:
       {highlight} `string|fun(value: string): string` Highlight group, or
                   function that returns a highlight group
+      {align}     `"left"|"center"|"right"` Text alignment within the column
       {icons}     `table<string, string>` Mapping of entry type to icon
-      {align}     `"left"|"center"|"right"` Text alignment within the column.
 
 icon                                                                 *column-icon*
     Adapters: *
@@ -424,12 +424,12 @@ icon                                                                 *column-ico
     Parameters:
       {highlight}    `string|fun(value: string): string` Highlight group, or
                      function that returns a highlight group
+      {align}        `"left"|"center"|"right"` Text alignment within the column
       {default_file} `string` Fallback icon for files when nvim-web-devicons
                      returns nil
       {directory}    `string` Icon for directories
       {add_padding}  `boolean` Set to false to remove the extra whitespace after
                      the icon
-      {align}     `"left"|"center"|"right"` Text alignment within the column.
 
 size                                                                 *column-size*
     Adapters: files, ssh
@@ -439,7 +439,7 @@ size                                                                 *column-siz
     Parameters:
       {highlight} `string|fun(value: string): string` Highlight group, or
                   function that returns a highlight group
-      {align}     `"left"|"center"|"right"` Text alignment within the column.
+      {align}     `"left"|"center"|"right"` Text alignment within the column
 
 permissions                                                   *column-permissions*
     Adapters: files, ssh
@@ -449,7 +449,7 @@ permissions                                                   *column-permission
     Parameters:
       {highlight} `string|fun(value: string): string` Highlight group, or
                   function that returns a highlight group
-      {align}     `"left"|"center"|"right"` Text alignment within the column.
+      {align}     `"left"|"center"|"right"` Text alignment within the column
 
 ctime                                                               *column-ctime*
     Adapters: files
@@ -459,8 +459,8 @@ ctime                                                               *column-ctim
     Parameters:
       {highlight} `string|fun(value: string): string` Highlight group, or
                   function that returns a highlight group
+      {align}     `"left"|"center"|"right"` Text alignment within the column
       {format}    `string` Format string (see :help strftime)
-      {align}     `"left"|"center"|"right"` Text alignment within the column.
 
 mtime                                                               *column-mtime*
     Adapters: files
@@ -470,8 +470,8 @@ mtime                                                               *column-mtim
     Parameters:
       {highlight} `string|fun(value: string): string` Highlight group, or
                   function that returns a highlight group
+      {align}     `"left"|"center"|"right"` Text alignment within the column
       {format}    `string` Format string (see :help strftime)
-      {align}     `"left"|"center"|"right"` Text alignment within the column.
 
 atime                                                               *column-atime*
     Adapters: files
@@ -481,8 +481,8 @@ atime                                                               *column-atim
     Parameters:
       {highlight} `string|fun(value: string): string` Highlight group, or
                   function that returns a highlight group
+      {align}     `"left"|"center"|"right"` Text alignment within the column
       {format}    `string` Format string (see :help strftime)
-      {align}     `"left"|"center"|"right"` Text alignment within the column.
 
 birthtime                                                       *column-birthtime*
     Adapters: files
@@ -492,8 +492,8 @@ birthtime                                                       *column-birthtim
     Parameters:
       {highlight} `string|fun(value: string): string` Highlight group, or
                   function that returns a highlight group
+      {align}     `"left"|"center"|"right"` Text alignment within the column
       {format}    `string` Format string (see :help strftime)
-      {align}     `"left"|"center"|"right"` Text alignment within the column.
 
 --------------------------------------------------------------------------------
 ACTIONS                                                              *oil-actions*
