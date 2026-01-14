@@ -156,7 +156,7 @@ COL_DEFS = [
             ),
         ],
     ),
-    ColumnDef("size", "files, ssh", False, True, "The size of the file", UNIVERSAL + []),
+    ColumnDef("size", "files, ssh, s3", False, True, "The size of the file", UNIVERSAL + []),
     ColumnDef(
         "permissions",
         "files, ssh",
@@ -176,7 +176,7 @@ COL_DEFS = [
     ),
     ColumnDef(
         "birthtime",
-        "files",
+        "files, s3",
         False,
         True,
         "The time the file was created",
