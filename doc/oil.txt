@@ -414,6 +414,7 @@ type                                                                 *column-typ
     Parameters:
       {highlight} `string|fun(value: string): string` Highlight group, or
                   function that returns a highlight group
+      {align}     `"left"|"center"|"right"` Text alignment within the column
       {icons}     `table<string, string>` Mapping of entry type to icon
 
 icon                                                                 *column-icon*
@@ -423,6 +424,7 @@ icon                                                                 *column-ico
     Parameters:
       {highlight}    `string|fun(value: string): string` Highlight group, or
                      function that returns a highlight group
+      {align}        `"left"|"center"|"right"` Text alignment within the column
       {default_file} `string` Fallback icon for files when nvim-web-devicons
                      returns nil
       {directory}    `string` Icon for directories
@@ -437,6 +439,7 @@ size                                                                 *column-siz
     Parameters:
       {highlight} `string|fun(value: string): string` Highlight group, or
                   function that returns a highlight group
+      {align}     `"left"|"center"|"right"` Text alignment within the column
 
 permissions                                                   *column-permissions*
     Adapters: files, ssh
@@ -446,6 +449,7 @@ permissions                                                   *column-permission
     Parameters:
       {highlight} `string|fun(value: string): string` Highlight group, or
                   function that returns a highlight group
+      {align}     `"left"|"center"|"right"` Text alignment within the column
 
 ctime                                                               *column-ctime*
     Adapters: files
@@ -455,6 +459,7 @@ ctime                                                               *column-ctim
     Parameters:
       {highlight} `string|fun(value: string): string` Highlight group, or
                   function that returns a highlight group
+      {align}     `"left"|"center"|"right"` Text alignment within the column
       {format}    `string` Format string (see :help strftime)
 
 mtime                                                               *column-mtime*
@@ -465,6 +470,7 @@ mtime                                                               *column-mtim
     Parameters:
       {highlight} `string|fun(value: string): string` Highlight group, or
                   function that returns a highlight group
+      {align}     `"left"|"center"|"right"` Text alignment within the column
       {format}    `string` Format string (see :help strftime)
 
 atime                                                               *column-atime*
@@ -475,6 +481,7 @@ atime                                                               *column-atim
     Parameters:
       {highlight} `string|fun(value: string): string` Highlight group, or
                   function that returns a highlight group
+      {align}     `"left"|"center"|"right"` Text alignment within the column
       {format}    `string` Format string (see :help strftime)
 
 birthtime                                                       *column-birthtime*
@@ -485,6 +492,7 @@ birthtime                                                       *column-birthtim
     Parameters:
       {highlight} `string|fun(value: string): string` Highlight group, or
                   function that returns a highlight group
+      {align}     `"left"|"center"|"right"` Text alignment within the column
       {format}    `string` Format string (see :help strftime)
 
 --------------------------------------------------------------------------------

@@ -91,34 +91,28 @@ M.get_adapter = function(bufnr, silent)
 end
 
 ---@param text string
----@param length nil|integer
----@return string
-M.rpad = function(text, length)
-  if not length then
-    return text
+---@param width integer|nil
+---@param align oil.ColumnAlign
+---@return string padded_text
+---@return integer left_padding
+M.pad_align = function(text, width, align)
+  if not width then
+    return text, 0
   end
-  local textlen = vim.api.nvim_strwidth(text)
-  local delta = length - textlen
-  if delta > 0 then
-    return text .. string.rep(" ", delta)
-  else
-    return text
+  local text_width = vim.api.nvim_strwidth(text)
+  local total_pad = width - text_width
+  if total_pad <= 0 then
+    return text, 0
   end
-end
 
----@param text string
----@param length nil|integer
----@return string
-M.lpad = function(text, length)
-  if not length then
-    return text
-  end
-  local textlen = vim.api.nvim_strwidth(text)
-  local delta = length - textlen
-  if delta > 0 then
-    return string.rep(" ", delta) .. text
+  if align == "right" then
+    return string.rep(" ", total_pad) .. text, total_pad
+  elseif align == "center" then
+    local left_pad = math.floor(total_pad / 2)
+    local right_pad = total_pad - left_pad
+    return string.rep(" ", left_pad) .. text .. string.rep(" ", right_pad), left_pad
   else
-    return text
+    return text .. string.rep(" ", total_pad), 0
   end
 end
 
@@ -314,11 +308,15 @@ M.split_config = function(name_or_config)
   end
 end
 
+---@alias oil.ColumnAlign "left"|"center"|"right"
+
 ---@param lines oil.TextChunk[][]
 ---@param col_width integer[]
+---@param col_align? oil.ColumnAlign[]
 ---@return string[]
 ---@return any[][] List of highlights {group, lnum, col_start, col_end}
-M.render_table = function(lines, col_width)
+M.render_table = function(lines, col_width, col_align)
+  col_align = col_align or {}
   local str_lines = {}
   local highlights = {}
   for _, cols in ipairs(lines) do
@@ -332,9 +330,12 @@ M.render_table = function(lines, col_width)
       else
         text = chunk
       end
-      text = M.rpad(text, col_width[i])
+
+      local unpadded_len = text:len()
+      local padding
+      text, padding = M.pad_align(text, col_width[i], col_align[i] or "left")
+
       table.insert(pieces, text)
-      local col_end = col + text:len() + 1
       if hl then
         if type(hl) == "table" then
           -- hl has the form { [1]: hl_name, [2]: col_start, [3]: col_end }[]
@@ -344,15 +345,15 @@ M.render_table = function(lines, col_width)
             table.insert(highlights, {
               sub_hl[1],
               #str_lines,
-              col + sub_hl[2],
-              col + sub_hl[3],
+              col + padding + sub_hl[2],
+              col + padding + sub_hl[3],
             })
           end
         else
-          table.insert(highlights, { hl, #str_lines, col, col_end })
+          table.insert(highlights, { hl, #str_lines, col + padding, col + padding + unpadded_len })
         end
       end
-      col = col_end
+      col = col + text:len() + 1
     end
     table.insert(str_lines, table.concat(pieces, " "))
   end

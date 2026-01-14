@@ -108,7 +108,7 @@ M.show_help = function(keymaps)
   local highlights = {}
   local max_line = 1
   for _, entry in ipairs(keymap_entries) do
-    local line = string.format(" %s   %s", util.rpad(entry.str, max_lhs), entry.desc)
+    local line = string.format(" %s   %s", util.pad_align(entry.str, max_lhs, "left"), entry.desc)
     max_line = math.max(max_line, vim.api.nvim_strwidth(line))
     table.insert(lines, line)
     local start = 1
