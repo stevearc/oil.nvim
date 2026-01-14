@@ -91,22 +91,6 @@ M.get_adapter = function(bufnr, silent)
 end
 
 ---@param text string
----@param length nil|integer
----@return string
-M.lpad = function(text, length)
-  if not length then
-    return text
-  end
-  local textlen = vim.api.nvim_strwidth(text)
-  local delta = length - textlen
-  if delta > 0 then
-    return string.rep(" ", delta) .. text
-  else
-    return text
-  end
-end
-
----@param text string
 ---@param width integer|nil
 ---@param align oil.ColumnAlign
 ---@return string padded_text
@@ -325,6 +309,7 @@ M.split_config = function(name_or_config)
 end
 
 ---@alias oil.ColumnAlign "left"|"center"|"right"
+
 ---@param lines oil.TextChunk[][]
 ---@param col_width integer[]
 ---@param col_align? oil.ColumnAlign[]

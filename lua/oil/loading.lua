@@ -74,7 +74,8 @@ M.set_loading = function(bufnr, is_loading)
             M.set_loading(bufnr, false)
             return
           end
-          local lines = { util.lpad("Loading", math.floor(width / 2) - 3), bar_iter() }
+          local lines =
+            { util.pad_align("Loading", math.floor(width / 2) - 3, "right"), bar_iter() }
           util.render_text(bufnr, lines)
         end)
       )
