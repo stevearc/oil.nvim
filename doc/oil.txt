@@ -321,12 +321,20 @@ open_float({dir}, {opts}, {cb})                                   *oil.open_floa
                            plit modifier
       {cb}   `nil|fun()` Called after the oil buffer is ready
 
-toggle_float({dir})                                             *oil.toggle_float*
+toggle_float({dir}, {opts}, {cb})                               *oil.toggle_float*
     Open oil browser in a floating window, or close it if open
 
     Parameters:
-      {dir} `nil|string` When nil, open the parent of the current buffer, or the
-            cwd if current buffer is not a file
+      {dir}  `nil|string` When nil, open the parent of the current buffer, or
+             the cwd if current buffer is not a file
+      {opts} `nil|oil.OpenOpts`
+          {preview} `nil|oil.OpenPreviewOpts` When present, open the preview
+                    window after opening oil
+              {vertical}   `nil|boolean` Open the buffer in a vertical split
+              {horizontal} `nil|boolean` Open the buffer in a horizontal split
+              {split}      `nil|"aboveleft"|"belowright"|"topleft"|"botright"` S
+                           plit modifier
+      {cb}   `nil|fun()` Called after the oil buffer is ready
 
 open({dir}, {opts}, {cb})                                               *oil.open*
     Open oil browser for a directory

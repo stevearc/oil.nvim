@@ -394,7 +394,7 @@ These are plugins maintained by other authors that extend the functionality of o
 - [toggle_hidden()](doc/api.md#toggle_hidden)
 - [get_current_dir(bufnr)](doc/api.md#get_current_dirbufnr)
 - [open_float(dir, opts, cb)](doc/api.md#open_floatdir-opts-cb)
-- [toggle_float(dir, opts, cb)](doc/api.md#toggle_floatdir)
+- [toggle_float(dir, opts, cb)](doc/api.md#toggle_floatdir-opts-cb)
 - [open(dir, opts, cb)](doc/api.md#opendir-opts-cb)
 - [close(opts)](doc/api.md#closeopts)
 - [open_preview(opts, callback)](doc/api.md#open_previewopts-callback)

@@ -11,7 +11,7 @@
 - [toggle_hidden()](#toggle_hidden)
 - [get_current_dir(bufnr)](#get_current_dirbufnr)
 - [open_float(dir, opts, cb)](#open_floatdir-opts-cb)
-- [toggle_float(dir, opts, cb)](#toggle_floatdir)
+- [toggle_float(dir, opts, cb)](#toggle_floatdir-opts-cb)
 - [open(dir, opts, cb)](#opendir-opts-cb)
 - [close(opts)](#closeopts)
 - [open_preview(opts, callback)](#open_previewopts-callback)
@@ -110,8 +110,7 @@ Open oil browser in a floating window
 ## toggle_float(dir, opts, cb)
 
 `toggle_float(dir, opts, cb)` \
-Open oil browser in a floating window, or close it if open. Parameters only apply when the floating window is
-opened
+Open oil browser in a floating window, or close it if open
 
 | Param        | Type                                                    | Desc                                                                                        |
 | ------------ | ------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
