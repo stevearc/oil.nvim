@@ -347,6 +347,9 @@ end
 M.toggle_float = function(dir, opts, cb)
   if vim.w.is_oil_win then
     M.close()
+    if cb then
+      cb()
+    end
   else
     M.open_float(dir, opts, cb)
   end
