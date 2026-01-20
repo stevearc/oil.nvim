@@ -154,6 +154,11 @@ COL_DEFS = [
                 "boolean",
                 "Set to false to remove the extra whitespace after the icon",
             ),
+            LuaParam(
+                "use_slow_filetype_detection",
+                "boolean",
+                "Set to true to use the file's first line to detect the filetype.",
+            ),
         ],
     ),
     ColumnDef("size", "files, ssh, s3", False, True, "The size of the file", UNIVERSAL + []),
