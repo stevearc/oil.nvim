@@ -122,6 +122,10 @@ CONFIG                                                                *oil-confi
           return nil
         end,
       },
+      -- Set the default mode to create files
+      new_files_mode = 644,
+      -- Set the default mode to create directories
+      new_dir_mode = 755,
       -- Extra arguments to pass to SCP when moving/copying files over SSH
       extra_scp_args = {},
       -- Extra arguments to pass to aws s3 when creating/deleting/moving/copying files using aws s3
