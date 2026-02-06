@@ -49,6 +49,24 @@ M.touch = function(path, cb)
   end)
 end
 
+---@param path string
+---@param content string
+---@param cb fun(err: nil|string)
+M.write_file = function(path, content, cb)
+  local fd = uv.fs_open(path, "w", 420)
+  if not fd then
+    cb("failed to open file: " .. path)
+    return
+  end
+  local success, write_err = pcall(uv.fs_write, fd, content)
+  uv.fs_close(fd)
+  if not success then
+    cb("failed to write file: " .. tostring(write_err))
+	return
+  end
+  cb(nil)
+end
+
 --- Returns true if candidate is a subpath of root, or if they are the same path.
 ---@param root string
 ---@param candidate string
