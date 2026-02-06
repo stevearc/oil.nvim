@@ -600,6 +600,13 @@ M.perform_action = function(action, cb)
       ---@diagnostic disable-next-line: param-type-mismatch
       uv.fs_symlink(target, path, flags, cb)
     else
+      local hook = config.create_hook
+      if hook then
+        local ok, content = pcall(hook, action)
+        if ok and content then
+          return fs.write_file(path, content, cb)
+        end
+      end
       fs.touch(path, cb)
     end
   elseif action.type == "delete" then
