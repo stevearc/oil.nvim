@@ -1,5 +1,5 @@
 -- Based on the FreeDesktop.org trash specification
--- https://specifications.freedesktop.org/trash-spec/1.0/
+-- https://specifications.freedesktop.org/trash/1.0/
 local cache = require("oil.cache")
 local config = require("oil.config")
 local constants = require("oil.constants")
