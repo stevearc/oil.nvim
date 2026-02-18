@@ -7,6 +7,7 @@ Have a cool recipe to share? Open a pull request and add it to this doc!
 - [Toggle file detail view](#toggle-file-detail-view)
 - [Show CWD in the winbar](#show-cwd-in-the-winbar)
 - [Hide gitignored files and show git tracked hidden files](#hide-gitignored-files-and-show-git-tracked-hidden-files)
+- [Open Telescope file finder in the current oil directory](#open-telescope-file-finder-in-the-current-oil-directory)
 
 <!-- /TOC -->
 
@@ -124,4 +125,45 @@ require("oil").setup({
     end,
   },
 })
+```
+
+## Open Telescope file finder in the current oil directory
+
+When using `get_current_dir()` in a keymap that also opens another plugin's UI (like Telescope), always capture the directory in a local variable **before** the call that changes the buffer context. Passing `get_current_dir()` directly as an argument works because Lua evaluates arguments before calling the function, but any subsequent calls will see the new buffer.
+
+```lua
+require("oil").setup({
+  keymaps = {
+    ["<leader>ff"] = {
+      desc = "Find files in the current directory",
+      callback = function()
+        local dir = require("oil").get_current_dir()
+        if not dir then
+          vim.notify("Could not get oil directory", vim.log.levels.WARN)
+          return
+        end
+        require("telescope.builtin").find_files({ cwd = dir })
+      end,
+    },
+    ["<leader>fg"] = {
+      desc = "Live grep in the current directory",
+      callback = function()
+        local dir = require("oil").get_current_dir()
+        if not dir then
+          vim.notify("Could not get oil directory", vim.log.levels.WARN)
+          return
+        end
+        require("telescope.builtin").live_grep({ cwd = dir })
+      end,
+    },
+  },
+})
+```
+
+If you need the directory after an operation that might change the current buffer, pass the buffer number explicitly:
+
+```lua
+local bufnr = vim.api.nvim_get_current_buf()
+-- ... some operation that changes the current buffer ...
+local dir = require("oil").get_current_dir(bufnr)
 ```
