@@ -438,6 +438,10 @@ icon                                                                 *column-ico
       {directory}    `string` Icon for directories
       {add_padding}  `boolean` Set to false to remove the extra whitespace after
                      the icon
+      {use_slow_filetype_detection} `boolean` Set to true to detect filetypes
+                     by reading the first lines of each file (e.g. shebangs).
+                     This improves icon accuracy for extensionless scripts but
+                     performs synchronous I/O per file per render.
 
 size                                                                 *column-size*
     Adapters: files, ssh, s3
