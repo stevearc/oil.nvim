@@ -1,0 +1,49 @@
+require("plenary.async").tests.add_to_env()
+local oil = require("oil")
+local test_util = require("tests.test_util")
+
+a.describe("close", function()
+  a.before_each(function()
+    test_util.reset_editor()
+  end)
+  a.after_each(function()
+    test_util.reset_editor()
+  end)
+
+  a.it("does not close buffer from visual mode", function()
+    oil.open()
+    test_util.wait_for_autocmd({ "User", pattern = "OilEnter" })
+    assert.equals("oil", vim.bo.filetype)
+    test_util.feedkeys({ "V" }, 10)
+    oil.close()
+    assert.equals("oil", vim.bo.filetype)
+    test_util.feedkeys({ "<Esc>" }, 10)
+  end)
+
+  a.it("does not close buffer from operator-pending mode", function()
+    oil.open()
+    test_util.wait_for_autocmd({ "User", pattern = "OilEnter" })
+    assert.equals("oil", vim.bo.filetype)
+    vim.api.nvim_feedkeys("d", "n", false)
+    a.util.sleep(20)
+    local mode = vim.api.nvim_get_mode().mode
+    if mode:match("^no") then
+      oil.close()
+      assert.equals("oil", vim.bo.filetype)
+    end
+    vim.api.nvim_feedkeys(
+      vim.api.nvim_replace_termcodes("<Esc>", true, true, true),
+      "n",
+      false
+    )
+    a.util.sleep(20)
+  end)
+
+  a.it("closes buffer from normal mode", function()
+    oil.open()
+    test_util.wait_for_autocmd({ "User", pattern = "OilEnter" })
+    assert.equals("oil", vim.bo.filetype)
+    oil.close()
+    assert.not_equals("oil", vim.bo.filetype)
+  end)
+end)

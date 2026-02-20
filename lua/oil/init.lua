@@ -410,6 +410,11 @@ end
 ---@param opts? oil.CloseOpts
 M.close = function(opts)
   opts = opts or {}
+  local mode = vim.api.nvim_get_mode().mode
+  if mode:match("^[vVsS\22\19]") or mode:match("^no") then
+    vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Esc>", true, true, true), "n", false)
+    return
+  end
   -- If we're in a floating oil window, close it and try to restore focus to the original window
   if vim.w.is_oil_win then
     local original_winid = vim.w.oil_original_win
