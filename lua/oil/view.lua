@@ -77,6 +77,18 @@ local function are_any_modified()
   return false
 end
 
+local function is_unix_executable(entry)
+  if entry[FIELD_TYPE] == "directory" then return false end
+  local meta = entry[FIELD_META]
+  if not meta or not meta.stat then return false end
+  if meta.stat.type == "directory" then return false end
+
+  local S_IXUSR = 64
+  local S_IXGRP = 8
+  local S_IXOTH = 1
+  return bit.band(meta.stat.mode, bit.bor(S_IXUSR, S_IXGRP, S_IXOTH)) ~= 0
+end
+
 M.toggle_hidden = function()
   local any_modified = are_any_modified()
   if any_modified then
@@ -821,6 +833,22 @@ M.format_entry_cols = function(entry, column_defs, col_width, adapter, is_hidden
     end
   end
 
+  local highlight_as_executable = false
+  if entry_type ~= "directory" then
+    local lower = name:lower()
+    if
+      lower:match("%.exe$")
+      or lower:match("%.bat$")
+      or lower:match("%.cmd$")
+      or lower:match("%.com$")
+      or lower:match("%.ps1$")
+    then
+      highlight_as_executable = true
+    elseif is_unix_executable(entry) then
+      highlight_as_executable = true
+    end
+  end
+
   if entry_type == "directory" then
     table.insert(cols, { name .. "/", "OilDir" .. hl_suffix })
   elseif entry_type == "socket" then
@@ -831,7 +859,11 @@ M.format_entry_cols = function(entry, column_defs, col_width, adapter, is_hidden
     end
     local is_orphan = not (meta and meta.link_stat)
     if not link_name_hl then
-      link_name_hl = (is_orphan and "OilOrphanLink" or "OilLink") .. hl_suffix
+      if highlight_as_executable then
+        link_name_hl = "OilExecutable" .. hl_suffix
+      else
+        link_name_hl = (is_orphan and "OilOrphanLink" or "OilLink") .. hl_suffix
+      end
     end
     table.insert(cols, { link_name, link_name_hl })
 
@@ -841,6 +873,8 @@ M.format_entry_cols = function(entry, column_defs, col_width, adapter, is_hidden
       end
       table.insert(cols, { link_target, link_target_hl })
     end
+  elseif highlight_as_executable then
+    table.insert(cols, { name, "OilExecutable" .. hl_suffix })
   else
     table.insert(cols, { name, "OilFile" .. hl_suffix })
   end
