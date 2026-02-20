@@ -778,6 +778,45 @@ OilTrashSourcePath                                         *hl-OilTrashSourcePat
     Virtual text that shows the original path of file in the trash
 
 --------------------------------------------------------------------------------
+EVENTS                                                                *oil-events*
+
+Oil emits the following User autocmd events:
+
+OilEnter                                                             *OilEnter*
+    Fired once when an oil buffer finishes its initial render and is ready for
+    interaction. The autocmd `data` table contains `{ buf = <bufnr> }`.
+
+    Example: >lua
+        vim.api.nvim_create_autocmd("User", {
+            pattern = "OilEnter",
+            callback = function(args)
+                -- args.data.buf is the oil buffer number
+            end,
+        })
+<
+
+OilReadPost                                                         *OilReadPost*
+    Fired after every successful render of an oil buffer, including re-renders
+    triggered by filesystem changes or manual refresh. This fires in addition
+    to OilEnter on the initial render.
+
+    Useful for third-party plugins that need to update decorations (e.g., git
+    status columns) whenever the buffer contents change.
+
+    Example: >lua
+        vim.api.nvim_create_autocmd("User", {
+            pattern = "OilReadPost",
+            callback = function(args)
+                -- args.data.buf is the oil buffer number
+            end,
+        })
+<
+
+OilMutationComplete                                         *OilMutationComplete*
+    Fired after a mutation (file create, delete, rename, move, copy) finishes
+    executing.
+
+--------------------------------------------------------------------------------
 TRASH                                                                  *oil-trash*
 
 
