@@ -378,7 +378,8 @@ Note that older versions of Neovim don't support numbers in the url, so for Neov
 These are plugins maintained by other authors that extend the functionality of oil.nvim.
 
 - [oil-git-status.nvim](https://github.com/refractalize/oil-git-status.nvim) - Shows git status of files in statuscolumn
-- [oil-git.nvim](https://github.com/benomahony/oil-git.nvim) - Shows git status of files with colour and symbols
+- [oil-git.nvim (benomahony)](https://github.com/benomahony/oil-git.nvim) - Shows git status of files with colour and symbols
+- [oil-git.nvim (malewicz1337)](https://github.com/malewicz1337/oil-git.nvim) - Async fork with directory highlighting and debounced updates
 - [oil-lsp-diagnostics.nvim](https://github.com/JezerM/oil-lsp-diagnostics.nvim) - Shows LSP diagnostics indicator as virtual text
 
 ## API
