@@ -580,14 +580,14 @@ M.perform_action = function(action, cb)
     end
 
     if action.entry_type == "directory" then
-      uv.fs_mkdir(path, 493, function(err)
+      uv.fs_mkdir(path, config.new_dir_mode, function(err)
         -- Ignore if the directory already exists
         if not err or err:match("^EEXIST:") then
           cb()
         else
           cb(err)
         end
-      end) -- 0755
+      end)
     elseif action.entry_type == "link" and action.link then
       local flags = nil
       local target = fs.posix_to_os_path(action.link)
@@ -600,7 +600,7 @@ M.perform_action = function(action, cb)
       ---@diagnostic disable-next-line: param-type-mismatch
       uv.fs_symlink(target, path, flags, cb)
     else
-      fs.touch(path, cb)
+      fs.touch(path, config.new_file_mode, cb)
     end
   elseif action.type == "delete" then
     local _, path = util.parse_url(action.url)

@@ -122,6 +122,10 @@ CONFIG                                                                *oil-confi
           return nil
         end,
       },
+      -- Permission mode for new files (default 420 = 0644)
+      new_file_mode = 420,
+      -- Permission mode for new directories (default 493 = 0755)
+      new_dir_mode = 493,
       -- Extra arguments to pass to SCP when moving/copying files over SSH
       extra_scp_args = {},
       -- Extra arguments to pass to aws s3 when creating/deleting/moving/copying files using aws s3
