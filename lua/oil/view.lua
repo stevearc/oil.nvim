@@ -17,15 +17,17 @@ local FIELD_META = constants.FIELD_META
 -- map of path->last entry under cursor
 local last_cursor_entry = {}
 
----@param name string
 ---@param bufnr integer
+---@param entry oil.InternalEntry
 ---@return boolean display
 ---@return boolean is_hidden Whether the file is classified as a hidden file
-M.should_display = function(name, bufnr)
-  if config.view_options.is_always_hidden(name, bufnr) then
+M.should_display = function(bufnr, entry)
+  local name = entry[FIELD_NAME]
+  local public_entry = util.export_entry(entry)
+  if config.view_options.is_always_hidden(name, bufnr, public_entry) then
     return false, true
   else
-    local is_hidden = config.view_options.is_hidden_file(name, bufnr)
+    local is_hidden = config.view_options.is_hidden_file(name, bufnr, public_entry)
     local display = config.view_options.show_hidden or not is_hidden
     return display, is_hidden
   end
@@ -85,7 +87,7 @@ M.toggle_hidden = function()
   end
 end
 
----@param is_hidden_file fun(filename: string, bufnr: integer): boolean
+---@param is_hidden_file fun(filename: string, bufnr: integer, entry: oil.Entry): boolean
 M.set_is_hidden_file = function(is_hidden_file)
   local any_modified = are_any_modified()
   if any_modified then
@@ -675,14 +677,15 @@ local function render_buffer(bufnr, opts)
     col_align[i + 1] = conf and conf.align or "left"
   end
 
-  if M.should_display("..", bufnr) then
+  local parent_entry = { 0, "..", "directory" }
+  if M.should_display(bufnr, parent_entry) then
     local cols =
-      M.format_entry_cols({ 0, "..", "directory" }, column_defs, col_width, adapter, true, bufnr)
+      M.format_entry_cols(parent_entry, column_defs, col_width, adapter, true, bufnr)
     table.insert(line_table, cols)
   end
 
   for _, entry in ipairs(entry_list) do
-    local should_display, is_hidden = M.should_display(entry[FIELD_NAME], bufnr)
+    local should_display, is_hidden = M.should_display(bufnr, entry)
     if should_display then
       local cols = M.format_entry_cols(entry, column_defs, col_width, adapter, is_hidden, bufnr)
       table.insert(line_table, cols)
