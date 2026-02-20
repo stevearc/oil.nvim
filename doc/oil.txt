@@ -293,44 +293,15 @@ set_is_hidden_file({is_hidden_file})                      *oil.set_is_hidden_fil
     Change how oil determines if the file is hidden
 
     Parameters:
-      {is_hidden_file} `fun(filename: string, bufnr: integer): boolean` Return
-                       true if the file/dir should be hidden
+      {is_hidden_file} `fun(filename: string, bufnr: integer, entry: oil.Entry): boolean`
+                       Return true if the file/dir should be hidden
 
 toggle_hidden()                                                *oil.toggle_hidden*
     Toggle hidden files and directories
 
 
 get_current_dir({bufnr}): nil|string                         *oil.get_current_dir*
-    Get the current directory for the given oil buffer. Returns the directory
-    path as a string, or nil in the following cases:
-    - The buffer is not an oil buffer
-    - The buffer uses a non-files adapter (ssh, s3, trash)
-    - The current buffer changed (e.g. after opening a Telescope picker)
-
-    When calling this function inside a keymap that also opens another
-    plugin's window (e.g. Telescope), capture the directory BEFORE the
-    call that changes the buffer context:
->lua
-        ["<leader>ff"] = {
-            function()
-                local dir = require("oil").get_current_dir()
-                if dir then
-                    require("telescope.builtin").find_files({ cwd = dir })
-                end
-            end,
-            mode = "n",
-            nowait = true,
-            desc = "Find files in the current directory"
-        },
-<
-
-    You can also pass a specific buffer number to avoid depending on the
-    current buffer:
->lua
-        local bufnr = vim.api.nvim_get_current_buf()
-        -- ... operations that may change the current buffer ...
-        local dir = require("oil").get_current_dir(bufnr)
-<
+    Get the current directory
 
     Parameters:
       {bufnr} `nil|integer`
@@ -548,10 +519,9 @@ The `keymaps` option in `oil.setup` allow you to create mappings using all the s
         -- a table with the mapping as the first element.
         ["<leader>ff"] = {
             function()
-                local dir = require("oil").get_current_dir()
-                if dir then
-                    require("telescope.builtin").find_files({ cwd = dir })
-                end
+                require("telescope.builtin").find_files({
+                    cwd = require("oil").get_current_dir()
+                })
             end,
             mode = "n",
             nowait = true,
@@ -776,45 +746,6 @@ OilTrash                                                             *hl-OilTras
 
 OilTrashSourcePath                                         *hl-OilTrashSourcePath*
     Virtual text that shows the original path of file in the trash
-
---------------------------------------------------------------------------------
-EVENTS                                                                *oil-events*
-
-Oil emits the following User autocmd events:
-
-OilEnter                                                             *OilEnter*
-    Fired once when an oil buffer finishes its initial render and is ready for
-    interaction. The autocmd `data` table contains `{ buf = <bufnr> }`.
-
-    Example: >lua
-        vim.api.nvim_create_autocmd("User", {
-            pattern = "OilEnter",
-            callback = function(args)
-                -- args.data.buf is the oil buffer number
-            end,
-        })
-<
-
-OilReadPost                                                         *OilReadPost*
-    Fired after every successful render of an oil buffer, including re-renders
-    triggered by filesystem changes or manual refresh. This fires in addition
-    to OilEnter on the initial render.
-
-    Useful for third-party plugins that need to update decorations (e.g., git
-    status columns) whenever the buffer contents change.
-
-    Example: >lua
-        vim.api.nvim_create_autocmd("User", {
-            pattern = "OilReadPost",
-            callback = function(args)
-                -- args.data.buf is the oil buffer number
-            end,
-        })
-<
-
-OilMutationComplete                                         *OilMutationComplete*
-    Fired after a mutation (file create, delete, rename, move, copy) finishes
-    executing.
 
 --------------------------------------------------------------------------------
 TRASH                                                                  *oil-trash*
