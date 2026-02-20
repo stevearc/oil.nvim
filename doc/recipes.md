@@ -8,6 +8,7 @@ Have a cool recipe to share? Open a pull request and add it to this doc!
 - [Show CWD in the winbar](#show-cwd-in-the-winbar)
 - [Hide gitignored files and show git tracked hidden files](#hide-gitignored-files-and-show-git-tracked-hidden-files)
 - [Open Telescope file finder in the current oil directory](#open-telescope-file-finder-in-the-current-oil-directory)
+- [Add custom column for file extension](#add-custom-column-for-file-extension)
 
 <!-- /TOC -->
 
@@ -166,4 +167,80 @@ If you need the directory after an operation that might change the current buffe
 local bufnr = vim.api.nvim_get_current_buf()
 -- ... some operation that changes the current buffer ...
 local dir = require("oil").get_current_dir(bufnr)
+```
+
+## Add custom column for file extension
+
+```lua
+local oil_cfg = require "oil.config"
+local oil_constant = require "oil.constants"
+local oil_column = require "oil.columns"
+
+local FIELD_TYPE = oil_constant.FIELD_TYPE
+local FIELD_NAME = oil_constant.FIELD_NAME
+
+local function adjust_number(int)
+  return string.format("%03d%s", #int, int)
+end
+
+local function format(output)
+  return vim.fn.fnamemodify(output, ":e")
+end
+
+oil_column.register("extension", {
+  render = function(entry, _)
+    local field_type = entry[FIELD_TYPE]
+    local name = entry[FIELD_NAME]
+
+    if field_type == "file" then
+      if name then
+        local extension = format(name)
+
+        if not extension:match "%s" then
+          return extension
+        end
+      end
+    end
+  end,
+  parse = function(line, _)
+    return line:match "^(%S+)%s+(.*)$"
+  end,
+  create_sort_value_factory = function(num_entries)
+    if
+      oil_cfg.view_options.natural_order == false
+      or (oil_cfg.view_options.natural_order == "fast" and num_entries > 5000)
+    then
+      return function(entry)
+        return format(entry[FIELD_NAME]:lower())
+      end
+    else
+      local memo = {}
+
+      return function(entry)
+        if memo[entry] == nil and entry[FIELD_TYPE] == "file" then
+          local name = entry[FIELD_NAME]:gsub("0*(%d+)", adjust_number)
+
+          memo[entry] = format(name:lower())
+        end
+
+        return memo[entry]
+      end
+    end
+  end,
+})
+
+require("oil").setup({
+  columns = {
+    "size",
+    "extension",
+    "icon",
+  },
+  view_options = {
+    sort = {
+      { "type", "asc" },
+      { "extension", "asc" },
+      { "name", "asc" },
+    },
+  },
+})
 ```
