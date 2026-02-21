@@ -582,6 +582,7 @@ M.render_text = function(bufnr, text, opts)
     h_align = "center",
     v_align = "center",
   })
+  ---@cast opts -nil
   if not vim.api.nvim_buf_is_valid(bufnr) then
     return
   end
