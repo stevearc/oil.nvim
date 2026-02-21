@@ -1447,9 +1447,10 @@ M.setup = function(opts)
       end,
     })
 
-    local bufnr = vim.api.nvim_get_current_buf()
-    if maybe_hijack_directory_buffer(bufnr) and vim.v.vim_did_enter == 1 then
-      M.load_oil_buffer(bufnr)
+    for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
+      if maybe_hijack_directory_buffer(bufnr) and vim.v.vim_did_enter == 1 then
+        M.load_oil_buffer(bufnr)
+      end
     end
   end
 end
