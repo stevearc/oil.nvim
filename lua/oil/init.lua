@@ -864,6 +864,11 @@ M._get_highlights = function()
       desc = "Icon for directories",
     },
     {
+      name = "OilFileIcon",
+      link = nil,
+      desc = "Icon for files",
+    },
+    {
       name = "OilSocket",
       link = "Keyword",
       desc = "Socket files in an oil buffer",

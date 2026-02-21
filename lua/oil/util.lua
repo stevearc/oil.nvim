@@ -956,6 +956,7 @@ M.get_icon_provider = function()
           end
         end
         local icon, hl = devicons.get_icon(name)
+        hl = hl or "OilFileIcon"
         icon = icon or (conf and conf.default_file or "")
         return icon, hl
       end
