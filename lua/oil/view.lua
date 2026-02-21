@@ -912,6 +912,7 @@ local pending_renders = {}
 ---@param caller_callback nil|fun(err: nil|string)
 M.render_buffer_async = function(bufnr, opts, caller_callback)
   opts = opts or {}
+  ---@cast opts -nil
   local function callback(err)
     if not err then
       vim.api.nvim_exec_autocmds(
