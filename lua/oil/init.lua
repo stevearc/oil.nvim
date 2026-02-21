@@ -1082,6 +1082,7 @@ M.load_oil_buffer = function(bufnr)
     -- (e.g. ssh) because it will set up the filetype keybinds at the *beginning* of the loading
     -- process.
     vim.bo[bufnr].filetype = "oil"
+    vim.bo[bufnr].buftype = "acwrite"
     keymap_util.set_keymaps(config.keymaps, bufnr)
   end
   loading.set_loading(bufnr, true)
