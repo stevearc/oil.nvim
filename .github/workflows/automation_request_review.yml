@@ -14,7 +14,7 @@ jobs:
     steps:
       - name: Request Review
         uses: actions/github-script@v7
-        if: github.actor != 'stevearc'
+        if: github.actor != 'barrettruth'
         with:
           github-token: ${{secrets.GITHUB_TOKEN}}
           script: |
@@ -23,5 +23,5 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               pull_number: pr.number,
-              reviewers: ['stevearc']
+              reviewers: ['barrettruth']
             });
