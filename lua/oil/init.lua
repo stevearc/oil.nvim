@@ -602,7 +602,7 @@ M.open_preview = function(opts, callback)
 
     -- If we called open_preview during an autocmd, then the edit command may not trigger the
     -- BufReadCmd to load the buffer. So we need to do it manually.
-    if util.is_oil_bufnr(filebufnr) then
+    if util.is_oil_bufnr(filebufnr) and not vim.b[filebufnr].oil_ready then
       M.load_oil_buffer(filebufnr)
     end
 
