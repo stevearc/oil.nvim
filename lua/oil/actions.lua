@@ -179,6 +179,22 @@ M.close = {
   },
 }
 
+M.close_float = {
+  desc = "Close oil if the window is floating, otherwise do nothing",
+  callback = function(opts)
+    if vim.w.is_oil_win then
+      opts = opts or {}
+      oil.close(opts)
+    end
+  end,
+  parameters = {
+    exit_if_last_buf = {
+      type = "boolean",
+      desc = "Exit vim if oil is closed as the last buffer",
+    },
+  },
+}
+
 ---@param cmd string
 ---@param silent? boolean
 local function cd(cmd, silent)
