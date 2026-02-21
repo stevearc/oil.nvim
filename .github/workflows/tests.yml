@@ -87,7 +87,7 @@ jobs:
       - name: Commit changes
         if: ${{ github.ref == 'refs/heads/main' }}
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.PUSH_TOKEN || secrets.GITHUB_TOKEN }}
           COMMIT_MSG: |
             [docgen] Update docs
             skip-checks: true
