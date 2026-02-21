@@ -122,9 +122,7 @@ CONFIG                                                                *oil-confi
           return nil
         end,
       },
-      -- Permission mode for new files (default 420 = 0644)
       new_file_mode = 420,
-      -- Permission mode for new directories (default 493 = 0755)
       new_dir_mode = 493,
       -- Extra arguments to pass to SCP when moving/copying files over SSH
       extra_scp_args = {},
@@ -442,10 +440,8 @@ icon                                                                 *column-ico
       {directory}    `string` Icon for directories
       {add_padding}  `boolean` Set to false to remove the extra whitespace after
                      the icon
-      {use_slow_filetype_detection} `boolean` Set to true to detect filetypes
-                     by reading the first lines of each file (e.g. shebangs).
-                     This improves icon accuracy for extensionless scripts but
-                     performs synchronous I/O per file per render.
+      {use_slow_filetype_detection} `boolean` Set to true to detect filetypes by
+                     reading the first lines of each file (e.g. shebangs).
 
 size                                                                 *column-size*
     Adapters: files, ssh, s3
@@ -575,6 +571,12 @@ close                                                              *actions.clos
     Parameters:
       {exit_if_last_buf} `boolean` Exit vim if oil is closed as the last buffer
 
+close_float                                                  *actions.close_float*
+    Close oil if the window is floating, otherwise do nothing
+
+    Parameters:
+      {exit_if_last_buf} `boolean` Exit vim if oil is closed as the last buffer
+
 copy_to_system_clipboard                        *actions.copy_to_system_clipboard*
     Copy the entry under the cursor to the system clipboard
 
@@ -691,6 +693,9 @@ OilDirHidden                                                     *hl-OilDirHidde
 OilDirIcon                                                         *hl-OilDirIcon*
     Icon for directories
 
+OilFileIcon                                                       *hl-OilFileIcon*
+    Icon for files
+
 OilSocket                                                           *hl-OilSocket*
     Socket files in an oil buffer
 
@@ -729,6 +734,9 @@ OilFileHidden                                                   *hl-OilFileHidde
 
 OilExecutable                                                   *hl-OilExecutable*
     Executable files in an oil buffer
+
+OilExecutableHidden                                       *hl-OilExecutableHidden*
+    Hidden executable files in an oil buffer
 
 OilCreate                                                           *hl-OilCreate*
     Create action in the oil preview window

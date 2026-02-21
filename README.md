@@ -240,6 +240,8 @@ require("oil").setup({
       return nil
     end,
   },
+  new_file_mode = 420,
+  new_dir_mode = 493,
   -- Extra arguments to pass to SCP when moving/copying files over SSH
   extra_scp_args = {},
   -- Extra arguments to pass to aws s3 when creating/deleting/moving/copying files using aws s3
@@ -374,6 +376,7 @@ Note that older versions of Neovim don't support numbers in the url, so for Neov
 - [Hide gitignored files and show git tracked hidden files](doc/recipes.md#hide-gitignored-files-and-show-git-tracked-hidden-files)
 - [Open Telescope file finder in the current oil directory](doc/recipes.md#open-telescope-file-finder-in-the-current-oil-directory)
 - [Add custom column for file extension](doc/recipes.md#add-custom-column-for-file-extension)
+- [Disable dimming of hidden files](doc/recipes.md#disable-dimming-of-hidden-files)
 
 ## Third-party extensions
 
