@@ -9,6 +9,7 @@ Have a cool recipe to share? Open a pull request and add it to this doc!
 - [Hide gitignored files and show git tracked hidden files](#hide-gitignored-files-and-show-git-tracked-hidden-files)
 - [Open Telescope file finder in the current oil directory](#open-telescope-file-finder-in-the-current-oil-directory)
 - [Add custom column for file extension](#add-custom-column-for-file-extension)
+- [Disable dimming of hidden files](#disable-dimming-of-hidden-files)
 
 <!-- /TOC -->
 
@@ -243,4 +244,19 @@ require("oil").setup({
     },
   },
 })
+```
+
+## Disable dimming of hidden files
+
+By default, hidden files (toggled with `g.`) are dimmed via the `OilHidden` highlight group, which links to `Comment`. Every typed hidden group (`OilDirHidden`, `OilFileHidden`, etc.) links to `OilHidden`, so all hidden entries resolve to the same dim color regardless of their type.
+
+To make hidden files look identical to their visible counterparts, relink each hidden group to its non-hidden variant after calling `setup()`:
+
+```lua
+for _, hl in ipairs(require("oil")._get_highlights()) do
+  local base = hl.name:match("^(Oil.+)Hidden$")
+  if base then
+    vim.api.nvim_set_hl(0, hl.name, { link = base })
+  end
+end
 ```
