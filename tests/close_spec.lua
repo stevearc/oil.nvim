@@ -31,11 +31,7 @@ a.describe("close", function()
       oil.close()
       assert.equals("oil", vim.bo.filetype)
     end
-    vim.api.nvim_feedkeys(
-      vim.api.nvim_replace_termcodes("<Esc>", true, true, true),
-      "n",
-      false
-    )
+    vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Esc>", true, true, true), "n", false)
     a.util.sleep(20)
   end)
 

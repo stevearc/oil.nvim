@@ -78,10 +78,16 @@ local function are_any_modified()
 end
 
 local function is_unix_executable(entry)
-  if entry[FIELD_TYPE] == "directory" then return false end
+  if entry[FIELD_TYPE] == "directory" then
+    return false
+  end
   local meta = entry[FIELD_META]
-  if not meta or not meta.stat then return false end
-  if meta.stat.type == "directory" then return false end
+  if not meta or not meta.stat then
+    return false
+  end
+  if meta.stat.type == "directory" then
+    return false
+  end
 
   local S_IXUSR = 64
   local S_IXGRP = 8
@@ -692,8 +698,7 @@ local function render_buffer(bufnr, opts)
 
   local parent_entry = { 0, "..", "directory" }
   if M.should_display(bufnr, parent_entry) then
-    local cols =
-      M.format_entry_cols(parent_entry, column_defs, col_width, adapter, true, bufnr)
+    local cols = M.format_entry_cols(parent_entry, column_defs, col_width, adapter, true, bufnr)
     table.insert(line_table, cols)
   end
 

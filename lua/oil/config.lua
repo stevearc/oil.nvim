@@ -417,7 +417,10 @@ M.setup = function(opts)
     for k, v in pairs(opts.keymaps) do
       local normalized = vim.api.nvim_replace_termcodes(k, true, true, true)
       for existing_k, _ in pairs(new_conf.keymaps) do
-        if existing_k ~= k and vim.api.nvim_replace_termcodes(existing_k, true, true, true) == normalized then
+        if
+          existing_k ~= k
+          and vim.api.nvim_replace_termcodes(existing_k, true, true, true) == normalized
+        then
           new_conf.keymaps[existing_k] = nil
         end
       end
