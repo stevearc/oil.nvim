@@ -384,6 +384,7 @@ M.initialize = function(bufnr)
     group = "Oil",
   })
   vim.bo[bufnr].buftype = "acwrite"
+  vim.bo[bufnr].readonly = false
   vim.bo[bufnr].swapfile = false
   vim.bo[bufnr].syntax = "oil"
   vim.bo[bufnr].filetype = "oil"
