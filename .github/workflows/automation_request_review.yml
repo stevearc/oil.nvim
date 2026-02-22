@@ -4,8 +4,6 @@ permissions:
 on:
   pull_request_target:
     types: [opened, reopened, ready_for_review, synchronize]
-    branches-ignore:
-      - "release-please--**"
 
 jobs:
   # Request review automatically when PRs are opened

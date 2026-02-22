@@ -1,0 +1,21 @@
+name: luarocks
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  quality:
+    uses: ./.github/workflows/tests.yml
+
+  publish:
+    needs: quality
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: nvim-neorocks/luarocks-tag-release@v7
+        env:
+          LUAROCKS_API_KEY: ${{ secrets.LUAROCKS_API_KEY }}

@@ -66,44 +66,58 @@ Neovim 0.8+ and optionally [mini.icons](https://github.com/nvim-mini/mini.nvim/b
 
 ## Installation
 
-Install with your favorite package manager or with luarocks.
+Install with your favorite package manager or with luarocks:
 
-## Quick start
-
-Add the following to your init.lua
-
-```lua
-require("oil").setup()
+```console
+luarocks install oil.nvim
 ```
-
-Then open a directory with `nvim .`. Use `<CR>` to open a file/directory, and `-` to go up a directory. Otherwise, just treat it like a normal buffer and make changes as you like. Remember to `:w` when you're done to actually perform the actions.
-
-If you want to mimic the `vim-vinegar` method of navigating to the parent directory of a file, add this keymap:
-
-```lua
-vim.keymap.set("n", "-", "<CMD>Oil<CR>", { desc = "Open parent directory" })
-```
-
-You can open a directory with `:edit <path>` or `:Oil <path>`. To open oil in a floating window, do `:Oil --float <path>`.
 
 ## Documentation
 
-See `:help oil` for configuration, API reference, recipes, and more.
+```vim
+:help oil.nvim
+```
 
 ## FAQ
 
-**Q: Why "oil"**?
+**How do I migrate from `stevearc/oil.nvim` to `barrettruth/oil.nvim`?**
 
-**A:** From the [vim-vinegar](https://github.com/tpope/vim-vinegar) README, a quote by Drew Neil:
+Replace your `setup()` call with a `vim.g.oil` assignment. For example, with
+[lazy.nvim](https://github.com/folke/lazy.nvim):
+
+```lua
+-- before
+{
+  'stevearc/oil.nvim',
+  config = function(_, opts)
+    require('oil').setup(opts)
+  end,
+  opts = {
+    ...
+  }
+}
+
+-- after
+{
+  'stevearc/oil.nvim',
+  init = function()
+    vim.g.oil = {
+      columns = { "icon", "size" },
+      delete_to_trash = true,
+    }
+  end
+```
+
+**Why "oil"**?
+
+From the [vim-vinegar](https://github.com/tpope/vim-vinegar) README, a quote by Drew Neil:
 
 > Split windows and the project drawer go together like oil and vinegar
 
 Vinegar was taken. Let's be oil.
 Plus, I think it's pretty slick ;)
 
-**Q: Why would I want to use oil vs any other plugin?**
-
-**A:**
+**Why would I want to use oil vs any other plugin?**
 
 - You like to use a netrw-like view to browse directories (as opposed to a file tree)
 - AND you want to be able to edit your filesystem like a buffer
@@ -111,14 +125,14 @@ Plus, I think it's pretty slick ;)
 
 If you don't need those features specifically, check out the alternatives listed below
 
-**Q: Can oil display files as a tree view**?
+**Can oil display files as a tree view**?
 
-**A:** No. A tree view would require a completely different methodology, necessitating a complete rewrite.
+No. A tree view would require a completely different methodology, necessitating a complete rewrite.
 
-**Q: What are some alternatives?**
+**What are some alternatives?**
 
-**A:**
-
+- [the original](https://github.com/stevearc/oil.nvim): the lesser-maintained but
+  official `oil.nvim`
 - [mini.files](https://github.com/nvim-mini/mini.nvim/blob/main/readmes/mini-files.md): Also supports cross-directory filesystem-as-buffer edits with a column view.
 - [vim-vinegar](https://github.com/tpope/vim-vinegar): The granddaddy of single-directory file browsing.
 - [dirbuf.nvim](https://github.com/elihunter173/dirbuf.nvim): Edit filesystem like a buffer, but no cross-directory edits.
