@@ -43,28 +43,37 @@ luarocks install oil.nvim
 
 ## FAQ
 
-**Q: How do I set up oil.nvim with lazy.nvim?**
+**Q: How do I set up oil.nvim (or migrate from stevearc/oil.nvim)?**
+
+Change the plugin source and replace `setup()` with `vim.g.oil` in `init`. The
+configuration table is identical — only the entry point changes.
+
+Before (stevearc/oil.nvim):
+
+```lua
+{
+  'stevearc/oil.nvim',
+  opts = { ... },
+  config = function(_, opts)
+    require('oil').setup(opts)
+  end,
+}
+```
+
+After (barrettruth/oil.nvim):
 
 ```lua
 {
   'barrettruth/oil.nvim',
   init = function()
-    vim.g.oil = {
-      columns = { 'icon', 'size' },
-      delete_to_trash = true,
-    }
+    vim.g.oil = { ... }
   end,
 }
 ```
 
-Do not use `config`, `opts`, or `lazy` — oil.nvim loads itself when you open a
-directory.
-
-**Q: How do I migrate from stevearc/oil.nvim?**
-
-Replace `stevearc/oil.nvim` with `barrettruth/oil.nvim` in your plugin manager
-and switch your `setup()` call to a `vim.g.oil` assignment in `init`. The
-configuration table is the same.
+`init` runs before the plugin loads; `config` runs after. oil.nvim reads
+`vim.g.oil` at load time, so `init` is the correct hook. Do not use `config`,
+`opts`, or `lazy` — oil.nvim loads itself when you open a directory.
 
 **Q: Why "oil"?**
 
