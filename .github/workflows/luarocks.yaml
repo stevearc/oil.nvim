@@ -7,7 +7,7 @@ on:
 
 jobs:
   quality:
-    uses: ./.github/workflows/tests.yml
+    uses: ./.github/workflows/quality.yaml
 
   publish:
     needs: quality

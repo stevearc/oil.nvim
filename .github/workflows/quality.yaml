@@ -1,0 +1,90 @@
+name: quality
+
+on:
+  workflow_call:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      lua: ${{ steps.changes.outputs.lua }}
+      markdown: ${{ steps.changes.outputs.markdown }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: changes
+        with:
+          filters: |
+            lua:
+              - 'lua/**'
+              - 'plugin/**'
+              - 'spec/**'
+              - '*.lua'
+              - '.luarc.json'
+              - '*.toml'
+            markdown:
+              - '*.md'
+
+  lua-format:
+    name: Lua Format Check
+    runs-on: ubuntu-latest
+    needs: changes
+    if: ${{ needs.changes.outputs.lua == 'true' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: JohnnyMorganz/stylua-action@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          version: 2.1.0
+          args: --check lua spec
+
+  lua-lint:
+    name: Lua Lint Check
+    runs-on: ubuntu-latest
+    needs: changes
+    if: ${{ needs.changes.outputs.lua == 'true' }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Lint with Selene
+        uses: NTBBloodbath/selene-action@v1.0.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          args: --display-style quiet .
+
+  lua-typecheck:
+    name: Lua Type Check
+    runs-on: ubuntu-latest
+    needs: changes
+    if: ${{ needs.changes.outputs.lua == 'true' }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run Lua LS Type Check
+        uses: mrcjkb/lua-typecheck-action@v0
+        with:
+          checklevel: Warning
+          directories: lua
+          configpath: .luarc.json
+
+  markdown-format:
+    name: Markdown Format Check
+    runs-on: ubuntu-latest
+    needs: changes
+    if: ${{ needs.changes.outputs.markdown == 'true' }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 8
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install prettier
+        run: pnpm add -g prettier@3.1.0
+      - name: Check markdown formatting with prettier
+        run: prettier --check .

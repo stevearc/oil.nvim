@@ -1,0 +1,80 @@
+name: Bug Report
+description: Report a bug
+title: 'bug: '
+labels: [bug]
+body:
+  - type: checkboxes
+    attributes:
+      label: Prerequisites
+      options:
+        - label:
+            I have searched [existing
+            issues](https://github.com/barrettruth/oil.nvim/issues)
+          required: true
+        - label: I have updated to the latest version
+          required: true
+
+  - type: textarea
+    attributes:
+      label: 'Neovim version'
+      description: 'Output of `nvim --version`'
+      render: text
+    validations:
+      required: true
+
+  - type: input
+    attributes:
+      label: 'Operating system'
+      placeholder: 'e.g. Arch Linux, macOS 15, Ubuntu 24.04'
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: Description
+      description: What happened? What did you expect?
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: Steps to reproduce
+      description: Minimal steps to trigger the bug
+      value: |
+        1.
+        2.
+        3.
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: 'Health check'
+      description: 'Output of `:checkhealth oil`'
+      render: text
+
+  - type: textarea
+    attributes:
+      label: Minimal reproduction
+      description: |
+        Save the script below as `repro.lua`, edit if needed, and run:
+        ```
+        nvim -u repro.lua
+        ```
+        Confirm the bug reproduces with this config before submitting.
+      render: lua
+      value: |
+        vim.env.LAZY_STDPATH = '.repro'
+        load(vim.fn.system('curl -s https://raw.githubusercontent.com/folke/lazy.nvim/main/bootstrap.lua'))()
+        require('lazy.nvim').setup({
+          spec = {
+            {
+              'barrettruth/oil.nvim',
+              init = function()
+                vim.g.oil = {}
+              end,
+            },
+          },
+        })
+    validations:
+      required: true
