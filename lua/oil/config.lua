@@ -406,7 +406,7 @@ local M = {}
 ---@field border? string|string[] Window border
 
 M.setup = function(opts)
-  opts = opts or {}
+  opts = opts or vim.g.oil or {}
 
   local new_conf = vim.tbl_deep_extend("keep", opts, default_config)
   if not new_conf.use_default_keymaps then

@@ -48,6 +48,27 @@ REQUIREMENTS                                                    *oil-requirement
 --------------------------------------------------------------------------------
 CONFIG                                                                *oil-config*
 
+Oil can be configured in two ways:
+
+1. The traditional `setup()` call: >lua
+    require("oil").setup({
+      -- your opts here
+    })
+<
+
+2. Declarative configuration via `vim.g.oil`, which does not require calling
+   `setup()`: >lua
+    vim.g.oil = {
+      -- your opts here
+    }
+<
+
+   When `vim.g.oil` is set, oil initializes automatically during plugin
+   loading. If `setup()` is called with explicit opts, those take precedence
+   over `vim.g.oil`.
+
+The full list of options with their defaults:
+
 >lua
     require("oil").setup({
       -- Oil will take over directory buffers (e.g. `vim .` or `:e src/`)

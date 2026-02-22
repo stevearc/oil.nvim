@@ -70,27 +70,42 @@ Install with your favorite package manager or with luarocks.
 
 ## Quick start
 
-Add the following to your init.lua
-
 ```lua
-require("oil").setup()
+vim.g.oil = {}
 ```
 
-Then open a directory with `nvim .`. Use `<CR>` to open a file/directory, and `-` to go up a directory. Otherwise, just treat it like a normal buffer and make changes as you like. Remember to `:w` when you're done to actually perform the actions.
-
-If you want to mimic the `vim-vinegar` method of navigating to the parent directory of a file, add this keymap:
-
-```lua
-vim.keymap.set("n", "-", "<CMD>Oil<CR>", { desc = "Open parent directory" })
-```
-
-You can open a directory with `:edit <path>` or `:Oil <path>`. To open oil in a floating window, do `:Oil --float <path>`.
+Open a directory with `nvim .`. Use `<CR>` to open a file/directory, and `-` to go up a directory. Edit the listing like a normal buffer, then `:w` to apply changes.
 
 ## Documentation
 
-See `:help oil` for configuration, API reference, recipes, and more.
+```vim
+:help oil
+```
 
 ## FAQ
+
+**Q: How do I migrate from `require("oil").setup()` to `vim.g.oil`?**
+
+**A:** Replace your `setup()` call with a `vim.g.oil` assignment. The option
+tables are identical:
+
+```lua
+-- before
+require("oil").setup({
+  columns = { "icon", "size" },
+  delete_to_trash = true,
+})
+
+-- after
+vim.g.oil = {
+  columns = { "icon", "size" },
+  delete_to_trash = true,
+}
+```
+
+`vim.g.oil` must be set before the plugin loads (e.g. in lazy.nvim's `init`
+function). `require("oil").setup(opts)` still works and takes precedence if
+both are present.
 
 **Q: Why "oil"**?
 
