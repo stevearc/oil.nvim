@@ -11,13 +11,13 @@ all: lint test
 ## test: run tests
 .PHONY: test
 test:
-	./run_tests.sh
+	luarocks test --local
 
 ## lint: run selene and stylua
 .PHONY: lint
 lint:
 	selene --display-style quiet .
-	stylua --check lua tests
+	stylua --check lua spec
 
 ## profile: use LuaJIT profiler to profile the plugin
 .PHONY: profile
@@ -41,4 +41,4 @@ scripts/benchmark.nvim:
 ## clean: reset the repository to a clean state
 .PHONY: clean
 clean:
-	rm -rf .testenv perf/tmp profile.json
+	rm -rf perf/tmp profile.json

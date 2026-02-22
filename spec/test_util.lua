@@ -1,4 +1,3 @@
-require('plenary.async').tests.add_to_env()
 local cache = require('oil.cache')
 local test_adapter = require('oil.adapters.test')
 local util = require('oil.util')
@@ -34,15 +33,36 @@ local function throwiferr(err, ...)
   end
 end
 
-M.oil_open = function(...)
-  a.wrap(require('oil').open, 3)(...)
-end
-
 M.await = function(fn, nargs, ...)
-  return throwiferr(a.wrap(fn, nargs)(...))
+  local done = false
+  local results
+  local n_results = 0
+  local args = { ... }
+  args[nargs] = function(...)
+    results = { ... }
+    n_results = select('#', ...)
+    done = true
+  end
+  fn(unpack(args, 1, nargs))
+  vim.wait(10000, function()
+    return done
+  end, 10)
+  if not done then
+    error('M.await timed out')
+  end
+  return unpack(results, 1, n_results)
 end
 
-M.wait_for_autocmd = a.wrap(function(autocmd, cb)
+M.await_throwiferr = function(fn, nargs, ...)
+  return throwiferr(M.await(fn, nargs, ...))
+end
+
+M.oil_open = function(...)
+  M.await(require('oil').open, 3, ...)
+end
+
+M.wait_for_autocmd = function(autocmd)
+  local triggered = false
   local opts = {
     pattern = '*',
     nested = true,
@@ -53,30 +73,47 @@ M.wait_for_autocmd = a.wrap(function(autocmd, cb)
     autocmd = autocmd[1]
     opts[1] = nil
   end
-  opts.callback = vim.schedule_wrap(cb)
-
+  opts.callback = vim.schedule_wrap(function()
+    triggered = true
+  end)
   vim.api.nvim_create_autocmd(autocmd, opts)
-end, 2)
+  vim.wait(10000, function()
+    return triggered
+  end, 10)
+  if not triggered then
+    error('wait_for_autocmd timed out waiting for ' .. tostring(autocmd))
+  end
+end
 
-M.wait_oil_ready = a.wrap(function(cb)
-  util.run_after_load(0, vim.schedule_wrap(cb))
-end, 1)
+M.wait_oil_ready = function()
+  local ready = false
+  util.run_after_load(
+    0,
+    vim.schedule_wrap(function()
+      ready = true
+    end)
+  )
+  vim.wait(10000, function()
+    return ready
+  end, 10)
+  if not ready then
+    error('wait_oil_ready timed out')
+  end
+end
 
 ---@param actions string[]
 ---@param timestep integer
 M.feedkeys = function(actions, timestep)
   timestep = timestep or 10
-  a.util.sleep(timestep)
+  vim.wait(timestep)
   for _, action in ipairs(actions) do
-    a.util.sleep(timestep)
+    vim.wait(timestep)
     local escaped = vim.api.nvim_replace_termcodes(action, true, false, true)
     vim.api.nvim_feedkeys(escaped, 'm', true)
   end
-  a.util.sleep(timestep)
-  -- process pending keys until the queue is empty.
-  -- Note that this will exit insert mode.
+  vim.wait(timestep)
   vim.api.nvim_feedkeys('', 'x', true)
-  a.util.sleep(timestep)
+  vim.wait(timestep)
 end
 
 M.actions = {
@@ -85,7 +122,6 @@ M.actions = {
   open = function(args)
     vim.schedule(function()
       vim.cmd.Oil({ args = args })
-      -- If this buffer was already open, manually dispatch the autocmd to finish the wait
       if vim.b.oil_ready then
         vim.api.nvim_exec_autocmds('User', {
           pattern = 'OilEnter',

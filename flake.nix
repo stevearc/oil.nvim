@@ -22,6 +22,10 @@
             pkgs.prettier
             pkgs.stylua
             pkgs.selene
+            (pkgs.luajit.withPackages (ps: [
+              ps.busted
+              ps.nlua
+            ]))
           ];
         };
       });

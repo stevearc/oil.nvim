@@ -1,25 +1,18 @@
 local fs = require('oil.fs')
-local test_util = require('tests.test_util')
-
-local await = test_util.await
+local test_util = require('spec.test_util')
 
 ---@param path string
----@param cb fun(err: nil|string)
-local function touch(path, cb)
-  vim.loop.fs_open(path, 'w', 420, function(err, fd) -- 0644
-    if err then
-      cb(err)
-    else
-      local shortpath = path:gsub('^[^' .. fs.sep .. ']*' .. fs.sep, '')
-      vim.loop.fs_write(fd, shortpath, nil, function(err2)
-        if err2 then
-          cb(err2)
-        else
-          vim.loop.fs_close(fd, cb)
-        end
-      end)
-    end
-  end)
+local function touch(path)
+  local fd, open_err = vim.loop.fs_open(path, 'w', 420) -- 0644
+  if not fd then
+    error(open_err)
+  end
+  local shortpath = path:gsub('^[^' .. fs.sep .. ']*' .. fs.sep, '')
+  local _, write_err = vim.loop.fs_write(fd, shortpath)
+  if write_err then
+    error(write_err)
+  end
+  vim.loop.fs_close(fd)
 end
 
 ---@param filepath string
@@ -28,11 +21,14 @@ local function exists(filepath)
   local stat = vim.loop.fs_stat(filepath)
   return stat ~= nil and stat.type ~= nil
 end
+
 local TmpDir = {}
 
 TmpDir.new = function()
-  local path = await(vim.loop.fs_mkdtemp, 2, 'oil_test_XXXXXXXXX')
-  a.util.scheduler()
+  local path, err = vim.loop.fs_mkdtemp('oil_test_XXXXXXXXX')
+  if not path then
+    error(err)
+  end
   return setmetatable({ path = path }, {
     __index = TmpDir,
   })
@@ -46,13 +42,12 @@ function TmpDir:create(paths)
     for i, piece in ipairs(pieces) do
       partial_path = fs.join(partial_path, piece)
       if i == #pieces and not vim.endswith(partial_path, fs.sep) then
-        await(touch, 2, partial_path)
+        touch(partial_path)
       elseif not exists(partial_path) then
         vim.loop.fs_mkdir(partial_path, 493)
       end
     end
   end
-  a.util.scheduler()
 end
 
 ---@param filepath string
@@ -65,12 +60,10 @@ local read_file = function(filepath)
   local stat = vim.loop.fs_fstat(fd)
   local content = vim.loop.fs_read(fd, stat.size)
   vim.loop.fs_close(fd)
-  a.util.scheduler()
   return content
 end
 
 ---@param dir string
----@param cb fun(err: nil|string, entry: {type: oil.EntryType, name: string, root: string}
 local function walk(dir)
   local ret = {}
   for name, type in vim.fs.dir(dir) do
@@ -112,12 +105,11 @@ local assert_fs = function(root, paths)
     end
     local expected_content = paths[shortpath]
     paths[shortpath] = nil
-    assert.truthy(expected_content, string.format("Unexpected entry '%s'", shortpath))
+    assert(expected_content, string.format("Unexpected entry '%s'", shortpath))
     if entry.type == 'file' then
       local data = read_file(fullpath)
-      assert.equals(
-        expected_content,
-        data,
+      assert(
+        expected_content == data,
         string.format(
           "File '%s' expected content '%s' received '%s'",
           shortpath,
@@ -129,8 +121,8 @@ local assert_fs = function(root, paths)
   end
 
   for k, v in pairs(paths) do
-    assert.falsy(
-      k,
+    assert(
+      not k,
       string.format(
         "Expected %s '%s', but it was not found",
         v == true and 'directory' or 'file',
@@ -142,27 +134,23 @@ end
 
 ---@param paths table<string, string>
 function TmpDir:assert_fs(paths)
-  a.util.scheduler()
   assert_fs(self.path, paths)
 end
 
 function TmpDir:assert_exists(path)
-  a.util.scheduler()
   path = fs.join(self.path, path)
   local stat = vim.loop.fs_stat(path)
-  assert.truthy(stat, string.format("Expected path '%s' to exist", path))
+  assert(stat, string.format("Expected path '%s' to exist", path))
 end
 
 function TmpDir:assert_not_exists(path)
-  a.util.scheduler()
   path = fs.join(self.path, path)
   local stat = vim.loop.fs_stat(path)
-  assert.falsy(stat, string.format("Expected path '%s' to not exist", path))
+  assert(not stat, string.format("Expected path '%s' to not exist", path))
 end
 
 function TmpDir:dispose()
-  await(fs.recursive_delete, 3, 'directory', self.path)
-  a.util.scheduler()
+  test_util.await_throwiferr(fs.recursive_delete, 3, 'directory', self.path)
 end
 
 return TmpDir

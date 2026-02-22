@@ -1,0 +1,9 @@
+return {
+  _all = {
+    lua = "nlua",
+  },
+  default = {
+    ROOT = { "./spec/" },
+    helper = "spec/minimal_init.lua",
+  },
+}

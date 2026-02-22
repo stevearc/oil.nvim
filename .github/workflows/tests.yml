@@ -12,7 +12,7 @@ on:
 jobs:
   selene:
     name: Selene
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: NTBBloodbath/selene-action@v1.0.0
@@ -22,7 +22,7 @@ jobs:
 
   stylua:
     name: StyLua
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - name: Stylua
@@ -30,11 +30,11 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           version: v2.1.0
-          args: --check lua tests
+          args: --check lua spec
 
   typecheck:
     name: typecheck
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: mrcjkb/lua-typecheck-action@v0
@@ -45,24 +45,16 @@ jobs:
 
   run_tests:
     strategy:
+      fail-fast: false
       matrix:
-        include:
-          - nvim_tag: v0.8.3
-          - nvim_tag: v0.9.4
-          - nvim_tag: v0.10.4
-          - nvim_tag: v0.11.0
+        nvim_version:
+          - stable
+          - nightly
 
     name: Run tests
-    runs-on: ubuntu-22.04
-    env:
-      NVIM_TAG: ${{ matrix.nvim_tag }}
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - name: Install Neovim and dependencies
-        run: |
-          bash ./.github/workflows/install_nvim.sh
-
-      - name: Run tests
-        run: |
-          bash ./run_tests.sh
+      - uses: nvim-neorocks/nvim-busted-action@v1
+        with:
+          nvim_version: ${{ matrix.nvim_version }}

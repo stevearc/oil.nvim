@@ -1,8 +1,7 @@
-require('plenary.async').tests.add_to_env()
 local constants = require('oil.constants')
 local parser = require('oil.mutator.parser')
 local test_adapter = require('oil.adapters.test')
-local test_util = require('tests.test_util')
+local test_util = require('spec.test_util')
 local util = require('oil.util')
 local view = require('oil.view')
 
