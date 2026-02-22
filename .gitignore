@@ -6,9 +6,6 @@ luac.out
 *.zip
 *.tar.gz
 
-# python bytecode
-__pycache__
-
 # Object files
 *.o
 *.os
@@ -44,9 +41,7 @@ __pycache__
 
 .direnv/
 .testenv/
-venv/
 doc/tags
-scripts/nvim_doc_tools
 scripts/nvim-typecheck-action
 scripts/benchmark.nvim
 perf/tmp/

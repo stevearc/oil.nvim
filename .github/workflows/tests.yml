@@ -70,24 +70,6 @@ jobs:
         run: |
           bash ./run_tests.sh
 
-  update_docs:
-    name: Update docs
-    runs-on: ubuntu-22.04
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install Neovim and dependencies
-        run: |
-          bash ./.github/workflows/install_nvim.sh
-
-      - name: Update docs
-        run: |
-          python -m pip install pyparsing==3.0.9
-          make doc
-      - name: Check docs are up to date
-        run: |
-          git diff --exit-code README.md doc
-
   release:
     name: release
 
@@ -97,7 +79,6 @@ jobs:
       - stylua
       - typecheck
       - run_tests
-      - update_docs
     runs-on: ubuntu-22.04
     steps:
       - uses: googleapis/release-please-action@v4
