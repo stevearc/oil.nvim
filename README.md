@@ -80,7 +80,7 @@ luarocks install oil.nvim
 
 ## FAQ
 
-**How do I migrate from `stevearc/oil.nvim` to `barrettruth/oil.nvim`?**
+**Q: How do I migrate from `stevearc/oil.nvim` to `barrettruth/oil.nvim`?**
 
 Replace your `setup()` call with a `vim.g.oil` assignment. For example, with
 [lazy.nvim](https://github.com/folke/lazy.nvim):
@@ -99,25 +99,28 @@ Replace your `setup()` call with a `vim.g.oil` assignment. For example, with
 
 -- after
 {
-  'stevearc/oil.nvim',
+  'barrettruth/oil.nvim',
   init = function()
     vim.g.oil = {
       columns = { "icon", "size" },
       delete_to_trash = true,
     }
-  end
+  end,
+}
 ```
 
-**Why "oil"**?
+**Q: Why "oil"?**
 
-From the [vim-vinegar](https://github.com/tpope/vim-vinegar) README, a quote by Drew Neil:
+**A:** From the [vim-vinegar](https://github.com/tpope/vim-vinegar) README, a quote by Drew Neil:
 
 > Split windows and the project drawer go together like oil and vinegar
 
 Vinegar was taken. Let's be oil.
 Plus, I think it's pretty slick ;)
 
-**Why would I want to use oil vs any other plugin?**
+**Q: Why would I want to use oil vs any other plugin?**
+
+**A:**
 
 - You like to use a netrw-like view to browse directories (as opposed to a file tree)
 - AND you want to be able to edit your filesystem like a buffer
@@ -125,11 +128,13 @@ Plus, I think it's pretty slick ;)
 
 If you don't need those features specifically, check out the alternatives listed below
 
-**Can oil display files as a tree view**?
+**Q: Can oil display files as a tree view?**
 
-No. A tree view would require a completely different methodology, necessitating a complete rewrite.
+**A:** No. A tree view would require a completely different methodology, necessitating a complete rewrite.
 
-**What are some alternatives?**
+**Q: What are some alternatives?**
+
+**A:**
 
 - [the original](https://github.com/stevearc/oil.nvim): the lesser-maintained but
   official `oil.nvim`
