@@ -1,4 +1,5 @@
 std = 'vim'
+exclude = [".direnv/*"]
 
 [lints]
 mixed_table = 'allow'

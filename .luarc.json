@@ -1,8 +1,15 @@
 {
-  "runtime.version": "Lua 5.1",
-  "runtime.path": ["lua/?.lua", "lua/?/init.lua"],
-  "diagnostics.globals": ["vim", "jit", "bit"],
-  "workspace.library": ["$VIMRUNTIME/lua", "${3rd}/luv/library"],
-  "workspace.checkThirdParty": false,
-  "completion.callSnippet": "Replace"
+  "runtime": {
+    "version": "LuaJIT",
+    "pathStrict": true
+  },
+  "workspace": {
+    "checkThirdParty": false
+  },
+  "type": {
+    "checkTableShape": true
+  },
+  "completion": {
+    "callSnippet": "Replace"
+  }
 }

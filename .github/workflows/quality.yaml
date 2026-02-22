@@ -62,12 +62,10 @@ jobs:
     if: ${{ needs.changes.outputs.lua == 'true' }}
     steps:
       - uses: actions/checkout@v4
-      - name: Run Lua LS Type Check
-        uses: mrcjkb/lua-typecheck-action@v0
+      - uses: stevearc/nvim-typecheck-action@v2
         with:
-          checklevel: Warning
-          directories: lua
-          configpath: .luarc.json
+          path: lua
+          luals-version: 3.16.4
 
   markdown-format:
     name: Markdown Format Check
