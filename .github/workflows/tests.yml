@@ -69,27 +69,3 @@ jobs:
       - name: Run tests
         run: |
           bash ./run_tests.sh
-
-  release:
-    name: release
-
-    if: ${{ github.ref == 'refs/heads/main' }}
-    needs:
-      - luacheck
-      - stylua
-      - typecheck
-      - run_tests
-    runs-on: ubuntu-22.04
-    steps:
-      - uses: googleapis/release-please-action@v4
-        id: release
-        with:
-          release-type: simple
-      - uses: actions/checkout@v4
-      - uses: rickstaa/action-create-tag@v1
-        if: ${{ steps.release.outputs.release_created }}
-        with:
-          tag: stable
-          message: "Current stable release: ${{ steps.release.outputs.tag_name }}"
-          tag_exists_error: false
-          force_push_tag: true
