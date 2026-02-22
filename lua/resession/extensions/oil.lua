@@ -1,7 +1,7 @@
 local M = {}
 
 M.is_win_supported = function(winid, bufnr)
-  return vim.bo[bufnr].filetype == "oil"
+  return vim.bo[bufnr].filetype == 'oil'
 end
 
 M.save_win = function(winid)
@@ -11,7 +11,7 @@ M.save_win = function(winid)
 end
 
 M.load_win = function(winid, config)
-  require("oil").open(config.bufname)
+  require('oil').open(config.bufname)
 end
 
 return M

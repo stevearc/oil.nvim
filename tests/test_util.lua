@@ -1,14 +1,14 @@
-require("plenary.async").tests.add_to_env()
-local cache = require("oil.cache")
-local test_adapter = require("oil.adapters.test")
-local util = require("oil.util")
+require('plenary.async').tests.add_to_env()
+local cache = require('oil.cache')
+local test_adapter = require('oil.adapters.test')
+local util = require('oil.util')
 local M = {}
 
 M.reset_editor = function()
-  require("oil").setup({
+  require('oil').setup({
     columms = {},
     adapters = {
-      ["oil-test://"] = "test",
+      ['oil-test://'] = 'test',
     },
     prompt_save_on_select_new_entry = false,
   })
@@ -35,7 +35,7 @@ local function throwiferr(err, ...)
 end
 
 M.oil_open = function(...)
-  a.wrap(require("oil").open, 3)(...)
+  a.wrap(require('oil').open, 3)(...)
 end
 
 M.await = function(fn, nargs, ...)
@@ -44,12 +44,12 @@ end
 
 M.wait_for_autocmd = a.wrap(function(autocmd, cb)
   local opts = {
-    pattern = "*",
+    pattern = '*',
     nested = true,
     once = true,
   }
-  if type(autocmd) == "table" then
-    opts = vim.tbl_extend("force", opts, autocmd)
+  if type(autocmd) == 'table' then
+    opts = vim.tbl_extend('force', opts, autocmd)
     autocmd = autocmd[1]
     opts[1] = nil
   end
@@ -70,12 +70,12 @@ M.feedkeys = function(actions, timestep)
   for _, action in ipairs(actions) do
     a.util.sleep(timestep)
     local escaped = vim.api.nvim_replace_termcodes(action, true, false, true)
-    vim.api.nvim_feedkeys(escaped, "m", true)
+    vim.api.nvim_feedkeys(escaped, 'm', true)
   end
   a.util.sleep(timestep)
   -- process pending keys until the queue is empty.
   -- Note that this will exit insert mode.
-  vim.api.nvim_feedkeys("", "x", true)
+  vim.api.nvim_feedkeys('', 'x', true)
   a.util.sleep(timestep)
 end
 
@@ -87,39 +87,39 @@ M.actions = {
       vim.cmd.Oil({ args = args })
       -- If this buffer was already open, manually dispatch the autocmd to finish the wait
       if vim.b.oil_ready then
-        vim.api.nvim_exec_autocmds("User", {
-          pattern = "OilEnter",
+        vim.api.nvim_exec_autocmds('User', {
+          pattern = 'OilEnter',
           modeline = false,
           data = { buf = vim.api.nvim_get_current_buf() },
         })
       end
     end)
-    M.wait_for_autocmd({ "User", pattern = "OilEnter" })
+    M.wait_for_autocmd({ 'User', pattern = 'OilEnter' })
   end,
 
   ---Save all changes and wait for operation to complete
   save = function()
-    vim.schedule_wrap(require("oil").save)({ confirm = false })
-    M.wait_for_autocmd({ "User", pattern = "OilMutationComplete" })
+    vim.schedule_wrap(require('oil').save)({ confirm = false })
+    M.wait_for_autocmd({ 'User', pattern = 'OilMutationComplete' })
   end,
 
   ---@param bufnr? integer
   reload = function(bufnr)
-    M.await(require("oil.view").render_buffer_async, 3, bufnr or 0)
+    M.await(require('oil.view').render_buffer_async, 3, bufnr or 0)
   end,
 
   ---Move cursor to a file or directory in an oil buffer
   ---@param filename string
   focus = function(filename)
     local lines = vim.api.nvim_buf_get_lines(0, 0, -1, true)
-    local search = " " .. filename .. "$"
+    local search = ' ' .. filename .. '$'
     for i, line in ipairs(lines) do
       if line:match(search) then
         vim.api.nvim_win_set_cursor(0, { i, 0 })
         return
       end
     end
-    error("Could not find file " .. filename)
+    error('Could not find file ' .. filename)
   end,
 }
 
@@ -133,7 +133,7 @@ M.parse_entries = function(bufnr)
   end
   local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, true)
   return vim.tbl_map(function(line)
-    return line:match("^/%d+ +(.+)$")
+    return line:match('^/%d+ +(.+)$')
   end, lines)
 end
 

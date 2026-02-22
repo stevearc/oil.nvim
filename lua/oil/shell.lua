@@ -9,7 +9,7 @@ M.run = function(cmd, opts, callback)
   local stderr = {}
   local jid = vim.fn.jobstart(
     cmd,
-    vim.tbl_deep_extend("keep", opts, {
+    vim.tbl_deep_extend('keep', opts, {
       stdout_buffered = true,
       stderr_buffered = true,
       on_stdout = function(j, output)
@@ -22,19 +22,19 @@ M.run = function(cmd, opts, callback)
         if code == 0 then
           callback(nil, stdout)
         else
-          local err = table.concat(stderr, "\n")
-          if err == "" then
-            err = "Unknown error"
+          local err = table.concat(stderr, '\n')
+          if err == '' then
+            err = 'Unknown error'
           end
-          local cmd_str = type(cmd) == "string" and cmd or table.concat(cmd, " ")
+          local cmd_str = type(cmd) == 'string' and cmd or table.concat(cmd, ' ')
           callback(string.format("Error running command '%s'\n%s", cmd_str, err))
         end
       end),
     })
   )
   local exe
-  if type(cmd) == "string" then
-    exe = vim.split(cmd, "%s+")[1]
+  if type(cmd) == 'string' then
+    exe = vim.split(cmd, '%s+')[1]
   else
     exe = cmd[1]
   end

@@ -1,12 +1,12 @@
-local cache = require("oil.cache")
-local columns = require("oil.columns")
-local config = require("oil.config")
-local constants = require("oil.constants")
-local fs = require("oil.fs")
-local git = require("oil.git")
-local log = require("oil.log")
-local permissions = require("oil.adapters.files.permissions")
-local util = require("oil.util")
+local cache = require('oil.cache')
+local columns = require('oil.columns')
+local config = require('oil.config')
+local constants = require('oil.constants')
+local fs = require('oil.fs')
+local git = require('oil.git')
+local log = require('oil.log')
+local permissions = require('oil.adapters.files.permissions')
+local util = require('oil.util')
 local uv = vim.uv or vim.loop
 
 local M = {}
@@ -25,7 +25,7 @@ local function read_link_data(path, cb)
         assert(link)
         local stat_path = link
         if not fs.is_absolute(link) then
-          stat_path = fs.join(vim.fn.fnamemodify(path, ":h"), link)
+          stat_path = fs.join(vim.fn.fnamemodify(path, ':h'), link)
         end
         uv.fs_stat(stat_path, function(stat_err, stat)
           cb(nil, link, stat)
@@ -43,7 +43,7 @@ end
 ---@return string
 M.to_short_os_path = function(path, entry_type)
   local shortpath = fs.shorten_path(fs.posix_to_os_path(path))
-  if entry_type == "directory" then
+  if entry_type == 'directory' then
     shortpath = util.addslash(shortpath, true)
   end
   return shortpath
@@ -61,13 +61,13 @@ file_columns.size = {
       return columns.EMPTY
     end
     if stat.size >= 1e9 then
-      return string.format("%.1fG", stat.size / 1e9)
+      return string.format('%.1fG', stat.size / 1e9)
     elseif stat.size >= 1e6 then
-      return string.format("%.1fM", stat.size / 1e6)
+      return string.format('%.1fM', stat.size / 1e6)
     elseif stat.size >= 1e3 then
-      return string.format("%.1fk", stat.size / 1e3)
+      return string.format('%.1fk', stat.size / 1e3)
     else
-      return string.format("%d", stat.size)
+      return string.format('%d', stat.size)
     end
   end,
 
@@ -82,7 +82,7 @@ file_columns.size = {
   end,
 
   parse = function(line, conf)
-    return line:match("^(%d+%S*)%s+(.*)$")
+    return line:match('^(%d+%S*)%s+(.*)$')
   end,
 }
 
@@ -120,7 +120,7 @@ if not fs.is_windows then
       local _, path = util.parse_url(action.url)
       assert(path)
       return string.format(
-        "CHMOD %s %s",
+        'CHMOD %s %s',
         permissions.mode_to_octal_str(action.value),
         M.to_short_os_path(path, action.entry_type)
       )
@@ -147,10 +147,10 @@ end
 local current_year
 -- Make sure we run this import-time effect in the main loop (mostly for tests)
 vim.schedule(function()
-  current_year = vim.fn.strftime("%Y")
+  current_year = vim.fn.strftime('%Y')
 end)
 
-for _, time_key in ipairs({ "ctime", "mtime", "atime", "birthtime" }) do
+for _, time_key in ipairs({ 'ctime', 'mtime', 'atime', 'birthtime' }) do
   file_columns[time_key] = {
     require_stat = true,
 
@@ -165,11 +165,11 @@ for _, time_key in ipairs({ "ctime", "mtime", "atime", "birthtime" }) do
       if fmt then
         ret = vim.fn.strftime(fmt, stat[time_key].sec)
       else
-        local year = vim.fn.strftime("%Y", stat[time_key].sec)
+        local year = vim.fn.strftime('%Y', stat[time_key].sec)
         if year ~= current_year then
-          ret = vim.fn.strftime("%b %d %Y", stat[time_key].sec)
+          ret = vim.fn.strftime('%b %d %Y', stat[time_key].sec)
         else
-          ret = vim.fn.strftime("%b %d %H:%M", stat[time_key].sec)
+          ret = vim.fn.strftime('%b %d %H:%M', stat[time_key].sec)
         end
       end
       return ret
@@ -183,20 +183,20 @@ for _, time_key in ipairs({ "ctime", "mtime", "atime", "birthtime" }) do
         -- and whitespace with a pattern that matches any amount of whitespace
         -- e.g. "%b %d %Y" -> "%S+%s+%S+%s+%S+"
         pattern = fmt
-          :gsub("%%.", "%%S+")
-          :gsub("%s+", "%%s+")
+          :gsub('%%.', '%%S+')
+          :gsub('%s+', '%%s+')
           -- escape `()[]` because those are special characters in Lua patterns
           :gsub(
-            "%(",
-            "%%("
+            '%(',
+            '%%('
           )
-          :gsub("%)", "%%)")
-          :gsub("%[", "%%[")
-          :gsub("%]", "%%]")
+          :gsub('%)', '%%)')
+          :gsub('%[', '%%[')
+          :gsub('%]', '%%]')
       else
-        pattern = "%S+%s+%d+%s+%d%d:?%d%d"
+        pattern = '%S+%s+%d+%s+%d%d:?%d%d'
       end
-      return line:match("^(" .. pattern .. ")%s+(.+)$")
+      return line:match('^(' .. pattern .. ')%s+(.+)$')
     end,
 
     get_sort_value = function(entry)
@@ -238,17 +238,17 @@ M.normalize_url = function(url, callback)
   assert(path)
 
   if fs.is_windows then
-    if path == "/" then
+    if path == '/' then
       return callback(url)
     else
-      local is_root_drive = path:match("^/%u$")
+      local is_root_drive = path:match('^/%u$')
       if is_root_drive then
-        return callback(url .. "/")
+        return callback(url .. '/')
       end
     end
   end
 
-  local os_path = vim.fn.fnamemodify(fs.posix_to_os_path(path), ":p")
+  local os_path = vim.fn.fnamemodify(fs.posix_to_os_path(path), ':p')
   uv.fs_realpath(os_path, function(err, new_os_path)
     local realpath
     if fs.is_windows then
@@ -264,8 +264,8 @@ M.normalize_url = function(url, callback)
       vim.schedule_wrap(function(stat_err, stat)
         local is_directory
         if stat then
-          is_directory = stat.type == "directory"
-        elseif vim.endswith(realpath, "/") or (fs.is_windows and vim.endswith(realpath, "\\")) then
+          is_directory = stat.type == 'directory'
+        elseif vim.endswith(realpath, '/') or (fs.is_windows and vim.endswith(realpath, '\\')) then
           is_directory = true
         else
           local filetype = vim.filetype.match({ filename = vim.fs.basename(realpath) })
@@ -276,7 +276,7 @@ M.normalize_url = function(url, callback)
           local norm_path = util.addslash(fs.os_to_posix_path(realpath))
           callback(scheme .. norm_path)
         else
-          callback(vim.fn.fnamemodify(realpath, ":."))
+          callback(vim.fn.fnamemodify(realpath, ':.'))
         end
       end)
     )
@@ -292,11 +292,11 @@ M.get_entry_path = function(url, entry, cb)
     local scheme, path = util.parse_url(parent_url)
     M.normalize_url(scheme .. path .. entry.name, cb)
   else
-    if entry.type == "directory" then
+    if entry.type == 'directory' then
       cb(url)
     else
       local _, path = util.parse_url(url)
-      local os_path = vim.fn.fnamemodify(fs.posix_to_os_path(assert(path)), ":p")
+      local os_path = vim.fn.fnamemodify(fs.posix_to_os_path(assert(path)), ':p')
       cb(os_path)
     end
   end
@@ -321,10 +321,10 @@ local function fetch_entry_metadata(parent_dir, entry, require_stat, cb)
   end
 
   -- Make sure we always get fs_stat info for links
-  if entry[FIELD_TYPE] == "link" then
+  if entry[FIELD_TYPE] == 'link' then
     read_link_data(entry_path, function(link_err, link, link_stat)
       if link_err then
-        log.warn("Error reading link data %s: %s", entry_path, link_err)
+        log.warn('Error reading link data %s: %s', entry_path, link_err)
         return cb()
       end
       meta.link = link
@@ -336,7 +336,7 @@ local function fetch_entry_metadata(parent_dir, entry, require_stat, cb)
         -- The link is broken, so let's use the stat of the link itself
         uv.fs_lstat(entry_path, function(stat_err, stat)
           if stat_err then
-            log.warn("Error lstat link file %s: %s", entry_path, stat_err)
+            log.warn('Error lstat link file %s: %s', entry_path, stat_err)
             return cb()
           end
           meta.stat = stat
@@ -350,7 +350,7 @@ local function fetch_entry_metadata(parent_dir, entry, require_stat, cb)
   elseif require_stat then
     uv.fs_stat(entry_path, function(stat_err, stat)
       if stat_err then
-        log.warn("Error stat file %s: %s", entry_path, stat_err)
+        log.warn('Error stat file %s: %s', entry_path, stat_err)
         return cb()
       end
       assert(stat)
@@ -368,11 +368,11 @@ end
 if fs.is_windows then
   local old_fetch_metadata = fetch_entry_metadata
   fetch_entry_metadata = function(parent_dir, entry, require_stat, cb)
-    if entry[FIELD_TYPE] == "link" then
+    if entry[FIELD_TYPE] == 'link' then
       local entry_path = fs.posix_to_os_path(parent_dir .. entry[FIELD_NAME])
       uv.fs_lstat(entry_path, function(stat_err, stat)
         if stat_err then
-          log.warn("Error lstat link file %s: %s", entry_path, stat_err)
+          log.warn('Error lstat link file %s: %s', entry_path, stat_err)
           return old_fetch_metadata(parent_dir, entry, require_stat, cb)
         end
         assert(stat)
@@ -398,17 +398,17 @@ local function list_windows_drives(url, column_defs, cb)
   local _, path = util.parse_url(url)
   assert(path)
   local require_stat = columns_require_stat(column_defs)
-  local stdout = ""
-  local jid = vim.fn.jobstart({ "wmic", "logicaldisk", "get", "name" }, {
+  local stdout = ''
+  local jid = vim.fn.jobstart({ 'wmic', 'logicaldisk', 'get', 'name' }, {
     stdout_buffered = true,
     on_stdout = function(_, data)
-      stdout = table.concat(data, "\n")
+      stdout = table.concat(data, '\n')
     end,
     on_exit = function(_, code)
       if code ~= 0 then
-        return cb("Error listing windows devices")
+        return cb('Error listing windows devices')
       end
-      local lines = vim.split(stdout, "\n", { plain = true, trimempty = true })
+      local lines = vim.split(stdout, '\n', { plain = true, trimempty = true })
       -- Remove the "Name" header
       table.remove(lines, 1)
       local internal_entries = {}
@@ -421,12 +421,12 @@ local function list_windows_drives(url, column_defs, cb)
       end)
 
       for _, disk in ipairs(lines) do
-        if disk:match("^%s*$") then
+        if disk:match('^%s*$') then
           -- Skip empty line
           complete_disk_cb()
         else
-          disk = disk:gsub(":%s*$", "")
-          local cache_entry = cache.create_entry(url, disk, "directory")
+          disk = disk:gsub(':%s*$', '')
+          local cache_entry = cache.create_entry(url, disk, 'directory')
           table.insert(internal_entries, cache_entry)
           fetch_entry_metadata(path, cache_entry, require_stat, complete_disk_cb)
         end
@@ -434,7 +434,7 @@ local function list_windows_drives(url, column_defs, cb)
     end,
   })
   if jid <= 0 then
-    cb("Could not list windows devices")
+    cb('Could not list windows devices')
   end
 end
 
@@ -444,7 +444,7 @@ end
 M.list = function(url, column_defs, cb)
   local _, path = util.parse_url(url)
   assert(path)
-  if fs.is_windows and path == "/" then
+  if fs.is_windows and path == '/' then
     return list_windows_drives(url, column_defs, cb)
   end
   local dir = fs.posix_to_os_path(path)
@@ -453,7 +453,7 @@ M.list = function(url, column_defs, cb)
   ---@diagnostic disable-next-line: param-type-mismatch, discard-returns
   uv.fs_opendir(dir, function(open_err, fd)
     if open_err then
-      if open_err:match("^ENOENT: no such file or directory") then
+      if open_err:match('^ENOENT: no such file or directory') then
         -- If the directory doesn't exist, treat the list as a success. We will be able to traverse
         -- and edit a not-yet-existing directory.
         return cb()
@@ -505,7 +505,7 @@ M.is_modifiable = function(bufnr)
   local bufname = vim.api.nvim_buf_get_name(bufnr)
   local _, path = util.parse_url(bufname)
   assert(path)
-  if fs.is_windows and path == "/" then
+  if fs.is_windows and path == '/' then
     return false
   end
   local dir = fs.posix_to_os_path(path)
@@ -515,30 +515,30 @@ M.is_modifiable = function(bufnr)
   end
 
   -- fs_access can return nil, force boolean return
-  return uv.fs_access(dir, "W") == true
+  return uv.fs_access(dir, 'W') == true
 end
 
 ---@param action oil.Action
 ---@return string
 M.render_action = function(action)
-  if action.type == "create" then
+  if action.type == 'create' then
     local _, path = util.parse_url(action.url)
     assert(path)
-    local ret = string.format("CREATE %s", M.to_short_os_path(path, action.entry_type))
+    local ret = string.format('CREATE %s', M.to_short_os_path(path, action.entry_type))
     if action.link then
-      ret = ret .. " -> " .. fs.posix_to_os_path(action.link)
+      ret = ret .. ' -> ' .. fs.posix_to_os_path(action.link)
     end
     return ret
-  elseif action.type == "delete" then
+  elseif action.type == 'delete' then
     local _, path = util.parse_url(action.url)
     assert(path)
     local short_path = M.to_short_os_path(path, action.entry_type)
     if config.delete_to_trash then
-      return string.format(" TRASH %s", short_path)
+      return string.format(' TRASH %s', short_path)
     else
-      return string.format("DELETE %s", short_path)
+      return string.format('DELETE %s', short_path)
     end
-  elseif action.type == "move" or action.type == "copy" then
+  elseif action.type == 'move' or action.type == 'copy' then
     local dest_adapter = assert(config.get_adapter_by_scheme(action.dest_url))
     if dest_adapter == M then
       local _, src_path = util.parse_url(action.src_url)
@@ -546,7 +546,7 @@ M.render_action = function(action)
       local _, dest_path = util.parse_url(action.dest_url)
       assert(dest_path)
       return string.format(
-        "  %s %s -> %s",
+        '  %s %s -> %s',
         action.type:upper(),
         M.to_short_os_path(src_path, action.entry_type),
         M.to_short_os_path(dest_path, action.entry_type)
@@ -563,7 +563,7 @@ end
 ---@param action oil.Action
 ---@param cb fun(err: nil|string)
 M.perform_action = function(action, cb)
-  if action.type == "create" then
+  if action.type == 'create' then
     local _, path = util.parse_url(action.url)
     assert(path)
     path = fs.posix_to_os_path(path)
@@ -579,16 +579,16 @@ M.perform_action = function(action, cb)
       end)
     end
 
-    if action.entry_type == "directory" then
+    if action.entry_type == 'directory' then
       uv.fs_mkdir(path, config.new_dir_mode, function(err)
         -- Ignore if the directory already exists
-        if not err or err:match("^EEXIST:") then
+        if not err or err:match('^EEXIST:') then
           cb()
         else
           cb(err)
         end
       end)
-    elseif action.entry_type == "link" and action.link then
+    elseif action.entry_type == 'link' and action.link then
       local flags = nil
       local target = fs.posix_to_os_path(action.link)
       if fs.is_windows then
@@ -602,7 +602,7 @@ M.perform_action = function(action, cb)
     else
       fs.touch(path, config.new_file_mode, cb)
     end
-  elseif action.type == "delete" then
+  elseif action.type == 'delete' then
     local _, path = util.parse_url(action.url)
     assert(path)
     path = fs.posix_to_os_path(path)
@@ -619,11 +619,11 @@ M.perform_action = function(action, cb)
     end
 
     if config.delete_to_trash then
-      require("oil.adapters.trash").delete_to_trash(path, cb)
+      require('oil.adapters.trash').delete_to_trash(path, cb)
     else
       fs.recursive_delete(action.entry_type, path, cb)
     end
-  elseif action.type == "move" then
+  elseif action.type == 'move' then
     local dest_adapter = assert(config.get_adapter_by_scheme(action.dest_url))
     if dest_adapter == M then
       local _, src_path = util.parse_url(action.src_url)
@@ -641,7 +641,7 @@ M.perform_action = function(action, cb)
       -- We should never hit this because we don't implement supported_cross_adapter_actions
       cb("files adapter doesn't support cross-adapter move")
     end
-  elseif action.type == "copy" then
+  elseif action.type == 'copy' then
     local dest_adapter = assert(config.get_adapter_by_scheme(action.dest_url))
     if dest_adapter == M then
       local _, src_path = util.parse_url(action.src_url)
@@ -656,7 +656,7 @@ M.perform_action = function(action, cb)
       cb("files adapter doesn't support cross-adapter copy")
     end
   else
-    cb(string.format("Bad action type: %s", action.type))
+    cb(string.format('Bad action type: %s', action.type))
   end
 end
 

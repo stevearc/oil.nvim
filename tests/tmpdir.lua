@@ -1,16 +1,16 @@
-local fs = require("oil.fs")
-local test_util = require("tests.test_util")
+local fs = require('oil.fs')
+local test_util = require('tests.test_util')
 
 local await = test_util.await
 
 ---@param path string
 ---@param cb fun(err: nil|string)
 local function touch(path, cb)
-  vim.loop.fs_open(path, "w", 420, function(err, fd) -- 0644
+  vim.loop.fs_open(path, 'w', 420, function(err, fd) -- 0644
     if err then
       cb(err)
     else
-      local shortpath = path:gsub("^[^" .. fs.sep .. "]*" .. fs.sep, "")
+      local shortpath = path:gsub('^[^' .. fs.sep .. ']*' .. fs.sep, '')
       vim.loop.fs_write(fd, shortpath, nil, function(err2)
         if err2 then
           cb(err2)
@@ -31,7 +31,7 @@ end
 local TmpDir = {}
 
 TmpDir.new = function()
-  local path = await(vim.loop.fs_mkdtemp, 2, "oil_test_XXXXXXXXX")
+  local path = await(vim.loop.fs_mkdtemp, 2, 'oil_test_XXXXXXXXX')
   a.util.scheduler()
   return setmetatable({ path = path }, {
     __index = TmpDir,
@@ -58,7 +58,7 @@ end
 ---@param filepath string
 ---@return string?
 local read_file = function(filepath)
-  local fd = vim.loop.fs_open(filepath, "r", 420)
+  local fd = vim.loop.fs_open(filepath, 'r', 420)
   if not fd then
     return nil
   end
@@ -79,7 +79,7 @@ local function walk(dir)
       type = type,
       root = dir,
     })
-    if type == "directory" then
+    if type == 'directory' then
       vim.list_extend(ret, walk(fs.join(dir, name)))
     end
   end
@@ -90,10 +90,10 @@ end
 local assert_fs = function(root, paths)
   local unlisted_dirs = {}
   for k in pairs(paths) do
-    local pieces = vim.split(k, "/")
-    local partial_path = ""
+    local pieces = vim.split(k, '/')
+    local partial_path = ''
     for i, piece in ipairs(pieces) do
-      partial_path = partial_path .. piece .. "/"
+      partial_path = partial_path .. piece .. '/'
       if i ~= #pieces then
         unlisted_dirs[partial_path] = true
       end
@@ -107,13 +107,13 @@ local assert_fs = function(root, paths)
   for _, entry in ipairs(entries) do
     local fullpath = fs.join(entry.root, entry.name)
     local shortpath = fullpath:sub(root:len() + 2)
-    if entry.type == "directory" then
-      shortpath = shortpath .. "/"
+    if entry.type == 'directory' then
+      shortpath = shortpath .. '/'
     end
     local expected_content = paths[shortpath]
     paths[shortpath] = nil
     assert.truthy(expected_content, string.format("Unexpected entry '%s'", shortpath))
-    if entry.type == "file" then
+    if entry.type == 'file' then
       local data = read_file(fullpath)
       assert.equals(
         expected_content,
@@ -133,7 +133,7 @@ local assert_fs = function(root, paths)
       k,
       string.format(
         "Expected %s '%s', but it was not found",
-        v == true and "directory" or "file",
+        v == true and 'directory' or 'file',
         k
       )
     )
@@ -161,7 +161,7 @@ function TmpDir:assert_not_exists(path)
 end
 
 function TmpDir:dispose()
-  await(fs.recursive_delete, 3, "directory", self.path)
+  await(fs.recursive_delete, 3, 'directory', self.path)
   a.util.scheduler()
 end
 

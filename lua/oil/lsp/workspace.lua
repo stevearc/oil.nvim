@@ -1,13 +1,13 @@
-local fs = require("oil.fs")
-local ms = require("vim.lsp.protocol").Methods
-if vim.fn.has("nvim-0.10") == 0 then
+local fs = require('oil.fs')
+local ms = require('vim.lsp.protocol').Methods
+if vim.fn.has('nvim-0.10') == 0 then
   ms = {
-    workspace_willCreateFiles = "workspace/willCreateFiles",
-    workspace_didCreateFiles = "workspace/didCreateFiles",
-    workspace_willDeleteFiles = "workspace/willDeleteFiles",
-    workspace_didDeleteFiles = "workspace/didDeleteFiles",
-    workspace_willRenameFiles = "workspace/willRenameFiles",
-    workspace_didRenameFiles = "workspace/didRenameFiles",
+    workspace_willCreateFiles = 'workspace/willCreateFiles',
+    workspace_didCreateFiles = 'workspace/didCreateFiles',
+    workspace_willDeleteFiles = 'workspace/willDeleteFiles',
+    workspace_didDeleteFiles = 'workspace/didDeleteFiles',
+    workspace_willRenameFiles = 'workspace/willRenameFiles',
+    workspace_didRenameFiles = 'workspace/didRenameFiles',
   }
 end
 
@@ -16,7 +16,7 @@ local M = {}
 ---@param method string
 ---@return vim.lsp.Client[]
 local function get_clients(method)
-  if vim.fn.has("nvim-0.10") == 1 then
+  if vim.fn.has('nvim-0.10') == 1 then
     return vim.lsp.get_clients({ method = method })
   else
     ---@diagnostic disable-next-line: deprecated
@@ -32,7 +32,7 @@ end
 ---@return boolean
 local function match_glob(glob, path)
   -- nvim-0.10 will have vim.glob.to_lpeg, so this will be a LPeg pattern
-  if type(glob) ~= "string" then
+  if type(glob) ~= 'string' then
     return glob:match(path) ~= nil
   end
 
@@ -59,7 +59,7 @@ local function get_matching_paths(client, filters, paths)
 
   local match_fns = {}
   for _, filter in ipairs(filters) do
-    if filter.scheme == nil or filter.scheme == "file" then
+    if filter.scheme == nil or filter.scheme == 'file' then
       local pattern = filter.pattern
       local glob = pattern.glob
       local ignore_case = pattern.options and pattern.options.ignoreCase
@@ -69,32 +69,32 @@ local function get_matching_paths(client, filters, paths)
 
       -- Some language servers use forward slashes as path separators on Windows (LuaLS)
       -- We no longer need this after 0.12: https://github.com/neovim/neovim/commit/322a6d305d088420b23071c227af07b7c1beb41a
-      if vim.fn.has("nvim-0.12") == 0 and fs.is_windows then
-        glob = glob:gsub("/", "\\")
+      if vim.fn.has('nvim-0.12') == 0 and fs.is_windows then
+        glob = glob:gsub('/', '\\')
       end
 
       ---@type string|vim.lpeg.Pattern
       local glob_to_match = glob
       if vim.glob and vim.glob.to_lpeg then
-        glob = glob:gsub("{(.-)}", function(s)
-          local patterns = vim.split(s, ",")
+        glob = glob:gsub('{(.-)}', function(s)
+          local patterns = vim.split(s, ',')
           local filtered = {}
           for _, pat in ipairs(patterns) do
-            if pat ~= "" then
+            if pat ~= '' then
               table.insert(filtered, pat)
             end
           end
           if #filtered == 0 then
-            return ""
+            return ''
           end
           -- HACK around https://github.com/neovim/neovim/issues/28931
           -- find alternations and sort them by length to try to match the longest first
-          if vim.fn.has("nvim-0.11") == 0 then
+          if vim.fn.has('nvim-0.11') == 0 then
             table.sort(filtered, function(a, b)
               return a:len() > b:len()
             end)
           end
-          return "{" .. table.concat(filtered, ",") .. "}"
+          return '{' .. table.concat(filtered, ',') .. '}'
         end)
 
         glob_to_match = vim.glob.to_lpeg(glob)
@@ -102,7 +102,7 @@ local function get_matching_paths(client, filters, paths)
       local matches = pattern.matches
       table.insert(match_fns, function(path)
         local is_dir = vim.fn.isdirectory(path) == 1
-        if matches and ((matches == "file" and is_dir) or (matches == "folder" and not is_dir)) then
+        if matches and ((matches == 'file' and is_dir) or (matches == 'folder' and not is_dir)) then
           return false
         end
 
@@ -163,10 +163,10 @@ local function will_file_operation(method, capability_name, files, options)
   for _, client in ipairs(clients) do
     local filters = vim.tbl_get(
       client.server_capabilities,
-      "workspace",
-      "fileOperations",
+      'workspace',
+      'fileOperations',
       capability_name,
-      "filters"
+      'filters'
     )
     local matching_files = get_matching_paths(client, filters, files)
     if matching_files then
@@ -178,7 +178,7 @@ local function will_file_operation(method, capability_name, files, options)
         end, matching_files),
       }
       local result, err
-      if vim.fn.has("nvim-0.11") == 1 then
+      if vim.fn.has('nvim-0.11') == 1 then
         result, err = client:request_sync(method, params, options.timeout_ms or 1000, 0)
       else
         ---@diagnostic disable-next-line: param-type-mismatch
@@ -205,10 +205,10 @@ local function did_file_operation(method, capability_name, files)
   for _, client in ipairs(clients) do
     local filters = vim.tbl_get(
       client.server_capabilities,
-      "workspace",
-      "fileOperations",
+      'workspace',
+      'fileOperations',
       capability_name,
-      "filters"
+      'filters'
     )
     local matching_files = get_matching_paths(client, filters, files)
     if matching_files then
@@ -219,7 +219,7 @@ local function did_file_operation(method, capability_name, files)
           }
         end, matching_files),
       }
-      if vim.fn.has("nvim-0.11") == 1 then
+      if vim.fn.has('nvim-0.11') == 1 then
         client:notify(method, params)
       else
         ---@diagnostic disable-next-line: param-type-mismatch
@@ -239,13 +239,13 @@ end
 ---@return nil|{edit: lsp.WorkspaceEdit, offset_encoding: string}[]
 ---@return nil|string|lsp.ResponseError err
 function M.will_create_files(files, options)
-  return will_file_operation(ms.workspace_willCreateFiles, "willCreate", files, options)
+  return will_file_operation(ms.workspace_willCreateFiles, 'willCreate', files, options)
 end
 
 --- Notify the server that files were created from within the client.
 ---@param files string[] The files and folders that will be created
 function M.did_create_files(files)
-  did_file_operation(ms.workspace_didCreateFiles, "didCreate", files)
+  did_file_operation(ms.workspace_didCreateFiles, 'didCreate', files)
 end
 
 --- Notify the server that the client is about to delete files.
@@ -258,13 +258,13 @@ end
 ---@return nil|{edit: lsp.WorkspaceEdit, offset_encoding: string}[]
 ---@return nil|string|lsp.ResponseError err
 function M.will_delete_files(files, options)
-  return will_file_operation(ms.workspace_willDeleteFiles, "willDelete", files, options)
+  return will_file_operation(ms.workspace_willDeleteFiles, 'willDelete', files, options)
 end
 
 --- Notify the server that files were deleted from within the client.
 ---@param files string[] The files and folders that were deleted
 function M.did_delete_files(files)
-  did_file_operation(ms.workspace_didDeleteFiles, "didDelete", files)
+  did_file_operation(ms.workspace_didDeleteFiles, 'didDelete', files)
 end
 
 --- Notify the server that the client is about to rename files.
@@ -284,10 +284,10 @@ function M.will_rename_files(files, options)
   for _, client in ipairs(clients) do
     local filters = vim.tbl_get(
       client.server_capabilities,
-      "workspace",
-      "fileOperations",
-      "willRename",
-      "filters"
+      'workspace',
+      'fileOperations',
+      'willRename',
+      'filters'
     )
     local matching_files = get_matching_paths(client, filters, vim.tbl_keys(files))
     if matching_files then
@@ -300,7 +300,7 @@ function M.will_rename_files(files, options)
         end, matching_files),
       }
       local result, err
-      if vim.fn.has("nvim-0.11") == 1 then
+      if vim.fn.has('nvim-0.11') == 1 then
         result, err =
           client:request_sync(ms.workspace_willRenameFiles, params, options.timeout_ms or 1000, 0)
       else
@@ -327,7 +327,7 @@ function M.did_rename_files(files)
   local clients = get_clients(ms.workspace_didRenameFiles)
   for _, client in ipairs(clients) do
     local filters =
-      vim.tbl_get(client.server_capabilities, "workspace", "fileOperations", "didRename", "filters")
+      vim.tbl_get(client.server_capabilities, 'workspace', 'fileOperations', 'didRename', 'filters')
     local matching_files = get_matching_paths(client, filters, vim.tbl_keys(files))
     if matching_files then
       local params = {
@@ -338,7 +338,7 @@ function M.did_rename_files(files)
           }
         end, matching_files),
       }
-      if vim.fn.has("nvim-0.11") == 1 then
+      if vim.fn.has('nvim-0.11') == 1 then
         client:notify(ms.workspace_didRenameFiles, params)
       else
         ---@diagnostic disable-next-line: param-type-mismatch

@@ -1,12 +1,12 @@
 local uv = vim.uv or vim.loop
-local cache = require("oil.cache")
-local columns = require("oil.columns")
-local config = require("oil.config")
-local constants = require("oil.constants")
-local fs = require("oil.fs")
-local keymap_util = require("oil.keymap_util")
-local loading = require("oil.loading")
-local util = require("oil.util")
+local cache = require('oil.cache')
+local columns = require('oil.columns')
+local config = require('oil.config')
+local constants = require('oil.constants')
+local fs = require('oil.fs')
+local keymap_util = require('oil.keymap_util')
+local loading = require('oil.loading')
+local util = require('oil.util')
 local M = {}
 
 local FIELD_ID = constants.FIELD_ID
@@ -41,7 +41,7 @@ end
 
 ---Set the cursor to the last_cursor_entry if one exists
 M.maybe_set_cursor = function()
-  local oil = require("oil")
+  local oil = require('oil')
   local bufname = vim.api.nvim_buf_get_name(0)
   local entry_name = last_cursor_entry[bufname]
   if not entry_name then
@@ -52,7 +52,7 @@ M.maybe_set_cursor = function()
     local entry = oil.get_entry_on_line(0, lnum)
     if entry and entry.name == entry_name then
       local line = vim.api.nvim_buf_get_lines(0, lnum - 1, lnum, true)[1]
-      local id_str = line:match("^/(%d+)")
+      local id_str = line:match('^/(%d+)')
       local col = line:find(entry_name, 1, true) or (id_str:len() + 1)
       vim.api.nvim_win_set_cursor(0, { lnum, col - 1 })
       M.set_last_cursor(bufname, nil)
@@ -78,14 +78,14 @@ local function are_any_modified()
 end
 
 local function is_unix_executable(entry)
-  if entry[FIELD_TYPE] == "directory" then
+  if entry[FIELD_TYPE] == 'directory' then
     return false
   end
   local meta = entry[FIELD_META]
   if not meta or not meta.stat then
     return false
   end
-  if meta.stat.type == "directory" then
+  if meta.stat.type == 'directory' then
     return false
   end
 
@@ -98,7 +98,7 @@ end
 M.toggle_hidden = function()
   local any_modified = are_any_modified()
   if any_modified then
-    vim.notify("Cannot toggle hidden files when you have unsaved changes", vim.log.levels.WARN)
+    vim.notify('Cannot toggle hidden files when you have unsaved changes', vim.log.levels.WARN)
   else
     config.view_options.show_hidden = not config.view_options.show_hidden
     M.rerender_all_oil_buffers({ refetch = false })
@@ -109,7 +109,7 @@ end
 M.set_is_hidden_file = function(is_hidden_file)
   local any_modified = are_any_modified()
   if any_modified then
-    vim.notify("Cannot change is_hidden_file when you have unsaved changes", vim.log.levels.WARN)
+    vim.notify('Cannot change is_hidden_file when you have unsaved changes', vim.log.levels.WARN)
   else
     config.view_options.is_hidden_file = is_hidden_file
     M.rerender_all_oil_buffers({ refetch = false })
@@ -119,7 +119,7 @@ end
 M.set_columns = function(cols)
   local any_modified = are_any_modified()
   if any_modified then
-    vim.notify("Cannot change columns when you have unsaved changes", vim.log.levels.WARN)
+    vim.notify('Cannot change columns when you have unsaved changes', vim.log.levels.WARN)
   else
     config.columns = cols
     -- TODO only refetch if we don't have all the necessary data for the columns
@@ -130,7 +130,7 @@ end
 M.set_sort = function(new_sort)
   local any_modified = are_any_modified()
   if any_modified then
-    vim.notify("Cannot change sorting when you have unsaved changes", vim.log.levels.WARN)
+    vim.notify('Cannot change sorting when you have unsaved changes', vim.log.levels.WARN)
   else
     config.view_options.sort = new_sort
     -- TODO only refetch if we don't have all the necessary data for the columns
@@ -207,14 +207,14 @@ M.set_win_options = function()
   local winid = vim.api.nvim_get_current_win()
 
   -- work around https://github.com/neovim/neovim/pull/27422
-  vim.api.nvim_set_option_value("foldmethod", "manual", { scope = "local", win = winid })
+  vim.api.nvim_set_option_value('foldmethod', 'manual', { scope = 'local', win = winid })
 
   for k, v in pairs(config.win_options) do
-    vim.api.nvim_set_option_value(k, v, { scope = "local", win = winid })
+    vim.api.nvim_set_option_value(k, v, { scope = 'local', win = winid })
   end
   if vim.wo[winid].previewwindow then -- apply preview window options last
     for k, v in pairs(config.preview_win.win_options) do
-      vim.api.nvim_set_option_value(k, v, { scope = "local", win = winid })
+      vim.api.nvim_set_option_value(k, v, { scope = 'local', win = winid })
     end
   end
 end
@@ -251,7 +251,7 @@ M.delete_hidden_buffers = function()
     not visible_buffers
     or not hidden_buffers
     or not vim.tbl_isempty(visible_buffers)
-    or vim.fn.win_gettype() == "command"
+    or vim.fn.win_gettype() == 'command'
   then
     return
   end
@@ -283,15 +283,15 @@ end
 --- @param cur integer[]
 --- @return integer[] | nil
 local function calc_constrained_cursor_pos(bufnr, adapter, mode, cur)
-  local parser = require("oil.mutator.parser")
+  local parser = require('oil.mutator.parser')
   local line = vim.api.nvim_buf_get_lines(bufnr, cur[1] - 1, cur[1], true)[1]
   local column_defs = columns.get_supported_columns(adapter)
   local result = parser.parse_line(adapter, line, column_defs)
   if result and result.ranges then
     local min_col
-    if mode == "editable" then
+    if mode == 'editable' then
       min_col = get_first_mutable_column_col(adapter, result.ranges)
-    elseif mode == "name" then
+    elseif mode == 'name' then
       min_col = result.ranges.name[1]
     else
       error(string.format('Unexpected value "%s" for option constrain_cursor', mode))
@@ -318,7 +318,7 @@ local function constrain_cursor(bufnr, mode)
     return
   end
 
-  local mc = package.loaded["multicursor-nvim"]
+  local mc = package.loaded['multicursor-nvim']
   if mc then
     mc.onSafeState(function()
       mc.action(function(ctx)
@@ -346,14 +346,14 @@ local function redraw_trash_virtual_text(bufnr)
   if not vim.api.nvim_buf_is_valid(bufnr) or not vim.api.nvim_buf_is_loaded(bufnr) then
     return
   end
-  local parser = require("oil.mutator.parser")
+  local parser = require('oil.mutator.parser')
   local adapter = util.get_adapter(bufnr, true)
-  if not adapter or adapter.name ~= "trash" then
+  if not adapter or adapter.name ~= 'trash' then
     return
   end
   local _, buf_path = util.parse_url(vim.api.nvim_buf_get_name(bufnr))
   local os_path = fs.posix_to_os_path(assert(buf_path))
-  local ns = vim.api.nvim_create_namespace("OilVtext")
+  local ns = vim.api.nvim_create_namespace('OilVtext')
   vim.api.nvim_buf_clear_namespace(bufnr, ns, 0, -1)
   local column_defs = columns.get_supported_columns(adapter)
   for lnum, line in ipairs(vim.api.nvim_buf_get_lines(bufnr, 0, -1, true)) do
@@ -367,8 +367,8 @@ local function redraw_trash_virtual_text(bufnr)
         vim.api.nvim_buf_set_extmark(bufnr, ns, lnum - 1, 0, {
           virt_text = {
             {
-              "➜ " .. fs.shorten_path(trash_info.original_path, os_path),
-              "OilTrashSourcePath",
+              '➜ ' .. fs.shorten_path(trash_info.original_path, os_path),
+              'OilTrashSourcePath',
             },
           },
         })
@@ -387,13 +387,13 @@ M.initialize = function(bufnr)
   end
   vim.api.nvim_clear_autocmds({
     buffer = bufnr,
-    group = "Oil",
+    group = 'Oil',
   })
-  vim.bo[bufnr].buftype = "acwrite"
+  vim.bo[bufnr].buftype = 'acwrite'
   vim.bo[bufnr].readonly = false
   vim.bo[bufnr].swapfile = false
-  vim.bo[bufnr].syntax = "oil"
-  vim.bo[bufnr].filetype = "oil"
+  vim.bo[bufnr].syntax = 'oil'
+  vim.bo[bufnr].filetype = 'oil'
   vim.b[bufnr].EditorConfig_disable = 1
   session[bufnr] = session[bufnr] or {}
   for k, v in pairs(config.buf_options) do
@@ -401,9 +401,9 @@ M.initialize = function(bufnr)
   end
   vim.api.nvim_buf_call(bufnr, M.set_win_options)
 
-  vim.api.nvim_create_autocmd("BufHidden", {
-    desc = "Delete oil buffers when no longer in use",
-    group = "Oil",
+  vim.api.nvim_create_autocmd('BufHidden', {
+    desc = 'Delete oil buffers when no longer in use',
+    group = 'Oil',
     nested = true,
     buffer = bufnr,
     callback = function()
@@ -413,7 +413,7 @@ M.initialize = function(bufnr)
         -- Only delete oil buffers if none of them are visible
         if visible_buffers and vim.tbl_isempty(visible_buffers) then
           -- Check if cleanup is enabled
-          if type(config.cleanup_delay_ms) == "number" then
+          if type(config.cleanup_delay_ms) == 'number' then
             if config.cleanup_delay_ms > 0 then
               vim.defer_fn(function()
                 M.delete_hidden_buffers()
@@ -426,8 +426,8 @@ M.initialize = function(bufnr)
       end, 100)
     end,
   })
-  vim.api.nvim_create_autocmd("BufUnload", {
-    group = "Oil",
+  vim.api.nvim_create_autocmd('BufUnload', {
+    group = 'Oil',
     nested = true,
     once = true,
     buffer = bufnr,
@@ -439,8 +439,8 @@ M.initialize = function(bufnr)
       end
     end,
   })
-  vim.api.nvim_create_autocmd("BufEnter", {
-    group = "Oil",
+  vim.api.nvim_create_autocmd('BufEnter', {
+    group = 'Oil',
     buffer = bufnr,
     callback = function(args)
       local opts = vim.b[args.buf].oil_dirty
@@ -451,9 +451,9 @@ M.initialize = function(bufnr)
     end,
   })
   local timer
-  vim.api.nvim_create_autocmd("InsertEnter", {
-    desc = "Constrain oil cursor position",
-    group = "Oil",
+  vim.api.nvim_create_autocmd('InsertEnter', {
+    desc = 'Constrain oil cursor position',
+    group = 'Oil',
     buffer = bufnr,
     callback = function()
       -- For some reason the cursor bounces back to its original position,
@@ -461,12 +461,12 @@ M.initialize = function(bufnr)
       vim.schedule_wrap(constrain_cursor)(bufnr, config.constrain_cursor)
     end,
   })
-  vim.api.nvim_create_autocmd({ "CursorMoved", "ModeChanged" }, {
-    desc = "Update oil preview window",
-    group = "Oil",
+  vim.api.nvim_create_autocmd({ 'CursorMoved', 'ModeChanged' }, {
+    desc = 'Update oil preview window',
+    group = 'Oil',
     buffer = bufnr,
     callback = function()
-      local oil = require("oil")
+      local oil = require('oil')
       if vim.wo.previewwindow then
         return
       end
@@ -513,7 +513,7 @@ M.initialize = function(bufnr)
   -- Set up a watcher that will refresh the directory
   if
     adapter
-    and adapter.name == "files"
+    and adapter.name == 'files'
     and config.watch_for_changes
     and not session[bufnr].fs_event
   then
@@ -532,7 +532,7 @@ M.initialize = function(bufnr)
           fs_event:stop()
           return
         end
-        local mutator = require("oil.mutator")
+        local mutator = require('oil.mutator')
         if err or vim.bo[bufnr].modified or vim.b[bufnr].oil_dirty or mutator.is_mutating() then
           return
         end
@@ -553,11 +553,11 @@ M.initialize = function(bufnr)
   end
 
   -- Watch for TextChanged and update the trash original path extmarks
-  if adapter and adapter.name == "trash" then
+  if adapter and adapter.name == 'trash' then
     local debounce_timer = assert(uv.new_timer())
     local pending = false
-    vim.api.nvim_create_autocmd("TextChanged", {
-      desc = "Update oil virtual text of original path",
+    vim.api.nvim_create_autocmd('TextChanged', {
+      desc = 'Update oil virtual text of original path',
       buffer = bufnr,
       callback = function()
         -- Respond immediately to prevent flickering, the set the timer for a "cooldown period"
@@ -583,14 +583,14 @@ M.initialize = function(bufnr)
   M.render_buffer_async(bufnr, {}, function(err)
     if err then
       vim.notify(
-        string.format("Error rendering oil buffer %s: %s", vim.api.nvim_buf_get_name(bufnr), err),
+        string.format('Error rendering oil buffer %s: %s', vim.api.nvim_buf_get_name(bufnr), err),
         vim.log.levels.ERROR
       )
     else
       vim.b[bufnr].oil_ready = true
       vim.api.nvim_exec_autocmds(
-        "User",
-        { pattern = "OilEnter", modeline = false, data = { buf = bufnr } }
+        'User',
+        { pattern = 'OilEnter', modeline = false, data = { buf = bufnr } }
       )
     end
   end)
@@ -606,12 +606,12 @@ local function get_sort_function(adapter, num_entries)
 
   -- If empty, default to type + name sorting
   if vim.tbl_isempty(sort_config) then
-    sort_config = { { "type", "asc" }, { "name", "asc" } }
+    sort_config = { { 'type', 'asc' }, { 'name', 'asc' } }
   end
 
   for _, sort_pair in ipairs(sort_config) do
     local col_name, order = unpack(sort_pair)
-    if order ~= "asc" and order ~= "desc" then
+    if order ~= 'asc' and order ~= 'desc' then
       vim.notify_once(
         string.format(
           "Column '%s' has invalid sort order '%s'. Should be either 'asc' or 'desc'",
@@ -639,7 +639,7 @@ local function get_sort_function(adapter, num_entries)
       local a_val = get_sort_value(a)
       local b_val = get_sort_value(b)
       if a_val ~= b_val then
-        if order == "desc" then
+        if order == 'desc' then
           return a_val > b_val
         else
           return a_val < b_val
@@ -663,7 +663,7 @@ local function render_buffer(bufnr, opts)
     return false
   end
   local bufname = vim.api.nvim_buf_get_name(bufnr)
-  opts = vim.tbl_extend("keep", opts or {}, {
+  opts = vim.tbl_extend('keep', opts or {}, {
     jump = false,
     jump_first = false,
   })
@@ -693,10 +693,10 @@ local function render_buffer(bufnr, opts)
   for i, col_def in ipairs(column_defs) do
     col_width[i + 1] = 1
     local _, conf = util.split_config(col_def)
-    col_align[i + 1] = conf and conf.align or "left"
+    col_align[i + 1] = conf and conf.align or 'left'
   end
 
-  local parent_entry = { 0, "..", "directory" }
+  local parent_entry = { 0, '..', 'directory' }
   if M.should_display(bufnr, parent_entry) then
     local cols = M.format_entry_cols(parent_entry, column_defs, col_width, adapter, true, bufnr)
     table.insert(line_table, cols)
@@ -732,7 +732,7 @@ local function render_buffer(bufnr, opts)
           if jump_idx then
             local lnum = jump_idx
             local line = vim.api.nvim_buf_get_lines(bufnr, lnum - 1, lnum, true)[1]
-            local id_str = line:match("^/(%d+)")
+            local id_str = line:match('^/(%d+)')
             local id = tonumber(id_str)
             if id then
               local entry = cache.get_entry_by_id(id)
@@ -745,7 +745,7 @@ local function render_buffer(bufnr, opts)
             end
           end
 
-          constrain_cursor(bufnr, "name")
+          constrain_cursor(bufnr, 'name')
         end
       end
     end)
@@ -760,13 +760,13 @@ end
 local function get_link_text(name, meta)
   local link_text
   if meta then
-    if meta.link_stat and meta.link_stat.type == "directory" then
-      name = name .. "/"
+    if meta.link_stat and meta.link_stat.type == 'directory' then
+      name = name .. '/'
     end
 
     if meta.link then
-      link_text = "-> " .. meta.link:gsub("\n", "")
-      if meta.link_stat and meta.link_stat.type == "directory" then
+      link_text = '-> ' .. meta.link:gsub('\n', '')
+      if meta.link_stat and meta.link_stat.type == 'directory' then
         link_text = util.addslash(link_text)
       end
     end
@@ -786,15 +786,15 @@ end
 M.format_entry_cols = function(entry, column_defs, col_width, adapter, is_hidden, bufnr)
   local name = entry[FIELD_NAME]
   local meta = entry[FIELD_META]
-  local hl_suffix = ""
+  local hl_suffix = ''
   if is_hidden then
-    hl_suffix = "Hidden"
+    hl_suffix = 'Hidden'
   end
   if meta and meta.display_name then
     name = meta.display_name
   end
   -- We can't handle newlines in filenames (and shame on you for doing that)
-  name = name:gsub("\n", "")
+  name = name:gsub('\n', '')
   -- First put the unique ID
   local cols = {}
   local id_key = cache.format_id(entry[FIELD_ID])
@@ -803,7 +803,7 @@ M.format_entry_cols = function(entry, column_defs, col_width, adapter, is_hidden
   -- Then add all the configured columns
   for i, column in ipairs(column_defs) do
     local chunk = columns.render_col(adapter, column, entry, bufnr)
-    local text = type(chunk) == "table" and chunk[1] or chunk
+    local text = type(chunk) == 'table' and chunk[1] or chunk
     ---@cast text string
     col_width[i + 1] = math.max(col_width[i + 1], vim.api.nvim_strwidth(text))
     table.insert(cols, chunk)
@@ -816,7 +816,7 @@ M.format_entry_cols = function(entry, column_defs, col_width, adapter, is_hidden
   if get_custom_hl then
     local external_entry = util.export_entry(entry)
 
-    if entry_type == "link" then
+    if entry_type == 'link' then
       link_name, link_target = get_link_text(name, meta)
       local is_orphan = not (meta and meta.link_stat)
       link_name_hl = get_custom_hl(external_entry, is_hidden, false, is_orphan, bufnr)
@@ -830,8 +830,8 @@ M.format_entry_cols = function(entry, column_defs, col_width, adapter, is_hidden
       local hl = get_custom_hl(external_entry, is_hidden, false, false, bufnr)
       if hl then
         -- Add the trailing / if this is a directory, this is important
-        if entry_type == "directory" then
-          name = name .. "/"
+        if entry_type == 'directory' then
+          name = name .. '/'
         end
         table.insert(cols, { name, hl })
         return cols
@@ -840,49 +840,50 @@ M.format_entry_cols = function(entry, column_defs, col_width, adapter, is_hidden
   end
 
   local highlight_as_executable = false
-  if entry_type ~= "directory" then
+  if entry_type ~= 'directory' then
     local lower = name:lower()
     if
-      lower:match("%.exe$")
-      or lower:match("%.bat$")
-      or lower:match("%.cmd$")
-      or lower:match("%.com$")
-      or lower:match("%.ps1$")
+      lower:match('%.exe$')
+      or lower:match('%.bat$')
+      or lower:match('%.cmd$')
+      or lower:match('%.com$')
+      or lower:match('%.ps1$')
     then
       highlight_as_executable = true
+    -- selene: allow(if_same_then_else)
     elseif is_unix_executable(entry) then
       highlight_as_executable = true
     end
   end
 
-  if entry_type == "directory" then
-    table.insert(cols, { name .. "/", "OilDir" .. hl_suffix })
-  elseif entry_type == "socket" then
-    table.insert(cols, { name, "OilSocket" .. hl_suffix })
-  elseif entry_type == "link" then
+  if entry_type == 'directory' then
+    table.insert(cols, { name .. '/', 'OilDir' .. hl_suffix })
+  elseif entry_type == 'socket' then
+    table.insert(cols, { name, 'OilSocket' .. hl_suffix })
+  elseif entry_type == 'link' then
     if not link_name then
       link_name, link_target = get_link_text(name, meta)
     end
     local is_orphan = not (meta and meta.link_stat)
     if not link_name_hl then
       if highlight_as_executable then
-        link_name_hl = "OilExecutable" .. hl_suffix
+        link_name_hl = 'OilExecutable' .. hl_suffix
       else
-        link_name_hl = (is_orphan and "OilOrphanLink" or "OilLink") .. hl_suffix
+        link_name_hl = (is_orphan and 'OilOrphanLink' or 'OilLink') .. hl_suffix
       end
     end
     table.insert(cols, { link_name, link_name_hl })
 
     if link_target then
       if not link_target_hl then
-        link_target_hl = (is_orphan and "OilOrphanLinkTarget" or "OilLinkTarget") .. hl_suffix
+        link_target_hl = (is_orphan and 'OilOrphanLinkTarget' or 'OilLinkTarget') .. hl_suffix
       end
       table.insert(cols, { link_target, link_target_hl })
     end
   elseif highlight_as_executable then
-    table.insert(cols, { name, "OilExecutable" .. hl_suffix })
+    table.insert(cols, { name, 'OilExecutable' .. hl_suffix })
   else
-    table.insert(cols, { name, "OilFile" .. hl_suffix })
+    table.insert(cols, { name, 'OilFile' .. hl_suffix })
   end
 
   return cols
@@ -914,8 +915,8 @@ M.render_buffer_async = function(bufnr, opts, caller_callback)
   local function callback(err)
     if not err then
       vim.api.nvim_exec_autocmds(
-        "User",
-        { pattern = "OilReadPost", modeline = false, data = { buf = bufnr } }
+        'User',
+        { pattern = 'OilReadPost', modeline = false, data = { buf = bufnr } }
       )
     end
     if caller_callback then
@@ -923,7 +924,7 @@ M.render_buffer_async = function(bufnr, opts, caller_callback)
     end
   end
 
-  opts = vim.tbl_deep_extend("keep", opts or {}, {
+  opts = vim.tbl_deep_extend('keep', opts or {}, {
     refetch = true,
   })
   ---@cast opts -nil
@@ -949,8 +950,8 @@ M.render_buffer_async = function(bufnr, opts, caller_callback)
   vim.bo[bufnr].undolevels = -1
   local handle_error = vim.schedule_wrap(function(message)
     vim.b[bufnr].oil_rendering = false
-    vim.bo[bufnr].undolevels = vim.api.nvim_get_option_value("undolevels", { scope = "global" })
-    util.render_text(bufnr, { "Error: " .. message })
+    vim.bo[bufnr].undolevels = vim.api.nvim_get_option_value('undolevels', { scope = 'global' })
+    util.render_text(bufnr, { 'Error: ' .. message })
     if pending_renders[bufnr] then
       for _, cb in ipairs(pending_renders[bufnr]) do
         cb(message)
@@ -987,7 +988,7 @@ M.render_buffer_async = function(bufnr, opts, caller_callback)
     loading.set_loading(bufnr, false)
     render_buffer(bufnr, { jump = true })
     M.set_last_cursor(bufname, nil)
-    vim.bo[bufnr].undolevels = vim.api.nvim_get_option_value("undolevels", { scope = "global" })
+    vim.bo[bufnr].undolevels = vim.api.nvim_get_option_value('undolevels', { scope = 'global' })
     vim.bo[bufnr].modifiable = not buffers_locked and adapter.is_modifiable(bufnr)
     if callback then
       callback()

@@ -1,10 +1,10 @@
-local cache = require("oil.cache")
-local columns = require("oil.columns")
-local config = require("oil.config")
-local constants = require("oil.constants")
-local fs = require("oil.fs")
-local util = require("oil.util")
-local view = require("oil.view")
+local cache = require('oil.cache')
+local columns = require('oil.columns')
+local config = require('oil.config')
+local constants = require('oil.constants')
+local fs = require('oil.fs')
+local util = require('oil.util')
+local view = require('oil.view')
 local M = {}
 
 local FIELD_ID = constants.FIELD_ID
@@ -37,7 +37,7 @@ local FIELD_META = constants.FIELD_META
 ---@return string
 ---@return boolean
 local function parsedir(name)
-  local isdir = vim.endswith(name, "/") or (fs.is_windows and vim.endswith(name, "\\"))
+  local isdir = vim.endswith(name, '/') or (fs.is_windows and vim.endswith(name, '\\'))
   if isdir then
     name = name:sub(1, name:len() - 1)
   end
@@ -52,8 +52,8 @@ local function compare_link_target(meta, parsed_entry)
     return false
   end
   -- Make sure we trim off any trailing path slashes from both sources
-  local meta_name = meta.link:gsub("[/\\]$", "")
-  local parsed_name = parsed_entry.link_target:gsub("[/\\]$", "")
+  local meta_name = meta.link:gsub('[/\\]$', '')
+  local parsed_name = parsed_entry.link_target:gsub('[/\\]$', '')
   return meta_name == parsed_name
 end
 
@@ -72,9 +72,9 @@ M.parse_line = function(adapter, line, column_defs)
   local ret = {}
   local ranges = {}
   local start = 1
-  local value, rem = line:match("^/(%d+) (.+)$")
+  local value, rem = line:match('^/(%d+) (.+)$')
   if not value then
-    return nil, "Malformed ID at start of line"
+    return nil, 'Malformed ID at start of line'
   end
   ranges.id = { start, value:len() + 1 }
   start = ranges.id[2] + 1
@@ -97,7 +97,7 @@ M.parse_line = function(adapter, line, column_defs)
     local start_len = string.len(rem)
     value, rem = columns.parse_col(adapter, assert(rem), def)
     if not rem then
-      return nil, string.format("Parsing %s failed", name)
+      return nil, string.format('Parsing %s failed', name)
     end
     ret[name] = value
     range[2] = range[1] + start_len - string.len(rem) - 1
@@ -108,10 +108,10 @@ M.parse_line = function(adapter, line, column_defs)
   if name then
     local isdir
     name, isdir = parsedir(vim.trim(name))
-    if name ~= "" then
+    if name ~= '' then
       ret.name = name
     end
-    ret._type = isdir and "directory" or "file"
+    ret._type = isdir and 'directory' or 'file'
   end
   local entry = cache.get_entry_by_id(ret.id)
   ranges.name = { start, start + string.len(rem) - 1 }
@@ -122,20 +122,20 @@ M.parse_line = function(adapter, line, column_defs)
   -- Parse the symlink syntax
   local meta = entry[FIELD_META]
   local entry_type = entry[FIELD_TYPE]
-  if entry_type == "link" and meta and meta.link then
-    local name_pieces = vim.split(ret.name, " -> ", { plain = true })
+  if entry_type == 'link' and meta and meta.link then
+    local name_pieces = vim.split(ret.name, ' -> ', { plain = true })
     if #name_pieces ~= 2 then
-      ret.name = ""
+      ret.name = ''
       return { data = ret, ranges = ranges }
     end
     ranges.name = { start, start + string.len(name_pieces[1]) - 1 }
     ret.name = parsedir(vim.trim(name_pieces[1]))
     ret.link_target = name_pieces[2]
-    ret._type = "link"
+    ret._type = 'link'
   end
 
   -- Try to keep the same file type
-  if entry_type ~= "directory" and entry_type ~= "file" and ret._type ~= "directory" then
+  if entry_type ~= 'directory' and entry_type ~= 'file' and ret._type ~= 'directory' then
     ret._type = entry[FIELD_TYPE]
   end
 
@@ -187,7 +187,7 @@ M.parse = function(bufnr)
       name = name:lower()
     end
     if seen_names[name] then
-      table.insert(errors, { message = "Duplicate filename", lnum = i - 1, end_lnum = i, col = 0 })
+      table.insert(errors, { message = 'Duplicate filename', lnum = i - 1, end_lnum = i, col = 0 })
     else
       seen_names[name] = true
     end
@@ -197,7 +197,7 @@ M.parse = function(bufnr)
     -- hack to be compatible with Lua 5.1
     -- use return instead of goto
     (function()
-      if line:match("^/%d+") then
+      if line:match('^/%d+') then
         -- Parse the line for an existing entry
         local result, err = M.parse_line(adapter, line, column_defs)
         if not result or err then
@@ -217,11 +217,11 @@ M.parse = function(bufnr)
 
         local err_message
         if not parsed_entry.name then
-          err_message = "No filename found"
+          err_message = 'No filename found'
         elseif not entry then
-          err_message = "Could not find existing entry (was the ID changed?)"
-        elseif parsed_entry.name:match("/") or parsed_entry.name:match(fs.sep) then
-          err_message = "Filename cannot contain path separator"
+          err_message = 'Could not find existing entry (was the ID changed?)'
+        elseif parsed_entry.name:match('/') or parsed_entry.name:match(fs.sep) then
+          err_message = 'Filename cannot contain path separator'
         end
         if err_message then
           table.insert(errors, {
@@ -237,16 +237,16 @@ M.parse = function(bufnr)
         check_dupe(parsed_entry.name, i)
         local meta = entry[FIELD_META]
         if original_entries[parsed_entry.name] == parsed_entry.id then
-          if entry[FIELD_TYPE] == "link" and not compare_link_target(meta, parsed_entry) then
+          if entry[FIELD_TYPE] == 'link' and not compare_link_target(meta, parsed_entry) then
             table.insert(diffs, {
-              type = "new",
+              type = 'new',
               name = parsed_entry.name,
-              entry_type = "link",
+              entry_type = 'link',
               link = parsed_entry.link_target,
             })
           elseif entry[FIELD_TYPE] ~= parsed_entry._type then
             table.insert(diffs, {
-              type = "new",
+              type = 'new',
               name = parsed_entry.name,
               entry_type = parsed_entry._type,
             })
@@ -255,7 +255,7 @@ M.parse = function(bufnr)
           end
         else
           table.insert(diffs, {
-            type = "new",
+            type = 'new',
             name = parsed_entry.name,
             entry_type = parsed_entry._type,
             id = parsed_entry.id,
@@ -267,7 +267,7 @@ M.parse = function(bufnr)
           local col_name = util.split_config(col_def)
           if columns.compare(adapter, col_name, entry, parsed_entry[col_name]) then
             table.insert(diffs, {
-              type = "change",
+              type = 'change',
               name = parsed_entry.name,
               entry_type = entry[FIELD_TYPE],
               column = col_name,
@@ -278,7 +278,7 @@ M.parse = function(bufnr)
       else
         -- Parse a new entry
         local name, isdir = parsedir(vim.trim(line))
-        if vim.startswith(name, "/") then
+        if vim.startswith(name, '/') then
           table.insert(errors, {
             message = "Paths cannot start with '/'",
             lnum = i - 1,
@@ -287,17 +287,17 @@ M.parse = function(bufnr)
           })
           return
         end
-        if name ~= "" then
-          local link_pieces = vim.split(name, " -> ", { plain = true })
-          local entry_type = isdir and "directory" or "file"
+        if name ~= '' then
+          local link_pieces = vim.split(name, ' -> ', { plain = true })
+          local entry_type = isdir and 'directory' or 'file'
           local link
           if #link_pieces == 2 then
-            entry_type = "link"
+            entry_type = 'link'
             name, link = unpack(link_pieces)
           end
           check_dupe(name, i)
           table.insert(diffs, {
-            type = "new",
+            type = 'new',
             name = name,
             entry_type = entry_type,
             link = link,
@@ -309,7 +309,7 @@ M.parse = function(bufnr)
 
   for name, child_id in pairs(original_entries) do
     table.insert(diffs, {
-      type = "delete",
+      type = 'delete',
       name = name,
       id = child_id,
     })

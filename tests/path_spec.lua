@@ -1,13 +1,13 @@
-local pathutil = require("oil.pathutil")
-describe("pathutil", function()
-  it("calculates parent path", function()
+local pathutil = require('oil.pathutil')
+describe('pathutil', function()
+  it('calculates parent path', function()
     local cases = {
-      { "/foo/bar", "/foo/" },
-      { "/foo/bar/", "/foo/" },
-      { "/", "/" },
-      { "", "" },
-      { "foo/bar/", "foo/" },
-      { "foo", "" },
+      { '/foo/bar', '/foo/' },
+      { '/foo/bar/', '/foo/' },
+      { '/', '/' },
+      { '', '' },
+      { 'foo/bar/', 'foo/' },
+      { 'foo', '' },
     }
     for _, case in ipairs(cases) do
       local input, expected = unpack(case)
@@ -16,12 +16,12 @@ describe("pathutil", function()
     end
   end)
 
-  it("calculates basename", function()
+  it('calculates basename', function()
     local cases = {
-      { "/foo/bar", "bar" },
-      { "/foo/bar/", "bar" },
-      { "/", nil },
-      { "", nil },
+      { '/foo/bar', 'bar' },
+      { '/foo/bar/', 'bar' },
+      { '/', nil },
+      { '', nil },
     }
     for _, case in ipairs(cases) do
       local input, expected = unpack(case)

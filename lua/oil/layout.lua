@@ -43,7 +43,7 @@ local function calc_list(values, max_value, aggregator, limit)
   local ret = limit
   if not max_value or not values then
     return nil
-  elseif type(values) == "table" then
+  elseif type(values) == 'table' then
     for _, v in ipairs(values) do
       ret = aggregator(ret, calc_float(v, max_value))
     end
@@ -106,12 +106,12 @@ end
 
 ---@return vim.api.keyset.win_config
 M.get_fullscreen_win_opts = function()
-  local config = require("oil.config")
+  local config = require('oil.config')
 
   local total_width = M.get_editor_width()
   local total_height = M.get_editor_height()
   local width = total_width - 2 * config.float.padding
-  if config.float.border ~= "none" then
+  if config.float.border ~= 'none' then
     width = width - 2 -- The border consumes 1 col on each side
   end
   if config.float.max_width > 0 then
@@ -127,7 +127,7 @@ M.get_fullscreen_win_opts = function()
   local col = math.floor((total_width - width) / 2) - 1 -- adjust for border width
 
   local win_opts = {
-    relative = "editor",
+    relative = 'editor',
     width = width,
     height = height,
     row = row,
@@ -144,8 +144,8 @@ end
 ---@return oil.WinLayout root_dim New dimensions of the original window
 ---@return oil.WinLayout new_dim New dimensions of the new window
 M.split_window = function(winid, direction, gap)
-  if direction == "auto" then
-    direction = vim.o.splitright and "right" or "left"
+  if direction == 'auto' then
+    direction = vim.o.splitright and 'right' or 'left'
   end
 
   local float_config = vim.api.nvim_win_get_config(winid)
@@ -156,14 +156,14 @@ M.split_window = function(winid, direction, gap)
     col = float_config.col,
     row = float_config.row,
   }
-  if vim.fn.has("nvim-0.10") == 0 then
+  if vim.fn.has('nvim-0.10') == 0 then
     -- read https://github.com/neovim/neovim/issues/24430 for more infos.
     dim_root.col = float_config.col[vim.val_idx]
     dim_root.row = float_config.row[vim.val_idx]
   end
   local dim_new = vim.deepcopy(dim_root)
 
-  if direction == "left" or direction == "right" then
+  if direction == 'left' or direction == 'right' then
     dim_new.width = math.floor(float_config.width / 2) - math.ceil(gap / 2)
     dim_root.width = dim_new.width
   else
@@ -171,13 +171,13 @@ M.split_window = function(winid, direction, gap)
     dim_root.height = dim_new.height
   end
 
-  if direction == "left" then
+  if direction == 'left' then
     dim_root.col = dim_root.col + dim_root.width + gap
-  elseif direction == "right" then
+  elseif direction == 'right' then
     dim_new.col = dim_new.col + dim_new.width + gap
-  elseif direction == "above" then
+  elseif direction == 'above' then
     dim_root.row = dim_root.row + dim_root.height + gap
-  elseif direction == "below" then
+  elseif direction == 'below' then
     dim_new.row = dim_new.row + dim_new.height + gap
   end
 

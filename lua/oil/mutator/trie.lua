@@ -1,4 +1,4 @@
-local util = require("oil.util")
+local util = require('oil.util')
 
 ---@class (exact) oil.Trie
 ---@field new fun(): oil.Trie
@@ -20,7 +20,7 @@ end
 function Trie:_url_to_path_pieces(url)
   local scheme, path = util.parse_url(url)
   assert(path)
-  local pieces = vim.split(path, "/")
+  local pieces = vim.split(path, '/')
   table.insert(pieces, 1, scheme)
   return pieces
 end
@@ -75,7 +75,7 @@ function Trie:remove(path_pieces, value)
       return
     end
   end
-  error("Value not present in trie: " .. vim.inspect(value))
+  error('Value not present in trie: ' .. vim.inspect(value))
 end
 
 ---Add the first action that affects a parent path of the url

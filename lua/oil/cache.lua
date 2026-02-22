@@ -1,5 +1,5 @@
-local constants = require("oil.constants")
-local util = require("oil.util")
+local constants = require('oil.constants')
+local util = require('oil.util')
 local M = {}
 
 local FIELD_ID = constants.FIELD_ID
@@ -28,7 +28,7 @@ local _cached_id_fmt
 M.format_id = function(id)
   if not _cached_id_fmt then
     local id_str_length = math.max(3, 1 + math.floor(math.log10(next_id)))
-    _cached_id_fmt = "/%0" .. string.format("%d", id_str_length) .. "d"
+    _cached_id_fmt = '/%0' .. string.format('%d', id_str_length) .. 'd'
   end
   return _cached_id_fmt:format(id)
 end
@@ -125,8 +125,8 @@ end
 M.get_entry_by_url = function(url)
   local scheme, path = util.parse_url(url)
   assert(path)
-  local parent_url = scheme .. vim.fn.fnamemodify(path, ":h")
-  local basename = vim.fn.fnamemodify(path, ":t")
+  local parent_url = scheme .. vim.fn.fnamemodify(path, ':h')
+  local basename = vim.fn.fnamemodify(path, ':t')
   return M.list_url(parent_url)[basename]
 end
 
@@ -135,7 +135,7 @@ end
 M.get_parent_url = function(id)
   local url = parent_url_by_id[id]
   if not url then
-    error(string.format("Entry %d missing parent url", id))
+    error(string.format('Entry %d missing parent url', id))
   end
   return url
 end
@@ -149,32 +149,32 @@ end
 
 ---@param action oil.Action
 M.perform_action = function(action)
-  if action.type == "create" then
+  if action.type == 'create' then
     local scheme, path = util.parse_url(action.url)
     assert(path)
-    local parent_url = util.addslash(scheme .. vim.fn.fnamemodify(path, ":h"))
-    local name = vim.fn.fnamemodify(path, ":t")
+    local parent_url = util.addslash(scheme .. vim.fn.fnamemodify(path, ':h'))
+    local name = vim.fn.fnamemodify(path, ':t')
     M.create_and_store_entry(parent_url, name, action.entry_type)
-  elseif action.type == "delete" then
+  elseif action.type == 'delete' then
     local scheme, path = util.parse_url(action.url)
     assert(path)
-    local parent_url = util.addslash(scheme .. vim.fn.fnamemodify(path, ":h"))
-    local name = vim.fn.fnamemodify(path, ":t")
+    local parent_url = util.addslash(scheme .. vim.fn.fnamemodify(path, ':h'))
+    local name = vim.fn.fnamemodify(path, ':t')
     local entry = url_directory[parent_url][name]
     url_directory[parent_url][name] = nil
     entries_by_id[entry[FIELD_ID]] = nil
     parent_url_by_id[entry[FIELD_ID]] = nil
-  elseif action.type == "move" then
+  elseif action.type == 'move' then
     local src_scheme, src_path = util.parse_url(action.src_url)
     assert(src_path)
-    local src_parent_url = util.addslash(src_scheme .. vim.fn.fnamemodify(src_path, ":h"))
-    local src_name = vim.fn.fnamemodify(src_path, ":t")
+    local src_parent_url = util.addslash(src_scheme .. vim.fn.fnamemodify(src_path, ':h'))
+    local src_name = vim.fn.fnamemodify(src_path, ':t')
     local entry = url_directory[src_parent_url][src_name]
 
     local dest_scheme, dest_path = util.parse_url(action.dest_url)
     assert(dest_path)
-    local dest_parent_url = util.addslash(dest_scheme .. vim.fn.fnamemodify(dest_path, ":h"))
-    local dest_name = vim.fn.fnamemodify(dest_path, ":t")
+    local dest_parent_url = util.addslash(dest_scheme .. vim.fn.fnamemodify(dest_path, ':h'))
+    local dest_name = vim.fn.fnamemodify(dest_path, ':t')
 
     url_directory[src_parent_url][src_name] = nil
     local dest_parent = url_directory[dest_parent_url]
@@ -188,13 +188,14 @@ M.perform_action = function(action)
     parent_url_by_id[entry[FIELD_ID]] = dest_parent_url
     entry[FIELD_NAME] = dest_name
     util.update_moved_buffers(action.entry_type, action.src_url, action.dest_url)
-  elseif action.type == "copy" then
+  elseif action.type == 'copy' then
     local scheme, path = util.parse_url(action.dest_url)
     assert(path)
-    local parent_url = util.addslash(scheme .. vim.fn.fnamemodify(path, ":h"))
-    local name = vim.fn.fnamemodify(path, ":t")
+    local parent_url = util.addslash(scheme .. vim.fn.fnamemodify(path, ':h'))
+    local name = vim.fn.fnamemodify(path, ':t')
     M.create_and_store_entry(parent_url, name, action.entry_type)
-  elseif action.type == "change" then
+  -- selene: allow(empty_if)
+  elseif action.type == 'change' then
     -- Cache doesn't need to update
   else
     ---@diagnostic disable-next-line: undefined-field

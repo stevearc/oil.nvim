@@ -10,21 +10,15 @@ on:
       - main
 
 jobs:
-  luacheck:
-    name: Luacheck
+  selene:
+    name: Selene
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
-
-      - name: Prepare
-        run: |
-          sudo apt-get update
-          sudo add-apt-repository universe
-          sudo apt install luarocks -y
-          sudo luarocks install luacheck
-
-      - name: Run Luacheck
-        run: luacheck lua tests
+      - uses: NTBBloodbath/selene-action@v1.0.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          args: --display-style quiet .
 
   stylua:
     name: StyLua
@@ -43,9 +37,11 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
-      - uses: stevearc/nvim-typecheck-action@v2
+      - uses: mrcjkb/lua-typecheck-action@v0
         with:
-          path: lua
+          checklevel: Warning
+          directories: lua
+          configpath: .luarc.json
 
   run_tests:
     strategy:

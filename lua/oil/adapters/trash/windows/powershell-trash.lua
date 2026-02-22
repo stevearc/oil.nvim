@@ -1,5 +1,5 @@
 -- A wrapper around trash operations using windows powershell
-local Powershell = require("oil.adapters.trash.windows.powershell-connection")
+local Powershell = require('oil.adapters.trash.windows.powershell-connection')
 
 ---@class oil.WindowsRawEntry
 ---@field IsFolder boolean

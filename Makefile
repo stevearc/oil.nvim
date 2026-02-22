@@ -13,11 +13,10 @@ all: lint test
 test:
 	./run_tests.sh
 
-## lint: run linters and LuaLS typechecking
+## lint: run selene and stylua
 .PHONY: lint
-lint: scripts/nvim-typecheck-action
-	./scripts/nvim-typecheck-action/typecheck.sh --workdir scripts/nvim-typecheck-action lua
-	luacheck lua tests --formatter plain
+lint:
+	selene --display-style quiet .
 	stylua --check lua tests
 
 ## profile: use LuaJIT profiler to profile the plugin
@@ -36,13 +35,10 @@ benchmark: scripts/benchmark.nvim
 	nvim --clean -u perf/bootstrap.lua -c 'lua benchmark()'
 	@cat perf/tmp/benchmark.txt
 
-scripts/nvim-typecheck-action:
-	git clone https://github.com/stevearc/nvim-typecheck-action scripts/nvim-typecheck-action
-
 scripts/benchmark.nvim:
 	git clone https://github.com/stevearc/benchmark.nvim scripts/benchmark.nvim
 
 ## clean: reset the repository to a clean state
 .PHONY: clean
 clean:
-	rm -rf scripts/nvim-typecheck-action venv .testenv perf/tmp profile.json
+	rm -rf .testenv perf/tmp profile.json

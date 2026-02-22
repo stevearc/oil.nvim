@@ -1,7 +1,7 @@
-local config = require("oil.config")
-local fs = require("oil.fs")
-local util = require("oil.util")
-local workspace = require("oil.lsp.workspace")
+local config = require('oil.config')
+local fs = require('oil.fs')
+local util = require('oil.util')
+local workspace = require('oil.lsp.workspace')
 
 local M = {}
 
@@ -12,7 +12,7 @@ M.will_perform_file_operations = function(actions)
   local creates = {}
   local deletes = {}
   for _, action in ipairs(actions) do
-    if action.type == "move" then
+    if action.type == 'move' then
       local src_scheme, src_path = util.parse_url(action.src_url)
       assert(src_path)
       local src_adapter = assert(config.get_adapter_by_scheme(src_scheme))
@@ -20,32 +20,32 @@ M.will_perform_file_operations = function(actions)
       local dest_adapter = assert(config.get_adapter_by_scheme(dest_scheme))
       src_path = fs.posix_to_os_path(src_path)
       dest_path = fs.posix_to_os_path(assert(dest_path))
-      if src_adapter.name == "files" and dest_adapter.name == "files" then
+      if src_adapter.name == 'files' and dest_adapter.name == 'files' then
         moves[src_path] = dest_path
-      elseif src_adapter.name == "files" then
+      elseif src_adapter.name == 'files' then
         table.insert(deletes, src_path)
-      elseif dest_adapter.name == "files" then
+      elseif dest_adapter.name == 'files' then
         table.insert(creates, src_path)
       end
-    elseif action.type == "create" then
+    elseif action.type == 'create' then
       local scheme, path = util.parse_url(action.url)
       path = fs.posix_to_os_path(assert(path))
       local adapter = assert(config.get_adapter_by_scheme(scheme))
-      if adapter.name == "files" then
+      if adapter.name == 'files' then
         table.insert(creates, path)
       end
-    elseif action.type == "delete" then
+    elseif action.type == 'delete' then
       local scheme, path = util.parse_url(action.url)
       path = fs.posix_to_os_path(assert(path))
       local adapter = assert(config.get_adapter_by_scheme(scheme))
-      if adapter.name == "files" then
+      if adapter.name == 'files' then
         table.insert(deletes, path)
       end
-    elseif action.type == "copy" then
+    elseif action.type == 'copy' then
       local scheme, path = util.parse_url(action.dest_url)
       path = fs.posix_to_os_path(assert(path))
       local adapter = assert(config.get_adapter_by_scheme(scheme))
-      if adapter.name == "files" then
+      if adapter.name == 'files' then
         table.insert(creates, path)
       end
     end
@@ -84,7 +84,7 @@ M.will_perform_file_operations = function(actions)
   accum(workspace.will_rename_files(moves, { timeout_ms = timeout_ms }))
   if final_err then
     vim.notify(
-      string.format("[lsp] file operation error: %s", vim.inspect(final_err)),
+      string.format('[lsp] file operation error: %s', vim.inspect(final_err)),
       vim.log.levels.WARN
     )
   end
@@ -102,7 +102,7 @@ M.will_perform_file_operations = function(actions)
       local bufnr = vim.uri_to_bufnr(uri)
       local was_open = buf_was_modified[bufnr] ~= nil
       local was_modified = buf_was_modified[bufnr]
-      local should_save = autosave == true or (autosave == "unmodified" and not was_modified)
+      local should_save = autosave == true or (autosave == 'unmodified' and not was_modified)
       -- Autosave changed buffers if they were not modified before
       if should_save then
         vim.api.nvim_buf_call(bufnr, function()

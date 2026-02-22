@@ -1,4 +1,4 @@
-local util = require("oil.util")
+local util = require('oil.util')
 local M = {}
 
 local timers = {}
@@ -12,14 +12,14 @@ M.is_loading = function(bufnr)
 end
 
 local spinners = {
-  dots = { "⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏" },
+  dots = { '⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏' },
 }
 
 ---@param name_or_frames string|string[]
 ---@return fun(): string
 M.get_iter = function(name_or_frames)
   local frames
-  if type(name_or_frames) == "string" then
+  if type(name_or_frames) == 'string' then
     frames = spinners[name_or_frames]
     if not frames then
       error(string.format("Unrecognized spinner: '%s'", name_or_frames))
@@ -35,26 +35,26 @@ M.get_iter = function(name_or_frames)
 end
 
 M.get_bar_iter = function(opts)
-  opts = vim.tbl_deep_extend("keep", opts or {}, {
+  opts = vim.tbl_deep_extend('keep', opts or {}, {
     bar_size = 3,
     width = 20,
   })
   local i = 0
   return function()
-    local chars = { "[" }
+    local chars = { '[' }
     for _ = 1, opts.width - 2 do
-      table.insert(chars, " ")
+      table.insert(chars, ' ')
     end
-    table.insert(chars, "]")
+    table.insert(chars, ']')
 
     for j = i - opts.bar_size, i do
       if j > 1 and j < opts.width then
-        chars[j] = "="
+        chars[j] = '='
       end
     end
 
     i = (i + 1) % (opts.width + opts.bar_size)
-    return table.concat(chars, "")
+    return table.concat(chars, '')
   end
 end
 
@@ -75,7 +75,7 @@ M.set_loading = function(bufnr, is_loading)
             return
           end
           local lines =
-            { util.pad_align("Loading", math.floor(width / 2) - 3, "right"), bar_iter() }
+            { util.pad_align('Loading', math.floor(width / 2) - 3, 'right'), bar_iter() }
           util.render_text(bufnr, lines)
         end)
       )

@@ -1,11 +1,11 @@
-local cache = require("oil.cache")
-local columns = require("oil.columns")
-local config = require("oil.config")
-local fs = require("oil.fs")
-local oil = require("oil")
-local parser = require("oil.mutator.parser")
-local util = require("oil.util")
-local view = require("oil.view")
+local cache = require('oil.cache')
+local columns = require('oil.columns')
+local config = require('oil.config')
+local fs = require('oil.fs')
+local oil = require('oil')
+local parser = require('oil.mutator.parser')
+local util = require('oil.util')
+local view = require('oil.view')
 
 local M = {}
 
@@ -16,10 +16,10 @@ local function get_linux_session_type()
     return
   end
   xdg_session_type = xdg_session_type:lower()
-  if xdg_session_type:find("x11") then
-    return "x11"
-  elseif xdg_session_type:find("wayland") then
-    return "wayland"
+  if xdg_session_type:find('x11') then
+    return 'x11'
+  elseif xdg_session_type:find('wayland') then
+    return 'wayland'
   else
     return nil
   end
@@ -29,9 +29,9 @@ end
 local function is_linux_desktop_gnome()
   local cur_desktop = vim.env.XDG_CURRENT_DESKTOP
   local session_desktop = vim.env.XDG_SESSION_DESKTOP
-  local idx = session_desktop and session_desktop:lower():find("gnome")
-    or cur_desktop and cur_desktop:lower():find("gnome")
-  return idx ~= nil or cur_desktop == "X-Cinnamon" or cur_desktop == "XFCE"
+  local idx = session_desktop and session_desktop:lower():find('gnome')
+    or cur_desktop and cur_desktop:lower():find('gnome')
+  return idx ~= nil or cur_desktop == 'X-Cinnamon' or cur_desktop == 'XFCE'
 end
 
 ---@param winid integer
@@ -55,7 +55,7 @@ end
 ---@param entry oil.InternalEntry
 local function remove_entry_from_parent_buffer(parent_url, entry)
   local bufnr = vim.fn.bufadd(parent_url)
-  assert(vim.api.nvim_buf_is_loaded(bufnr), "Expected parent buffer to be loaded during paste")
+  assert(vim.api.nvim_buf_is_loaded(bufnr), 'Expected parent buffer to be loaded during paste')
   local adapter = assert(util.get_adapter(bufnr))
   local column_defs = columns.get_supported_columns(adapter)
   local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
@@ -77,7 +77,7 @@ end
 ---@param delete_original? boolean
 local function paste_paths(paths, delete_original)
   local bufnr = vim.api.nvim_get_current_buf()
-  local scheme = "oil://"
+  local scheme = 'oil://'
   local adapter = assert(config.get_adapter_by_scheme(scheme))
   local column_defs = columns.get_supported_columns(scheme)
   local winid = vim.api.nvim_get_current_win()
@@ -88,7 +88,7 @@ local function paste_paths(paths, delete_original)
   -- Handle as many paths synchronously as possible
   for _, path in ipairs(paths) do
     -- Trim the trailing slash off directories
-    if vim.endswith(path, "/") then
+    if vim.endswith(path, '/') then
       path = path:sub(1, -2)
     end
 
@@ -114,7 +114,7 @@ local function paste_paths(paths, delete_original)
   local cursor = vim.api.nvim_win_get_cursor(winid)
   local complete_loading = util.cb_collect(#vim.tbl_keys(parent_urls), function(err)
     if err then
-      vim.notify(string.format("Error loading parent directory: %s", err), vim.log.levels.ERROR)
+      vim.notify(string.format('Error loading parent directory: %s', err), vim.log.levels.ERROR)
     else
       -- Something in this process moves the cursor to the top of the window, so have to restore it
       vim.api.nvim_win_set_cursor(winid, cursor)
@@ -149,8 +149,8 @@ end
 ---@return integer end
 local function range_from_selection()
   -- [bufnum, lnum, col, off]; both row and column 1-indexed
-  local start = vim.fn.getpos("v")
-  local end_ = vim.fn.getpos(".")
+  local start = vim.fn.getpos('v')
+  local end_ = vim.fn.getpos('.')
   local start_row = start[2]
   local end_row = end_[2]
 
@@ -164,16 +164,16 @@ end
 M.copy_to_system_clipboard = function()
   local dir = oil.get_current_dir()
   if not dir then
-    vim.notify("System clipboard only works for local files", vim.log.levels.ERROR)
+    vim.notify('System clipboard only works for local files', vim.log.levels.ERROR)
     return
   end
 
   local entries = {}
   local mode = vim.api.nvim_get_mode().mode
-  if mode == "v" or mode == "V" then
+  if mode == 'v' or mode == 'V' then
     if fs.is_mac then
       vim.notify(
-        "Copying multiple paths to clipboard is not supported on mac",
+        'Copying multiple paths to clipboard is not supported on mac',
         vim.log.levels.ERROR
       )
       return
@@ -184,7 +184,7 @@ M.copy_to_system_clipboard = function()
     end
 
     -- leave visual mode
-    vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Esc>", true, false, true), "n", true)
+    vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes('<Esc>', true, false, true), 'n', true)
   else
     table.insert(entries, oil.get_cursor_entry())
   end
@@ -193,7 +193,7 @@ M.copy_to_system_clipboard = function()
   entries = vim.tbl_values(entries)
 
   if #entries == 0 then
-    vim.notify("Could not find local file under cursor", vim.log.levels.WARN)
+    vim.notify('Could not find local file under cursor', vim.log.levels.WARN)
     return
   end
   local paths = {}
@@ -204,38 +204,38 @@ M.copy_to_system_clipboard = function()
   local stdin
   if fs.is_mac then
     cmd = {
-      "osascript",
-      "-e",
-      "on run args",
-      "-e",
-      "set the clipboard to POSIX file (first item of args)",
-      "-e",
-      "end run",
+      'osascript',
+      '-e',
+      'on run args',
+      '-e',
+      'set the clipboard to POSIX file (first item of args)',
+      '-e',
+      'end run',
       paths[1],
     }
   elseif fs.is_linux then
     local xdg_session_type = get_linux_session_type()
-    if xdg_session_type == "x11" then
-      vim.list_extend(cmd, { "xclip", "-i", "-selection", "clipboard" })
-    elseif xdg_session_type == "wayland" then
-      table.insert(cmd, "wl-copy")
+    if xdg_session_type == 'x11' then
+      vim.list_extend(cmd, { 'xclip', '-i', '-selection', 'clipboard' })
+    elseif xdg_session_type == 'wayland' then
+      table.insert(cmd, 'wl-copy')
     else
-      vim.notify("System clipboard not supported, check $XDG_SESSION_TYPE", vim.log.levels.ERROR)
+      vim.notify('System clipboard not supported, check $XDG_SESSION_TYPE', vim.log.levels.ERROR)
       return
     end
     local urls = {}
     for _, path in ipairs(paths) do
-      table.insert(urls, "file://" .. path)
+      table.insert(urls, 'file://' .. path)
     end
     if is_linux_desktop_gnome() then
-      stdin = string.format("copy\n%s\0", table.concat(urls, "\n"))
-      vim.list_extend(cmd, { "-t", "x-special/gnome-copied-files" })
+      stdin = string.format('copy\n%s\0', table.concat(urls, '\n'))
+      vim.list_extend(cmd, { '-t', 'x-special/gnome-copied-files' })
     else
-      stdin = table.concat(urls, "\n") .. "\n"
-      vim.list_extend(cmd, { "-t", "text/uri-list" })
+      stdin = table.concat(urls, '\n') .. '\n'
+      vim.list_extend(cmd, { '-t', 'text/uri-list' })
     end
   else
-    vim.notify("System clipboard not supported on Windows", vim.log.levels.ERROR)
+    vim.notify('System clipboard not supported on Windows', vim.log.levels.ERROR)
     return
   end
 
@@ -243,11 +243,11 @@ M.copy_to_system_clipboard = function()
     vim.notify(string.format("Could not find executable '%s'", cmd[1]), vim.log.levels.ERROR)
     return
   end
-  local stderr = ""
+  local stderr = ''
   local jid = vim.fn.jobstart(cmd, {
     stderr_buffered = true,
     on_stderr = function(_, data)
-      stderr = table.concat(data, "\n")
+      stderr = table.concat(data, '\n')
     end,
     on_exit = function(j, exit_code)
       if exit_code ~= 0 then
@@ -259,15 +259,15 @@ M.copy_to_system_clipboard = function()
         if #paths == 1 then
           vim.notify(string.format("Copied '%s' to system clipboard", paths[1]))
         else
-          vim.notify(string.format("Copied %d files to system clipboard", #paths))
+          vim.notify(string.format('Copied %d files to system clipboard', #paths))
         end
       end
     end,
   })
-  assert(jid > 0, "Failed to start job")
+  assert(jid > 0, 'Failed to start job')
   if stdin then
     vim.api.nvim_chan_send(jid, stdin)
-    vim.fn.chanclose(jid, "stdin")
+    vim.fn.chanclose(jid, 'stdin')
   end
 end
 
@@ -276,7 +276,7 @@ end
 local function handle_paste_output_mac(lines)
   local ret = {}
   for _, line in ipairs(lines) do
-    if not line:match("^%s*$") then
+    if not line:match('^%s*$') then
       table.insert(ret, line)
     end
   end
@@ -288,7 +288,7 @@ end
 local function handle_paste_output_linux(lines)
   local ret = {}
   for _, line in ipairs(lines) do
-    local path = line:match("^file://(.+)$")
+    local path = line:match('^file://(.+)$')
     if path then
       table.insert(ret, util.url_unescape(path))
     end
@@ -306,37 +306,37 @@ M.paste_from_system_clipboard = function(delete_original)
   local handle_paste_output
   if fs.is_mac then
     cmd = {
-      "osascript",
-      "-e",
-      "on run",
-      "-e",
-      "POSIX path of (the clipboard as «class furl»)",
-      "-e",
-      "end run",
+      'osascript',
+      '-e',
+      'on run',
+      '-e',
+      'POSIX path of (the clipboard as «class furl»)',
+      '-e',
+      'end run',
     }
     handle_paste_output = handle_paste_output_mac
   elseif fs.is_linux then
     local xdg_session_type = get_linux_session_type()
-    if xdg_session_type == "x11" then
-      vim.list_extend(cmd, { "xclip", "-o", "-selection", "clipboard" })
-    elseif xdg_session_type == "wayland" then
-      table.insert(cmd, "wl-paste")
+    if xdg_session_type == 'x11' then
+      vim.list_extend(cmd, { 'xclip', '-o', '-selection', 'clipboard' })
+    elseif xdg_session_type == 'wayland' then
+      table.insert(cmd, 'wl-paste')
     else
-      vim.notify("System clipboard not supported, check $XDG_SESSION_TYPE", vim.log.levels.ERROR)
+      vim.notify('System clipboard not supported, check $XDG_SESSION_TYPE', vim.log.levels.ERROR)
       return
     end
     if is_linux_desktop_gnome() then
-      vim.list_extend(cmd, { "-t", "x-special/gnome-copied-files" })
+      vim.list_extend(cmd, { '-t', 'x-special/gnome-copied-files' })
     else
-      vim.list_extend(cmd, { "-t", "text/uri-list" })
+      vim.list_extend(cmd, { '-t', 'text/uri-list' })
     end
     handle_paste_output = handle_paste_output_linux
   else
-    vim.notify("System clipboard not supported on Windows", vim.log.levels.ERROR)
+    vim.notify('System clipboard not supported on Windows', vim.log.levels.ERROR)
     return
   end
   local paths
-  local stderr = ""
+  local stderr = ''
   if vim.fn.executable(cmd[1]) == 0 then
     vim.notify(string.format("Could not find executable '%s'", cmd[1]), vim.log.levels.ERROR)
     return
@@ -345,26 +345,26 @@ M.paste_from_system_clipboard = function(delete_original)
     stdout_buffered = true,
     stderr_buffered = true,
     on_stdout = function(j, data)
-      local lines = vim.split(table.concat(data, "\n"), "\r?\n")
+      local lines = vim.split(table.concat(data, '\n'), '\r?\n')
       paths = handle_paste_output(lines)
     end,
     on_stderr = function(_, data)
-      stderr = table.concat(data, "\n")
+      stderr = table.concat(data, '\n')
     end,
     on_exit = function(j, exit_code)
       if exit_code ~= 0 or not paths then
         vim.notify(
-          string.format("Error pasting from system clipboard: %s", stderr),
+          string.format('Error pasting from system clipboard: %s', stderr),
           vim.log.levels.ERROR
         )
       elseif #paths == 0 then
-        vim.notify("No valid files found in system clipboard", vim.log.levels.WARN)
+        vim.notify('No valid files found in system clipboard', vim.log.levels.WARN)
       else
         paste_paths(paths, delete_original)
       end
     end,
   })
-  assert(jid > 0, "Failed to start job")
+  assert(jid > 0, 'Failed to start job')
 end
 
 return M

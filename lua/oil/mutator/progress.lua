@@ -1,17 +1,17 @@
-local columns = require("oil.columns")
-local config = require("oil.config")
-local layout = require("oil.layout")
-local loading = require("oil.loading")
-local util = require("oil.util")
+local columns = require('oil.columns')
+local config = require('oil.config')
+local layout = require('oil.layout')
+local loading = require('oil.loading')
+local util = require('oil.util')
 local Progress = {}
 
 local FPS = 20
 
 function Progress.new()
   return setmetatable({
-    lines = { "", "" },
-    count = "",
-    spinner = "",
+    lines = { '', '' },
+    count = '',
+    spinner = '',
     bufnr = nil,
     winid = nil,
     min_bufnr = nil,
@@ -40,18 +40,18 @@ function Progress:show(opts)
     return
   end
   local bufnr = vim.api.nvim_create_buf(false, true)
-  vim.bo[bufnr].bufhidden = "wipe"
+  vim.bo[bufnr].bufhidden = 'wipe'
   self.bufnr = bufnr
   self.cancel = opts.cancel or self.cancel
   local loading_iter = loading.get_bar_iter()
-  local spinner = loading.get_iter("dots")
+  local spinner = loading.get_iter('dots')
   if not self.timer then
     self.timer = vim.loop.new_timer()
     self.timer:start(
       0,
       math.floor(1000 / FPS),
       vim.schedule_wrap(function()
-        self.lines[2] = string.format("%s %s", self.count, loading_iter())
+        self.lines[2] = string.format('%s %s', self.count, loading_iter())
         self.spinner = spinner()
         self:_render()
       end)
@@ -59,22 +59,22 @@ function Progress:show(opts)
   end
   local width, height = layout.calculate_dims(120, 10, config.progress)
   self.winid = vim.api.nvim_open_win(self.bufnr, true, {
-    relative = "editor",
+    relative = 'editor',
     width = width,
     height = height,
     row = math.floor((layout.get_editor_height() - height) / 2),
     col = math.floor((layout.get_editor_width() - width) / 2),
     zindex = 152, -- render on top of the floating window title
-    style = "minimal",
+    style = 'minimal',
     border = config.progress.border,
   })
-  vim.bo[self.bufnr].filetype = "oil_progress"
+  vim.bo[self.bufnr].filetype = 'oil_progress'
   for k, v in pairs(config.progress.win_options) do
-    vim.api.nvim_set_option_value(k, v, { scope = "local", win = self.winid })
+    vim.api.nvim_set_option_value(k, v, { scope = 'local', win = self.winid })
   end
   table.insert(
     self.autocmds,
-    vim.api.nvim_create_autocmd("VimResized", {
+    vim.api.nvim_create_autocmd('VimResized', {
       callback = function()
         self:_reposition()
       end,
@@ -82,7 +82,7 @@ function Progress:show(opts)
   )
   table.insert(
     self.autocmds,
-    vim.api.nvim_create_autocmd("WinLeave", {
+    vim.api.nvim_create_autocmd('WinLeave', {
       callback = function()
         self:minimize()
       end,
@@ -94,17 +94,17 @@ function Progress:show(opts)
       vim.api.nvim_win_close(self.winid, true)
     end
   end
-  vim.keymap.set("n", "c", cancel, { buffer = self.bufnr, nowait = true })
-  vim.keymap.set("n", "C", cancel, { buffer = self.bufnr, nowait = true })
-  vim.keymap.set("n", "m", minimize, { buffer = self.bufnr, nowait = true })
-  vim.keymap.set("n", "M", minimize, { buffer = self.bufnr, nowait = true })
+  vim.keymap.set('n', 'c', cancel, { buffer = self.bufnr, nowait = true })
+  vim.keymap.set('n', 'C', cancel, { buffer = self.bufnr, nowait = true })
+  vim.keymap.set('n', 'm', minimize, { buffer = self.bufnr, nowait = true })
+  vim.keymap.set('n', 'M', minimize, { buffer = self.bufnr, nowait = true })
 end
 
 function Progress:restore()
   if self.closing then
     return
   elseif not self:is_minimized() then
-    error("Cannot restore progress window: not minimized")
+    error('Cannot restore progress window: not minimized')
   end
   self:_cleanup_minimized_win()
   self:show()
@@ -115,14 +115,14 @@ function Progress:_render()
     util.render_text(
       self.bufnr,
       self.lines,
-      { winid = self.winid, actions = { "[M]inimize", "[C]ancel" } }
+      { winid = self.winid, actions = { '[M]inimize', '[C]ancel' } }
     )
   end
   if self.min_bufnr and vim.api.nvim_buf_is_valid(self.min_bufnr) then
     util.render_text(
       self.min_bufnr,
-      { string.format("%sOil: %s", self.spinner, self.count) },
-      { winid = self.min_winid, h_align = "left" }
+      { string.format('%sOil: %s', self.spinner, self.count) },
+      { winid = self.min_winid, h_align = 'left' }
     )
   end
 end
@@ -136,7 +136,7 @@ function Progress:_reposition()
     end
     local width, height = layout.calculate_dims(min_width, 10, config.progress)
     vim.api.nvim_win_set_config(self.winid, {
-      relative = "editor",
+      relative = 'editor',
       width = width,
       height = height,
       row = math.floor((layout.get_editor_height() - height) / 2),
@@ -174,22 +174,22 @@ function Progress:minimize()
   end
   self:_cleanup_main_win()
   local bufnr = vim.api.nvim_create_buf(false, true)
-  vim.bo[bufnr].bufhidden = "wipe"
+  vim.bo[bufnr].bufhidden = 'wipe'
   local winid = vim.api.nvim_open_win(bufnr, false, {
-    relative = "editor",
+    relative = 'editor',
     width = 16,
     height = 1,
-    anchor = "SE",
+    anchor = 'SE',
     row = layout.get_editor_height(),
     col = layout.get_editor_width(),
     zindex = 152, -- render on top of the floating window title
-    style = "minimal",
+    style = 'minimal',
     border = config.progress.minimized_border,
   })
   self.min_bufnr = bufnr
   self.min_winid = winid
   self:_render()
-  vim.notify_once("Restore progress window with :Oil --progress")
+  vim.notify_once('Restore progress window with :Oil --progress')
 end
 
 ---@param action oil.Action
@@ -198,14 +198,14 @@ end
 function Progress:set_action(action, idx, total)
   local adapter = util.get_adapter_for_action(action)
   local change_line
-  if action.type == "change" then
+  if action.type == 'change' then
     ---@cast action oil.ChangeAction
     change_line = columns.render_change_action(adapter, action)
   else
     change_line = adapter.render_action(action)
   end
   self.lines[1] = change_line
-  self.count = string.format("%d/%d", idx, total)
+  self.count = string.format('%d/%d', idx, total)
   self:_reposition()
   self:_render()
 end

@@ -1,11 +1,11 @@
 -- Based on the FreeDesktop.org trash specification
 -- https://specifications.freedesktop.org/trash/1.0/
-local cache = require("oil.cache")
-local config = require("oil.config")
-local constants = require("oil.constants")
-local files = require("oil.adapters.files")
-local fs = require("oil.fs")
-local util = require("oil.util")
+local cache = require('oil.cache')
+local config = require('oil.config')
+local constants = require('oil.constants')
+local files = require('oil.adapters.files')
+local fs = require('oil.fs')
+local util = require('oil.util')
 
 local uv = vim.uv or vim.loop
 local FIELD_META = constants.FIELD_META
@@ -14,8 +14,8 @@ local M = {}
 
 local function ensure_trash_dir(path)
   local mode = 448 -- 0700
-  fs.mkdirp(fs.join(path, "info"), mode)
-  fs.mkdirp(fs.join(path, "files"), mode)
+  fs.mkdirp(fs.join(path, 'info'), mode)
+  fs.mkdirp(fs.join(path, 'files'), mode)
 end
 
 ---Gets the location of the home trash dir, creating it if necessary
@@ -23,9 +23,9 @@ end
 local function get_home_trash_dir()
   local xdg_home = vim.env.XDG_DATA_HOME
   if not xdg_home then
-    xdg_home = fs.join(assert(uv.os_homedir()), ".local", "share")
+    xdg_home = fs.join(assert(uv.os_homedir()), '.local', 'share')
   end
-  local trash_dir = fs.join(xdg_home, "Trash")
+  local trash_dir = fs.join(xdg_home, 'Trash')
   ensure_trash_dir(trash_dir)
   return trash_dir
 end
@@ -43,13 +43,13 @@ end
 local function get_top_trash_dirs(path)
   local dirs = {}
   local dev = (uv.fs_lstat(path) or {}).dev
-  local top_trash_dirs = vim.fs.find(".Trash", { upward = true, path = path, limit = math.huge })
+  local top_trash_dirs = vim.fs.find('.Trash', { upward = true, path = path, limit = math.huge })
   for _, top_trash_dir in ipairs(top_trash_dirs) do
     local stat = uv.fs_lstat(top_trash_dir)
     if stat and not dev then
       dev = stat.dev
     end
-    if stat and stat.dev == dev and stat.type == "directory" and is_sticky(stat.mode) then
+    if stat and stat.dev == dev and stat.type == 'directory' and is_sticky(stat.mode) then
       local trash_dir = fs.join(top_trash_dir, tostring(uv.getuid()))
       ensure_trash_dir(trash_dir)
       table.insert(dirs, trash_dir)
@@ -58,7 +58,7 @@ local function get_top_trash_dirs(path)
 
   -- Also search for the .Trash-$uid
   top_trash_dirs = vim.fs.find(
-    string.format(".Trash-%d", uv.getuid()),
+    string.format('.Trash-%d', uv.getuid()),
     { upward = true, path = path, limit = math.huge }
   )
   for _, top_trash_dir in ipairs(top_trash_dirs) do
@@ -91,14 +91,14 @@ local function get_write_trash_dir(path)
     return top_trash_dirs[1]
   end
 
-  local parent = vim.fn.fnamemodify(path, ":h")
-  local next_parent = vim.fn.fnamemodify(parent, ":h")
+  local parent = vim.fn.fnamemodify(path, ':h')
+  local next_parent = vim.fn.fnamemodify(parent, ':h')
   while parent ~= next_parent and uv.fs_lstat(next_parent).dev == dev do
     parent = next_parent
-    next_parent = vim.fn.fnamemodify(parent, ":h")
+    next_parent = vim.fn.fnamemodify(parent, ':h')
   end
 
-  local top_trash = fs.join(parent, string.format(".Trash-%d", uv.getuid()))
+  local top_trash = fs.join(parent, string.format('.Trash-%d', uv.getuid()))
   ensure_trash_dir(top_trash)
   return top_trash
 end
@@ -116,7 +116,7 @@ end
 M.normalize_url = function(url, callback)
   local scheme, path = util.parse_url(url)
   assert(path)
-  local os_path = vim.fn.fnamemodify(fs.posix_to_os_path(path), ":p")
+  local os_path = vim.fn.fnamemodify(fs.posix_to_os_path(path), ':p')
   uv.fs_realpath(
     os_path,
     vim.schedule_wrap(function(err, new_os_path)
@@ -140,10 +140,10 @@ M.get_entry_path = function(url, entry, cb)
     return
   end
   local path = fs.os_to_posix_path(trash_info.trash_file)
-  if meta.stat.type == "directory" then
+  if meta.stat.type == 'directory' then
     path = util.addslash(path)
   end
-  cb("oil://" .. path)
+  cb('oil://' .. path)
 end
 
 ---@class oil.TrashInfo
@@ -156,10 +156,10 @@ end
 ---@param info_file string
 ---@param cb fun(err?: string, info?: oil.TrashInfo)
 local function read_trash_info(info_file, cb)
-  if not vim.endswith(info_file, ".trashinfo") then
-    return cb("File is not .trashinfo")
+  if not vim.endswith(info_file, '.trashinfo') then
+    return cb('File is not .trashinfo')
   end
-  uv.fs_open(info_file, "r", 448, function(err, fd)
+  uv.fs_open(info_file, 'r', 448, function(err, fd)
     if err then
       return cb(err)
     end
@@ -182,32 +182,32 @@ local function read_trash_info(info_file, cb)
           local trash_info = {
             info_file = info_file,
           }
-          local lines = vim.split(content, "\r?\n")
-          if lines[1] ~= "[Trash Info]" then
-            return cb("File missing [Trash Info] header")
+          local lines = vim.split(content, '\r?\n')
+          if lines[1] ~= '[Trash Info]' then
+            return cb('File missing [Trash Info] header')
           end
-          local trash_base = vim.fn.fnamemodify(info_file, ":h:h")
+          local trash_base = vim.fn.fnamemodify(info_file, ':h:h')
           for _, line in ipairs(lines) do
-            local key, value = unpack(vim.split(line, "=", { plain = true, trimempty = true }))
-            if key == "Path" and not trash_info.original_path then
-              if not vim.startswith(value, "/") then
+            local key, value = unpack(vim.split(line, '=', { plain = true, trimempty = true }))
+            if key == 'Path' and not trash_info.original_path then
+              if not vim.startswith(value, '/') then
                 value = fs.join(trash_base, value)
               end
               trash_info.original_path = value
-            elseif key == "DeletionDate" and not trash_info.deletion_date then
-              trash_info.deletion_date = vim.fn.strptime("%Y-%m-%dT%H:%M:%S", value)
+            elseif key == 'DeletionDate' and not trash_info.deletion_date then
+              trash_info.deletion_date = vim.fn.strptime('%Y-%m-%dT%H:%M:%S', value)
             end
           end
 
           if not trash_info.original_path or not trash_info.deletion_date then
-            return cb("File missing required fields")
+            return cb('File missing required fields')
           end
 
-          local basename = vim.fn.fnamemodify(info_file, ":t:r")
-          trash_info.trash_file = fs.join(trash_base, "files", basename)
+          local basename = vim.fn.fnamemodify(info_file, ':t:r')
+          trash_info.trash_file = fs.join(trash_base, 'files', basename)
           uv.fs_lstat(trash_info.trash_file, function(trash_stat_err, trash_stat)
             if trash_stat_err then
-              cb(".trashinfo file points to non-existant file")
+              cb('.trashinfo file points to non-existant file')
             else
               trash_info.stat = trash_stat
               ---@cast trash_info oil.TrashInfo
@@ -244,14 +244,14 @@ M.list = function(url, column_defs, cb)
     -- The first trash dir is a special case; it is in the home directory and we should only show
     -- all entries if we are in the top root path "/"
     if trash_idx == 1 then
-      show_all_files = path == "/"
+      show_all_files = path == '/'
     end
 
-    local info_dir = fs.join(trash_dir, "info")
+    local info_dir = fs.join(trash_dir, 'info')
     ---@diagnostic disable-next-line: param-type-mismatch, discard-returns
     uv.fs_opendir(info_dir, function(open_err, fd)
       if open_err then
-        if open_err:match("^ENOENT: no such file or directory") then
+        if open_err:match('^ENOENT: no such file or directory') then
           -- If the directory doesn't exist, treat the list as a success. We will be able to traverse
           -- and edit a not-yet-existing directory.
           return read_next_trash_dir()
@@ -286,12 +286,12 @@ M.list = function(url, column_defs, cb)
                     -- files.
                     poll()
                   else
-                    local parent = util.addslash(vim.fn.fnamemodify(info.original_path, ":h"))
+                    local parent = util.addslash(vim.fn.fnamemodify(info.original_path, ':h'))
                     if path == parent or show_all_files then
-                      local name = vim.fn.fnamemodify(info.trash_file, ":t")
+                      local name = vim.fn.fnamemodify(info.trash_file, ':t')
                       ---@diagnostic disable-next-line: undefined-field
                       local cache_entry = cache.create_entry(url, name, info.stat.type)
-                      local display_name = vim.fn.fnamemodify(info.original_path, ":t")
+                      local display_name = vim.fn.fnamemodify(info.original_path, ':t')
                       cache_entry[FIELD_META] = {
                         stat = info.stat,
                         trash_info = info,
@@ -302,12 +302,12 @@ M.list = function(url, column_defs, cb)
                     if path ~= parent and (show_all_files or fs.is_subpath(path, parent)) then
                       local name = parent:sub(path:len() + 1)
                       local next_par = vim.fs.dirname(name)
-                      while next_par ~= "." do
+                      while next_par ~= '.' do
                         name = next_par
                         next_par = vim.fs.dirname(name)
                       end
                       ---@diagnostic disable-next-line: undefined-field
-                      local cache_entry = cache.create_entry(url, name, "directory")
+                      local cache_entry = cache.create_entry(url, name, 'directory')
 
                       cache_entry[FIELD_META] = {
                         stat = info.stat,
@@ -348,7 +348,7 @@ local file_columns = {}
 local current_year
 -- Make sure we run this import-time effect in the main loop (mostly for tests)
 vim.schedule(function()
-  current_year = vim.fn.strftime("%Y")
+  current_year = vim.fn.strftime('%Y')
 end)
 
 file_columns.mtime = {
@@ -368,11 +368,11 @@ file_columns.mtime = {
     if fmt then
       ret = vim.fn.strftime(fmt, time)
     else
-      local year = vim.fn.strftime("%Y", time)
+      local year = vim.fn.strftime('%Y', time)
       if year ~= current_year then
-        ret = vim.fn.strftime("%b %d %Y", time)
+        ret = vim.fn.strftime('%b %d %Y', time)
       else
-        ret = vim.fn.strftime("%b %d %H:%M", time)
+        ret = vim.fn.strftime('%b %d %H:%M', time)
       end
     end
     return ret
@@ -393,11 +393,11 @@ file_columns.mtime = {
     local fmt = conf and conf.format
     local pattern
     if fmt then
-      pattern = fmt:gsub("%%.", "%%S+")
+      pattern = fmt:gsub('%%.', '%%S+')
     else
-      pattern = "%S+%s+%d+%s+%d%d:?%d%d"
+      pattern = '%S+%s+%d+%s+%d%d:?%d%d'
     end
-    return line:match("^(" .. pattern .. ")%s+(.+)$")
+    return line:match('^(' .. pattern .. ')%s+(.+)$')
   end,
 }
 
@@ -407,25 +407,26 @@ M.get_column = function(name)
   return file_columns[name]
 end
 
-M.supported_cross_adapter_actions = { files = "move" }
+M.supported_cross_adapter_actions = { files = 'move' }
 
 ---@param action oil.Action
 ---@return boolean
 M.filter_action = function(action)
-  if action.type == "create" then
+  if action.type == 'create' then
     return false
-  elseif action.type == "delete" then
+  elseif action.type == 'delete' then
     local entry = assert(cache.get_entry_by_url(action.url))
     local meta = entry[FIELD_META]
     return meta ~= nil and meta.trash_info ~= nil
-  elseif action.type == "move" then
+  elseif action.type == 'move' then
     local src_adapter = assert(config.get_adapter_by_scheme(action.src_url))
     local dest_adapter = assert(config.get_adapter_by_scheme(action.dest_url))
-    return src_adapter.name == "files" or dest_adapter.name == "files"
-  elseif action.type == "copy" then
+    return src_adapter.name == 'files' or dest_adapter.name == 'files'
+  -- selene: allow(if_same_then_else)
+  elseif action.type == 'copy' then
     local src_adapter = assert(config.get_adapter_by_scheme(action.src_url))
     local dest_adapter = assert(config.get_adapter_by_scheme(action.dest_url))
-    return src_adapter.name == "files" or dest_adapter.name == "files"
+    return src_adapter.name == 'files' or dest_adapter.name == 'files'
   else
     error(string.format("Bad action type '%s'", action.type))
   end
@@ -434,7 +435,7 @@ end
 ---@param err oil.ParseError
 ---@return boolean
 M.filter_error = function(err)
-  if err.message == "Duplicate filename" then
+  if err.message == 'Duplicate filename' then
     return false
   end
   return true
@@ -443,44 +444,44 @@ end
 ---@param action oil.Action
 ---@return string
 M.render_action = function(action)
-  if action.type == "delete" then
+  if action.type == 'delete' then
     local entry = assert(cache.get_entry_by_url(action.url))
     local meta = entry[FIELD_META]
     ---@type oil.TrashInfo
     local trash_info = assert(meta).trash_info
     local short_path = fs.shorten_path(trash_info.original_path)
-    return string.format(" PURGE %s", short_path)
-  elseif action.type == "move" then
+    return string.format(' PURGE %s', short_path)
+  elseif action.type == 'move' then
     local src_adapter = assert(config.get_adapter_by_scheme(action.src_url))
     local dest_adapter = assert(config.get_adapter_by_scheme(action.dest_url))
-    if src_adapter.name == "files" then
+    if src_adapter.name == 'files' then
       local _, path = util.parse_url(action.src_url)
       assert(path)
       local short_path = files.to_short_os_path(path, action.entry_type)
-      return string.format(" TRASH %s", short_path)
-    elseif dest_adapter.name == "files" then
+      return string.format(' TRASH %s', short_path)
+    elseif dest_adapter.name == 'files' then
       local _, path = util.parse_url(action.dest_url)
       assert(path)
       local short_path = files.to_short_os_path(path, action.entry_type)
-      return string.format("RESTORE %s", short_path)
+      return string.format('RESTORE %s', short_path)
     else
-      error("Must be moving files into or out of trash")
+      error('Must be moving files into or out of trash')
     end
-  elseif action.type == "copy" then
+  elseif action.type == 'copy' then
     local src_adapter = assert(config.get_adapter_by_scheme(action.src_url))
     local dest_adapter = assert(config.get_adapter_by_scheme(action.dest_url))
-    if src_adapter.name == "files" then
+    if src_adapter.name == 'files' then
       local _, path = util.parse_url(action.src_url)
       assert(path)
       local short_path = files.to_short_os_path(path, action.entry_type)
-      return string.format("  COPY %s -> TRASH", short_path)
-    elseif dest_adapter.name == "files" then
+      return string.format('  COPY %s -> TRASH', short_path)
+    elseif dest_adapter.name == 'files' then
       local _, path = util.parse_url(action.dest_url)
       assert(path)
       local short_path = files.to_short_os_path(path, action.entry_type)
-      return string.format("RESTORE %s", short_path)
+      return string.format('RESTORE %s', short_path)
     else
-      error("Must be copying files into or out of trash")
+      error('Must be copying files into or out of trash')
     end
   else
     error(string.format("Bad action type '%s'", action.type))
@@ -490,7 +491,7 @@ end
 ---@param trash_info oil.TrashInfo
 ---@param cb fun(err?: string)
 local function purge(trash_info, cb)
-  fs.recursive_delete("file", trash_info.info_file, function(err)
+  fs.recursive_delete('file', trash_info.info_file, function(err)
     if err then
       return cb(err)
     end
@@ -505,15 +506,15 @@ end
 local function write_info_file(path, info_path, cb)
   uv.fs_open(
     info_path,
-    "w",
+    'w',
     448,
     vim.schedule_wrap(function(err, fd)
       if err then
         return cb(err)
       end
       assert(fd)
-      local deletion_date = vim.fn.strftime("%Y-%m-%dT%H:%M:%S")
-      local contents = string.format("[Trash Info]\nPath=%s\nDeletionDate=%s", path, deletion_date)
+      local deletion_date = vim.fn.strftime('%Y-%m-%dT%H:%M:%S')
+      local contents = string.format('[Trash Info]\nPath=%s\nDeletionDate=%s', path, deletion_date)
       uv.fs_write(fd, contents, function(write_err)
         uv.fs_close(fd, function(close_err)
           cb(write_err or close_err)
@@ -529,9 +530,9 @@ local function create_trash_info(path, cb)
   local trash_dir = get_write_trash_dir(path)
   local basename = vim.fs.basename(path)
   local now = os.time()
-  local name = string.format("%s-%d.%d", basename, now, math.random(100000, 999999))
-  local dest_path = fs.join(trash_dir, "files", name)
-  local dest_info = fs.join(trash_dir, "info", name .. ".trashinfo")
+  local name = string.format('%s-%d.%d', basename, now, math.random(100000, 999999))
+  local dest_path = fs.join(trash_dir, 'files', name)
+  local dest_info = fs.join(trash_dir, 'info', name .. '.trashinfo')
   uv.fs_lstat(path, function(err, stat)
     if err then
       return cb(err)
@@ -557,19 +558,19 @@ end
 ---@param action oil.Action
 ---@param cb fun(err: nil|string)
 M.perform_action = function(action, cb)
-  if action.type == "delete" then
+  if action.type == 'delete' then
     local entry = assert(cache.get_entry_by_url(action.url))
     local meta = entry[FIELD_META]
     ---@type oil.TrashInfo
     local trash_info = assert(meta).trash_info
     purge(trash_info, cb)
-  elseif action.type == "move" then
+  elseif action.type == 'move' then
     local src_adapter = assert(config.get_adapter_by_scheme(action.src_url))
     local dest_adapter = assert(config.get_adapter_by_scheme(action.dest_url))
-    if src_adapter.name == "files" then
+    if src_adapter.name == 'files' then
       local _, path = util.parse_url(action.src_url)
       M.delete_to_trash(assert(path), cb)
-    elseif dest_adapter.name == "files" then
+    elseif dest_adapter.name == 'files' then
       -- Restore
       local _, dest_path = util.parse_url(action.dest_url)
       assert(dest_path)
@@ -584,23 +585,23 @@ M.perform_action = function(action, cb)
         uv.fs_unlink(trash_info.info_file, cb)
       end)
     else
-      error("Must be moving files into or out of trash")
+      error('Must be moving files into or out of trash')
     end
-  elseif action.type == "copy" then
+  elseif action.type == 'copy' then
     local src_adapter = assert(config.get_adapter_by_scheme(action.src_url))
     local dest_adapter = assert(config.get_adapter_by_scheme(action.dest_url))
-    if src_adapter.name == "files" then
+    if src_adapter.name == 'files' then
       local _, path = util.parse_url(action.src_url)
       assert(path)
       create_trash_info(path, function(err, trash_info)
         if err then
           cb(err)
         else
-          local stat_type = trash_info.stat.type or "unknown"
+          local stat_type = trash_info.stat.type or 'unknown'
           fs.recursive_copy(stat_type, path, trash_info.trash_file, vim.schedule_wrap(cb))
         end
       end)
-    elseif dest_adapter.name == "files" then
+    elseif dest_adapter.name == 'files' then
       -- Restore
       local _, dest_path = util.parse_url(action.dest_url)
       assert(dest_path)
@@ -610,10 +611,10 @@ M.perform_action = function(action, cb)
       local trash_info = assert(meta).trash_info
       fs.recursive_copy(action.entry_type, trash_info.trash_file, dest_path, cb)
     else
-      error("Must be moving files into or out of trash")
+      error('Must be moving files into or out of trash')
     end
   else
-    cb(string.format("Bad action type: %s", action.type))
+    cb(string.format('Bad action type: %s', action.type))
   end
 end
 
@@ -624,7 +625,7 @@ M.delete_to_trash = function(path, cb)
     if err then
       cb(err)
     else
-      local stat_type = trash_info.stat.type or "unknown"
+      local stat_type = trash_info.stat.type or 'unknown'
       fs.recursive_move(stat_type, path, trash_info.trash_file, vim.schedule_wrap(cb))
     end
   end)

@@ -1,0 +1,36 @@
+[selene]
+base = "lua51"
+name = "vim"
+
+[vim]
+any = true
+
+[jit]
+any = true
+
+[bit]
+any = true
+
+[assert]
+any = true
+
+[a]
+any = true
+
+[describe]
+any = true
+
+[it]
+any = true
+
+[before_each]
+any = true
+
+[after_each]
+any = true
+
+[spy]
+any = true
+
+[stub]
+any = true

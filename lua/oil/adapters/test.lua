@@ -1,5 +1,5 @@
-local cache = require("oil.cache")
-local util = require("oil.util")
+local cache = require('oil.cache')
+local util = require('oil.util')
 local M = {}
 
 ---@param url string
@@ -32,24 +32,24 @@ end
 ---@param entry_type oil.EntryType
 ---@return oil.InternalEntry
 M.test_set = function(path, entry_type)
-  if path == "/" then
+  if path == '/' then
     return {}
   end
-  local parent = vim.fn.fnamemodify(path, ":h")
+  local parent = vim.fn.fnamemodify(path, ':h')
   if parent ~= path then
-    M.test_set(parent, "directory")
+    M.test_set(parent, 'directory')
   end
   parent = util.addslash(parent)
   if not dir_listing[parent] then
     dir_listing[parent] = {}
   end
-  local name = vim.fn.fnamemodify(path, ":t")
+  local name = vim.fn.fnamemodify(path, ':t')
   local entry = {
     name = name,
     entry_type = entry_type,
   }
   table.insert(dir_listing[parent], entry)
-  local parent_url = "oil-test://" .. parent
+  local parent_url = 'oil-test://' .. parent
   return cache.create_and_store_entry(parent_url, entry.name, entry.entry_type)
 end
 
@@ -68,12 +68,12 @@ end
 ---@param action oil.Action
 ---@return string
 M.render_action = function(action)
-  if action.type == "create" or action.type == "delete" then
-    return string.format("%s %s", action.type:upper(), action.url)
-  elseif action.type == "move" or action.type == "copy" then
-    return string.format("  %s %s -> %s", action.type:upper(), action.src_url, action.dest_url)
+  if action.type == 'create' or action.type == 'delete' then
+    return string.format('%s %s', action.type:upper(), action.url)
+  elseif action.type == 'move' or action.type == 'copy' then
+    return string.format('  %s %s -> %s', action.type:upper(), action.src_url, action.dest_url)
   else
-    error("Bad action type")
+    error('Bad action type')
   end
 end
 

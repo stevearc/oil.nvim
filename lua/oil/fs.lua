@@ -1,17 +1,17 @@
-local log = require("oil.log")
+local log = require('oil.log')
 local M = {}
 
 local uv = vim.uv or vim.loop
 
 ---@type boolean
-M.is_windows = uv.os_uname().version:match("Windows")
+M.is_windows = uv.os_uname().version:match('Windows')
 
-M.is_mac = uv.os_uname().sysname == "Darwin"
+M.is_mac = uv.os_uname().sysname == 'Darwin'
 
 M.is_linux = not M.is_windows and not M.is_mac
 
 ---@type string
-M.sep = M.is_windows and "\\" or "/"
+M.sep = M.is_windows and '\\' or '/'
 
 ---@param ... string
 M.join = function(...)
@@ -23,15 +23,15 @@ end
 ---@return boolean
 M.is_absolute = function(dir)
   if M.is_windows then
-    return dir:match("^%a:\\")
+    return dir:match('^%a:\\')
   else
-    return vim.startswith(dir, "/")
+    return vim.startswith(dir, '/')
   end
 end
 
 M.abspath = function(path)
   if not M.is_absolute(path) then
-    path = vim.fn.fnamemodify(path, ":p")
+    path = vim.fn.fnamemodify(path, ':p')
   end
   return path
 end
@@ -40,11 +40,11 @@ end
 ---@param mode? integer File mode in decimal (default 420 = 0644)
 ---@param cb fun(err: nil|string)
 M.touch = function(path, mode, cb)
-  if type(mode) == "function" then
+  if type(mode) == 'function' then
     cb = mode
     mode = 420
   end
-  uv.fs_open(path, "a", mode or 420, function(err, fd)
+  uv.fs_open(path, 'a', mode or 420, function(err, fd)
     if err then
       cb(err)
     else
@@ -59,12 +59,12 @@ end
 ---@param candidate string
 ---@return boolean
 M.is_subpath = function(root, candidate)
-  if candidate == "" then
+  if candidate == '' then
     return false
   end
   root = vim.fs.normalize(M.abspath(root))
   -- Trim trailing "/" from the root
-  if root:find("/", -1) then
+  if root:find('/', -1) then
     root = root:sub(1, -2)
   end
   candidate = vim.fs.normalize(M.abspath(candidate))
@@ -80,8 +80,8 @@ M.is_subpath = function(root, candidate)
     return false
   end
 
-  local candidate_starts_with_sep = candidate:find("/", root:len() + 1, true) == root:len() + 1
-  local root_ends_with_sep = root:find("/", root:len(), true) == root:len()
+  local candidate_starts_with_sep = candidate:find('/', root:len() + 1, true) == root:len() + 1
+  local root_ends_with_sep = root:find('/', root:len(), true) == root:len()
 
   return candidate_starts_with_sep or root_ends_with_sep
 end
@@ -90,15 +90,15 @@ end
 ---@return string
 M.posix_to_os_path = function(path)
   if M.is_windows then
-    if vim.startswith(path, "/") then
-      local drive = path:match("^/(%a+)")
+    if vim.startswith(path, '/') then
+      local drive = path:match('^/(%a+)')
       if not drive then
         return path
       end
       local rem = path:sub(drive:len() + 2)
-      return string.format("%s:%s", drive, rem:gsub("/", "\\"))
+      return string.format('%s:%s', drive, rem:gsub('/', '\\'))
     else
-      local newpath = path:gsub("/", "\\")
+      local newpath = path:gsub('/', '\\')
       return newpath
     end
   else
@@ -111,10 +111,10 @@ end
 M.os_to_posix_path = function(path)
   if M.is_windows then
     if M.is_absolute(path) then
-      local drive, rem = path:match("^([^:]+):\\(.*)$")
-      return string.format("/%s/%s", drive:upper(), rem:gsub("\\", "/"))
+      local drive, rem = path:match('^([^:]+):\\(.*)$')
+      return string.format('/%s/%s', drive:upper(), rem:gsub('\\', '/'))
     else
-      local newpath = path:gsub("\\", "/")
+      local newpath = path:gsub('\\', '/')
       return newpath
     end
   else
@@ -135,16 +135,16 @@ M.shorten_path = function(path, relative_to)
   if M.is_subpath(relative_to, path) then
     local idx = relative_to:len() + 1
     -- Trim the dividing slash if it's not included in relative_to
-    if not vim.endswith(relative_to, "/") and not vim.endswith(relative_to, "\\") then
+    if not vim.endswith(relative_to, '/') and not vim.endswith(relative_to, '\\') then
       idx = idx + 1
     end
     relpath = path:sub(idx)
-    if relpath == "" then
-      relpath = "."
+    if relpath == '' then
+      relpath = '.'
     end
   end
   if M.is_subpath(home_dir, path) then
-    local homepath = "~" .. path:sub(home_dir:len() + 1)
+    local homepath = '~' .. path:sub(home_dir:len() + 1)
     if not relpath or homepath:len() < relpath:len() then
       return homepath
     end
@@ -156,13 +156,13 @@ end
 ---@param mode? integer
 M.mkdirp = function(dir, mode)
   mode = mode or 493
-  local mod = ""
+  local mod = ''
   local path = dir
   while vim.fn.isdirectory(path) == 0 do
-    mod = mod .. ":h"
+    mod = mod .. ':h'
     path = vim.fn.fnamemodify(dir, mod)
   end
-  while mod ~= "" do
+  while mod ~= '' do
     mod = mod:sub(3)
     path = vim.fn.fnamemodify(dir, mod)
     uv.fs_mkdir(path, mode)
@@ -209,7 +209,7 @@ end
 ---@param path string
 ---@param cb fun(err: nil|string)
 M.recursive_delete = function(entry_type, path, cb)
-  if entry_type ~= "directory" then
+  if entry_type ~= 'directory' then
     return uv.fs_unlink(path, cb)
   end
   ---@diagnostic disable-next-line: param-type-mismatch, discard-returns
@@ -271,13 +271,13 @@ local move_undofile = vim.schedule_wrap(function(src_path, dest_path, copy)
       if copy then
         uv.fs_copyfile(src_path, dest_path, function(err)
           if err then
-            log.warn("Error copying undofile %s: %s", undofile, err)
+            log.warn('Error copying undofile %s: %s', undofile, err)
           end
         end)
       else
         uv.fs_rename(undofile, dest_undofile, function(err)
           if err then
-            log.warn("Error moving undofile %s: %s", undofile, err)
+            log.warn('Error moving undofile %s: %s', undofile, err)
           end
         end)
       end
@@ -290,7 +290,7 @@ end)
 ---@param dest_path string
 ---@param cb fun(err: nil|string)
 M.recursive_copy = function(entry_type, src_path, dest_path, cb)
-  if entry_type == "link" then
+  if entry_type == 'link' then
     uv.fs_readlink(src_path, function(link_err, link)
       if link_err then
         return cb(link_err)
@@ -300,7 +300,7 @@ M.recursive_copy = function(entry_type, src_path, dest_path, cb)
     end)
     return
   end
-  if entry_type ~= "directory" then
+  if entry_type ~= 'directory' then
     uv.fs_copyfile(src_path, dest_path, { excl = true }, cb)
     move_undofile(src_path, dest_path, true)
     return
@@ -374,7 +374,7 @@ M.recursive_move = function(entry_type, src_path, dest_path, cb)
         end
       end)
     else
-      if entry_type ~= "directory" then
+      if entry_type ~= 'directory' then
         move_undofile(src_path, dest_path, false)
       end
       cb()

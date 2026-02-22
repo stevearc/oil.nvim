@@ -1,0 +1,17 @@
+minimum_pre_commit_version: '3.5.0'
+
+repos:
+  - repo: https://github.com/JohnnyMorganz/StyLua
+    rev: v2.3.1
+    hooks:
+      - id: stylua-github
+        name: stylua (Lua formatter)
+        files: \.lua$
+        pass_filenames: true
+
+  - repo: https://github.com/pre-commit/mirrors-prettier
+    rev: v4.0.0-alpha.8
+    hooks:
+      - id: prettier
+        name: prettier
+        files: \.(md|toml|yaml|yml|sh)$

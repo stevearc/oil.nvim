@@ -23,11 +23,11 @@ end
 
 ---@return string
 function Ringbuf:as_str()
-  local postfix = ""
+  local postfix = ''
   for i = 1, self.tail, 1 do
     postfix = postfix .. self.buf[i]
   end
-  local prefix = ""
+  local prefix = ''
   for i = self.tail + 1, #self.buf, 1 do
     prefix = prefix .. self.buf[i]
   end

@@ -41,23 +41,23 @@ function PowershellConnection:_init(init_command)
   -- 65001 is the UTF-8 codepage
   -- powershell needs to be launched with the UTF-8 codepage to use it for both stdin and stdout
   local jid = vim.fn.jobstart({
-    "cmd",
-    "/c",
+    'cmd',
+    '/c',
     '"chcp 65001 && powershell -NoProfile -NoLogo -ExecutionPolicy Bypass -NoExit -Command -"',
   }, {
     ---@param data string[]
     on_stdout = function(_, data)
       for _, fragment in ipairs(data) do
-        if fragment:find("===DONE%((%a+)%)===") then
+        if fragment:find('===DONE%((%a+)%)===') then
           self.is_reading_data = false
-          local output = table.concat(self.stdout, "")
+          local output = table.concat(self.stdout, '')
           local cb = self.commands[1].cb
           table.remove(self.commands, 1)
-          local success = fragment:match("===DONE%((%a+)%)===")
-          if success == "True" then
+          local success = fragment:match('===DONE%((%a+)%)===')
+          if success == 'True' then
             cb(nil, output)
-          elseif success == "False" then
-            cb(success .. ": " .. output, output)
+          elseif success == 'False' then
+            cb(success .. ': ' .. output, output)
           end
           self.stdout = {}
           self:_consume()

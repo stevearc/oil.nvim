@@ -1,3 +1,3 @@
 if vim.g.oil ~= nil then
-  require("oil").setup()
+  require('oil').setup()
 end

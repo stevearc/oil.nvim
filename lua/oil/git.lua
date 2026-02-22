@@ -1,12 +1,12 @@
 -- integration with git operations
-local fs = require("oil.fs")
+local fs = require('oil.fs')
 
 local M = {}
 
 ---@param path string
 ---@return string|nil
 M.get_root = function(path)
-  local git_dir = vim.fs.find(".git", { upward = true, path = path })[1]
+  local git_dir = vim.fs.find('.git', { upward = true, path = path })[1]
   if git_dir then
     return vim.fs.dirname(git_dir)
   else
@@ -22,16 +22,16 @@ M.add = function(path, cb)
     return cb()
   end
 
-  local stderr = ""
-  local jid = vim.fn.jobstart({ "git", "add", path }, {
+  local stderr = ''
+  local jid = vim.fn.jobstart({ 'git', 'add', path }, {
     cwd = root,
     stderr_buffered = true,
     on_stderr = function(_, data)
-      stderr = table.concat(data, "\n")
+      stderr = table.concat(data, '\n')
     end,
     on_exit = function(_, code)
       if code ~= 0 then
-        cb("Error in git add: " .. stderr)
+        cb('Error in git add: ' .. stderr)
       else
         cb()
       end
@@ -50,12 +50,12 @@ M.rm = function(path, cb)
     return cb()
   end
 
-  local stderr = ""
-  local jid = vim.fn.jobstart({ "git", "rm", "-r", path }, {
+  local stderr = ''
+  local jid = vim.fn.jobstart({ 'git', 'rm', '-r', path }, {
     cwd = root,
     stderr_buffered = true,
     on_stderr = function(_, data)
-      stderr = table.concat(data, "\n")
+      stderr = table.concat(data, '\n')
     end,
     on_exit = function(_, code)
       if code ~= 0 then
@@ -63,7 +63,7 @@ M.rm = function(path, cb)
         if stderr:match("^fatal: pathspec '.*' did not match any files$") then
           cb()
         else
-          cb("Error in git rm: " .. stderr)
+          cb('Error in git rm: ' .. stderr)
         end
       else
         cb()
@@ -86,23 +86,23 @@ M.mv = function(entry_type, src_path, dest_path, cb)
     return
   end
 
-  local stderr = ""
-  local jid = vim.fn.jobstart({ "git", "mv", src_path, dest_path }, {
+  local stderr = ''
+  local jid = vim.fn.jobstart({ 'git', 'mv', src_path, dest_path }, {
     cwd = src_git,
     stderr_buffered = true,
     on_stderr = function(_, data)
-      stderr = table.concat(data, "\n")
+      stderr = table.concat(data, '\n')
     end,
     on_exit = function(_, code)
       if code ~= 0 then
         stderr = vim.trim(stderr)
         if
-          stderr:match("^fatal: not under version control")
-          or stderr:match("^fatal: source directory is empty")
+          stderr:match('^fatal: not under version control')
+          or stderr:match('^fatal: source directory is empty')
         then
           fs.recursive_move(entry_type, src_path, dest_path, cb)
         else
-          cb("Error in git mv: " .. stderr)
+          cb('Error in git mv: ' .. stderr)
         end
       else
         cb()

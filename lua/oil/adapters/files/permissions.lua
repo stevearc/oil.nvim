@@ -4,7 +4,7 @@ local M = {}
 ---@param num integer
 ---@return string
 local function perm_to_str(exe_modifier, num)
-  local str = (bit.band(num, 4) ~= 0 and "r" or "-") .. (bit.band(num, 2) ~= 0 and "w" or "-")
+  local str = (bit.band(num, 4) ~= 0 and 'r' or '-') .. (bit.band(num, 2) ~= 0 and 'w' or '-')
   if exe_modifier then
     if bit.band(num, 1) ~= 0 then
       return str .. exe_modifier
@@ -12,7 +12,7 @@ local function perm_to_str(exe_modifier, num)
       return str .. exe_modifier:upper()
     end
   else
-    return str .. (bit.band(num, 1) ~= 0 and "x" or "-")
+    return str .. (bit.band(num, 1) ~= 0 and 'x' or '-')
   end
 end
 
@@ -20,9 +20,9 @@ end
 ---@return string
 M.mode_to_str = function(mode)
   local extra = bit.rshift(mode, 9)
-  return perm_to_str(bit.band(extra, 4) ~= 0 and "s", bit.rshift(mode, 6))
-    .. perm_to_str(bit.band(extra, 2) ~= 0 and "s", bit.rshift(mode, 3))
-    .. perm_to_str(bit.band(extra, 1) ~= 0 and "t", mode)
+  return perm_to_str(bit.band(extra, 4) ~= 0 and 's', bit.rshift(mode, 6))
+    .. perm_to_str(bit.band(extra, 2) ~= 0 and 's', bit.rshift(mode, 3))
+    .. perm_to_str(bit.band(extra, 1) ~= 0 and 't', mode)
 end
 
 ---@param mode integer
@@ -38,25 +38,25 @@ end
 ---@param str string String of 3 characters
 ---@return nil|integer
 local function str_to_mode(str)
-  local r, w, x = unpack(vim.split(str, "", {}))
+  local r, w, x = unpack(vim.split(str, '', {}))
   local mode = 0
-  if r == "r" then
+  if r == 'r' then
     mode = bit.bor(mode, 4)
-  elseif r ~= "-" then
+  elseif r ~= '-' then
     return nil
   end
-  if w == "w" then
+  if w == 'w' then
     mode = bit.bor(mode, 2)
-  elseif w ~= "-" then
+  elseif w ~= '-' then
     return nil
   end
   -- t means sticky and executable
   -- T means sticky, not executable
   -- s means setuid/setgid and executable
   -- S means setuid/setgid and not executable
-  if x == "x" or x == "t" or x == "s" then
+  if x == 'x' or x == 't' or x == 's' then
     mode = bit.bor(mode, 1)
-  elseif x ~= "-" and x ~= "T" and x ~= "S" then
+  elseif x ~= '-' and x ~= 'T' and x ~= 'S' then
     return nil
   end
   return mode
@@ -67,13 +67,13 @@ end
 local function parse_extra_bits(perm)
   perm = perm:lower()
   local mode = 0
-  if perm:sub(3, 3) == "s" then
+  if perm:sub(3, 3) == 's' then
     mode = bit.bor(mode, 4)
   end
-  if perm:sub(6, 6) == "s" then
+  if perm:sub(6, 6) == 's' then
     mode = bit.bor(mode, 2)
   end
-  if perm:sub(9, 9) == "t" then
+  if perm:sub(9, 9) == 't' then
     mode = bit.bor(mode, 1)
   end
   return mode
@@ -83,7 +83,7 @@ end
 ---@return nil|integer
 ---@return nil|string
 M.parse = function(line)
-  local strval, rem = line:match("^([r%-][w%-][xsS%-][r%-][w%-][xsS%-][r%-][w%-][xtT%-])%s*(.*)$")
+  local strval, rem = line:match('^([r%-][w%-][xsS%-][r%-][w%-][xsS%-][r%-][w%-][xtT%-])%s*(.*)$')
   if not strval then
     return
   end
