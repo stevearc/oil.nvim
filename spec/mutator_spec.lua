@@ -1,15 +1,14 @@
-require('plenary.async').tests.add_to_env()
 local cache = require('oil.cache')
 local constants = require('oil.constants')
 local mutator = require('oil.mutator')
 local test_adapter = require('oil.adapters.test')
-local test_util = require('tests.test_util')
+local test_util = require('spec.test_util')
 
 local FIELD_ID = constants.FIELD_ID
 local FIELD_NAME = constants.FIELD_NAME
 local FIELD_TYPE = constants.FIELD_TYPE
 
-a.describe('mutator', function()
+describe('mutator', function()
   after_each(function()
     test_util.reset_editor()
   end)
@@ -196,9 +195,6 @@ a.describe('mutator', function()
     end)
 
     it('Handles parent child move ordering', function()
-      -- move parent into a child and child OUT of parent
-      --     MOVE /a/b -> /b
-      --     MOVE /a -> /b/a
       local move1 = {
         type = 'move',
         src_url = 'oil-test:///a/b',
@@ -217,9 +213,6 @@ a.describe('mutator', function()
     end)
 
     it('Handles a delete inside a moved folder', function()
-      -- delete in directory and move directory
-      --     DELETE /a/b.txt
-      --     MOVE /a/ -> /b/
       local del = {
         type = 'delete',
         url = 'oil-test:///a/b.txt',
@@ -346,12 +339,12 @@ a.describe('mutator', function()
     end)
   end)
 
-  a.describe('perform actions', function()
-    a.it('creates new entries', function()
+  describe('perform actions', function()
+    it('creates new entries', function()
       local actions = {
         { type = 'create', url = 'oil-test:///a.txt', entry_type = 'file' },
       }
-      a.wrap(mutator.process_actions, 2)(actions)
+      test_util.await(mutator.process_actions, 2, actions)
       local files = cache.list_url('oil-test:///')
       assert.are.same({
         ['a.txt'] = {
@@ -362,12 +355,12 @@ a.describe('mutator', function()
       }, files)
     end)
 
-    a.it('deletes entries', function()
+    it('deletes entries', function()
       local file = test_adapter.test_set('/a.txt', 'file')
       local actions = {
         { type = 'delete', url = 'oil-test:///a.txt', entry_type = 'file' },
       }
-      a.wrap(mutator.process_actions, 2)(actions)
+      test_util.await(mutator.process_actions, 2, actions)
       local files = cache.list_url('oil-test:///')
       assert.are.same({}, files)
       assert.is_nil(cache.get_entry_by_id(file[FIELD_ID]))
@@ -376,7 +369,7 @@ a.describe('mutator', function()
       end)
     end)
 
-    a.it('moves entries', function()
+    it('moves entries', function()
       local file = test_adapter.test_set('/a.txt', 'file')
       local actions = {
         {
@@ -386,7 +379,7 @@ a.describe('mutator', function()
           entry_type = 'file',
         },
       }
-      a.wrap(mutator.process_actions, 2)(actions)
+      test_util.await(mutator.process_actions, 2, actions)
       local files = cache.list_url('oil-test:///')
       local new_entry = {
         [FIELD_ID] = file[FIELD_ID],
@@ -400,7 +393,7 @@ a.describe('mutator', function()
       assert.equals('oil-test:///', cache.get_parent_url(file[FIELD_ID]))
     end)
 
-    a.it('copies entries', function()
+    it('copies entries', function()
       local file = test_adapter.test_set('/a.txt', 'file')
       local actions = {
         {
@@ -410,7 +403,7 @@ a.describe('mutator', function()
           entry_type = 'file',
         },
       }
-      a.wrap(mutator.process_actions, 2)(actions)
+      test_util.await(mutator.process_actions, 2, actions)
       local files = cache.list_url('oil-test:///')
       local new_entry = {
         [FIELD_ID] = file[FIELD_ID] + 1,

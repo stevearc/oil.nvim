@@ -1,5 +1,5 @@
 local fs = require('oil.fs')
-local test_util = require('tests.test_util')
+local test_util = require('spec.test_util')
 local util = require('oil.util')
 
 describe('update_moved_buffers', function()

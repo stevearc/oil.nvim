@@ -41,7 +41,6 @@ luac.out
 
 .direnv/
 .envrc
-.testenv/
 doc/tags
 scripts/benchmark.nvim
 perf/tmp/
