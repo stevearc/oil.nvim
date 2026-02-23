@@ -871,6 +871,7 @@ M.render_buffer_async = function(bufnr, opts, callback)
   opts = vim.tbl_deep_extend("keep", opts or {}, {
     refetch = true,
   })
+  ---@cast opts table
   if bufnr == 0 then
     bufnr = vim.api.nvim_get_current_buf()
   end
