@@ -410,6 +410,13 @@ end
 ---@param opts? oil.CloseOpts
 M.close = function(opts)
   opts = opts or {}
+  local mode = vim.api.nvim_get_mode().mode
+  -- If we're in operator pending or visual modes, we should cancel that operation and return
+  if mode == "no" or mode == "v" or mode == "V" then
+    -- Trigger <ESC> to cancel the operation
+    vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<ESC>", true, true, true), "n", false)
+    return
+  end
   -- If we're in a floating oil window, close it and try to restore focus to the original window
   if vim.w.is_oil_win then
     local original_winid = vim.w.oil_original_win
