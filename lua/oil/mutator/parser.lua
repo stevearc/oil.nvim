@@ -57,8 +57,14 @@ local function compare_link_target(meta, parsed_entry)
   return meta_name == parsed_name
 end
 
+---@class oil.ParseResultData
+---@field _type 'directory'|'file'|'link'
+---@field id number
+---@field name string
+---@field link_target string
+
 ---@class (exact) oil.ParseResult
----@field data table Parsed entry data
+---@field data oil.ParseResultData | table Parsed entry data
 ---@field ranges table<string, integer[]> Locations of the various columns
 ---@field entry nil|oil.InternalEntry If the entry already exists
 
@@ -220,8 +226,6 @@ M.parse = function(bufnr)
           err_message = "No filename found"
         elseif not entry then
           err_message = "Could not find existing entry (was the ID changed?)"
-        elseif parsed_entry.name:match("/") or parsed_entry.name:match(fs.sep) then
-          err_message = "Filename cannot contain path separator"
         end
         if err_message then
           table.insert(errors, {
@@ -235,6 +239,16 @@ M.parse = function(bufnr)
         assert(entry)
 
         check_dupe(parsed_entry.name, i)
+
+        local maybe_new_dir = parsed_entry.name:gsub("/[^/]+$", "")
+        if #maybe_new_dir ~= 0 and maybe_new_dir ~= parsed_entry.name then
+          table.insert(diffs, {
+            type = "new",
+            name = maybe_new_dir,
+            entry_type = "directory",
+          })
+        end
+
         local meta = entry[FIELD_META]
         if original_entries[parsed_entry.name] == parsed_entry.id then
           if entry[FIELD_TYPE] == "link" and not compare_link_target(meta, parsed_entry) then
