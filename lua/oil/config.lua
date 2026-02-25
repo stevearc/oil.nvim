@@ -201,6 +201,11 @@ local default_config = {
   keymaps_help = {
     border = nil,
   },
+  -- Optional function to call before creating a new file.
+  -- Return nil to create an empty file, or return a string to use as the file content.
+  -- @param action oil.Action The create action being performed.
+  -- @return nil|string The content to write to the file, or nil for empty file.
+  create_hook = nil,
 }
 
 -- The adapter API hasn't really stabilized yet. We're not ready to advertise or encourage people to
@@ -248,6 +253,7 @@ default_config.view_options.highlight_filename = nil
 ---@field progress oil.ProgressWindowConfig
 ---@field ssh oil.SimpleWindowConfig
 ---@field keymaps_help oil.SimpleWindowConfig
+---@field create_hook? fun(action: oil.Action): nil|string
 local M = {}
 
 -- For backwards compatibility
@@ -277,6 +283,7 @@ local M = {}
 ---@field progress? oil.SetupProgressWindowConfig Configuration for the floating progress window
 ---@field ssh? oil.SetupSimpleWindowConfig Configuration for the floating SSH window
 ---@field keymaps_help? oil.SetupSimpleWindowConfig Configuration for the floating keymaps help window
+---@field create_hook? fun(action: oil.Action): nil|string Optional function to call before creating a new file. Return nil to create an empty file, or return a string to use that as the file content.
 
 ---@class (exact) oil.LspFileMethods
 ---@field enabled boolean
