@@ -867,7 +867,19 @@ local pending_renders = {}
 ---@param opts nil|table
 ---    refetch nil|boolean Defaults to true
 ---@param callback nil|fun(err: nil|string)
-M.render_buffer_async = function(bufnr, opts, callback)
+M.render_buffer_async = function(bufnr, opts, caller_callback)
+  local function callback(err)
+    if not err then
+      vim.api.nvim_exec_autocmds(
+        "User",
+        { pattern = "OilReadPost", modeline = false, data = { buf = bufnr } }
+      )
+    end
+    if caller_callback then
+      caller_callback(err)
+    end
+  end
+
   opts = vim.tbl_deep_extend("keep", opts or {}, {
     refetch = true,
   })
