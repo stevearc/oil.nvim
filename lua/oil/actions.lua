@@ -330,6 +330,46 @@ M.open_external = {
   end,
 }
 
+local programs = {
+  { name = "xdg-open (default)", cmd = function(path) return { "xdg-open", path } end },
+  { name = "Firefox",            cmd = function(path) return { "firefox", path } end },
+  { name = "Chrome",             cmd = function(path) return { "google-chrome", path } end },
+  { name = "VLC",                cmd = function(path) return { "vlc", path } end },
+  { name = "Open with custom…",  cmd = "custom" },
+}
+
+local function pick_and_open(path)
+  vim.ui.select(programs, {
+    prompt = "Open with:",
+    format_item = function(it) return it.name end,
+  }, function(choice)
+    if not choice then return end
+
+    if choice.cmd == "custom" then
+      vim.ui.input({ prompt = "Program: " }, function(prog)
+        if not prog or prog == "" then return end
+        vim.fn.jobstart({ prog, path }, { detach = true })
+      end)
+      return
+    end
+
+    local cmd = choice.cmd(path)
+    vim.fn.jobstart(cmd, { detach = true })
+  end)
+end
+
+M.open_external_select = {
+  desc = "Open the entry under the cursor in an external program selection",
+  callback = function()
+    local entry = oil.get_cursor_entry()
+    local dir = oil.get_current_dir()
+    if not entry or not dir then return end
+
+    local path = dir .. entry.name
+    pick_and_open(path)
+  end,
+}
+
 M.refresh = {
   desc = "Refresh current directory list",
   callback = function(opts)
