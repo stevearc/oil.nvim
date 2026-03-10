@@ -332,8 +332,9 @@ M.open_external = {
 
 local programs = {
   { name = "xdg-open (default)", cmd = function(path) return { "xdg-open", path } end },
-  { name = "Firefox",            cmd = function(path) return { "firefox", path } end },
   { name = "Chrome",             cmd = function(path) return { "google-chrome", path } end },
+  { name = "Okular",             cmd = function(path) return { "okular", path } end },
+  { name = "Firefox",            cmd = function(path) return { "firefox", path } end },
   { name = "VLC",                cmd = function(path) return { "vlc", path } end },
   { name = "Open with custom…",  cmd = "custom" },
 }
