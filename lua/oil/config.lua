@@ -74,6 +74,7 @@ local default_config = {
     ["gx"] = "actions.open_external",
     ["g."] = { "actions.toggle_hidden", mode = "n" },
     ["g\\"] = { "actions.toggle_trash", mode = "n" },
+    ["gy"] = { "actions.yank_entry", mode = "n" },
   },
   -- Set to false to disable all of the above keymaps
   use_default_keymaps = true,
