@@ -1201,12 +1201,24 @@ M.setup = function(opts)
   local aug = vim.api.nvim_create_augroup("Oil", {})
 
   if config.default_file_explorer then
-    vim.g.loaded_netrw = 1
-    vim.g.loaded_netrwPlugin = 1
-    -- If netrw was already loaded, clear this augroup
-    if vim.fn.exists("#FileExplorer") then
-      vim.api.nvim_create_augroup("FileExplorer", { clear = true })
+    -- Stop netrw from taking over directory buffers without disabling it entirely.
+    -- Setting g:loaded_netrw / g:loaded_netrwPlugin (the previous approach) blocked
+    -- unrelated netrw functionality like spell-file downloads, :Nread, gx, and
+    -- remote-URL editing. See #483.
+    local function clear_file_explorer()
+      if vim.fn.exists("#FileExplorer") == 1 then
+        vim.api.nvim_create_augroup("FileExplorer", { clear = true })
+      end
     end
+    clear_file_explorer()
+    -- netrw's runtime plugin loads after init.lua but before files are opened, so
+    -- clear again on VimEnter to catch the augroup it registers then.
+    vim.api.nvim_create_autocmd("VimEnter", {
+      desc = "Clear netrw FileExplorer augroup so oil owns directory buffers",
+      group = aug,
+      once = true,
+      callback = clear_file_explorer,
+    })
   end
 
   local patterns = {}
