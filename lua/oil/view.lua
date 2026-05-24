@@ -264,6 +264,10 @@ end
 --- @return integer[] | nil
 local function calc_constrained_cursor_pos(bufnr, adapter, mode, cur)
   local parser = require("oil.mutator.parser")
+  local line_count = vim.api.nvim_buf_line_count(bufnr)
+  if cur[1] < 1 or cur[1] > line_count then
+    return
+  end
   local line = vim.api.nvim_buf_get_lines(bufnr, cur[1] - 1, cur[1], true)[1]
   local column_defs = columns.get_supported_columns(adapter)
   local result = parser.parse_line(adapter, line, column_defs)
