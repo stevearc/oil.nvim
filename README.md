@@ -20,7 +20,7 @@ https://user-images.githubusercontent.com/506791/209727111-6b4a11f4-634a-4efa-94
 
 ## Requirements
 
-- Neovim 0.8+
+- Neovim 0.10+ (for older versions, use a [nvim-0.x branch](https://github.com/stevearc/oil.nvim/branches))
 - Icon provider plugin (optional)
   - [mini.icons](https://github.com/nvim-mini/mini.nvim/blob/main/readmes/mini-icons.md) for file and folder icons
   - [nvim-web-devicons](https://github.com/nvim-tree/nvim-web-devicons) for file icons

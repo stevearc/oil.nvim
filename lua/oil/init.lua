@@ -1130,6 +1130,13 @@ local _on_key_ns = 0
 ---Initialize oil
 ---@param opts oil.setupOpts|nil
 M.setup = function(opts)
+  if vim.fn.has("nvim-0.10") == 0 then
+    vim.notify_once(
+      "aerial is deprecated for Neovim <0.10. Please use a nvim-0.x branch or upgrade Neovim",
+      vim.log.levels.ERROR
+    )
+    return
+  end
   local Ringbuf = require("oil.ringbuf")
   local config = require("oil.config")
 
