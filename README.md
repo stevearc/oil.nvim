@@ -372,6 +372,7 @@ Note that older versions of Neovim don't support numbers in the url, so for Neov
 - [Toggle file detail view](doc/recipes.md#toggle-file-detail-view)
 - [Show CWD in the winbar](doc/recipes.md#show-cwd-in-the-winbar)
 - [Hide gitignored files and show git tracked hidden files](doc/recipes.md#hide-gitignored-files-and-show-git-tracked-hidden-files)
+- [Use FreeDesktop trash on MacOS](doc/recipes.md#use-freedesktop-trash-on-macos)
 
 ## Third-party extensions
 

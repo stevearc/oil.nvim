@@ -7,6 +7,7 @@ Have a cool recipe to share? Open a pull request and add it to this doc!
 - [Toggle file detail view](#toggle-file-detail-view)
 - [Show CWD in the winbar](#show-cwd-in-the-winbar)
 - [Hide gitignored files and show git tracked hidden files](#hide-gitignored-files-and-show-git-tracked-hidden-files)
+- [Use FreeDesktop trash on MacOS](#use-freedesktop-trash-on-macos)
 
 <!-- /TOC -->
 
