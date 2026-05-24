@@ -51,7 +51,6 @@ jobs:
     strategy:
       matrix:
         include:
-          - nvim_tag: v0.8.3
           - nvim_tag: v0.10.4
           - nvim_tag: v0.11.0
           - nvim_tag: v0.12.2
