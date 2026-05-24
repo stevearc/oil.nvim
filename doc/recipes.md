@@ -125,3 +125,11 @@ require("oil").setup({
   },
 })
 ```
+
+## Use FreeDesktop trash on MacOS
+
+If you want all the oil.nvim trash features on MacOS, you can use the FreeDesktop trash implementation. Note that this will cause trashed files to **not** appear in your system trash.
+
+```lua
+package.loaded["oil.adapters.trash.mac"] = require("oil.adapters.trash.freedesktop")
+```
