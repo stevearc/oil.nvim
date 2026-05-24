@@ -10,7 +10,7 @@ on:
 jobs:
   # Request review automatically when PRs are opened
   request_review:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted-ubuntu
     steps:
       - name: Request Review
         uses: actions/github-script@v7

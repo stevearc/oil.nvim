@@ -7,7 +7,7 @@ jobs:
   # This lets me ask a question, tag the issue with "question", and filter out all "question"-tagged
   # issues in my "needs triage" filter.
   remove_question:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted-ubuntu
     if: github.event.sender.login != 'stevearc'
     steps:
       - uses: actions/checkout@v4
