@@ -14,7 +14,7 @@ jobs:
     name: Luacheck
     runs-on: self-hosted-ubuntu
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Prepare
         run: |
@@ -30,19 +30,19 @@ jobs:
     name: StyLua
     runs-on: self-hosted-ubuntu
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Stylua
-        uses: JohnnyMorganz/stylua-action@v4
+        uses: JohnnyMorganz/stylua-action@v5
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          version: v2.0.2
+          version: v2.4.1
           args: --check lua tests
 
   typecheck:
     name: typecheck
     runs-on: self-hosted-ubuntu
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: stevearc/nvim-typecheck-action@v2
         with:
           path: lua
@@ -55,13 +55,14 @@ jobs:
           - nvim_tag: v0.9.4
           - nvim_tag: v0.10.4
           - nvim_tag: v0.11.0
+          - nvim_tag: v0.12.2
 
     name: Run tests
     runs-on: self-hosted-ubuntu
     env:
       NVIM_TAG: ${{ matrix.nvim_tag }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Install Neovim and dependencies
         run: |
@@ -75,7 +76,7 @@ jobs:
     name: Update docs
     runs-on: self-hosted-ubuntu
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Install Neovim and dependencies
         run: |
@@ -112,11 +113,11 @@ jobs:
       - update_docs
     runs-on: self-hosted-ubuntu
     steps:
-      - uses: googleapis/release-please-action@v4
+      - uses: googleapis/release-please-action@v5
         id: release
         with:
           release-type: simple
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Update stable tag
         if: ${{ steps.release.outputs.release_created }}
         run: |
