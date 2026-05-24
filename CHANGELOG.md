@@ -1,5 +1,22 @@
 # Changelog
 
+## [3.0.0](https://github.com/stevearc/oil.nvim/compare/v2.16.0...v3.0.0) (2026-05-24)
+
+
+### ⚠ BREAKING CHANGES
+
+* drop support for Neovim 0.8 and 0.9
+
+### cleanup
+
+* drop support for Neovim 0.8 and 0.9 ([28d3e4f](https://github.com/stevearc/oil.nvim/commit/28d3e4ff7764e7a9152dcf9f5839c8af03df0868))
+
+
+### Bug Fixes
+
+* add bounds check in calc_constrained_cursor_pos to prevent index out of bounds ([#748](https://github.com/stevearc/oil.nvim/issues/748)) ([366b739](https://github.com/stevearc/oil.nvim/commit/366b7395a69000f908f42da57843aa90dbdcdcf7))
+* use os path when watching for changes ([#744](https://github.com/stevearc/oil.nvim/issues/744)) ([505b930](https://github.com/stevearc/oil.nvim/commit/505b93077745445ae9aafc9cb1ed0b6f9adcb055))
+
 ## [2.16.0](https://github.com/stevearc/oil.nvim/compare/v2.15.0...v2.16.0) (2026-05-24)
 
 
