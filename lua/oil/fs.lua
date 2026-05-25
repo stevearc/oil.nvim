@@ -3,15 +3,18 @@ local M = {}
 
 local uv = vim.uv or vim.loop
 
----@type boolean
-M.is_windows = uv.os_uname().version:match("Windows")
+M._initialize_environment = function()
+  ---@type boolean
+  M.is_windows = uv.os_uname().version:match("Windows")
 
-M.is_mac = uv.os_uname().sysname == "Darwin"
+  M.is_mac = uv.os_uname().sysname == "Darwin"
 
-M.is_linux = not M.is_windows and not M.is_mac
+  M.is_linux = not M.is_windows and not M.is_mac
 
----@type string
-M.sep = M.is_windows and "\\" or "/"
+  ---@type string
+  M.sep = M.is_windows and "\\" or "/"
+end
+M._initialize_environment()
 
 ---@param ... string
 M.join = function(...)
@@ -85,7 +88,7 @@ end
 ---@return string
 M.posix_to_os_path = function(path)
   if M.is_windows then
-    if vim.startswith(path, "/") then
+    if vim.startswith(path, "/") and not vim.startswith(path, "//") then
       local drive = path:match("^/(%a+)")
       local rem = path:sub(drive:len() + 2)
       return string.format("%s:%s", drive, rem:gsub("/", "\\"))
