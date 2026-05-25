@@ -1,6 +1,7 @@
 require("plenary.async").tests.add_to_env()
 local TmpDir = require("tests.tmpdir")
 local files = require("oil.adapters.files")
+local fs = require("oil.fs")
 local test_util = require("tests.test_util")
 
 a.describe("files adapter", function()
@@ -15,13 +16,25 @@ a.describe("files adapter", function()
     test_util.reset_editor()
   end)
 
-  a.it("tmpdir creates files and asserts they exist", function()
-    tmpdir:create({ "a.txt", "foo/b.txt", "foo/c.txt", "bar/" })
+  a.it("tmpdir creates file and asserts it exists", function()
+    tmpdir:create({ "a.txt" })
     tmpdir:assert_fs({
       ["a.txt"] = "a.txt",
+    })
+  end)
+
+  a.it("tmpdir creates directory and asserts it exists", function()
+    tmpdir:create({ "bar/" })
+    tmpdir:assert_fs({
+      ["bar/"] = true,
+    })
+  end)
+
+  a.it("tmpdir creates directory and files and asserts they exist", function()
+    tmpdir:create({ "foo/b.txt", "foo/c.txt" })
+    tmpdir:assert_fs({
       ["foo/b.txt"] = "foo/b.txt",
       ["foo/c.txt"] = "foo/c.txt",
-      ["bar/"] = true,
     })
   end)
 
@@ -147,16 +160,32 @@ a.describe("files adapter", function()
     })
   end)
 
-  a.it("Editing a new oil://path/ creates an oil buffer", function()
+  a.it("Editing a new unnormalized oil://path/ creates an oil buffer", function()
     local tmpdir_url = "oil://" .. vim.fn.fnamemodify(tmpdir.path, ":p") .. "/"
     vim.cmd.edit({ args = { tmpdir_url } })
     test_util.wait_oil_ready()
-    local new_url = "oil://" .. vim.fn.fnamemodify(tmpdir.path, ":p") .. "newdir"
-    vim.cmd.edit({ args = { new_url } })
+    local unnormalized_url = "oil://" .. vim.fn.fnamemodify(tmpdir.path, ":p") .. "newdir"
+    local normalized_url = "oil://"
+      .. fs.os_to_posix_path(vim.fn.fnamemodify(tmpdir.path, ":p"))
+      .. "newdir/"
+    vim.cmd.edit({ args = { unnormalized_url } })
     test_util.wait_oil_ready()
     assert.equals("oil", vim.bo.filetype)
     -- The normalization will add a '/'
-    assert.equals(new_url .. "/", vim.api.nvim_buf_get_name(0))
+    assert.equals(normalized_url, vim.api.nvim_buf_get_name(0))
+  end)
+
+  a.it("Editing a new normalized oil://path/ creates an oil buffer", function()
+    local tmpdir_url = "oil://" .. vim.fn.fnamemodify(tmpdir.path, ":p") .. "/"
+    vim.cmd.edit({ args = { tmpdir_url } })
+    test_util.wait_oil_ready()
+    local new_url = "oil://"
+      .. fs.os_to_posix_path(vim.fn.fnamemodify(tmpdir.path, ":p"))
+      .. "newdir/"
+    vim.cmd.edit({ args = { new_url } })
+    test_util.wait_oil_ready()
+    assert.equals("oil", vim.bo.filetype)
+    assert.equals(new_url, vim.api.nvim_buf_get_name(0))
   end)
 
   a.it("Editing a new oil://file.rb creates a normal buffer", function()

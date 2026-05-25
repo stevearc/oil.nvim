@@ -3,15 +3,18 @@ local M = {}
 
 local uv = vim.uv or vim.loop
 
----@type boolean
-M.is_windows = uv.os_uname().version:match("Windows")
+M._initialize_environment = function()
+  ---@type boolean
+  M.is_windows = uv.os_uname().version:match("Windows")
 
-M.is_mac = uv.os_uname().sysname == "Darwin"
+  M.is_mac = uv.os_uname().sysname == "Darwin"
 
-M.is_linux = not M.is_windows and not M.is_mac
+  M.is_linux = not M.is_windows and not M.is_mac
 
----@type string
-M.sep = M.is_windows and "\\" or "/"
+  ---@type string
+  M.sep = M.is_windows and "\\" or "/"
+end
+M._initialize_environment()
 
 ---@param ... string
 M.join = function(...)
@@ -83,9 +86,23 @@ end
 
 ---@param path string
 ---@return string
+local function normalized_path_seperators(path)
+  local leading_slashes, rem = path:match("^([\\/]*)(.*)$")
+  local normalized_rem = rem:gsub("[\\/]+", M.sep)
+  local normalized_leading = ""
+  if #leading_slashes >= 2 then
+    normalized_leading = M.sep .. M.sep
+  elseif #leading_slashes == 1 then
+    normalized_leading = M.sep
+  end
+  return string.format("%s%s", normalized_leading, normalized_rem)
+end
+
+---@param path string
+---@return string
 M.posix_to_os_path = function(path)
   if M.is_windows then
-    if vim.startswith(path, "/") then
+    if vim.startswith(path, "/") and not vim.startswith(path, "//") then
       local drive = path:match("^/(%a+)")
       local rem = path:sub(drive:len() + 2)
       return string.format("%s:%s", drive, rem:gsub("/", "\\"))
@@ -102,11 +119,12 @@ end
 ---@return string
 M.os_to_posix_path = function(path)
   if M.is_windows then
-    if M.is_absolute(path) then
-      local drive, rem = path:match("^([^:]+):\\(.*)$")
+    local normalized_path = normalized_path_seperators(path)
+    if M.is_absolute(normalized_path) then
+      local drive, rem = normalized_path:match("^([^:]+):\\(.*)$")
       return string.format("/%s/%s", drive:upper(), rem:gsub("\\", "/"))
     else
-      local newpath = path:gsub("\\", "/")
+      local newpath = normalized_path:gsub("\\", "/")
       return newpath
     end
   else
