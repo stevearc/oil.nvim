@@ -94,6 +94,17 @@ call dein#add('stevearc/oil.nvim')
 </details>
 
 <details>
+  <summary>vim.pack (Neovim 0.12+)</summary>
+
+```lua
+vim.pack.add({
+    'https://github.com/stevearc/oil.nvim',
+})
+```
+
+</details>
+
+<details>
   <summary>Pathogen</summary>
 
 ```sh
