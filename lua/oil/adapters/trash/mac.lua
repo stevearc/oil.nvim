@@ -166,7 +166,7 @@ M.perform_action = function(action, cb)
       ---@diagnostic disable-next-line: param-type-mismatch
       uv.fs_symlink(target, path, flags, cb)
     else
-      fs.touch(path, cb)
+      fs.touch(path, config.new_file_mode, cb)
     end
   elseif action.type == "delete" then
     local _, path = util.parse_url(action.url)
