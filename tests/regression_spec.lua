@@ -145,4 +145,20 @@ a.describe("regression tests", function()
     end, 10)
     assert.equals("a.txt", vim.fn.expand("%:t"))
   end)
+
+  -- https://github.com/stevearc/oil.nvim/issues/483
+  -- Oil used to disable netrw entirely (g:loaded_netrw / g:loaded_netrwPlugin),
+  -- which blocked spell-file downloads, `:Nread`, `gx`, and other netrw features
+  -- that are unrelated to directory browsing. Clearing only the FileExplorer
+  -- augroup is enough to keep oil in charge of directory buffers.
+  a.it("does not disable netrw plugin entirely", function()
+    assert.not_equals(1, vim.g.loaded_netrw)
+    assert.not_equals(1, vim.g.loaded_netrwPlugin)
+    if vim.fn.exists("#FileExplorer") == 1 then
+      assert.equals(
+        "--- Autocommands ---",
+        vim.trim(vim.api.nvim_exec2("autocmd FileExplorer", { output = true }).output)
+      )
+    end
+  end)
 end)
