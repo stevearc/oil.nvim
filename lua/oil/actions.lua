@@ -335,6 +335,7 @@ local programs = {
   { name = "Chrome",             cmd = function(path) return { "google-chrome", path } end },
   { name = "Okular",             cmd = function(path) return { "okular", path } end },
   { name = "Firefox",            cmd = function(path) return { "firefox", path } end },
+  { name = "Drawio",             cmd = function(path) return { "drawio", path } end },
   { name = "VLC",                cmd = function(path) return { "vlc", path } end },
   { name = "Open with custom…",  cmd = "custom" },
 }
