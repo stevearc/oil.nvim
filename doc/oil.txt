@@ -683,6 +683,9 @@ OilDirHidden                                                     *hl-OilDirHidde
 OilDirIcon                                                         *hl-OilDirIcon*
     Icon for directories
 
+OilDefaultFileIcon                                         *hl-OilDefaultFileIcon*
+    Default icon for files
+
 OilSocket                                                           *hl-OilSocket*
     Socket files in an oil buffer
 
