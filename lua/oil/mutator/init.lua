@@ -546,25 +546,28 @@ M.try_write_changes = function(confirm, cb)
 
     -- Jump to an error
     local curbuf = vim.api.nvim_get_current_buf()
+    local curerr
     if all_errors[curbuf] then
+      curerr = all_errors[curbuf][1]
       pcall(
         vim.api.nvim_win_set_cursor,
         0,
-        { all_errors[curbuf][1].lnum + 1, all_errors[curbuf][1].col }
+        { curerr.lnum + 1, curerr.col }
       )
     else
       local bufnr, errs = next(all_errors)
       assert(bufnr)
       assert(errs)
+      curerr = errs[1]
       -- HACK: This is a workaround for the fact that we can't switch buffers in the middle of a
       -- BufWriteCmd.
       vim.schedule(function()
         vim.api.nvim_win_set_buf(0, bufnr)
-        pcall(vim.api.nvim_win_set_cursor, 0, { errs[1].lnum + 1, errs[1].col })
+        pcall(vim.api.nvim_win_set_cursor, 0, { curerr.lnum + 1, curerr.col })
       end)
     end
     unlock()
-    cb("Error parsing oil buffers")
+    cb("Error parsing oil buffers: " .. curerr.message)
     return
   end
 
