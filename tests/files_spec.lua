@@ -1,6 +1,7 @@
 require("plenary.async").tests.add_to_env()
 local TmpDir = require("tests.tmpdir")
 local files = require("oil.adapters.files")
+local fs = require("oil.fs")
 local test_util = require("tests.test_util")
 
 a.describe("files adapter", function()
@@ -48,6 +49,41 @@ a.describe("files adapter", function()
       ["a/"] = true,
     })
   end)
+
+  if not fs.is_windows then
+    a.it("Creates files and directories using the process umask", function()
+      -- On Unix, luv implements fs_open/fs_mkdir with open(2)/mkdir(2), which apply umask.
+      -- Windows does not have Unix mode bits, and libuv currently ignores the mkdir mode there.
+      for _, case in ipairs({
+        { umask = "0002", file_mode = 436, directory_mode = 509 }, -- 0664, 0775
+        { umask = "0022", file_mode = 420, directory_mode = 493 }, -- 0644, 0755
+      }) do
+        local cmd = {
+          "sh",
+          "-c",
+          'umask "$1"; shift; exec "$@"',
+          "sh",
+          case.umask,
+          vim.v.progpath,
+          "--headless",
+          "-i",
+          "NONE",
+          "-u",
+          "tests/minimal_init.lua",
+          "-c",
+          string.format(
+            "lua require('tests.umask_case').run(%d, %d)",
+            case.file_mode,
+            case.directory_mode
+          ),
+          "-c",
+          "qa!",
+        }
+        local output = vim.fn.system(cmd)
+        assert.equals(0, vim.v.shell_error, output)
+      end
+    end)
+  end
 
   a.it("Deletes files", function()
     tmpdir:create({ "a.txt" })

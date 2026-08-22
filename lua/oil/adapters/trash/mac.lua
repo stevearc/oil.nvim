@@ -152,14 +152,14 @@ M.perform_action = function(action, cb)
     assert(path)
     path = trash_dir .. path
     if action.entry_type == "directory" then
-      uv.fs_mkdir(path, 493, function(err)
+      uv.fs_mkdir(path, 511, function(err)
         -- Ignore if the directory already exists
         if not err or err:match("^EEXIST:") then
           cb()
         else
           cb(err)
         end
-      end) -- 0755
+      end) -- 0777, filtered by the process umask
     elseif action.entry_type == "link" and action.link then
       local flags = nil
       local target = fs.posix_to_os_path(action.link)
