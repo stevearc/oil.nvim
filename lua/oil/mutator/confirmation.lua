@@ -63,6 +63,10 @@ M.show = vim.schedule_wrap(function(actions, should_confirm, cb)
     cb(true)
     return
   end
+  if should_confirm == nil and config.skip_every_confirm then
+    cb(true)
+    return
+  end
   if should_confirm == nil and config.skip_confirm_for_simple_edits and is_simple_edit(actions) then
     cb(true)
     return
