@@ -210,6 +210,11 @@ skip_confirm_for_simple_edits                  *oil.skip_confirm_for_simple_edit
         * contain at most one copy or move
         * contain at most five creates
 
+skip_every_confirm                  *oil.skip_every_confirm*
+    type: `boolean` default: `false`
+    Before performing filesystem operations, Oil displays a confirmation popup to ensure
+    that all operations are intentional. When this option is `true`, every confirmation popup will be skipped
+
 prompt_save_on_select_new_entry              *oil.prompt_save_on_select_new_entry*
     type: `boolean` default: `true`
     There are two cases where this option is relevant:
