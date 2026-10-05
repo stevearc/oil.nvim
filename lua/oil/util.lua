@@ -197,6 +197,13 @@ M.rename_buffer = function(src_bufnr, dest_buf_name)
       if vim.api.nvim_win_is_valid(winid) then
         if vim.api.nvim_win_get_buf(winid) == src_bufnr then
           vim.api.nvim_win_set_buf(winid, dest_bufnr)
+          local ft = vim.bo[dest_bufnr].filetype
+          if ft and ft ~= "" then
+            vim.api.nvim_win_call(winid, function()
+              -- This will run ftplugin for ft and apply any window-local settings
+              vim.cmd("doautocmd FileType " .. ft)
+            end)
+          end
         end
       end
     end
