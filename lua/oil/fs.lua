@@ -209,6 +209,7 @@ M.recursive_delete = function(entry_type, path, cb)
     if open_err then
       return cb(open_err)
     end
+    local failed = false
     local poll
     poll = function(inner_cb)
       uv.fs_readdir(fd, function(err, entries)
@@ -216,10 +217,12 @@ M.recursive_delete = function(entry_type, path, cb)
           return inner_cb(err)
         elseif entries then
           local waiting = #entries
-          local complete
-          complete = function(err2)
+          local function complete(err2)
+            if failed then
+              return
+            end
             if err2 then
-              complete = function() end
+              failed = true
               return inner_cb(err2)
             end
             waiting = waiting - 1
@@ -311,6 +314,7 @@ M.recursive_copy = function(entry_type, src_path, dest_path, cb)
         if open_err then
           return cb(open_err)
         end
+        local failed = false
         local poll
         poll = function(inner_cb)
           uv.fs_readdir(fd, function(err, entries)
@@ -318,10 +322,12 @@ M.recursive_copy = function(entry_type, src_path, dest_path, cb)
               return inner_cb(err)
             elseif entries then
               local waiting = #entries
-              local complete
-              complete = function(err2)
+              local function complete(err2)
+                if failed then
+                  return
+                end
                 if err2 then
-                  complete = function() end
+                  failed = true
                   return inner_cb(err2)
                 end
                 waiting = waiting - 1
