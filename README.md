@@ -393,6 +393,7 @@ These are plugins maintained by other authors that extend the functionality of o
 - [oil-git.nvim](https://github.com/benomahony/oil-git.nvim) - Shows git status of files with colour and symbols
 - [oil-git.nvim](https://github.com/malewicz1337/oil-git.nvim) - Async git status integration with directory support
 - [oil-lsp-diagnostics.nvim](https://github.com/JezerM/oil-lsp-diagnostics.nvim) - Shows LSP diagnostics indicator as virtual text
+- [oil-status.nvim](https://github.com/3p5ilon/oil-status.nvim) - Shows git status and LSP diagnostics with status symbols and file/directory colors
 
 ## API
 
