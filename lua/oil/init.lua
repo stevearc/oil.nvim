@@ -541,6 +541,14 @@ M.open_preview = function(opts, callback)
   end
 
   util.get_edit_path(bufnr, entry, function(normalized_url)
+    if
+      not vim.api.nvim_win_is_valid(prev_win)
+      or vim.api.nvim_win_get_buf(prev_win) ~= bufnr
+      or (preview_win and not vim.api.nvim_win_is_valid(preview_win))
+    then
+      return finish()
+    end
+
     local mc = package.loaded["multicursor-nvim"]
     local has_multicursors = mc and mc.hasCursors()
     local is_visual_mode = util.is_visual_mode()
