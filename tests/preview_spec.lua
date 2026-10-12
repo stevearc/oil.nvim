@@ -28,6 +28,32 @@ a.describe("oil preview", function()
     assert.are.same({ "a.txt" }, preview_lines)
   end)
 
+  a.it("does not continue opening a preview after the source window closes", function()
+    tmpdir:create({ "a.txt" })
+    test_util.oil_open(tmpdir.path)
+    local source_win = vim.api.nvim_get_current_win()
+    vim.cmd.vsplit()
+    local other_win = vim.api.nvim_get_current_win()
+    vim.api.nvim_set_current_win(source_win)
+
+    local original_get_edit_path = util.get_edit_path
+    local pending_callback
+    util.get_edit_path = function(_, _, callback)
+      pending_callback = callback
+    end
+    oil.open_preview()
+    util.get_edit_path = original_get_edit_path
+
+    vim.api.nvim_set_current_win(other_win)
+    vim.api.nvim_win_close(source_win, true)
+    assert.is_not_nil(pending_callback)
+
+    local window_count = #vim.api.nvim_list_wins()
+    local ok, err = pcall(pending_callback, tmpdir.path .. "/a.txt")
+    assert.is_true(ok, tostring(err))
+    assert.equals(window_count, #vim.api.nvim_list_wins())
+  end)
+
   a.it("opens preview window when open(preview={})", function()
     tmpdir:create({ "a.txt" })
     test_util.oil_open(tmpdir.path, { preview = {} })
