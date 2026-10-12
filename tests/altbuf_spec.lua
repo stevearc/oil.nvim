@@ -153,5 +153,38 @@ a.describe("Alternate buffer", function()
       assert.equals("LICENSE", vim.fn.expand("%:."))
       assert.equals("foo", vim.fn.expand("#"))
     end)
+
+    a.it("keeps the floating window open when close is false", function()
+      vim.cmd.edit({ args = { "foo" } })
+      oil.open_float()
+      test_util.wait_for_autocmd({ "User", pattern = "OilEnter" })
+      local oil_winid = vim.api.nvim_get_current_win()
+      local original_winid = vim.w.oil_original_win
+      vim.wait(1000, function()
+        return oil.get_cursor_entry() ~= nil
+      end, 10)
+      local license_row
+      for row, line in ipairs(vim.api.nvim_buf_get_lines(0, 0, -1, false)) do
+        if line:match("LICENSE") then
+          license_row = row
+          break
+        end
+      end
+      assert.is_not_nil(license_row)
+      vim.api.nvim_win_set_cursor(0, { license_row, 0 })
+      oil.select({ close = false })
+      test_util.wait_for_autocmd("BufEnter")
+      assert.equals(original_winid, vim.api.nvim_get_current_win())
+      assert.is_true(vim.api.nvim_win_is_valid(oil_winid))
+      assert.equals("LICENSE", vim.fn.expand("%:."))
+      assert.is_true(vim.wait(1000, function()
+        return vim.w[oil_winid].oil_skip_close == false
+      end, 10))
+      vim.api.nvim_set_current_win(oil_winid)
+      vim.api.nvim_set_current_win(original_winid)
+      assert.is_true(vim.wait(1000, function()
+        return not vim.api.nvim_win_is_valid(oil_winid)
+      end, 10))
+    end)
   end)
 end)
