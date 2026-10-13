@@ -7,6 +7,7 @@ local util = require("oil.util")
 ---@class (exact) oil.sshFs
 ---@field new fun(url: oil.sshUrl): oil.sshFs
 ---@field conn oil.sshConnection
+---@field aix_compatible_ls? boolean
 local SSHFS = {}
 
 local FIELD_TYPE = constants.FIELD_TYPE
@@ -101,6 +102,33 @@ function SSHFS:open_terminal()
   self.conn:open_terminal()
 end
 
+---@param options string
+---@param path_postfix string
+---@param stderr_postfix string
+---@param callback fun(err: nil|string, lines: nil|string[])
+function SSHFS:_run_ls(options, path_postfix, stderr_postfix, callback)
+  local function run(aix_compatible)
+    local color_option = aix_compatible and "" or " --color=never"
+    self.conn:run(
+      string.format("LC_ALL=C ls %s%s%s%s", options, color_option, path_postfix, stderr_postfix),
+      function(err, lines)
+        if
+          err
+          and not aix_compatible
+          and (err:match("illegal option") or err:match("unrecognized option"))
+        then
+          self.aix_compatible_ls = true
+          run(true)
+        else
+          callback(err, lines)
+        end
+      end
+    )
+  end
+
+  run(self.aix_compatible_ls == true)
+end
+
 function SSHFS:realpath(path, callback)
   local cmd = string.format(
     'if ! readlink -f "%s" 2>/dev/null; then [[ "%s" == /* ]] && echo "%s" || echo "$PWD/%s"; fi',
@@ -119,24 +147,21 @@ function SSHFS:realpath(path, callback)
     if vim.endswith(abspath, ".") then
       abspath = abspath:sub(1, #abspath - 1)
     end
-    self.conn:run(
-      string.format("LC_ALL=C ls -land --color=never %s", shellescape(abspath)),
-      function(ls_err, ls_lines)
-        local type
-        if ls_err then
-          -- If the file doesn't exist, treat it like a not-yet-existing directory
-          type = "directory"
-        else
-          assert(ls_lines)
-          local _
-          _, type = parse_ls_line(ls_lines[1])
-        end
-        if type == "directory" then
-          abspath = util.addslash(abspath)
-        end
-        callback(nil, abspath)
+    self:_run_ls("-land", string.format(" %s", shellescape(abspath)), "", function(ls_err, ls_lines)
+      local type
+      if ls_err then
+        -- If the file doesn't exist, treat it like a not-yet-existing directory
+        type = "directory"
+      else
+        assert(ls_lines)
+        local _
+        _, type = parse_ls_line(ls_lines[1])
       end
-    )
+      if type == "directory" then
+        abspath = util.addslash(abspath)
+      end
+      callback(nil, abspath)
+    end)
   end)
 end
 
@@ -150,7 +175,7 @@ function SSHFS:list_dir(url, path, callback)
   if path ~= "" then
     path_postfix = string.format(" %s", shellescape(path))
   end
-  self.conn:run("LC_ALL=C ls -lan --color=never" .. path_postfix, function(err, lines)
+  self:_run_ls("-lan", path_postfix, "", function(err, lines)
     if err then
       if err:match("No such file or directory%s*$") then
         -- If the directory doesn't exist, treat the list as a success. We will be able to traverse
@@ -183,31 +208,28 @@ function SSHFS:list_dir(url, path, callback)
     if any_links then
       -- If there were any soft links, then we need to run another ls command with -L so that we can
       -- resolve the type of the link target
-      self.conn:run(
-        "LC_ALL=C ls -naLl --color=never" .. path_postfix .. " 2> /dev/null",
-        function(link_err, link_lines)
-          -- Ignore exit code 1. That just means one of the links could not be resolved.
-          if link_err and not link_err:match("^1:") then
-            return callback(link_err)
-          end
-          assert(link_lines)
-          for _, line in ipairs(link_lines) do
-            if line ~= "" and not line:match("^total") then
-              local ok, name, type, meta = pcall(parse_ls_line, line)
-              if ok and name ~= "." and name ~= ".." then
-                local cache_entry = entries[name]
-                if cache_entry[FIELD_TYPE] == "link" then
-                  cache_entry[FIELD_META].link_stat = {
-                    type = type,
-                    size = meta.size,
-                  }
-                end
+      self:_run_ls("-naLl", path_postfix, " 2> /dev/null", function(link_err, link_lines)
+        -- Ignore exit code 1. That just means one of the links could not be resolved.
+        if link_err and not link_err:match("^1:") then
+          return callback(link_err)
+        end
+        assert(link_lines)
+        for _, line in ipairs(link_lines) do
+          if line ~= "" and not line:match("^total") then
+            local ok, name, type, meta = pcall(parse_ls_line, line)
+            if ok and name ~= "." and name ~= ".." then
+              local cache_entry = entries[name]
+              if cache_entry[FIELD_TYPE] == "link" then
+                cache_entry[FIELD_META].link_stat = {
+                  type = type,
+                  size = meta.size,
+                }
               end
             end
           end
-          callback(nil, cache_entries)
         end
-      )
+        callback(nil, cache_entries)
+      end)
     else
       callback(nil, cache_entries)
     end
