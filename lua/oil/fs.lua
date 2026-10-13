@@ -39,7 +39,7 @@ end
 ---@param path string
 ---@param cb fun(err: nil|string)
 M.touch = function(path, cb)
-  uv.fs_open(path, "a", 420, function(err, fd) -- 0644
+  uv.fs_open(path, "a", 438, function(err, fd) -- 0666, filtered by the process umask
     if err then
       cb(err)
     else
@@ -147,7 +147,7 @@ end
 ---@param dir string
 ---@param mode? integer
 M.mkdirp = function(dir, mode)
-  mode = mode or 493
+  mode = mode or 511 -- 0777, filtered by the process umask
   local mod = ""
   local path = dir
   while vim.fn.isdirectory(path) == 0 do
