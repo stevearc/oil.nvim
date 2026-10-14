@@ -183,16 +183,16 @@ for _, time_key in ipairs({ "ctime", "mtime", "atime", "birthtime" }) do
         -- and whitespace with a pattern that matches any amount of whitespace
         -- e.g. "%b %d %Y" -> "%S+%s+%S+%s+%S+"
         pattern = fmt
-          :gsub("%%.", "%%S+")
-          :gsub("%s+", "%%s+")
-          -- escape `()[]` because those are special characters in Lua patterns
-          :gsub(
-            "%(",
-            "%%("
-          )
-          :gsub("%)", "%%)")
-          :gsub("%[", "%%[")
-          :gsub("%]", "%%]")
+            :gsub("%%.", "%%S+")
+            :gsub("%s+", "%%s+")
+            -- escape `()[]` because those are special characters in Lua patterns
+            :gsub(
+              "%(",
+              "%%("
+            )
+            :gsub("%)", "%%)")
+            :gsub("%[", "%%[")
+            :gsub("%]", "%%]")
       else
         pattern = "%S+%s+%d+%s+%d%d:?%d%d"
       end
@@ -397,21 +397,34 @@ end
 local function list_windows_drives(url, column_defs, cb)
   local _, path = util.parse_url(url)
   assert(path)
+
   local require_stat = columns_require_stat(column_defs)
   local stdout = ""
-  local jid = vim.fn.jobstart({ "wmic", "logicaldisk", "get", "name" }, {
+
+  local jid = vim.fn.jobstart({
+    "powershell.exe",
+    "-NoProfile",
+    "-Command",
+    "Get-CimInstance Win32_LogicalDisk | Select-Object -ExpandProperty DeviceID",
+  }, {
     stdout_buffered = true,
+
     on_stdout = function(_, data)
       stdout = table.concat(data, "\n")
     end,
+
     on_exit = function(_, code)
       if code ~= 0 then
         return cb("Error listing windows devices")
       end
-      local lines = vim.split(stdout, "\n", { plain = true, trimempty = true })
-      -- Remove the "Name" header
-      table.remove(lines, 1)
+
+      local lines = vim.split(stdout, "\n", {
+        plain = true,
+        trimempty = true,
+      })
+
       local internal_entries = {}
+
       local complete_disk_cb = util.cb_collect(#lines, function(err)
         if err then
           cb(err)
@@ -421,82 +434,27 @@ local function list_windows_drives(url, column_defs, cb)
       end)
 
       for _, disk in ipairs(lines) do
-        if disk:match("^%s*$") then
-          -- Skip empty line
-          complete_disk_cb()
-        else
-          disk = disk:gsub(":%s*$", "")
+        disk = disk:gsub("%s+", "")
+
+        if disk ~= "" then
           local cache_entry = cache.create_entry(url, disk, "directory")
           table.insert(internal_entries, cache_entry)
-          fetch_entry_metadata(path, cache_entry, require_stat, complete_disk_cb)
+          fetch_entry_metadata(
+            path,
+            cache_entry,
+            require_stat,
+            complete_disk_cb
+          )
+        else
+          complete_disk_cb()
         end
       end
     end,
   })
+
   if jid <= 0 then
     cb("Could not list windows devices")
   end
-end
-
----@param url string
----@param column_defs string[]
----@param cb fun(err?: string, entries?: oil.InternalEntry[], fetch_more?: fun())
-M.list = function(url, column_defs, cb)
-  local _, path = util.parse_url(url)
-  assert(path)
-  if fs.is_windows and path == "/" then
-    return list_windows_drives(url, column_defs, cb)
-  end
-  local dir = fs.posix_to_os_path(path)
-  local require_stat = columns_require_stat(column_defs)
-
-  ---@diagnostic disable-next-line: param-type-mismatch, discard-returns
-  uv.fs_opendir(dir, function(open_err, fd)
-    if open_err then
-      if open_err:match("^ENOENT: no such file or directory") then
-        -- If the directory doesn't exist, treat the list as a success. We will be able to traverse
-        -- and edit a not-yet-existing directory.
-        return cb()
-      else
-        return cb(open_err)
-      end
-    end
-    local read_next
-    read_next = function()
-      uv.fs_readdir(fd, function(err, entries)
-        local internal_entries = {}
-        if err then
-          uv.fs_closedir(fd, function()
-            cb(err)
-          end)
-          return
-        elseif entries then
-          local poll = util.cb_collect(#entries, function(inner_err)
-            if inner_err then
-              cb(inner_err)
-            else
-              cb(nil, internal_entries, read_next)
-            end
-          end)
-          for _, entry in ipairs(entries) do
-            local cache_entry = cache.create_entry(url, entry.name, entry.type)
-            table.insert(internal_entries, cache_entry)
-            fetch_entry_metadata(path, cache_entry, require_stat, poll)
-          end
-        else
-          uv.fs_closedir(fd, function(close_err)
-            if close_err then
-              cb(close_err)
-            else
-              cb()
-            end
-          end)
-        end
-      end)
-    end
-    read_next()
-    ---@diagnostic disable-next-line: param-type-mismatch
-  end, 10000)
 end
 
 ---@param bufnr integer
