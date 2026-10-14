@@ -182,6 +182,27 @@ M.rename_buffer = function(src_bufnr, dest_buf_name)
 
   local is_modified = vim.bo[src_bufnr].modified
   local dest_bufnr = vim.fn.bufadd(dest_buf_name)
+  if dest_bufnr == src_bufnr then
+    -- On a case-insensitive filesystem, changing only the case of a path
+    -- resolves to the same file, so bufadd returns the existing buffer
+    -- instead of creating a new one. There is no src/dest pair to
+    -- reconcile here, just one buffer that needs its display name updated.
+    ---@diagnostic disable-next-line: param-type-mismatch
+    local altbuf = vim.fn.bufnr("#")
+    local ok = pcall(vim.api.nvim_buf_set_name, dest_bufnr, dest_buf_name)
+    if ok then
+      local old_bufnr = vim.fn.bufadd(bufname)
+      if old_bufnr ~= dest_bufnr then
+        pcall(vim.api.nvim_buf_delete, old_bufnr, {})
+      end
+      if altbuf and vim.api.nvim_buf_is_valid(altbuf) then
+        vim.fn.setreg("#", altbuf)
+      end
+    end
+    vim.bo[dest_bufnr].modified = is_modified
+    return false
+  end
+
   pcall(vim.fn.bufload, dest_bufnr)
   if vim.bo[src_bufnr].buflisted then
     vim.bo[dest_bufnr].buflisted = true
