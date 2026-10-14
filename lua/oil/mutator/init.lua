@@ -148,6 +148,7 @@ M.create_actions_from_diffs = function(all_diffs)
     end
   end
 
+  local delete_actions = {}
   for id, diffs in pairs(diff_by_id) do
     local entry = cache.get_entry_by_id(id)
     if not entry then
@@ -171,7 +172,7 @@ M.create_actions_from_diffs = function(all_diffs)
         end
       else
         -- DELETE when no create
-        add_action({
+        table.insert(delete_actions, {
           type = "delete",
           entry_type = entry[FIELD_TYPE],
           url = cache.get_parent_url(id) .. entry[FIELD_NAME],
@@ -190,6 +191,10 @@ M.create_actions_from_diffs = function(all_diffs)
         })
       end
     end
+  end
+
+  for _, action in ipairs(delete_actions) do
+    add_action(action)
   end
 
   return M.enforce_action_order(actions)
@@ -225,6 +230,9 @@ M.enforce_action_order = function(actions)
     local ret = {}
     if action.type == "delete" then
       src_trie:accum_children_of(action.url, ret)
+      src_trie:accum_actions_at(action.url, ret, function(a)
+        return a.type == "copy"
+      end)
     elseif action.type == "create" then
       -- Finish operating on parents first
       -- e.g. NEW /a BEFORE NEW /a/b
@@ -262,6 +270,10 @@ M.enforce_action_order = function(actions)
       src_trie:accum_actions_at(action.dest_url, ret, function(a)
         return a.type == "move" or a.type == "delete"
       end)
+      -- Process delete of children before moving to new path
+      src_trie:accum_children_of(action.dest_url, ret, function(a)
+        return a.type == "delete"
+      end)
     elseif action.type == "copy" then
       -- Finish operating on parents first
       -- e.g. NEW /a BEFORE COPY /z -> /a/b
@@ -273,6 +285,10 @@ M.enforce_action_order = function(actions)
       -- e.g. MOVE /a -> /b BEFORE COPY /c -> /a
       src_trie:accum_actions_at(action.dest_url, ret, function(a)
         return a.type == "move" or a.type == "delete"
+      end)
+      -- Process delete of children before copying to new path
+      src_trie:accum_children_of(action.dest_url, ret, function(a)
+        return a.type == "delete"
       end)
     end
     return ret
@@ -303,10 +319,19 @@ M.enforce_action_order = function(actions)
     return nil, action_in_loop
   end
 
+  local function get_next_action()
+    for _, a in ipairs(actions) do
+      if a.type ~= "delete" then
+        return a
+      end
+    end
+    return actions[1]
+  end
+
   local ret = {}
   local after = {}
   while not vim.tbl_isempty(actions) do
-    local action = actions[1]
+    local action = get_next_action()
     local selected, loop_action = find_leaf(action)
     local to_remove
     if selected then
@@ -314,7 +339,8 @@ M.enforce_action_order = function(actions)
     else
       if loop_action and loop_action.type == "move" then
         -- If this is moving a parent into itself, that's an error
-        if vim.startswith(loop_action.dest_url, loop_action.src_url) then
+        local loop_src_prefix = loop_action.src_url:gsub("/+$", "") .. "/"
+        if vim.startswith(loop_action.dest_url, loop_src_prefix) then
           error("Detected cycle in desired paths")
         end
 
@@ -346,7 +372,8 @@ M.enforce_action_order = function(actions)
 
     if selected then
       if selected.type == "move" or selected.type == "copy" then
-        if vim.startswith(selected.dest_url, selected.src_url .. "/") then
+        local src_prefix = selected.src_url:gsub("/+$", "") .. "/"
+        if vim.startswith(selected.dest_url, src_prefix) then
           error(
             string.format(
               "Cannot move or copy parent into itself: %s -> %s",

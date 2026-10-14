@@ -20,6 +20,7 @@ end
 function Trie:_url_to_path_pieces(url)
   local scheme, path = util.parse_url(url)
   assert(path)
+  path = path:gsub("/+$", "")
   local pieces = vim.split(path, "/")
   table.insert(pieces, 1, scheme)
   return pieces
@@ -85,7 +86,14 @@ function Trie:accum_first_parents_of(url, ret)
   local pieces = self:_url_to_path_pieces(url)
   local containers = { self.root }
   for _, piece in ipairs(pieces) do
-    local next_container = containers[#containers].children[piece]
+    local parent = containers[#containers]
+    if not parent then
+      break
+    end
+    local next_container = parent.children[piece]
+    if not next_container then
+      break
+    end
     table.insert(containers, next_container)
   end
   table.remove(containers)
@@ -110,8 +118,8 @@ function Trie:_dfs(container, ret, filter)
   else
     vim.list_extend(ret, container.values)
   end
-  for _, child in ipairs(container.children) do
-    self:_dfs(child, ret)
+  for _, child in pairs(container.children) do
+    self:_dfs(child, ret, filter)
   end
 end
 
