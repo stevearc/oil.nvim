@@ -129,6 +129,42 @@ a.describe("mutator", function()
       }, actions)
     end)
 
+    it("correctly orders MOVE out of dir before DELETE dir", function()
+      local foodir = test_adapter.test_set("/foo", "directory")
+      local afile = test_adapter.test_set("/foo/a.txt", "file")
+      vim.cmd.edit({ args = { "oil-test:///" } })
+      local root_buf = vim.api.nvim_get_current_buf()
+      vim.cmd.edit({ args = { "oil-test:///foo/" } })
+      local foo_buf = vim.api.nvim_get_current_buf()
+      vim.cmd.edit({ args = { "oil-test:///bar/" } })
+      local bar_buf = vim.api.nvim_get_current_buf()
+
+      local actions = mutator.create_actions_from_diffs({
+        [root_buf] = {
+          { type = "delete", name = "foo", id = foodir[FIELD_ID] },
+        },
+        [foo_buf] = {
+          { type = "delete", name = "a.txt", id = afile[FIELD_ID] },
+        },
+        [bar_buf] = {
+          { type = "new", name = "a.txt", entry_type = "file", id = afile[FIELD_ID] },
+        },
+      })
+      assert.are.same({
+        {
+          type = "move",
+          entry_type = "file",
+          src_url = "oil-test:///foo/a.txt",
+          dest_url = "oil-test:///bar/a.txt",
+        },
+        {
+          type = "delete",
+          entry_type = "directory",
+          url = "oil-test:///foo",
+        },
+      }, actions)
+    end)
+
     it("resolves MOVE loops", function()
       local afile = test_adapter.test_set("/a.txt", "file")
       local bfile = test_adapter.test_set("/b.txt", "file")
@@ -234,6 +270,52 @@ a.describe("mutator", function()
       local actions = { move, del }
       local ordered_actions = mutator.enforce_action_order(actions)
       assert.are.same({ del, move }, ordered_actions)
+    end)
+
+    it("Moves file out of descendant before deleting parent", function()
+      local move = {
+        type = "move",
+        src_url = "oil-test:///a/sub/b.txt",
+        dest_url = "oil-test:///b.txt",
+        entry_type = "file",
+      }
+      local delete = { type = "delete", url = "oil-test:///a", entry_type = "directory" }
+      local actions = { delete, move }
+      local ordered_actions = mutator.enforce_action_order(actions)
+      assert.are.same({ move, delete }, ordered_actions)
+    end)
+
+    it("Bulk move descendants and delete parents", function()
+      local del1 = { type = "delete", url = "oil-test:///home/parent1", entry_type = "directory" }
+      local del2 = { type = "delete", url = "oil-test:///home/parent2", entry_type = "directory" }
+      local move1 = {
+        type = "move",
+        src_url = "oil-test:///home/parent1/of/a.txt",
+        dest_url = "oil-test:///home/destination/a.txt",
+        entry_type = "file",
+      }
+      local move2 = {
+        type = "move",
+        src_url = "oil-test:///home/parent2/of/b.txt",
+        dest_url = "oil-test:///home/destination/b.txt",
+        entry_type = "file",
+      }
+      local actions = { del1, del2, move1, move2 }
+      local ordered_actions = mutator.enforce_action_order(actions)
+      assert.are.same({ move1, move2, del1, del2 }, ordered_actions)
+    end)
+
+    it("Deletes target before moving to it", function()
+      local delete = { type = "delete", url = "oil-test:///x/a", entry_type = "directory" }
+      local move = {
+        type = "move",
+        src_url = "oil-test:///y/a",
+        dest_url = "oil-test:///x/a",
+        entry_type = "directory",
+      }
+      local actions = { move, delete }
+      local ordered_actions = mutator.enforce_action_order(actions)
+      assert.are.same({ delete, move }, ordered_actions)
     end)
 
     it("Detects move directory loops", function()
