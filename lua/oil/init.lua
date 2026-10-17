@@ -1416,6 +1416,18 @@ M.setup = function(opts)
       -- (the BufReadCmd will not trigger)
       M.load_oil_buffer(bufnr)
     end
+
+    -- Buffers that were added before setup (e.g. by `nvim -O file.txt dir/`) never triggered the
+    -- BufAdd autocmd. Hijack them now, and BufReadCmd will load them when they are first entered.
+    for _, other_bufnr in ipairs(vim.api.nvim_list_bufs()) do
+      if
+        other_bufnr ~= bufnr
+        and vim.bo[other_bufnr].buflisted
+        and not vim.api.nvim_buf_is_loaded(other_bufnr)
+      then
+        maybe_hijack_directory_buffer(other_bufnr)
+      end
+    end
   end
 end
 
