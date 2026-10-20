@@ -176,7 +176,7 @@ M.parse = function(bufnr)
   local original_entries = {}
   for _, child in pairs(children) do
     local name = child[FIELD_NAME]
-    if view.should_display(name, bufnr) then
+    if view.should_display(bufnr, child) then
       original_entries[name] = child[FIELD_ID]
     end
   end
