@@ -194,6 +194,60 @@ describe("parser", function()
     }, diffs)
   end)
 
+  it("moves a file into a new directory by renaming", function()
+    local file = test_adapter.test_set("/foo/a.txt", "file")
+    vim.cmd.edit({ args = { "oil-test:///foo/" } })
+    local bufnr = vim.api.nvim_get_current_buf()
+
+    set_lines(bufnr, {
+      string.format("/%d new/a.txt", file[FIELD_ID]),
+    })
+
+    local diffs = parser.parse(bufnr)
+
+    assert.are.same({
+      { type = "new", name = "new", entry_type = "directory" },
+      { type = "new", id = file[FIELD_ID], name = "new/a.txt", entry_type = "file" },
+      { type = "delete", id = file[FIELD_ID], name = "a.txt" },
+    }, diffs)
+  end)
+
+  it("moves a directory into a new directory by renaming", function()
+    local dir = test_adapter.test_set("/foo/0.7", "directory")
+    vim.cmd.edit({ args = { "oil-test:///foo/" } })
+    local bufnr = vim.api.nvim_get_current_buf()
+
+    set_lines(bufnr, {
+      string.format("/%d exercises/0.7/", dir[FIELD_ID]),
+    })
+
+    local diffs = parser.parse(bufnr)
+
+    assert.are.same({
+      { type = "new", name = "exercises", entry_type = "directory" },
+      { type = "new", id = dir[FIELD_ID], name = "exercises/0.7", entry_type = "directory" },
+      { type = "delete", id = dir[FIELD_ID], name = "0.7" },
+    }, diffs)
+  end)
+
+  it("moves a file into nested new directories by renaming", function()
+    local file = test_adapter.test_set("/foo/a.txt", "file")
+    vim.cmd.edit({ args = { "oil-test:///foo/" } })
+    local bufnr = vim.api.nvim_get_current_buf()
+
+    set_lines(bufnr, {
+      string.format("/%d one/two/a.txt", file[FIELD_ID]),
+    })
+
+    local diffs = parser.parse(bufnr)
+
+    assert.are.same({
+      { type = "new", name = "one/two", entry_type = "directory" },
+      { type = "new", id = file[FIELD_ID], name = "one/two/a.txt", entry_type = "file" },
+      { type = "delete", id = file[FIELD_ID], name = "a.txt" },
+    }, diffs)
+  end)
+
   it("detects a new trailing slash as a delete + create", function()
     local file = test_adapter.test_set("/foo", "file")
     vim.cmd.edit({ args = { "oil-test:///" } })
