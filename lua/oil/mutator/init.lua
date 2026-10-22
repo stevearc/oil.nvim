@@ -314,7 +314,7 @@ M.enforce_action_order = function(actions)
     else
       if loop_action and loop_action.type == "move" then
         -- If this is moving a parent into itself, that's an error
-        if vim.startswith(loop_action.dest_url, loop_action.src_url) then
+        if vim.startswith(loop_action.dest_url, loop_action.src_url .. "/") then
           error("Detected cycle in desired paths")
         end
 
