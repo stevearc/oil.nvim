@@ -248,6 +248,31 @@ a.describe("mutator", function()
       end)
     end)
 
+    it("Resolves MOVE loops between names that share a prefix", function()
+      local move_1 = {
+        type = "move",
+        src_url = "oil-test:///foo",
+        dest_url = "oil-test:///foo2",
+        entry_type = "file",
+      }
+      local move_2 = {
+        type = "move",
+        src_url = "oil-test:///foo2",
+        dest_url = "oil-test:///foo",
+        entry_type = "file",
+      }
+      for _, actions in ipairs({ { move_1, move_2 }, { move_2, move_1 } }) do
+        local ordered_actions = mutator.enforce_action_order(actions)
+        assert.are.same(3, #ordered_actions)
+        -- One file is moved out of the way first and moved into place last
+        local tmp_url = ordered_actions[1].dest_url
+        assert.truthy(tmp_url:find("__oil_tmp_", 1, true))
+        assert.are.same(ordered_actions[1].src_url, ordered_actions[2].dest_url)
+        assert.are.same(tmp_url, ordered_actions[3].src_url)
+        assert.are.same(ordered_actions[2].src_url, ordered_actions[3].dest_url)
+      end
+    end)
+
     it("Detects copy directory loops", function()
       local move = {
         type = "copy",
