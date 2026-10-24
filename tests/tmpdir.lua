@@ -41,11 +41,15 @@ end
 ---@param paths string[]
 function TmpDir:create(paths)
   for _, path in ipairs(paths) do
-    local pieces = vim.split(path, fs.sep)
+    local pieces = vim.split(path, "[\\/]")
     local partial_path = self.path
     for i, piece in ipairs(pieces) do
       partial_path = fs.join(partial_path, piece)
-      if i == #pieces and not vim.endswith(partial_path, fs.sep) then
+      if
+        i == #pieces
+        and not vim.endswith(partial_path, "/")
+        and not vim.endswith(partial_path, "\\")
+      then
         await(touch, 2, partial_path)
       elseif not exists(partial_path) then
         vim.loop.fs_mkdir(partial_path, 493)
@@ -90,7 +94,7 @@ end
 local assert_fs = function(root, paths)
   local unlisted_dirs = {}
   for k in pairs(paths) do
-    local pieces = vim.split(k, "/")
+    local pieces = vim.split(k, "[/\\]")
     local partial_path = ""
     for i, piece in ipairs(pieces) do
       partial_path = partial_path .. piece .. "/"
@@ -110,11 +114,15 @@ local assert_fs = function(root, paths)
     if entry.type == "directory" then
       shortpath = shortpath .. "/"
     end
+    shortpath = shortpath:gsub("\\", "/")
     local expected_content = paths[shortpath]
     paths[shortpath] = nil
     assert.truthy(expected_content, string.format("Unexpected entry '%s'", shortpath))
     if entry.type == "file" then
       local data = read_file(fullpath)
+      if data ~= nil then
+        data = data:gsub("\\", "/")
+      end
       assert.equals(
         expected_content,
         data,
