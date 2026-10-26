@@ -145,6 +145,8 @@ local default_config = {
   },
   -- Configuration for the file preview window
   preview_win = {
+    -- preview split size: size of the preview window (fraction of the whole window)
+    preview_size = 0.5,
     -- Whether the preview window is automatically updated when the cursor is moved
     update_on_cursor_moved = true,
     -- How to open the preview window "load"|"scratch"|"fast_scratch"
@@ -352,6 +354,7 @@ local M = {}
 ---| '"fast_scratch"' # Put only the visible text into a scratch buffer
 
 ---@class (exact) oil.PreviewWindowConfig
+---@field preview_size number
 ---@field update_on_cursor_moved boolean
 ---@field preview_method oil.PreviewMethod
 ---@field disable_preview fun(filename: string): boolean

@@ -490,7 +490,7 @@ M.open_preview = function(opts, callback)
   if util.is_floating_win() then
     if preview_win == nil then
       local root_win_opts, preview_win_opts =
-        layout.split_window(0, config.float.preview_split, config.float.padding)
+        layout.split_window(0, config.float.preview_split, config.float.padding, config.preview_win.preview_size)
 
       local win_opts_oil = {
         relative = "editor",
@@ -592,6 +592,15 @@ M.open_preview = function(opts, callback)
     -- BufReadCmd to load the buffer. So we need to do it manually.
     if util.is_oil_bufnr(filebufnr) then
       M.load_oil_buffer(filebufnr)
+    end
+
+    -- Set preview window size if the window is not floating
+    if config.preview_win.preview_size and not util.is_floating_win() then
+      if opts.vertical then
+        vim.api.nvim_win_set_width(0, math.floor(vim.o.columns * config.preview_win.preview_size))
+      else
+        vim.api.nvim_win_set_height(0, math.floor(vim.o.lines * config.preview_win.preview_size))
+      end
     end
 
     vim.api.nvim_set_option_value("previewwindow", true, { scope = "local", win = 0 })
