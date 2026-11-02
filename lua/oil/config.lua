@@ -409,6 +409,18 @@ M.setup = function(opts)
     -- We don't want to deep merge the keymaps, we want any keymap defined by the user to override
     -- everything about the default.
     for k, v in pairs(opts.keymaps) do
+      -- The same key can be written in different ways (e.g. <C-t> and <c-t>). Drop any default
+      -- keymap that maps to the same key so it doesn't override the user's keymap.
+      local lhs = vim.api.nvim_replace_termcodes(k, true, true, true)
+      for default_k in pairs(default_config.keymaps) do
+        if
+          default_k ~= k
+          and opts.keymaps[default_k] == nil
+          and vim.api.nvim_replace_termcodes(default_k, true, true, true) == lhs
+        then
+          new_conf.keymaps[default_k] = nil
+        end
+      end
       new_conf.keymaps[k] = v
     end
   end
