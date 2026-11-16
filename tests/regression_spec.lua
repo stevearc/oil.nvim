@@ -145,4 +145,40 @@ a.describe("regression tests", function()
     end, 10)
     assert.equals("a.txt", vim.fn.expand("%:t"))
   end)
+
+  -- https://github.com/stevearc/oil.nvim/issues/782
+  -- bufadd() does not list the buffer, so Oil's BufAdd hijack never runs.
+  a.it("loads a directory buffer created with bufadd() after setup", function()
+    tmpdir:create({ "a.txt" })
+    local dir = tmpdir.path
+    local bufnr = vim.fn.bufadd(dir)
+    assert.falsy(vim.bo[bufnr].buflisted)
+    vim.api.nvim_set_current_buf(bufnr)
+    assert.truthy(vim.wait(2000, function()
+      return vim.b[bufnr].oil_ready
+    end, 20))
+    assert.truthy(vim.startswith(vim.api.nvim_buf_get_name(bufnr), "oil://"))
+    assert.equals("oil", vim.bo[bufnr].filetype)
+    assert.are.same({ "a.txt" }, test_util.parse_entries(bufnr))
+  end)
+
+  -- https://github.com/stevearc/oil.nvim/issues/782
+  -- Listing the buffer after it was loaded renames it to oil://, but BufReadCmd does not re-fire.
+  a.it("loads a directory buffer that is listed after it was already loaded", function()
+    tmpdir:create({ "a.txt" })
+    local dir = tmpdir.path
+    local bufnr = vim.fn.bufadd(dir)
+    -- bufload() would otherwise enter the buffer. Skip that so the directory stays plain
+    -- until it is listed, which is the empty oil:// case.
+    vim.cmd("noautocmd call bufload(" .. bufnr .. ")")
+    assert.falsy(vim.startswith(vim.api.nvim_buf_get_name(bufnr), "oil://"))
+    assert.truthy(vim.api.nvim_buf_is_loaded(bufnr))
+    vim.bo[bufnr].buflisted = true
+    assert.truthy(vim.wait(2000, function()
+      return vim.b[bufnr].oil_ready
+    end, 20))
+    assert.truthy(vim.startswith(vim.api.nvim_buf_get_name(bufnr), "oil://"))
+    assert.equals("oil", vim.bo[bufnr].filetype)
+    assert.are.same({ "a.txt" }, test_util.parse_entries(bufnr))
+  end)
 end)

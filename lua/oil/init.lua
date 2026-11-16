@@ -820,6 +820,20 @@ local function maybe_hijack_directory_buffer(bufnr)
   return not replaced
 end
 
+---Hijack a directory buffer, and load it when it is already loaded.
+---Renaming a loaded buffer does not run BufReadCmd again, so the oil:// buffer would stay empty.
+---@param bufnr integer
+---@return boolean hijacked
+local function hijack_directory_buffer(bufnr)
+  if not maybe_hijack_directory_buffer(bufnr) then
+    return false
+  end
+  if vim.api.nvim_buf_is_loaded(bufnr) then
+    M.load_oil_buffer(bufnr)
+  end
+  return true
+end
+
 ---@private
 M._get_highlights = function()
   return {
@@ -1400,13 +1414,41 @@ M.setup = function(opts)
   })
 
   if config.default_file_explorer then
+    -- bufadd() does not list the buffer, so BufAdd never fires for it. Remember buffers that
+    -- already exist: directory arguments from before setup() (nvim -O file.txt dir/) are a
+    -- separate case and must keep their current behavior.
+    local buf_existed_before_setup = {}
+    for _, existing_bufnr in ipairs(vim.api.nvim_list_bufs()) do
+      buf_existed_before_setup[existing_bufnr] = true
+    end
+
+    vim.api.nvim_create_autocmd("BufEnter", {
+      desc = "Hijack an unlisted directory buffer created after setup",
+      group = aug,
+      pattern = "*",
+      nested = true,
+      callback = function(params)
+        local bufnr = params.buf
+        if buf_existed_before_setup[bufnr] or vim.bo[bufnr].buflisted then
+          return
+        end
+        hijack_directory_buffer(bufnr)
+      end,
+    })
     vim.api.nvim_create_autocmd("BufAdd", {
       desc = "Detect directory buffer and open oil file browser",
       group = aug,
       pattern = "*",
       nested = true,
       callback = function(params)
-        maybe_hijack_directory_buffer(params.buf)
+        -- A buffer created before setup keeps the previous hijack-only behavior. Buffers
+        -- created afterwards (bufadd, then listed once they are already loaded) have to be
+        -- read here, because the rename to oil:// does not run BufReadCmd.
+        if buf_existed_before_setup[params.buf] then
+          maybe_hijack_directory_buffer(params.buf)
+        else
+          hijack_directory_buffer(params.buf)
+        end
       end,
     })
 
