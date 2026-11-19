@@ -1064,17 +1064,23 @@ M.load_oil_buffer = function(bufnr)
         local new_scheme = util.parse_url(new_url)
         if not new_scheme then
           loading.set_loading(bufnr, false)
-          vim.cmd.doautocmd({ args = { "BufReadPre", new_url }, mods = { emsg_silent = true } })
-          vim.cmd.doautocmd({ args = { "BufReadPost", new_url }, mods = { emsg_silent = true } })
+          vim.api.nvim_buf_call(bufnr, function()
+            vim.cmd.doautocmd({ args = { "BufReadPre", new_url }, mods = { emsg_silent = true } })
+            vim.cmd.doautocmd({ args = { "BufReadPost", new_url }, mods = { emsg_silent = true } })
+          end)
           return
         end
 
         bufname = new_url
       end
       if vim.endswith(bufname, "/") then
-        vim.cmd.doautocmd({ args = { "BufReadPre", bufname }, mods = { emsg_silent = true } })
+        vim.api.nvim_buf_call(bufnr, function()
+          vim.cmd.doautocmd({ args = { "BufReadPre", bufname }, mods = { emsg_silent = true } })
+        end)
         view.initialize(bufnr)
-        vim.cmd.doautocmd({ args = { "BufReadPost", bufname }, mods = { emsg_silent = true } })
+        vim.api.nvim_buf_call(bufnr, function()
+          vim.cmd.doautocmd({ args = { "BufReadPost", bufname }, mods = { emsg_silent = true } })
+        end)
       else
         vim.bo[bufnr].buftype = "acwrite"
         adapter.read_file(bufnr)
