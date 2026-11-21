@@ -30,6 +30,8 @@ local default_config = {
   delete_to_trash = false,
   -- Skip the confirmation popup for simple operations (:help oil.skip_confirm_for_simple_edits)
   skip_confirm_for_simple_edits = false,
+  -- Skip every confirmation (:help oil.skip_every_confirm)
+  skip_every_confirm = false, 
   -- Selecting a new/moved/renamed file or directory will prompt you to save changes first
   -- (:help prompt_save_on_select_new_entry)
   prompt_save_on_select_new_entry = true,
@@ -231,6 +233,7 @@ default_config.view_options.highlight_filename = nil
 ---@field win_options table<string, any>
 ---@field delete_to_trash boolean
 ---@field skip_confirm_for_simple_edits boolean
+---@field skip_every_confirm boolean
 ---@field prompt_save_on_select_new_entry boolean
 ---@field cleanup_delay_ms integer
 ---@field lsp_file_methods oil.LspFileMethods
@@ -260,6 +263,7 @@ local M = {}
 ---@field win_options? table<string, any> Window-local options to use for oil buffers
 ---@field delete_to_trash? boolean Send deleted files to the trash instead of permanently deleting them (:help oil-trash).
 ---@field skip_confirm_for_simple_edits? boolean Skip the confirmation popup for simple operations (:help oil.skip_confirm_for_simple_edits).
+---@field skip_every_confirm ? boolean Skip the confirmation popup for every operation (:help oil.skip_every_confirm).
 ---@field prompt_save_on_select_new_entry? boolean Selecting a new/moved/renamed file or directory will prompt you to save changes first (:help prompt_save_on_select_new_entry).
 ---@field cleanup_delay_ms? integer Oil will automatically delete hidden buffers after this delay. You can set the delay to false to disable cleanup entirely. Note that the cleanup process only starts when none of the oil buffers are currently displayed.
 ---@field lsp_file_methods? oil.SetupLspFileMethods Configure LSP file operation integration.
